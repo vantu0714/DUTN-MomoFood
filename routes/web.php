@@ -23,3 +23,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/backend', function () {
     return view('backend.layouts.app');
 });
+
+
+Route::get('/admin/dashboard', function () {
+    return view('backend.dashboard');
+});
