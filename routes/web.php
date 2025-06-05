@@ -19,9 +19,6 @@ use App\Http\Controllers\clients\HomeController;
 // });
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/', function () {
-    return view('welcome');
-});
 
 Route::get('/backend', function () {
     return view('backend.layouts.app');
