@@ -1,5 +1,5 @@
-@include('backend.layouts.header')
-@include('backend.layouts.sidebar')
+@include('admin.layouts.header')
+@include('admin.layouts.sidebar')
 
 <div class="main_content_iner overly_inner ">
     <div class="container-fluid p-0">
@@ -10,4 +10,4 @@
 
 
 
-@include('backend.layouts.footer')
+@include('admin.layouts.footer')
