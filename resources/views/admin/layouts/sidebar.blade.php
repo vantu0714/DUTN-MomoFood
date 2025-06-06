@@ -22,10 +22,8 @@
                 <span>Quản lí người dùng</span>
             </a>
             <ul>
-                <li><a href="editor.html">editor</a></li>
-                <li><a href="mail_box.html">Mail Box</a></li>
-                <li><a href="chat.html">Chat</a></li>
-                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="{{ route('users.index')}}">Danh sách người dùng</a></li>
+                <li><a href="">Thêm mới người dùng</a></li>
             </ul>
         </li>
         <li class>
