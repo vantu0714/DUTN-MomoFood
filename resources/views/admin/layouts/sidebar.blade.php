@@ -77,6 +77,14 @@
                 <span>Quản lí kho</span>
             </a>
         </li>
+         <li class>
+            <a href="{{ route('comments.index')}}" aria-expanded="false">
+                <div class="icon_menu">
+                    <img src="{{ asset('admins/assets/img/menu-icon/8.svg')}}" alt>
+                </div>
+                <span>Quản lí bình luận</span>
+            </a>
+        </li>
         <li class>
             <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
