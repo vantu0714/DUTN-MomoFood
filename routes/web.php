@@ -23,7 +23,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 
 Route::get('/admin/dashboard', function () {
-    return view('backend.dashboard');
+    return view('admin.dashboard');
 
    
 
