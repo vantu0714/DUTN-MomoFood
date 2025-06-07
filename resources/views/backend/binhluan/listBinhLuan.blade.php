@@ -1,1 +1,0 @@
-<h1>Quản lý bình luận</h1>
