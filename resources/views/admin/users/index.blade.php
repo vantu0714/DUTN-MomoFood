@@ -4,10 +4,6 @@
     <div class="container mt-4">
         <h2 class="mb-4">Danh sách người dùng</h2>
 
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
         <a href="{{ route('users.create') }}" class="btn btn-primary mb-3">Thêm người dùng</a>
 
         <div class="table-responsive">
@@ -33,17 +29,21 @@
                             <td> {{ $user->created_at->format('d-m-Y') }}</td>
                             <td> {{ $user->updated_at->format('d-m-Y') }}</td>
                             <td>
-                                <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                                <a href="{{ route('users.edit', $user->id) }}" class="btn  btn-warning">Sửa</a>
 
-                                <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm btn-info">Xem</a>
+                                <a href="{{ route('users.show', $user->id) }}" class="btn  btn-info">Xem</a>
 
-                                <form action="{{ route('users.destroy', $user->id) }}" method="POST"
-                                    style="display:inline;">
+                                <form id="delete-form-{{ $user->id }}"
+                                    action="{{ route('users.destroy', $user->id) }}" method="POST"
+                                    style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Xoá người dùng này?')">Xoá</button>
+                                    <button type="button" class="btn  btn-danger"
+                                        onclick="confirmDelete({{ $user->id }})">
+                                        Xóa
+                                    </button>
                                 </form>
+
                             </td>
                         </tr>
                     @empty
@@ -56,3 +56,24 @@
         </div>
     </div>
 @endsection
+
+<script>
+    function confirmDelete(userId) {
+        Swal.fire({
+            title: 'Bạn chắc chắn muốn xóa?',
+            text: "Hành động này không thể hoàn tác!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + userId).submit();
+            }
+        });
+    }
+    
+</script>
+
