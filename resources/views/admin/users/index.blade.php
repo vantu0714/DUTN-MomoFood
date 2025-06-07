@@ -1,62 +1,58 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container mt-4">
-    <h2 class="mb-4">Danh sách người dùng</h2>
+    <div class="container mt-4">
+        <h2 class="mb-4">Danh sách người dùng</h2>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        @if (session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
-    <a href="{{ route('users.create') }}" class="btn btn-primary mb-3">Thêm người dùng</a>
+        <a href="{{ route('users.create') }}" class="btn btn-primary mb-3">Thêm người dùng</a>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Họ tên</th>
-                    <th>Email</th>
-                    <th>Điện thoại</th>
-                    <th>Địa chỉ</th>
-                    <th>Mật khẩu</th>
-                    <th>Role ID</th>
-                    <th>Ngày tạo</th>
-                    <th>Cập nhật</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($users as $user)
-                <tr>
-                    <td>{{ $user->id }}</td>
-                    <td>{{ $user->name }}</td>
-                    <td>{{ $user->email }}</td>
-                    <td>{{ $user->phone }}</td>
-                    <td>{{ $user->address }}</td>
-                    <td>{{ $user->password }}</td>
-                    <td>{{ $user->role_id }}</td>
-                    <td>{{ $user->created_at }}</td>
-                    <td>{{ $user->updated_at }}</td>
-                    <td>
-                        <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>Vai trò</th>
+                        <th>Ngày tạo</th>
+                        <th>Cập nhật</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($users as $user)
+                        <tr>
+                            <td>{{ $user->id }}</td>
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->email }}</td>
+                            <td>{{ $user->role->name }}</td>
+                            <td> {{ $user->created_at->format('d-m-Y') }}</td>
+                            <td> {{ $user->updated_at->format('d-m-Y') }}</td>
+                            <td>
+                                <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-warning">Sửa</a>
 
-                        <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm btn-info">Xem</a>
+                                <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm btn-info">Xem</a>
 
-                        <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Xoá người dùng này?')">Xoá</button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="10" class="text-center">Không có người dùng nào</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+                                <form action="{{ route('users.destroy', $user->id) }}" method="POST"
+                                    style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Xoá người dùng này?')">Xoá</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="10" class="text-center">Không có người dùng nào</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 @endsection

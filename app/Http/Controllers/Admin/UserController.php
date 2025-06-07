@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\User\StoreUserRequest;
+use Illuminate\Contracts\Cache\Store;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -22,15 +25,26 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+         return view('admin.users.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        //
+        $request->validated();
+        // dd($$request);
+        $users = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'phone'    => $request->phone,
+            'address'  => $request->address,
+            'password' => Hash::make($request->password),
+            'role_id'  => $request->role_id,
+        ]);
+        
+        return redirect()->route('users.index')->with('success', 'Đã thêm người dùng thành công');
     }
 
     /**
@@ -60,8 +74,8 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+     public function destroy($id)
     {
-        //
+        
     }
 }
