@@ -23,7 +23,7 @@
             </a>
             <ul>
                 <li><a href="{{ route('users.index')}}">Danh sách người dùng</a></li>
-                <li><a href="">Thêm mới người dùng</a></li>
+                <li><a href="{{ route('users.create')}}">Thêm mới người dùng</a></li>
             </ul>
         </li>
         <li class>
