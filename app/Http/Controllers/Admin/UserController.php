@@ -38,13 +38,18 @@ class UserController extends Controller
     {
         $request->validated();
         // dd($$request);
+        if ($request->hasFile('avatar')) {
+            $urlAvatar = $request->file('avatar')->store('avatar');
+        }
+
         $users = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'phone'    => $request->phone,
-            'address'  => $request->address,
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'address' => $request->address,
             'password' => Hash::make($request->password),
-            'role_id'  => $request->role_id,
+            'role_id' => $request->role_id,
+            'avatar' => $urlAvatar ?? null,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Đã thêm người dùng thành công');
@@ -55,7 +60,7 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-         $user = User::findOrFail($id);
+        $user = User::findOrFail($id);
         $roles = Role::all();
 
         return view('admin.users.show', compact('user', 'roles'));
@@ -77,23 +82,28 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, string $id)
     {
- try {
-           $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        $request->validated();
+            $request->validated();
+            
+                    if ($request->hasFile('avatar')) {
+            $urlAvatar = $request->file('avatar')->store('avatar');
+        }
 
-        $user->update([
-            'name'    => $request->name,
-            'email'   => $request->email,
-            'phone'   => $request->phone,
-            'address' => $request->address,
-            'role_id' => $request->role_id,
-        ]);
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'role_id' => $request->role_id,
+                'avatar' => $urlAvatar ?? $user->avatar
+            ]);
 
-        return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công');
- } catch (\Throwable $th) {
-    return back()->with('error', $th->getMessage());
- }
+            return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công');
+        } catch (\Throwable $th) {
+            return back()->with('error', $th->getMessage());
+        }
     }
 
     /**

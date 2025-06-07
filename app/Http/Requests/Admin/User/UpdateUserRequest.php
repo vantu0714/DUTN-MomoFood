@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\User;
 
+use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,6 +24,7 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         $userId = $this->route('id');
+        $roles = Role::query()->get()->pluck('id')->toArray();
         return [
             'name' => 'required|string|max:255',
             'email' => [
@@ -32,7 +34,10 @@ class UpdateUserRequest extends FormRequest
             ],
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
-            'role_id' => 'required|integer',
+            'role_id' => [
+                'required',
+                'in:' . implode(',', $roles),
+            ],        
         ];
     }
 

@@ -12,6 +12,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Họ tên</th>
+                        <th>Ảnh đại diện</th>
                         <th>Email</th>
                         <th>Vai trò</th>
                         <th>Ngày tạo</th>
@@ -24,6 +25,7 @@
                         <tr>
                             <td>{{ $user->id }}</td>
                             <td>{{ $user->name }}</td>
+                            <td><img src="{{ asset('storage/' . $user->avatar) }}" alt="avatar" width="100"></td>
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->role->name }}</td>
                             <td> {{ $user->created_at->format('d-m-Y') }}</td>
