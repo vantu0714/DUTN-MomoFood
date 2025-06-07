@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Role;
 use App\Models\User;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Contracts\Cache\Store;
+use App\Http\Requests\Admin\User\StoreUserRequest;
+use App\Http\Requests\Admin\User\UpdateUserRequest;
 
 class UserController extends Controller
 {
@@ -13,8 +18,8 @@ class UserController extends Controller
      */
     public function index()
     {
-            $users = User::all();
-            return view('admin.users.index', compact('users')); 
+        $users = User::all();
+        return view('admin.users.index', compact('users'));
     }
 
     /**
@@ -22,15 +27,27 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+        $roles = Role::all(); // Lấy tất cả vai trò
+        return view('admin.users.create', compact('roles'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        //
+        $request->validated();
+        // dd($$request);
+        $users = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'phone'    => $request->phone,
+            'address'  => $request->address,
+            'password' => Hash::make($request->password),
+            'role_id'  => $request->role_id,
+        ]);
+
+        return redirect()->route('users.index')->with('success', 'Đã thêm người dùng thành công');
     }
 
     /**
@@ -38,7 +55,10 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        //
+         $user = User::findOrFail($id);
+        $roles = Role::all();
+
+        return view('admin.users.show', compact('user', 'roles'));
     }
 
     /**
@@ -46,22 +66,44 @@ class UserController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $user = User::findOrFail($id);
+        $roles = Role::all();
+
+        return view('admin.users.edit', compact('user', 'roles'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateUserRequest $request, string $id)
     {
-        //
+ try {
+           $user = User::findOrFail($id);
+
+        $request->validated();
+
+        $user->update([
+            'name'    => $request->name,
+            'email'   => $request->email,
+            'phone'   => $request->phone,
+            'address' => $request->address,
+            'role_id' => $request->role_id,
+        ]);
+
+        return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công');
+ } catch (\Throwable $th) {
+    return back()->with('error', $th->getMessage());
+ }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return redirect()->route('users.index')->with('success', 'Đã xoá người dùng');
     }
 }
