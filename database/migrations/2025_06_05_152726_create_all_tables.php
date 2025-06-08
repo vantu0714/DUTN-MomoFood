@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('password');
             $table->foreignId('role_id')->constrained('roles');
+            $table->string('avatar')->nullable();
             $table->timestamps();
         });
 
