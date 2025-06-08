@@ -61,6 +61,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
 Route::prefix('promotions')->name('promotions.')->group(function () {
     Route::get('/', [PromotionController::class, 'index'])->name('index');
     Route::get('/create', [PromotionController::class, 'create'])->name('create');
+    Route::post('/store', [PromotionController::class, 'store'])->name('store');
 });
 //Auth
 Route::get('/login', [AuthController::class, 'index'])->name('login');

@@ -34,7 +34,21 @@ class PromotionController extends Controller
     public function store(Request $request)
     {
         //
+        $validated = $request->validate([
+            'promotion_name' => 'required|string|max:255',
+            'discount_type' => 'required|in:fixed,percent',
+            'discount_value' => 'required|numeric|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'description' => 'nullable|string',
+        ]);
+    
+        Promotion::create($validated);
+    
+        return redirect()->route('promotions.index')->with('success', 'Thêm mã giảm giá thành công!');
     }
+    
 
     /**
      * Display the specified resource.
