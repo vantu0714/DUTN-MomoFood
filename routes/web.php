@@ -39,10 +39,17 @@ Route::get('/admin/dashboard', function () {
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
-    // categories
-   Route::prefix('categories')->name('categories.')->group(function () {
-        Route::get('/', [CategoryController::class, 'index'])->name('index');
-    });
+   // categories
+    Route::prefix('categories')->name('categories.')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::get('/create', [CategoryController::class, 'create'])->name('create');
+    Route::get('/{category}/show', [CategoryController::class, 'show'])->name('show');
+    Route::post('/store', [CategoryController::class, 'store'])->name('store');
+    Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{category}', [CategoryController::class, 'update'])->name('update'); 
+    Route::delete('/{category}/destroy', [CategoryController::class, 'destroy'])->name('destroy');    
+});
+
     //comments
     Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
     Route::get('/comments/{id}', [CommentController::class, 'show'])->name('comments.show');
