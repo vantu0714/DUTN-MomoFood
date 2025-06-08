@@ -51,17 +51,21 @@ Route::get('/comments/{id}/edit', [CommentController::class, 'edit'])->name('com
 Route::put('/comments/{id}', [CommentController::class, 'update'])->name('comments.update');
 Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
+
+
+//Auth
+Route::get('/login', [AuthController::class, 'index'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
-   
 });
 
-// orders
+// promotions
 Route::prefix('promotions')->name('promotions.')->group(function () {
     Route::get('/', [PromotionController::class, 'index'])->name('index');
     Route::get('/create', [PromotionController::class, 'create'])->name('create');
     Route::post('/store', [PromotionController::class, 'store'])->name('store');
 });
-//Auth
-Route::get('/login', [AuthController::class, 'index'])->name('login');
+
