@@ -54,12 +54,16 @@
             </ul>
         </li>
         <li class>
-            <a href="Board.html" aria-expanded="false">
+            <a href="#" class="has-arrow" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/5.svg')}}" alt>
                 </div>
                 <span>Quản lí mã giảm giá</span>
             </a>
+            <ul>
+                <li><a href="{{ route('promotions.index')}}">Danh sách khuyen mai</a></li>
+                <li><a href="#">Thêm khuyen mai</a></li>
+            </ul>
         </li>
         <li class>
             <a href="#" class="has-arrow" aria-expanded="false">

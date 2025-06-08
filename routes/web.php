@@ -7,6 +7,7 @@ use App\Http\Controllers\clients\HomeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PromotionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,8 +30,6 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/admin/dashboard', function () {
     return view('admin.dashboard');
-
-
 });
 //users
 Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -44,20 +43,14 @@ Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.de
 // categories
 Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
-    Route::get('/create', [CategoryController::class, 'create'])->name('create');
-    Route::get('/{category}/show', [CategoryController::class, 'show'])->name('show');
-    Route::post('/store', [CategoryController::class, 'store'])->name('store');
-    Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
-    Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
-    Route::delete('/{category}/destroy', [CategoryController::class, 'destroy'])->name('destroy');
 });
-
 //comments
 Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
 Route::get('/comments/{id}', [CommentController::class, 'show'])->name('comments.show');
 Route::get('/comments/{id}/edit', [CommentController::class, 'edit'])->name('comments.edit');
 Route::put('/comments/{id}', [CommentController::class, 'update'])->name('comments.update');
 Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
 
 
 //Auth
@@ -68,3 +61,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
 });
+
+// promotions
+Route::prefix('promotions')->name('promotions.')->group(function () {
+    Route::get('/', [PromotionController::class, 'index'])->name('index');
+    Route::get('/create', [PromotionController::class, 'create'])->name('create');
+    Route::post('/store', [PromotionController::class, 'store'])->name('store');
+});
+
