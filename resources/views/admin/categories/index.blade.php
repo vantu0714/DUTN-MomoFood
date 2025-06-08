@@ -8,7 +8,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <a href="" class="btn btn-primary mb-3">
+    <a href="{{ route('categories.create') }}" class="btn btn-primary mb-3">
         <i class="fas fa-plus"></i> Thêm danh mục
     </a>
 
@@ -17,6 +17,7 @@
             <tr>
                 <th>ID</th>
                 <th>Tên danh mục</th>
+                <th>Danh mục cha</th> {{-- thêm dòng này --}}
                 <th>Mô tả</th>
                 <th>Trạng thái</th>
                 <th>Ngày tạo</th>
@@ -25,10 +26,11 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($categories as $cat)
+        @foreach ($categories as $cat)
                 <tr>
                     <td>{{ $cat->id }}</td>
                     <td>{{ $cat->category_name }}</td>
+                    <td>{{ $cat->parent ? $cat->parent->category_name : '---' }}</td> {{-- danh mục cha --}}
                     <td>{{ $cat->description }}</td>
                     <td>
                         <span class="badge bg-{{ $cat->status ? 'success' : 'secondary' }}">
@@ -38,8 +40,9 @@
                     <td>{{ $cat->created_at->format('d/m/Y') }}</td>
                     <td>{{ $cat->updated_at->format('d/m/Y') }}</td>
                     <td>
-                        <a href="" class="btn btn-sm btn-warning">Sửa</a>
-                        <form action="" method="POST" class="d-inline" onsubmit="return confirm('Xóa danh mục này?')">
+                        <a href="{{ route('categories.show', $cat->id) }}" class="btn btn-sm btn-info">Xem</a>
+                        <a href="{{ route('categories.edit', $cat->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                        <form action="{{ route('categories.destroy', $cat->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa danh mục này?')">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger">Xóa</button>
@@ -48,6 +51,7 @@
                 </tr>
             @endforeach
         </tbody>
+
     </table>
 
 </div>
