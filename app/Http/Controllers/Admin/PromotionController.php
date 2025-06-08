@@ -14,8 +14,9 @@ class PromotionController extends Controller
     public function index()
     {
         //
-        $promotions = Promotion::all();
-        return view('promotions.index', compact('promotions'));
+        $promotions = Promotion::orderBy('id', 'desc')->paginate(10); // ✅ đúng
+
+        return view('admin.promotions.index', compact('promotions'));
     }
 
     /**
@@ -24,7 +25,7 @@ class PromotionController extends Controller
     public function create()
     {
         //
-        return view('promotions.create');
+        return view('admin.promotions.create');
     }
 
     /**
