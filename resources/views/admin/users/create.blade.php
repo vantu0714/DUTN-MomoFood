@@ -4,7 +4,7 @@
     <div class="container mt-4">
         <h2>Thêm người dùng mới</h2>
 
-        <form action="{{ route('users.store') }}" method="POST">
+        <form action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <div class="mb-3">
@@ -22,7 +22,15 @@
                     {{ $message }}
                 @enderror
             </div>
-
+            <div class="col-md-12">
+                <label class="form-label">Avatar</label>
+                <input type="file" name="avatar" id="imageInput" accept="image/*" class="form-control">
+                <img class="mt-2" id="imagePreview"
+                        style="display: none; max-width: 100%; max-height: 300px;">
+                @error('avatar')
+                <span class="text-danger mt-2">{{ $message }}</span>
+                @enderror
+            </div>
             <div class="mb-3">
                 <label for="phone" class="form-label">Số điện thoại</label>
                 <input type="text" name="phone" class="form-control">
@@ -65,3 +73,19 @@
         </form>
     </div>
 @endsection
+@push('page-js')
+    <script>
+        document.getElementById('imageInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = reader.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+@endpush

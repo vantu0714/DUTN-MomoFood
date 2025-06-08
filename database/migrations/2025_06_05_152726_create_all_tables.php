@@ -23,15 +23,19 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('password');
             $table->foreignId('role_id')->constrained('roles');
+            $table->string('avatar')->nullable();
             $table->timestamps();
         });
 
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('category_name');
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->boolean('status');
             $table->text('description')->nullable();
             $table->timestamps();
+
+            $table->foreign('parent_id')->references('id')->on('categories')->onDelete('set null');
         });
 
         Schema::create('products', function (Blueprint $table) {

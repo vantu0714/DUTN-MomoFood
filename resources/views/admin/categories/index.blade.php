@@ -1,0 +1,58 @@
+@extends('admin.layouts.app') 
+
+@section('content')
+<div class="container mt-4">
+    <h2 class="mb-4">Quản lý danh mục</h2>
+
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    <a href="{{ route('categories.create') }}" class="btn btn-primary mb-3">
+        <i class="fas fa-plus"></i> Thêm danh mục
+    </a>
+
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Tên danh mục</th>
+                <th>Danh mục cha</th> {{-- thêm dòng này --}}
+                <th>Mô tả</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th>Cập nhật</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach ($categories as $cat)
+                <tr>
+                    <td>{{ $cat->id }}</td>
+                    <td>{{ $cat->category_name }}</td>
+                    <td>{{ $cat->parent ? $cat->parent->category_name : '---' }}</td> {{-- danh mục cha --}}
+                    <td>{{ $cat->description }}</td>
+                    <td>
+                        <span class="badge bg-{{ $cat->status ? 'success' : 'secondary' }}">
+                            {{ $cat->status ? 'Hiển thị' : 'Ẩn' }}
+                        </span>
+                    </td>
+                    <td>{{ $cat->created_at->format('d/m/Y') }}</td>
+                    <td>{{ $cat->updated_at->format('d/m/Y') }}</td>
+                    <td>
+                        <a href="{{ route('categories.show', $cat->id) }}" class="btn btn-sm btn-info">Xem</a>
+                        <a href="{{ route('categories.edit', $cat->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                        <form action="{{ route('categories.destroy', $cat->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa danh mục này?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+
+    </table>
+
+</div>
+@endsection
