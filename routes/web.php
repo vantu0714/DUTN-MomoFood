@@ -57,3 +57,4 @@ Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('co
 
 //Auth
 Route::get('/login', [AuthController::class, 'index'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
