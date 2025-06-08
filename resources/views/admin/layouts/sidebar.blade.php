@@ -23,29 +23,22 @@
             </a>
             <ul>
                 <li><a href="{{ route('users.index')}}">Danh sách người dùng</a></li>
-                <li><a href="">Thêm mới người dùng</a></li>
+                <li><a href="{{ route('users.create')}}">Thêm mới người dùng</a></li>
             </ul>
         </li>
         <li class>
             <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
-                    <img src="{{ asset('admins/assets/img/menu-icon/3.svg')}}" alt>
+                    <img src="{{ asset('admins/assets/img/menu-icon/3.svg') }}" alt>
                 </div>
                 <span>Quản lí danh mục</span>
             </a>
             <ul>
-                <li><a href="colors.html">colors</a></li>
-                <li><a href="Alerts.html">Alerts</a></li>
-                <li><a href="buttons.html">Buttons</a></li>
-                <li><a href="modal.html">modal</a></li>
-                <li><a href="dropdown.html">Droopdowns</a></li>
-                <li><a href="Badges.html">Badges</a></li>
-                <li><a href="Loading_Indicators.html">Loading Indicators</a></li>
-                <li><a href="State_color.html">State color</a></li>
-                <li><a href="typography.html">Typography</a></li>
-                <li><a href="datepicker.html">Date Picker</a></li>
+                <li><a href="{{ route('categories.index') }}">Danh sách danh mục</a></li>
+                <li><a href="">Thêm mới danh mục</a></li>
             </ul>
         </li>
+
         <li class>
             <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
@@ -69,12 +62,16 @@
             </a>
         </li>
         <li class>
-            <a href="invoice.html" aria-expanded="false">
+            <a href="#" class="has-arrow" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/6.svg')}}" alt>
                 </div>
                 <span>Quản lí đơn hàng</span>
             </a>
+            <ul>
+                <li><a href="{{ route('orders.index')}}">Danh sách đơn hàng</a></li>
+                <li><a href="#">Thêm đơn hàng</a></li>
+            </ul>
         </li>
         <li class>
             <a href="calender.html" aria-expanded="false">

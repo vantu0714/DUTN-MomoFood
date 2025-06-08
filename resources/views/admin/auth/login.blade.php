@@ -23,20 +23,22 @@
             <div class="white_box mb_30">
                 <div class="row justify-content-center">
                     <div class="col-lg-6">
-
                         <div class="modal-content cs_modal">
                             <div class="modal-header justify-content-center theme_bg_1">
                                 <h5 class="modal-title text_white">Log in</h5>
                             </div>
                             <div class="modal-body">
-                                <form>
+                                <form method="POST" action="{{ route('login') }}">
+                                    @csrf
                                     <div class>
-                                        <input type="text" class="form-control" placeholder="Enter your email">
+                                        <input type="email" name="email" class="form-control"
+                                            placeholder="Enter your email" required>
                                     </div>
                                     <div class>
-                                        <input type="password" class="form-control" placeholder="Password">
+                                        <input type="password" name="password" class="form-control" placeholder="Password"
+                                            required>
                                     </div>
-                                    <a href="#" class="btn_1 full_width text-center">Log in</a>
+                                    <button type="submit" class="btn_1 full_width text-center">Log in</button>
                                     <p>Need an account? <a data-bs-toggle="modal" data-bs-target="#sing_up"
                                             data-bs-dismiss="modal" href="#"> Sign Up</a></p>
                                     <div class="text-center">
