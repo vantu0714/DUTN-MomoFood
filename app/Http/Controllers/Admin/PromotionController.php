@@ -57,6 +57,8 @@ class PromotionController extends Controller
     public function show(string $id)
     {
         //
+        $promotion = Promotion::findOrFail($id);
+        return view('admin.promotions.show', compact('promotion'));
     }
 
     /**
