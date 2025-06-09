@@ -28,8 +28,12 @@
                             <td>{{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}</td>
                             <td>
                                 <a href="#" class="btn btn-info btn-sm">Xem</a>
-                                <a href="{{route('promotions.edit')}}" class="btn btn-warning btn-sm">Sửa</a>
-                               
+                                <a href="{{route('promotions.edit', $promotion->id)}}" class="btn btn-warning btn-sm">Sửa</a>
+                                <form action="{{ route('promotions.destroy', $promotion->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xoá không?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
+                                </form>
                             </td>
                         </tr>
                     @empty
