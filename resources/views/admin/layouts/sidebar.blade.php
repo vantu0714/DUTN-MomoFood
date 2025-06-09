@@ -61,8 +61,8 @@
                 <span>Quản lí mã giảm giá</span>
             </a>
             <ul>
-                <li><a href="{{ route('promotions.index')}}">Danh sách khuyen mai</a></li>
-                <li><a href="#">Thêm khuyen mai</a></li>
+                <li><a href="{{ route('promotions.index')}}">Danh sách mã giảm giá</a></li>
+                <li><a href="{{route('promotions.create')}}">Thêm mã giảm giá</a></li>
             </ul>
         </li>
         <li class>

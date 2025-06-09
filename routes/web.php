@@ -69,6 +69,7 @@ Route::prefix('promotions')->name('promotions.')->group(function () {
     Route::get('/', [PromotionController::class, 'index'])->name('index');
     Route::get('/create', [PromotionController::class, 'create'])->name('create');
     Route::post('/store', [PromotionController::class, 'store'])->name('store');
+    Route::get('/{id}show', [PromotionController::class, 'show'])->name('show');
     Route::get('/{id}/edit', [PromotionController::class, 'edit'])->name('edit');
     Route::put('/{id}', [PromotionController::class, 'update'])->name('update');
     Route::delete('/{id}', [PromotionController::class, 'destroy'])->name('destroy');
