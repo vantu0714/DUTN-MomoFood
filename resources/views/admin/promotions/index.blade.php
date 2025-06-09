@@ -28,7 +28,7 @@
                             <td>{{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}</td>
                             <td>
                                 <a href="#" class="btn btn-info btn-sm">Xem</a>
-                                <a href="#" class="btn btn-warning btn-sm">Sửa</a>
+                                <a href="{{route('promotions.edit')}}" class="btn btn-warning btn-sm">Sửa</a>
                                
                             </td>
                         </tr>
