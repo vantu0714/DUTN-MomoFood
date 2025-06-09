@@ -69,5 +69,8 @@ Route::prefix('promotions')->name('promotions.')->group(function () {
     Route::get('/', [PromotionController::class, 'index'])->name('index');
     Route::get('/create', [PromotionController::class, 'create'])->name('create');
     Route::post('/store', [PromotionController::class, 'store'])->name('store');
+    Route::get('/edit', [PromotionController::class, 'edit'])->name('edit');
+    Route::put('/update', [PromotionController::class, 'update'])->name('update');
+    Route::delete('/delete', [PromotionController::class, 'delete'])->name('delete');
 });
 
