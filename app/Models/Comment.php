@@ -12,7 +12,7 @@ class Comment extends Model
         'user_id',
         'product_id',
         'content',
-        'status',
+        'created_at 	',
     ];
 
     // Quan hệ với User
