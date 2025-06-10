@@ -38,8 +38,17 @@ class UserController extends Controller
     {
         $request->validated();
         // dd($$request);
+        $urlAvatar = null;
+
         if ($request->hasFile('avatar')) {
-            $urlAvatar = $request->file('avatar')->store('avatar');
+            $file = $request->file('avatar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+
+            // Lưu vào storage/app/public/avatar
+            $file->storeAs('public/avatar', $filename);
+
+            // Đường dẫn lưu trong database: public/storage/avatar/filename
+            $urlAvatar = 'avatar/' . $filename;
         }
 
         $users = User::create([
@@ -49,7 +58,7 @@ class UserController extends Controller
             'address' => $request->address,
             'password' => Hash::make($request->password),
             'role_id' => $request->role_id,
-            'avatar' => $urlAvatar ?? null,
+            'avatar' => $urlAvatar,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Đã thêm người dùng thành công');
@@ -84,12 +93,20 @@ class UserController extends Controller
     {
         try {
             $user = User::findOrFail($id);
-
             $request->validated();
-            
-                    if ($request->hasFile('avatar')) {
-            $urlAvatar = $request->file('avatar')->store('avatar');
-        }
+
+            $urlAvatar = $user->avatar; // mặc định giữ nguyên avatar cũ
+
+            if ($request->hasFile('avatar')) {
+                $file = $request->file('avatar');
+                $filename = time() . '_' . $file->getClientOriginalName();
+
+                // Lưu vào storage/app/public/avatar
+                $file->storeAs('public/avatar', $filename);
+
+                // Cập nhật đường dẫn avatar
+                $urlAvatar = 'avatar/' . $filename;
+            }
 
             $user->update([
                 'name' => $request->name,
@@ -97,7 +114,7 @@ class UserController extends Controller
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'role_id' => $request->role_id,
-                'avatar' => $urlAvatar ?? $user->avatar
+                'avatar' => $urlAvatar,
             ]);
 
             return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công');
@@ -105,6 +122,7 @@ class UserController extends Controller
             return back()->with('error', $th->getMessage());
         }
     }
+
 
     /**
      * Remove the specified resource from storage.
