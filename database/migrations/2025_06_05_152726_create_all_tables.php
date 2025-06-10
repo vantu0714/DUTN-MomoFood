@@ -27,33 +27,30 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Schema::create('categories', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('category_name');
-        //     $table->unsignedBigInteger('parent_id')->nullable();
-        //     $table->boolean('status');
-        //     $table->text('description')->nullable();
-        //     $table->timestamps();
+        Schema::create('categories', function (Blueprint $table) {
+            $table->id();
+            $table->string('category_name');
+            $table->boolean('status');
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
 
-        //     $table->foreign('parent_id')->references('id')->on('categories')->onDelete('set null');
-        // });
-
-        // Schema::create('products', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('product_code');
-        //     $table->string('product_name');
-        //     $table->string('image');
-        //     $table->text('description')->nullable();
-        //     $table->text('ingredients')->nullable();
-        //     $table->date('expiration_date')->nullable();
-        //     $table->decimal('original_price', 10, 2);
-        //     $table->decimal('discounted_price', 10, 2);
-        //     $table->boolean('status')->default(1);
-        //     $table->integer('view')->default(0);
-        //     $table->boolean('is_show_home')->default(0);
-        //     $table->foreignId('category_id')->constrained('categories');
-        //     $table->timestamps();
-        // });
+        Schema::create('products', function (Blueprint $table) {
+            $table->id();
+            $table->string('product_code');
+            $table->string('product_name');
+            $table->string('image');
+            $table->text('description')->nullable();
+            $table->text('ingredients')->nullable();
+            $table->date('expiration_date')->nullable();
+            $table->decimal('original_price', 10, 2);
+            $table->decimal('discounted_price', 10, 2);
+            $table->boolean('status')->default(1);
+            $table->integer('view')->default(0);
+            $table->boolean('is_show_home')->default(0);
+            $table->foreignId('category_id')->constrained('categories');
+            $table->timestamps();
+        });
 
         Schema::create('product_variant', function (Blueprint $table) {
             $table->id();
