@@ -52,6 +52,19 @@
                 <li><a href="Max_Length.html">Sửa</a></li>
             </ul>
         </li>
+         <li class>
+            <a class="has-arrow" href="#" aria-expanded="false">
+                <div class="icon_menu">
+                    <img src="{{ asset('admins/assets/img/menu-icon/4.svg')}}" alt>
+                </div>
+                <span>Quản lí biến thể  </span>
+            </a>
+            <ul>
+                <li><a href="{{ route('admin.product_variants.index') }}">Danh sách biến thể</a></li>
+                <li><a href="Groups.html">Thêm</a></li>
+                <li><a href="Max_Length.html">Sửa</a></li>
+            </ul>
+        </li>
         <li class>
             <a href="#" class="has-arrow" aria-expanded="false">
                 <div class="icon_menu">

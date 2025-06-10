@@ -56,4 +56,10 @@ class Product extends Model
         // Điều này giúp bạn dễ dàng hiển thị đúng trạng thái trong Blade
         return $this->status; // Trả về trực tiếp giá trị từ cột 'status'
     }
+    public function index()
+    {
+        $variants = ProductVariant::all(); // or your appropriate model/query
+
+        return view('admin.product_variants.index', compact('variants'));
+    }
 }

@@ -37,7 +37,7 @@ class ProductController extends Controller
         $outOfStockProductsCount = Product::where('status', 'Hết hàng')->count();
 
           
-        $products = $query->withQueryString()->paginate(10);
+        $products = $query->paginate(10);
 
         $categories = Category::all();
 

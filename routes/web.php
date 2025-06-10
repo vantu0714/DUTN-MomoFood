@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
 
 /*
@@ -92,3 +93,15 @@ Route::prefix('promotions')->name('promotions.')->group(function () {
     Route::delete('/{id}', [PromotionController::class, 'destroy'])->name('destroy');
 });
 
+
+//product_variants
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('product-variants')->name('product_variants.')->group(function () {
+        Route::get('/', [ProductVariantController::class, 'index'])->name('index');
+        Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
+        Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
+        Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
+        Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
+        Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
+    });
+});
