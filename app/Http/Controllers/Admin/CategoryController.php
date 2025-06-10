@@ -24,7 +24,6 @@ class CategoryController extends Controller
     {
         $request->validate([
             'category_name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id',
             'status' => 'required|boolean',
             'description' => 'nullable|string',
         ]);
@@ -33,6 +32,14 @@ class CategoryController extends Controller
 
         return redirect()->route('categories.index')->with('success', 'Thêm danh mục thành công!');
     }
+
+    public function show(string $id)
+    {
+        //
+        $categories = Category::findOrFail($id);
+        return view('admin.categories.show', compact('categories'));
+    }
+
 
     public function edit(Category $category)
     {
@@ -46,7 +53,6 @@ class CategoryController extends Controller
     {
         $request->validate([
             'category_name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id|not_in:' . $category->id,
             'status' => 'required|boolean',
             'description' => 'nullable|string',
         ]);
