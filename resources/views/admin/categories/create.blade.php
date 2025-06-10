@@ -15,19 +15,6 @@
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
-           
-            <div class="mb-3">
-                <label for="parent_id" class="form-label">Danh mục cha (nếu có)</label>
-                <select name="parent_id" class="form-control">
-                    <option value="">-- Không có --</option>
-                    @foreach ($categories as $cat)
-                        <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
-                    @endforeach
-                </select>
-                @error('parent_id')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
 
             <div class="mb-3">
                 <label for="status" class="form-label">Trạng thái</label>
