@@ -21,7 +21,19 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/');
+
+            $user = Auth::user();
+
+            if ($user->role && $user->role->name === 'admin') {
+                return redirect()->intended('/admin/dashboard');
+            } elseif ($user->role && $user->role->name === 'user') {
+                return redirect()->intended('/');
+            } else {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Tài khoản không có quyền truy cập hợp lệ.',
+                ]);
+            }
         }
 
         return back()->withErrors([
