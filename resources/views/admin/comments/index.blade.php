@@ -22,24 +22,24 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($Comments as $Comment)
+                @forelse ($comments as $comment)
                 <tr>
-                    <td>{{ $Comment->id }}</td>
-                    <td>{{ $Comment->user->name ?? 'Ẩn danh' }}</td>
-                    <td>{{ Str::limit($Comment->content, 50) }}</td>
-                    <td>{{ $Comment->product->name ?? 'Không xác định' }}</td>
+                    <td>{{ $comment->id }}</td>
+                    <td>{{ $comment->user->name ?? 'Ẩn danh' }}</td>
+                    <td>{{ Str::limit($comment->content, 50) }}</td>
+                    <td>{{ $comment->product->name ?? 'Không xác định' }}</td>
                     <td>
-                        @if($Comment->status == 1)
+                        @if($comment->status == 1)
                             <span class="badge bg-success">Đã duyệt</span>
                         @else
                             <span class="badge bg-secondary">Chờ duyệt</span>
                         @endif
                     </td>
-                    <td>{{ $Comment->created_at->format('d/m/Y H:i') }}</td>
+                    <td>{{ $comment->created_at->format('d/m/Y H:i') }}</td>
                     <td>
-                        <a href="{{ route('Comments.edit', $Comment->id) }}" class="btn btn-sm btn-warning">Sửa</a>
-                        <a href="{{ route('Comments.show', $Comment->id) }}" class="btn btn-sm btn-info">Xem</a>
-                        <form action="{{ route('Comments.destroy', $Comment->id) }}" method="POST" style="display:inline;">
+                        <a href="{{ route('comments.edit', $comment->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                        <a href="{{ route('comments.show', $comment->id) }}" class="btn btn-sm btn-info">Xem</a>
+                        <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger" onclick="return confirm('Xoá bình luận này?')">Xoá</button>
