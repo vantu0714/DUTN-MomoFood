@@ -78,6 +78,7 @@ Route::post('/register', [AuthController::class, 'register']);
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
+    Route::get('/create', [OrderController::class, 'create'])->name('create');
 });
 
 // promotions
