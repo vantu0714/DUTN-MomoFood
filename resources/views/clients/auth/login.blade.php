@@ -1,6 +1,5 @@
-{{-- @extends('clients.layouts.app') --}}
 @include('clients.layouts.header')
-{{-- @section('content') --}}
+
 <div class="row justify-content-center">
     <div class="col-lg-12">
         <div class="white_box mb-5">
@@ -17,11 +16,17 @@
                                     <label for="email" class="form-label">Email Address</label>
                                     <input type="email" id="email" name="email" class="form-control"
                                         placeholder="Enter your email" required>
+                                    @error('email')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Password</label>
                                     <input type="password" id="password" name="password" class="form-control"
                                         placeholder="Enter your password" required>
+                                    @error('password')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 <button type="submit" class="btn_1 full_width text-center mb-3">Log in</button>
                                 <div class="text-center">
@@ -41,4 +46,3 @@
         </div>
     </div>
 </div>
-{{-- @endsection --}}
