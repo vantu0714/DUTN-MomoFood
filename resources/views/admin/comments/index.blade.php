@@ -22,7 +22,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($comments as $comment)
+                {{-- @forelse ($comments as $comment)
                 <tr>
                     <td>{{ $comment->id }}</td>
                     <td>{{ $comment->user->name ?? 'Ẩn danh' }}</td>
@@ -50,7 +50,7 @@
                 <tr>
                     <td colspan="7" class="text-center">Không có bình luận nào</td>
                 </tr>
-                @endforelse
+                @endforelse --}}
             </tbody>
         </table>
     </div>
