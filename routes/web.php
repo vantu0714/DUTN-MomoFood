@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\clients\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\clients\HomeController;
 use App\Http\Controllers\Admin\UserController;
@@ -44,6 +44,13 @@ Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.de
 // categories
 Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
+
+    Route::get('/create', [CategoryController::class, 'create'])->name('create');
+    Route::get('/{category}/show', [CategoryController::class, 'show'])->name('show');
+    Route::post('/store', [CategoryController::class, 'store'])->name('store');
+    Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{category}', [CategoryController::class, 'update'])->name('update'); 
+    Route::delete('/{category}/destroy', [CategoryController::class, 'destroy'])->name('destroy');
 });
 //product
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -65,10 +72,13 @@ Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('co
 //Auth
 Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
 
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
+    Route::get('/create', [OrderController::class, 'create'])->name('create');
 });
 
 // promotions
@@ -76,5 +86,9 @@ Route::prefix('promotions')->name('promotions.')->group(function () {
     Route::get('/', [PromotionController::class, 'index'])->name('index');
     Route::get('/create', [PromotionController::class, 'create'])->name('create');
     Route::post('/store', [PromotionController::class, 'store'])->name('store');
+    Route::get('/{id}show', [PromotionController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [PromotionController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [PromotionController::class, 'update'])->name('update');
+    Route::delete('/{id}', [PromotionController::class, 'destroy'])->name('destroy');
 });
 

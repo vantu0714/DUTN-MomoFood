@@ -4,7 +4,7 @@
     <div class="container mt-4">
         <h2 class="mb-4">Danh sách đơn hàng</h2>
 
-        <a href="#" class="btn btn-primary mb-3">Thêm đơn hàng</a>
+        <a href="{{route('orders.create')}}" class="btn btn-primary mb-3">Thêm đơn hàng</a>
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover table-striped">
@@ -49,4 +49,3 @@
         </div>
     </div>
 @endsection
-
