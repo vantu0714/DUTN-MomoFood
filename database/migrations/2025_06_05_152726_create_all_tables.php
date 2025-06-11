@@ -52,7 +52,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('product_variant', function (Blueprint $table) {
+        Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products');
             $table->string('name');
