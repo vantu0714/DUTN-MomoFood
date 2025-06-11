@@ -10,10 +10,9 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::with('parent')->get();
+        $categories = Category::all();
         return view('admin.categories.index', compact('categories'));
     }
-
     public function create()
     {
         $categories = Category::all(); 
@@ -63,17 +62,14 @@ class CategoryController extends Controller
     }
 
     public function destroy(Category $category)
-    {
-        // Kiểm tra xem danh mục có con hay không
-        if ($category->children()->count() > 0) {
-            return redirect()->route('categories.index')->with('error', 'Không thể xóa danh mục có danh mục con.');
-        }
-
-        $category->delete();
-
-        return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
+{
+    if ($category->products()->count() > 0) {
+        return redirect()->route('categories.index')->with('error', 'Không thể xóa danh mục vì đang có sản phẩm liên kết.');
     }
 
+    $category->delete();
 
+    return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
+}
 
 }
