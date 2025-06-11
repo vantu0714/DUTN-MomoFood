@@ -61,18 +61,17 @@
                             style="top: -5px; left: 15px; height: 20px; min-width: 20px;">3</span>
                     </a>
                     <div class="dropdown dropdown-hover position-relative d-flex align-items-center">
-                        <a href="#" class="dropdown-toggle d-flex align-items-center" id="userDropdown"
+                        <a href="/login" class="dropdown-toggle d-flex align-items-center" id="userDropdown"
                             role="button">
                             <i class="fas fa-user fa-2x"></i>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="userDropdown" style="top: 100%; left: 0;">
-                            <li><a class="dropdown-item" href="#">Trang cá nhân</a></li>
-                            <li><a class="dropdown-item" href="#">Cài đặt</a></li>
+                            <li><a class="dropdown-item" href="#">Thông tin cá nhân</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
-                                <a class="dropdown-item" href="#"
+                                <a class="dropdown-item" href="/logout"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     Đăng xuất
                                 </a>
