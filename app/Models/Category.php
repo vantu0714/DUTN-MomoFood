@@ -29,4 +29,6 @@ class Category extends Model
     {
         return $this->hasMany(Product::class); // Một Category có nhiều Product
     }
+    
     }
+  

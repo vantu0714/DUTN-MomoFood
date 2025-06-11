@@ -39,7 +39,7 @@ return new class extends Migration
             $table->id();
             $table->string('product_code');
             $table->string('product_name');
-            $table->string('image');
+            $table->string('image')->nullable();
             $table->text('description')->nullable();
             $table->text('ingredients')->nullable();
             $table->date('expiration_date')->nullable();
