@@ -29,10 +29,12 @@ use App\Http\Controllers\Admin\PromotionController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 
-
-Route::get('/admin/dashboard', function () {
-    return view('admin.dashboard');
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/dashboard', function () {
+        return view('admin.dashboard');
+    });
 });
+
 //users
 Route::get('/users', [UserController::class, 'index'])->name('users.index');
 Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
