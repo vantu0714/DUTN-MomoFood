@@ -22,7 +22,8 @@ class Product extends Model
         'status', // Cột này sẽ dùng để kiểm tra trạng thái "Còn hàng" / "Hết hàng"
         'view',
         'is_show_home',
-        'category_id'
+        'category_id',
+        'quantity', 
     ];
 
     /**
@@ -56,10 +57,9 @@ class Product extends Model
         // Điều này giúp bạn dễ dàng hiển thị đúng trạng thái trong Blade
         return $this->status; // Trả về trực tiếp giá trị từ cột 'status'
     }
-    public function index()
+    public function variants()
     {
-        $variants = ProductVariant::all(); // or your appropriate model/query
-
-        return view('admin.product_variants.index', compact('variants'));
+        return $this->hasMany(ProductVariant::class);
     }
+    
 }

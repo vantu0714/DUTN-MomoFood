@@ -16,7 +16,7 @@
                     <i class="fas fa-download me-1"></i>
                     Xuất Excel
                 </button>
-                <a href="" class="btn btn-primary btn-sm shadow">
+                <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm shadow">
                     <i class="fas fa-plus me-1"></i>
                     Thêm sản phẩm
                 </a>
@@ -107,46 +107,51 @@
         <!-- Filter & Search Section -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Tìm kiếm sản phẩm</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="fas fa-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0" placeholder="Nhập tên sản phẩm...">
+                <form method="GET" action="{{ route('products.index') }}">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Tìm kiếm sản phẩm</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" name="search" class="form-control border-start-0"
+                                    placeholder="Nhập tên sản phẩm..." value="{{ request('search') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Danh mục</label>
+                            <select class="form-select" name="category_id">
+                                <option value="" style="font-weight: bold;">Tất cả danh mục</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}"
+                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Trạng thái</label>
+                            <select class="form-select" name="status">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="Còn hàng" {{ request('status') == 'Còn hàng' ? 'selected' : '' }}>Còn hàng
+                                </option>
+                                <option value="Hết hàng" {{ request('status') == 'Hết hàng' ? 'selected' : '' }}>Hết hàng
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter me-1"></i>
+                                    Lọc
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Danh mục</label>
-                        <select class="form-select" name="category_id">
-                            <option value="" style="font-weight: bold;">Tất cả danh mục</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Trạng thái</label>
-                        <select class="form-select" name="status" onchange="this.form.submit()">
-                            <option value="">Tất cả trạng thái</option>
-                            {{-- Kiểm tra giá trị 'status' từ request và chọn option tương ứng --}}
-                            <option value="Còn hàng" {{ request('status') == 'Còn hàng' ? 'selected' : '' }}>Còn hàng
-                            </option>
-                            <option value="Hết hàng" {{ request('status') == 'Hết hàng' ? 'selected' : '' }}>Hết hàng
-                            </option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-grid">
-                            <button class="btn btn-primary">
-                                <i class="fas fa-filter me-1"></i>
-                                Lọc
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
 
@@ -172,12 +177,13 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="border-0 fw-semibold text-dark">
-                                    <input type="checkbox" class="form-check-input">
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
                                 </th>
                                 <th class="border-0 fw-semibold text-dark">ID</th>
                                 <th class="border-0 fw-semibold text-dark">Ảnh</th>
                                 <th class="border-0 fw-semibold text-dark">Tên sản phẩm</th>
                                 <th class="border-0 fw-semibold text-dark">Danh mục</th>
+                                <th class="border-0 fw-semibold text-dark">Số lượng</th>
                                 <th class="border-0 fw-semibold text-dark">Giá gốc</th>
                                 <th class="border-0 fw-semibold text-dark">Giá khuyến mãi</th>
                                 <th class="border-0 fw-semibold text-dark">Trạng thái</th>
@@ -190,14 +196,15 @@
                             @foreach ($products as $item)
                                 <tr class="align-middle">
                                     <td>
-                                        <input type="checkbox" class="form-check-input" value="{{ $item->id }}">
+                                        <input type="checkbox" class="form-check-input item-checkbox"
+                                            value="{{ $item->id }}">
                                     </td>
                                     <td>
                                         <span class="badge bg-light text-dark">#{{ $item->id }}</span>
                                     </td>
                                     <td>
                                         <div class="text-center">
-                                            <img src="{{ asset('storage') . '/' . $item->image }}"
+                                            <img src="{{ asset('storage/' . $item->image) }}"
                                                 class="rounded shadow-sm" width="60" height="60"
                                                 style="object-fit: cover;" alt="Product Image">
                                         </div>
@@ -222,6 +229,18 @@
                                             class="category-badge fw-bold text-primary border border-primary rounded px-3 py-1">
                                             {{ $item->category->category_name }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <span class="quantity-badge fw-bold 
+                                                @if($item->quantity <= 10) text-danger border-danger
+                                                @elseif($item->quantity <= 50) text-warning border-warning
+                                                @else text-success border-success
+                                                @endif border rounded px-3 py-1">
+                                                <i class="fas fa-cubes me-1"></i>
+                                                {{ number_format($item->quantity) }}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="fw-semibold">{{ number_format($item->original_price) }}đ</span>
@@ -262,54 +281,22 @@
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-1">
-                                            <a href="" class="btn btn-sm btn-outline-info"
-                                                data-bs-toggle="tooltip" title="Xem chi tiết">
+                                            <a href="{{ route('products.show', $item->id) }}"
+                                                class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip"
+                                                title="Xem chi tiết">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="" class="btn btn-sm btn-outline-warning"
-                                                data-bs-toggle="tooltip" title="Chỉnh sửa">
+                                            <a href="{{ route('products.edit', $item->id) }}"
+                                                class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip"
+                                                title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                data-bs-toggle="modal" data-bs-target="#deleteModal{{ $item->id }}"
-                                                data-bs-toggle="tooltip" title="Xóa">
+                                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
+                                                data-product-id="{{ $item->id }}"
+                                                data-product-name="{{ $item->product_name }}" data-bs-toggle="tooltip"
+                                                title="Xóa">
                                                 <i class="fas fa-trash"></i>
                                             </button>
-                                        </div>
-
-                                        <!-- Delete Modal -->
-                                        <div class="modal fade" id="deleteModal{{ $item->id }}" tabindex="-1">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content border-0 shadow">
-                                                    <div class="modal-header border-0 pb-0">
-                                                        <h5 class="modal-title text-danger">
-                                                            <i class="fas fa-exclamation-triangle me-2"></i>
-                                                            Xác nhận xóa
-                                                        </h5>
-                                                        <button type="button" class="btn-close"
-                                                            data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <p class="mb-0">Bạn có chắc chắn muốn xóa sản phẩm
-                                                            <strong>"{{ $item->product_name }}"</strong>?
-                                                        </p>
-                                                        <p class="text-muted small mb-0">Hành động này không thể hoàn tác.
-                                                        </p>
-                                                    </div>
-                                                    <div class="modal-footer border-0 pt-0">
-                                                        <button type="button" class="btn btn-secondary btn-sm"
-                                                            data-bs-dismiss="modal">Hủy</button>
-                                                        <form action="" method="POST" class="d-inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                                <i class="fas fa-trash me-1"></i>
-                                                                Xóa
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -324,13 +311,44 @@
                         Hiển thị {{ $products->count() }} sản phẩm
                     </div>
                     <nav>
-                        <!-- Pagination links here -->
                         {{-- {{ $products->links() }} --}}
                     </nav>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Single Delete Modal -->
+    <!-- Modal xác nhận xoá dùng chung -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-danger" id="deleteModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Xác nhận xóa
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">
+                        Bạn có chắc chắn muốn xóa sản phẩm <strong id="productName"></strong>?
+                    </p>
+                    <p class="text-muted small mb-0">Hành động này không thể hoàn tác.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                    <form id="deleteForm" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash me-1"></i> Xóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <style>
         .card {
@@ -372,6 +390,31 @@
             text-align: center;
         }
 
+        /* Cải thiện hiển thị số lượng */
+        .quantity-badge {
+            font-size: 0.875rem;
+            font-weight: 700 !important;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            display: inline-block;
+            min-width: 70px;
+            text-align: center;
+            border-width: 1.5px !important;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .quantity-badge.text-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .quantity-badge.text-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+
+        .quantity-badge.text-success {
+            background-color: rgba(25, 135, 84, 0.1);
+        }
+
         /* Cải thiện hiển thị trạng thái */
         .status-badge {
             font-size: 0.875rem;
@@ -398,10 +441,26 @@
         }
 
         /* Hover effects cho badges */
-        .category-badge:hover {
-            background-color: rgba(13, 110, 253, 0.2);
+        .category-badge:hover,
+        .quantity-badge:hover {
             transform: scale(1.02);
             transition: all 0.2s ease;
+        }
+
+        .category-badge:hover {
+            background-color: rgba(13, 110, 253, 0.2);
+        }
+
+        .quantity-badge.text-danger:hover {
+            background-color: rgba(220, 53, 69, 0.2);
+        }
+
+        .quantity-badge.text-warning:hover {
+            background-color: rgba(255, 193, 7, 0.2);
+        }
+
+        .quantity-badge.text-success:hover {
+            background-color: rgba(25, 135, 84, 0.2);
         }
 
         .status-badge:hover {
@@ -431,9 +490,10 @@
             }
 
             .category-badge,
+            .quantity-badge,
             .status-badge {
                 font-size: 0.75rem;
-                min-width: 70px;
+                min-width: 60px;
                 padding: 0.25rem 0.5rem;
             }
         }
@@ -441,17 +501,44 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
-            const selectAllCheckbox = document.querySelector('thead input[type="checkbox"]');
-            const itemCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+            // Select all checkbox functionality
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
 
-            selectAllCheckbox?.addEventListener('change', function() {
-                itemCheckboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    itemCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                });
+            }
+
+            // Delete functionality
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            const deleteModal = document.getElementById('deleteModal');
+            const deleteForm = document.getElementById('deleteForm');
+            const productNameSpan = document.getElementById('productName');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    const productName = this.getAttribute('data-product-name');
+
+                    // Set product name in modal
+                    productNameSpan.textContent = `"${productName}"`;
+
+                    // Set form action
+                    deleteForm.action = `{{ route('products.destroy', '') }}/${productId}`;
+
+                    // Show modal
+                    const modal = new bootstrap.Modal(deleteModal);
+                    modal.show();
                 });
             });
         });
