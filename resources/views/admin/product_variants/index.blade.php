@@ -163,8 +163,8 @@
                                             <i class="fas fa-cube text-primary"></i>
                                         </div>
                                         <div>
-                                            <div class="fw-semibold text-dark">{{ $variant->product->name }}</div>
-                                            <small class="text-muted">Mã: #{{ $variant->product->id }}</small>
+                                            <div class="fw-semibold text-dark">{{ $variant->product->product_name }}</div>
+            
                                         </div>
                                     </div>
                                 </td>

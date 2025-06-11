@@ -10,8 +10,7 @@
 
             <div class="mb-3">
                 <label for="name" class="form-label">Tên biến thể</label>
-                <input type="text" name="name" class="form-control"
-                    value="{{ old('name', $product_variant->name) }}">
+                <input type="text" name="name" class="form-control" value="{{ old('name', $product_variant->name) }}">
                 @error('name')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
@@ -37,9 +36,22 @@
 
             <div class="mb-3">
                 <label for="sku" class="form-label">SKU</label>
-                <input type="text" name="sku" class="form-control"
-                    value="{{ old('sku', $product_variant->sku) }}">
+                <input type="text" name="sku" class="form-control" value="{{ old('sku', $product_variant->sku) }}">
                 @error('sku')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="mb-3">
+                <label for="product_id" class="form-label">Sản phẩm</label>
+                <select name="product_id" class="form-control">
+                    @foreach ($products as $product)
+                        <option value="{{ $product->id }}"
+                            {{ $product_variant->product_id == $product->id ? 'selected' : '' }}>
+                            {{ $product->product_name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('product_id')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>

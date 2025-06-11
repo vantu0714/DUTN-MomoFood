@@ -43,8 +43,9 @@
             <div class="mb-3">
                 <label for="product_id" class="form-label">Sản phẩm cha</label>
                 <select name="product_id" class="form-control">
-                    @foreach($products as $product)
-                        <option value="{{ $product->id }}">{{ $product->name }}</option>
+                    <option value="">-- Chọn sản phẩm --</option>
+                    @foreach ($products as $product)
+                       <option value="{{ $product->id }}">{{ $product->product_name }}</option>
                     @endforeach
                 </select>
                 @error('product_id')
@@ -64,7 +65,8 @@
             </div>
 
             <button type="submit" class="btn btn-success">Lưu</button>
-            <<a href="{{ route('admin.product_variants.index') }}" class="btn btn-secondary">Huỷ</a>
+            <a href="{{ route('admin.product_variants.index') }}" class="btn btn-secondary">Huỷ</a>
+
 
         </form>
     </div>
