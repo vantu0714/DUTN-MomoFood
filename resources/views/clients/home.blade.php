@@ -1,3 +1,4 @@
+@include('clients.layouts.header')
 @include('clients.layouts.sidebar')
 
 <!-- Spinner Start -->
@@ -394,7 +395,7 @@
                                         <div class="fruite-img">
 
                                             <img src="{{ asset('clients/img/vegetable-item-4.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
-                                            
+
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
                                             style="top: 10px; left: 10px;">Fruits</div>
@@ -1144,7 +1145,7 @@
             </div>
             <div class="col-md-6 col-lg-6 col-xl-3">
                 <div class="text-center">
-                
+
                     <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded" alt="">
                     <div class="py-2">
                         <a href="#" class="h5">Organic Tomato</a>

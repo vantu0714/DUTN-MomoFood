@@ -179,6 +179,16 @@
 #searchModal .modal-content {
     background: rgba(255, 255, 255, .8);
 }
+
+.dropdown-hover .dropdown-menu {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+}
+
+.dropdown-hover:hover .dropdown-menu {
+    display: block;
+}
 /*** Navbar End ***/
 
 /*** Hero Header ***/
