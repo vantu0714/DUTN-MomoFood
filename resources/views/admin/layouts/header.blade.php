@@ -70,13 +70,13 @@
                                     <a class="bell_notification_clicker nav-link-notify" href="#"> <img
                                             src="{{ asset('admins/assets/img/icon/bell.svg')}}" alt>
                                     </a>
-    
+
                                     <div class="Menu_NOtification_Wrap">
                                         <div class="notification_Header">
                                             <h4>Notifications</h4>
                                         </div>
                                         <div class="Notification_body">
-    
+
                                             <div class="single_notify d-flex align-items-center">
                                                 <div class="notify_thumb">
                                                     <a href="#"><img src="{{ asset('admins/assets/img/staf/2.png')}}" alt></a>
@@ -88,7 +88,7 @@
                                                     <p>Lorem ipsum dolor sit amet</p>
                                                 </div>
                                             </div>
-    
+
                                             <div class="single_notify d-flex align-items-center">
                                                 <div class="notify_thumb">
                                                     <a href="#"><img src="{{ asset('admins/assets/img/staf/4.png')}}" alt></a>
@@ -100,7 +100,7 @@
                                                     <p>Lorem ipsum dolor sit amet</p>
                                                 </div>
                                             </div>
-    
+
                                             <div class="single_notify d-flex align-items-center">
                                                 <div class="notify_thumb">
                                                     <a href="#"><img src="{{ asset('admins/assets/img/staf/3.png')}}" alt></a>
@@ -112,7 +112,7 @@
                                                     <p>Lorem ipsum dolor sit amet</p>
                                                 </div>
                                             </div>
-    
+
                                             <div class="single_notify d-flex align-items-center">
                                                 <div class="notify_thumb">
                                                     <a href="#"><img src="{{ asset('admins/assets/img/staf/2.png')}}" alt></a>
@@ -124,7 +124,7 @@
                                                     <p>Lorem ipsum dolor sit amet</p>
                                                 </div>
                                             </div>
-    
+
                                             <div class="single_notify d-flex align-items-center">
                                                 <div class="notify_thumb">
                                                     <a href="#"><img src="{{ asset('admins/assets/img/staf/4.png')}}" alt></a>
@@ -136,7 +136,7 @@
                                                     <p>Lorem ipsum dolor sit amet</p>
                                                 </div>
                                             </div>
-    
+
                                             <div class="single_notify d-flex align-items-center">
                                                 <div class="notify_thumb">
                                                     <a href="#"><img src="{{ asset('admins/assets/img/staf/3.png')}}" alt></a>
@@ -155,7 +155,7 @@
                                             </div>
                                         </div>
                                     </div>
-    
+
                                 </li>
                                 <li>
                                     <a class="CHATBOX_open nav-link-notify" href="#"> <img src="{{ asset('admins/assets/img/icon/msg.svg')}}"
@@ -172,7 +172,7 @@
                                     <div class="profile_info_details">
                                         <a href="#">My Profile </a>
                                         <a href="#">Settings</a>
-                                        <a href="#">Log Out </a>
+                                        <a href="/logout">Log Out </a>
                                     </div>
                                 </div>
                             </div>

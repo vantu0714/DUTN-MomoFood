@@ -49,7 +49,7 @@ Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/{id}/show', [CategoryController::class, 'show'])->name('show');
     Route::post('/store', [CategoryController::class, 'store'])->name('store');
     Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
-    Route::put('/{category}', [CategoryController::class, 'update'])->name('update'); 
+    Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
     Route::delete('/{category}/destroy', [CategoryController::class, 'destroy'])->name('destroy');
 });
 //product
@@ -74,6 +74,7 @@ Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {
