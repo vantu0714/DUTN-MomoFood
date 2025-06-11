@@ -32,13 +32,13 @@ class AuthController extends Controller
                 Auth::logout();
                 return back()->withErrors([
                     'email' => 'Tài khoản không có quyền truy cập hợp lệ.',
-                ]);
+                ])->withInput();
             }
         }
 
         return back()->withErrors([
             'email' => 'Email hoặc mật khẩu không chính xác.',
-        ]);
+        ])->withInput();
     }
 
     public function showRegister()
