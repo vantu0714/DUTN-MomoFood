@@ -28,8 +28,7 @@
                 <div class="navbar-nav mx-auto">
                     <a href="{{ route('home.index') }}" class="nav-item nav-link active">Trang chủ</a>
                     <a href="{{ route('shop.index') }}" class="nav-item nav-link">Shop</a>
-                    <a href="index.html" class="nav-item nav-link active">Home</a>
-                    <a href="{{ route('product.index')}}" class="nav-item nav-link">Shop</a>
+                  
                     <a href="shop-detail.html" class="nav-item nav-link">Shop Detail</a>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Pages</a>
