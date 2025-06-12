@@ -98,13 +98,13 @@
         <div class="row g-5 align-items-center">
             <div class="col-md-12 col-lg-7">
                 <h4 class="mb-3 text-secondary">100% MomoFood</h4>
-                <h1 class="mb-5 display-3 text-primary">Organic Veggies & MomoFood</h1>
+                <h1 class="mb-5 display-3 text-primary">Shop bán đồ ăn vặt MomoFood</h1>
                 <div class="position-relative mx-auto">
                     <input class="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" type="number"
-                        placeholder="Search">
+                        placeholder="Tìm kiếm">
                     <button type="submit"
                         class="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
-                        style="top: 0; right: 25%;">Submit Now</button>
+                        style="top: 0; right: 25%;">Tìm kiếm</button>
                 </div>
             </div>
             <div class="col-md-12 col-lg-5">
@@ -148,8 +148,8 @@
                         <i class="fas fa-car-side fa-3x text-white"></i>
                     </div>
                     <div class="featurs-content text-center">
-                        <h5>Free Shipping</h5>
-                        <p class="mb-0">Free on order over $300</p>
+                        <h5>Miễn phí vận chuyển</h5>
+                        <p class="mb-0">Miễn phí cho đơn hàng trên $300</p>
                     </div>
                 </div>
             </div>
@@ -159,8 +159,8 @@
                         <i class="fas fa-user-shield fa-3x text-white"></i>
                     </div>
                     <div class="featurs-content text-center">
-                        <h5>Security Payment</h5>
-                        <p class="mb-0">100% security payment</p>
+                        <h5>Thanh toán bảo mật</h5>
+                        <p class="mb-0">Thanh toán bảo mật 100%</p>
 
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#carouselId"
@@ -182,8 +182,8 @@
                         <i class="fas fa-exchange-alt fa-3x text-white"></i>
                     </div>
                     <div class="featurs-content text-center">
-                        <h5>30 Day Return</h5>
-                        <p class="mb-0">30 day money guarantee</p>
+                        <h5>Hỗ trợ trả hàng trong vòng 30 ngày</h5>
+                        {{-- <p class="mb-0">Hoàn tiền trong vòng 30 ngày</p> --}}
 
                     </div>
                 </div>
@@ -196,8 +196,8 @@
                     </div>
                     <div class="featurs-content text-center">
 
-                        <h5>24/7 Support</h5>
-                        <p class="mb-0">Support every time fast</p>
+                        <h5>Hỗ trợ 24/7</h5>
+                        <p class="mb-0">Hỗ trợ mọi lúc nhanh chóngt</p>
                     </div>
                 </div>
             </div>
