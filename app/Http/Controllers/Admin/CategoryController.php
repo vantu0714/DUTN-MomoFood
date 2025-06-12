@@ -62,14 +62,22 @@ class CategoryController extends Controller
     }
 
     public function destroy(Category $category)
-{
-    if ($category->products()->count() > 0) {
-        return redirect()->route('categories.index')->with('error', 'Không thể xóa danh mục vì đang có sản phẩm liên kết.');
+    {
+        if ($category->products()->count() > 0) {
+            return redirect()->route('categories.index')->with('error', 'Không thể xóa danh mục vì đang có sản phẩm liên kết.');
+        }
+
+        $category->delete();
+
+        return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
     }
+    
+    public function toggleStatus(Category $category)
+    {
+        $category->status = !$category->status; 
+        $category->save();
 
-    $category->delete();
-
-    return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
-}
+        return redirect()->route('categories.index')->with('success', 'Cập nhật trạng thái danh mục thành công!');
+    }
 
 }
