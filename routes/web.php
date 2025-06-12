@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
 
+use App\Http\Controllers\Clients\ShopController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -27,6 +29,7 @@ use App\Http\Controllers\Admin\PromotionController;
 // });
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
