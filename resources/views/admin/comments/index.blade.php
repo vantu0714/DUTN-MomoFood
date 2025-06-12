@@ -9,50 +9,54 @@
     @endif
 
     <div class="table-responsive">
-        <table class="table table-bordered table-hover table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Người bình luận</th>
-                    <th>Nội dung</th>
-                    <th>Sản phẩm/Bài viết</th>
-                    <th>Trạng thái</th>
-                    <th>Ngày tạo</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- @forelse ($comments as $comment)
-                <tr>
-                    <td>{{ $comment->id }}</td>
-                    <td>{{ $comment->user->name ?? 'Ẩn danh' }}</td>
-                    <td>{{ Str::limit($comment->content, 50) }}</td>
-                    <td>{{ $comment->product->name ?? 'Không xác định' }}</td>
-                    <td>
-                        @if($comment->status == 1)
-                            <span class="badge bg-success">Đã duyệt</span>
-                        @else
-                            <span class="badge bg-secondary">Chờ duyệt</span>
-                        @endif
-                    </td>
-                    <td>{{ $comment->created_at->format('d/m/Y H:i') }}</td>
-                    <td>
-                        <a href="{{ route('comments.edit', $comment->id) }}" class="btn btn-sm btn-warning">Sửa</a>
-                        <a href="{{ route('comments.show', $comment->id) }}" class="btn btn-sm btn-info">Xem</a>
-                        <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Xoá bình luận này?')">Xoá</button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="7" class="text-center">Không có bình luận nào</td>
-                </tr>
-                @endforelse --}}
-            </tbody>
-        </table>
+  <table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Sản phẩm</th>
+            <th>Người dùng</th>
+            <th>Nội dung</th>
+            <th>Ngày</th>
+            <th>Xóa</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($comments as $comment)
+        <tr>
+            <td>{{ $comment->product->name }}</td>
+            <td>{{ $comment->user->name }}</td>
+            <td>{{ $comment->content }}</td>
+            <td>{{ $comment->created_at->format('d/m/Y H:i') }}</td>
+            <td>
+                <form action="/admin/comments/{{ $comment->id }}" method="POST">
+                    @csrf @method('DELETE')
+                    <button class="btn btn-danger btn-sm">Xóa</button>
+                </form>
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+
+// form client bình luận sau product
+<h4>Bình luận:</h4>
+{{-- @auth
+<form action="/product/{{ $product->id }}/comment" method="POST">
+    @csrf
+    <textarea name="content" class="form-control mb-2" rows="3" required></textarea>
+    <button class="btn btn-primary">Gửi bình luận</button>
+</form>
+@else
+<p><a href="/login">Đăng nhập</a> để bình luận</p>
+@endauth
+
+@foreach ($product->comments as $comment)
+    <div class="border p-2 my-2">
+        <strong>{{ $comment->user->name }}</strong>:
+        <p>{{ $comment->content }}</p>
+        <small>{{ $comment->created_at->diffForHumans() }}</small>
+    </div>
+@endforeach  --}}
+
     </div>
 </div>
 @endsection
