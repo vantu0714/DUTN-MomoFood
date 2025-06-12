@@ -4,9 +4,9 @@
         <div class="d-flex justify-content-between">
             <div class="top-info ps-2">
                 <small class="me-3"><i class="fas fa-map-marker-alt me-2 text-secondary"></i> <a href="#"
-                        class="text-white">1 Trinh Van Bo, Ha Noi</a></small>
+                        class="text-white text-cent">1 Trinh Van Bo, Ha Noi</a></small>
                 <small class="me-3"><i class="fas fa-envelope me-2 text-secondary"></i><a href="#"
-                        class="text-white">momofood@gmail.com</a></small>
+                        class="text-white alig">momofood@gmail.com</a></small>
             </div>
             <div class="top-link pe-2">
                 <a href="#" class="text-white"><small class="text-white mx-2">Privacy Policy</small>/</a>
@@ -27,7 +27,7 @@
             <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
                 <div class="navbar-nav mx-auto">
                     <a href="index.html" class="nav-item nav-link active">Home</a>
-                    <a href="shop.html" class="nav-item nav-link">Shop</a>
+                    <a href="{{ route('product.index')}}" class="nav-item nav-link">Shop</a>
                     <a href="shop-detail.html" class="nav-item nav-link">Shop Detail</a>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Pages</a>
@@ -44,7 +44,7 @@
                     <button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4"
                         data-bs-toggle="modal" data-bs-target="#searchModal"><i
                             class="fas fa-search text-primary"></i></button>
-                    <a href="#" class="position-relative me-4 my-auto">
+                    <a href="{{ route('carts.index')}}" class="position-relative me-4 my-auto">
                         <i class="fa fa-shopping-bag fa-2x"></i>
                         <span
                             class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
