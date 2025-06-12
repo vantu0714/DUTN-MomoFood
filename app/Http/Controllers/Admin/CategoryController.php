@@ -10,10 +10,9 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::with('parent')->get();
+        $categories = Category::all();
         return view('admin.categories.index', compact('categories'));
     }
-
     public function create()
     {
         $categories = Category::all(); 
@@ -24,7 +23,6 @@ class CategoryController extends Controller
     {
         $request->validate([
             'category_name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id',
             'status' => 'required|boolean',
             'description' => 'nullable|string',
         ]);
@@ -33,6 +31,14 @@ class CategoryController extends Controller
 
         return redirect()->route('categories.index')->with('success', 'Thêm danh mục thành công!');
     }
+
+    public function show(string $id)
+    {
+        //
+        $categories = Category::findOrFail($id);
+        return view('admin.categories.show', compact('categories'));
+    }
+
 
     public function edit(Category $category)
     {
@@ -46,7 +52,6 @@ class CategoryController extends Controller
     {
         $request->validate([
             'category_name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:categories,id|not_in:' . $category->id,
             'status' => 'required|boolean',
             'description' => 'nullable|string',
         ]);
@@ -57,17 +62,14 @@ class CategoryController extends Controller
     }
 
     public function destroy(Category $category)
-    {
-        // Kiểm tra xem danh mục có con hay không
-        if ($category->children()->count() > 0) {
-            return redirect()->route('categories.index')->with('error', 'Không thể xóa danh mục có danh mục con.');
-        }
-
-        $category->delete();
-
-        return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
+{
+    if ($category->products()->count() > 0) {
+        return redirect()->route('categories.index')->with('error', 'Không thể xóa danh mục vì đang có sản phẩm liên kết.');
     }
 
+    $category->delete();
 
+    return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
+}
 
 }

@@ -10,19 +10,13 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'parent_id',         // <-- thêm dòng này
         'category_name',
         'status',
         'description',
     ];
 
-    public function parent()
+    public function products()
     {
-        return $this->belongsTo(Category::class, 'parent_id');
+        return $this->hasMany(Product::class); // Một Category có nhiều Product
     }
-
-    public function children()
-    {
-        return $this->hasMany(Category::class, 'parent_id');
-    }
-    }
+}

@@ -19,22 +19,6 @@
             </div>
 
             <div class="mb-3">
-                <label for="parent_id" class="form-label">Danh mục cha (nếu có)</label>
-                <select name="parent_id" class="form-control">
-                    <option value="">-- Không có --</option>
-                    @foreach ($parentCategories as $cat)
-                        <option value="{{ $cat->id }}"
-                            {{ $category->parent_id == $cat->id ? 'selected' : '' }}>
-                            {{ $cat->category_name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('parent_id')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
                 <label for="status" class="form-label">Trạng thái</label>
                 <select name="status" class="form-control">
                     <option value="1" {{ $category->status == 1 ? 'selected' : '' }}>Hiển thị</option>

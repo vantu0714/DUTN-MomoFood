@@ -17,7 +17,6 @@
             <tr>
                 <th>ID</th>
                 <th>Tên danh mục</th>
-                <th>Danh mục cha</th> {{-- thêm dòng này --}}
                 <th>Mô tả</th>
                 <th>Trạng thái</th>
                 <th>Ngày tạo</th>
@@ -30,7 +29,6 @@
                 <tr>
                     <td>{{ $cat->id }}</td>
                     <td>{{ $cat->category_name }}</td>
-                    <td>{{ $cat->parent ? $cat->parent->category_name : '---' }}</td> {{-- danh mục cha --}}
                     <td>{{ $cat->description }}</td>
                     <td>
                         <span class="badge bg-{{ $cat->status ? 'success' : 'secondary' }}">

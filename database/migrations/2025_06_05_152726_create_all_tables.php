@@ -30,19 +30,16 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('category_name');
-            $table->unsignedBigInteger('parent_id')->nullable();
             $table->boolean('status');
             $table->text('description')->nullable();
             $table->timestamps();
-
-            $table->foreign('parent_id')->references('id')->on('categories')->onDelete('set null');
         });
 
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('product_code');
             $table->string('product_name');
-            $table->string('image');
+            $table->string('image')->nullable();
             $table->text('description')->nullable();
             $table->text('ingredients')->nullable();
             $table->date('expiration_date')->nullable();
@@ -55,7 +52,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('product_variant', function (Blueprint $table) {
+        Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products');
             $table->string('name');

@@ -47,19 +47,35 @@
                 <span>Quản lí sản phẩm</span>
             </a>
             <ul>
-                <li><a href="Basic_Elements.html">Basic Elements</a></li>
-                <li><a href="Groups.html">Groups</a></li>
-                <li><a href="Max_Length.html">Max Length</a></li>
-                <li><a href="Layouts.html">Layouts</a></li>
+                <li><a href="{{route('products.index')}}">Danh sách sản phẩm</a></li>
+                <li><a href="Groups.html">Thêm</a></li>
+                <li><a href="Max_Length.html">Sửa</a></li>
+            </ul>
+        </li>
+         <li class>
+            <a class="has-arrow" href="#" aria-expanded="false">
+                <div class="icon_menu">
+                    <img src="{{ asset('admins/assets/img/menu-icon/4.svg')}}" alt>
+                </div>
+                <span>Quản lí biến thể  </span>
+            </a>
+            <ul>
+                <li><a href="{{ route('admin.product_variants.index') }}">Danh sách biến thể</a></li>
+                <li><a href="Groups.html">Thêm</a></li>
+                <li><a href="Max_Length.html">Sửa</a></li>
             </ul>
         </li>
         <li class>
-            <a href="Board.html" aria-expanded="false">
+            <a href="#" class="has-arrow" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/5.svg')}}" alt>
                 </div>
                 <span>Quản lí mã giảm giá</span>
             </a>
+            <ul>
+                <li><a href="{{ route('promotions.index')}}">Danh sách mã giảm giá</a></li>
+                <li><a href="{{route('promotions.create')}}">Thêm mã giảm giá</a></li>
+            </ul>
         </li>
         <li class>
             <a href="#" class="has-arrow" aria-expanded="false">
