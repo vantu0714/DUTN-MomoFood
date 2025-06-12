@@ -72,4 +72,49 @@ class AuthController extends Controller
     {
         return view('clients.user.info');
     }
+
+    public function showEditProfile()
+    {
+        return view('clients.user.edit');
+    }
+
+    public function editProfile(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email',
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:255',
+                'avatar' => 'nullable|image|max:5120',
+            ]);
+
+            $user = Auth::user();
+            $urlAvatar = $user->avatar;
+
+            if ($request->hasFile('avatar')) {
+                $file = $request->file('avatar');
+                $filename = time() . '_' . $file->getClientOriginalName();
+
+                // Lưu vào storage/app/public/avatar
+                $file->storeAs('public/avatar', $filename);
+
+                // Cập nhật đường dẫn avatar
+                $urlAvatar = 'avatar/' . $filename;
+            }
+
+            // dd($request->all());
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'avatar' => $urlAvatar,
+            ]);
+
+            return redirect()->route('clients.info');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
 }

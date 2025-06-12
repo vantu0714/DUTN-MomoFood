@@ -131,3 +131,5 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 
 //Clients
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
+Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
+Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
