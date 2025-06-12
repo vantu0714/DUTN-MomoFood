@@ -12,6 +12,9 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
 
 use App\Http\Controllers\Clients\ShopController;
+use App\Http\Controllers\Clients\NewsController;
+use App\Http\Controllers\Clients\ContactsController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +32,13 @@ use App\Http\Controllers\Clients\ShopController;
 // });
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+//shop
 Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
+//tin tức
+Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
+//lien he
+Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
