@@ -13,8 +13,8 @@ class CommentController extends Controller
      */
     public function index()
     {
-            $Comments = Comment::all();
-            return view('admin.comments.index', compact('Comments')); 
+            $comment = Comment::all();
+            return view('admin.comments.index', compact('comment')); 
     }
 
     /**
