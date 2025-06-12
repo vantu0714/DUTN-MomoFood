@@ -8,60 +8,68 @@ use App\Models\Comment;
 
 class CommentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-            $comment = Comment::all();
-            return view('admin.comments.index', compact('comment')); 
+        $comments = Comment::with('user', 'product')->latest()->get();
+        return view('admin/comments.index', compact('comments'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $users = User::all();
+        $products = Product::all();
+        return view('comments.create', compact('users', 'products'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'product_id' => 'required|exists:products,id',
+            'content' => 'required|string',
+        ]);
+
+        Comment::create([
+            'user_id' => $request->user_id,
+            'product_id' => $request->product_id,
+            'content' => $request->content,
+        ]);
+
+        return redirect()->route('comments.index')->with('success', 'Thêm bình luận thành công!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Comment $comment)
     {
-        //
+        return view('comments.show', compact('comment'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(Comment $comment)
     {
-        //
+        $users = User::all();
+        $products = Product::all();
+        return view('comments.edit', compact('comment', 'users', 'products'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Comment $comment)
     {
-        //
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'product_id' => 'required|exists:products,id',
+            'content' => 'required|string',
+        ]);
+
+        $comment->update([
+            'user_id' => $request->user_id,
+            'product_id' => $request->product_id,
+            'content' => $request->content,
+        ]);
+
+        return redirect()->route('comments.index')->with('success', 'Cập nhật bình luận thành công!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Comment $comment)
     {
-        //
+        $comment->delete();
+        return redirect()->route('comments.index')->with('success', 'Xoá bình luận thành công!');
     }
 }
