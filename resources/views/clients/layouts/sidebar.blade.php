@@ -58,7 +58,7 @@
                                     alt="avatar" width="40" height="40" style="border-radius: 50%;">
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="userDropdown" style="top: 100%; left: 0;">
-                                <li><a class="dropdown-item" href="#">Trang cá nhân</a></li>
+                                <li><a class="dropdown-item" href="{{ route('clients.info') }}">Trang cá nhân</a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
