@@ -29,7 +29,7 @@ class OrderController extends Controller
     {
         //
         $products = Product::where('status', 1)->get(); // lấy sản phẩm đang hoạt động
-    return view('admin.orders.create', compact('products'));
+        return view('admin.orders.create', compact('products'));
     }
 
     /**
@@ -40,77 +40,92 @@ class OrderController extends Controller
         //
         DB::beginTransaction();
 
-    try {
-        // Bước 1: Tính tổng tiền sản phẩm
-        $totalProductPrice = 0;
-        foreach ($request->products as $product) {
-            $productModel = Product::findOrFail($product['product_id']);
-            $price = $productModel->discounted_price;
-            $totalProductPrice += $price * $product['quantity'];
-        }
+        try {
+            // Bước 1: Tính tổng tiền sản phẩm
+            $totalProductPrice = 0;
+            $orderDetails = [];
 
-        // Bước 2: Áp dụng khuyến mãi (nếu có)
-        $discountAmount = 0;
+            foreach ($request->products as $productInput) {
+                $product = Product::findOrFail($productInput['product_id']);
+                $quantity = (int) $productInput['quantity'];
+                $price = $product->discounted_price;
+                $total = $price * $quantity;
 
-        if ($request->promotion) {
-            $promotion = Promotion::where('code', $request->promotion)->first();
+                $totalProductPrice += $total;
 
-            if ($promotion) {
-                if ($promotion->type == 'fixed') {
-                    $discountAmount = $promotion->value;
-                } elseif ($promotion->type == 'percent') {
-                    $discountAmount = ($totalProductPrice * $promotion->value) / 100;
+                // Lưu để dùng lại ở bước 5
+                $orderDetails[] = [
+                    'product_id' => $product->id,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                    'total' => $total,
+                ];
+            }
+
+            // Bước 2: Áp dụng khuyến mãi (nếu có)
+            $discountAmount = 0;
+            $promotionCode = $request->promotion;
+
+            if (!empty($promotionCode)) {
+                $promotion = Promotion::where('code', $promotionCode)->first();
+
+                if ($promotion) {
+                    if ($promotion->type === 'fixed') {
+                        $discountAmount = $promotion->value;
+                    } elseif ($promotion->type === 'percent') {
+                        $discountAmount = ($totalProductPrice * $promotion->value) / 100;
+                    }
                 }
             }
-        }
 
-        // Bước 3: Tính tổng tiền đơn hàng cuối cùng
-        $finalTotal = $totalProductPrice + $request->shipping_fee - $discountAmount;
+            // Bước 3: Tính tổng tiền đơn hàng
+            $shippingFee = (float) $request->shipping_fee;
+            $finalTotal = $totalProductPrice + $shippingFee - $discountAmount;
 
-        // Bước 4: Lưu vào bảng orders
-        $order = Order::create([
-            'user_id' => $request->user_id,
-            'recipient_name' => $request->recipient_name,
-            'recipient_phone' => $request->recipient_phone,
-            'recipient_address' => $request->recipient_address,
-            'promotion' => $request->promotion,
-            'shipping_fee' => $request->shipping_fee,
-            'total_price' => $finalTotal,
-            'payment_method' => $request->payment_method,
-            'payment_status' => $request->payment_status,
-            'status' => $request->status,
-            'note' => $request->note,
-            'cancellation_reason' => $request->cancellation_reason,
-        ]);
-
-        // Bước 5: Lưu từng sản phẩm vào order_details
-        foreach ($request->products as $product) {
-            $productModel = Product::findOrFail($product['product_id']);
-            $price = $productModel->discounted_price;
-
-            OrderDetail::create([
-                'order_id' => $order->id,
-                'product_id' => $product['product_id'],
-                'quantity' => $product['quantity'],
-                'price' => $price,
-                'total' => $price * $product['quantity'],
+            // Bước 4: Lưu đơn hàng
+            $order = Order::create([
+                'user_id' => $request->user_id,
+                'recipient_name' => $request->recipient_name,
+                'recipient_phone' => $request->recipient_phone,
+                'recipient_address' => $request->recipient_address,
+                'promotion' => $promotionCode,
+                'shipping_fee' => $shippingFee,
+                'total_price' => $finalTotal,
+                'payment_method' => $request->payment_method,
+                'payment_status' => $request->payment_status,
+                'status' => $request->status,
+                'note' => $request->note,
+                'cancellation_reason' => $request->cancellation_reason,
             ]);
-        }
 
-        DB::commit();
-        return redirect()->route('orders.index')->with('success', 'Tạo đơn hàng thành công!');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
-    }
+            // Bước 5: Lưu chi tiết sản phẩm
+            foreach ($orderDetails as $detail) {
+                OrderDetail::create([
+                    'order_id' => $order->id,
+                    'product_id' => $detail['product_id'],
+                    'quantity' => $detail['quantity'],
+                    'price' => $detail['price'],
+                    'total' => $detail['total'],
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('orders.index')->with('success', 'Tạo đơn hàng thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Order $order)
+    public function show(string $id)
     {
         //
+        $order = Order::with(['user', 'orderDetails.productVariant.product'])->findOrFail($id);
+
+    return view('admin.orders.show', compact('order'));
     }
 
     /**
