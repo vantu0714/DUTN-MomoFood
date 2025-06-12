@@ -84,7 +84,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
     Route::get('/create', [OrderController::class, 'create'])->name('create');
     Route::post('/store', [OrderController::class, 'store'])->name('store');
-    Route::get('/create', [OrderController::class, 'create'])->name('create');
+    Route::get('/{id}/show', [OrderController::class, 'show'])->name('show');
     Route::get('/create', [OrderController::class, 'create'])->name('create');
 });
 

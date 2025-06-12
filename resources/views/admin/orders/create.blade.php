@@ -7,6 +7,7 @@
     <form action="{{ route('orders.store') }}" method="POST">
         @csrf
 
+        <!-- Thông tin người nhận -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="recipient_name" class="form-label">Tên người nhận</label>
@@ -25,6 +26,7 @@
             </div>
         </div>
 
+        <!-- Mã khuyến mãi và phí vận chuyển -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="promotion" class="form-label">Mã khuyến mãi</label>
@@ -32,10 +34,11 @@
             </div>
             <div class="col-md-6">
                 <label for="shipping_fee" class="form-label">Phí vận chuyển</label>
-                <input type="number" step="0.01" class="form-control" id="shipping_fee" name="shipping_fee" required>
+                <input type="number" step="0.01" class="form-control" id="shipping_fee" name="shipping_fee" value="0" required>
             </div>
         </div>
 
+        <!-- Thanh toán và trạng thái -->
         <div class="mb-3">
             <label for="payment_method" class="form-label">Phương thức thanh toán</label>
             <input type="text" class="form-control" id="payment_method" name="payment_method" required>
@@ -77,29 +80,25 @@
             <thead>
                 <tr>
                     <th>Sản phẩm</th>
-                    <th>Số lượng</th>
                     <th>Giá</th>
+                    <th>Số lượng</th>
                     <th>Thành tiền</th>
                     <th></th>
                 </tr>
             </thead>
-            <tbody id="product-rows">
+            <tbody>
                 <tr>
                     <td>
-                        <select name="products[0][product_id]" class="form-select product-select" required>
-                            <option value="">-- Chọn --</option>
+                        <select name="products[0][product_id]" class="product-select form-select" required>
+                            <option value="">-- Chọn sản phẩm --</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->id }}" data-price="{{ $product->discounted_price }}">
-                                    {{ $product->product_name }}
-                                </option>
+                                <option value="{{ $product->id }}">{{ $product->product_name }}</option>
                             @endforeach
                         </select>
                     </td>
-                    <td>
-                        <input type="number" name="products[0][quantity]" class="form-control quantity-input" min="1" value="1" required>
-                    </td>
-                    <td class="price">0</td>
-                    <td class="total">0</td>
+                    <td><input type="number" name="products[0][price]" class="price form-control" readonly></td>
+                    <td><input type="number" name="products[0][quantity]" class="quantity form-control" value="1" min="1"></td>
+                    <td><input type="number" class="total form-control" readonly></td>
                     <td><button type="button" class="btn btn-danger remove-row">X</button></td>
                 </tr>
             </tbody>
@@ -107,7 +106,7 @@
         <button type="button" class="btn btn-primary mb-4" id="add-row">+ Thêm sản phẩm</button>
 
         <div class="mb-3">
-            <label for="total_price" class="form-label">Tổng tiền</label>
+            <label for="total_price" class="form-label">Tổng tiền tạm tính</label>
             <input type="number" step="0.01" class="form-control" id="total_price" name="total_price" readonly>
         </div>
 
@@ -120,80 +119,81 @@
 @endsection
 
 @section('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
     let rowIndex = 1;
 
-    // Cập nhật thành tiền cho một dòng sản phẩm
-    function updateRowTotal(row) {
-        const selectedOption = row.find('.product-select option:selected');
-        const price = parseFloat(selectedOption.data('price')) || 0;
-        const quantity = parseInt(row.find('.quantity-input').val()) || 0;
-        const rowTotal = price * quantity;
+    const productPrices = {
+        @foreach($products as $product)
+            "{{ $product->id }}": {{ $product->discounted_price }},
+        @endforeach
+    };
 
-        row.find('.price').text(price.toLocaleString('vi-VN'));
-        row.find('.total').text(rowTotal.toLocaleString('vi-VN'));
+    function updateRow(row) {
+        const select = row.querySelector('.product-select');
+        const priceInput = row.querySelector('.price');
+        const quantityInput = row.querySelector('.quantity');
+        const totalInput = row.querySelector('.total');
 
-        updateGrandTotal();
+        const productId = select.value;
+        const price = productPrices[productId] || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+
+        priceInput.value = price;
+        totalInput.value = price * quantity;
+
+        updateTotalPrice();
     }
 
-    // Tính tổng tất cả thành tiền
-    function updateGrandTotal() {
+    function updateTotalPrice() {
         let total = 0;
-
-        $('#products-table tbody tr').each(function () {
-            const rowTotal = parseFloat($(this).find('.total').text().replace(/\./g, '').replace(',', '.')) || 0;
-            total += rowTotal;
+        document.querySelectorAll('#products-table .total').forEach(input => {
+            total += parseFloat(input.value) || 0;
         });
 
-        // Gán tổng vào input
-        $('#total_price').val(total.toFixed(2));
+        const shippingFee = parseFloat(document.querySelector('#shipping_fee').value) || 0;
+        document.querySelector('#total_price').value = total + shippingFee;
     }
 
-    // Xử lý khi thay đổi sản phẩm hoặc số lượng
-    $(document).on('change', '.product-select, .quantity-input', function () {
-        const row = $(this).closest('tr');
-        updateRowTotal(row);
-    });
+    document.querySelector('#add-row').addEventListener('click', () => {
+        const tableBody = document.querySelector('#products-table tbody');
+        const newRow = document.createElement('tr');
 
-    // Thêm dòng sản phẩm mới
-    $('#add-row').click(function () {
-        const firstRow = $('#products-table tbody tr:first');
-        const newRow = firstRow.clone();
+        newRow.innerHTML = `
+            <td>
+                <select name="products[${rowIndex}][product_id]" class="product-select form-select" required>
+                    <option value="">-- Chọn sản phẩm --</option>
+                    @foreach($products as $product)
+                        <option value="{{ $product->id }}">{{ $product->product_name }}</option>
+                    @endforeach
+                </select>
+            </td>
+            <td><input type="number" name="products[${rowIndex}][price]" class="price form-control" readonly></td>
+            <td><input type="number" name="products[${rowIndex}][quantity]" class="quantity form-control" value="1" min="1"></td>
+            <td><input type="number" class="total form-control" readonly></td>
+            <td><button type="button" class="btn btn-danger remove-row">X</button></td>
+        `;
 
-        // Cập nhật tên input theo rowIndex mới
-        newRow.find('select, input').each(function () {
-            const name = $(this).attr('name');
-            if (name) {
-                const newName = name.replace(/\[\d+\]/, `[${rowIndex}]`);
-                $(this).attr('name', newName);
-            }
+        tableBody.appendChild(newRow);
+
+        newRow.querySelector('.product-select').addEventListener('change', () => updateRow(newRow));
+        newRow.querySelector('.quantity').addEventListener('input', () => updateRow(newRow));
+        newRow.querySelector('.remove-row').addEventListener('click', () => {
+            newRow.remove();
+            updateTotalPrice();
         });
 
-        // Reset các giá trị
-        newRow.find('select').val('');
-        newRow.find('input[type="number"]').val(1);
-        newRow.find('.price').text('0');
-        newRow.find('.total').text('0');
-
-        $('#products-table tbody').append(newRow);
         rowIndex++;
     });
 
-    // Xoá dòng sản phẩm
-    $(document).on('click', '.remove-row', function () {
-        if ($('#products-table tbody tr').length > 1) {
-            $(this).closest('tr').remove();
-            updateGrandTotal();
-        }
-    });
-
-    // Tính lại khi trang load
-    $(document).ready(function () {
-        $('#products-table tbody tr').each(function () {
-            updateRowTotal($(this));
+    document.querySelectorAll('#products-table tbody tr').forEach(row => {
+        row.querySelector('.product-select').addEventListener('change', () => updateRow(row));
+        row.querySelector('.quantity').addEventListener('input', () => updateRow(row));
+        row.querySelector('.remove-row').addEventListener('click', () => {
+            row.remove();
+            updateTotalPrice();
         });
     });
+
+    document.querySelector('#shipping_fee').addEventListener('input', updateTotalPrice);
 </script>
 @endsection
