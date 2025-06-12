@@ -49,10 +49,10 @@ class ProductController extends Controller
         $categories = Category::all();
         return view('admin.products.create', compact('categories'));
     }
-    
+
 
     public function store(Request $request)
-    {   
+    {
         $validated = $request->validate([
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code',
@@ -114,19 +114,17 @@ class ProductController extends Controller
             'original_price' => 'nullable|numeric',
             'discounted_price' => 'nullable|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-             'quantity' => 'required|integer|min:0',
+            'quantity' => 'required|integer|min:0',
 
         ]);
         if ($request->hasFile('image')) {
             // Xoá ảnh cũ (nếu có)
-            if ($product->image && file_exists(public_path($product->image))) {
-                unlink(public_path($product->image));
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
             }
 
-            $image = $request->file('image');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('uploads/products'), $imageName);
-            $validated['image'] = 'uploads/products/' . $imageName;
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validated['image'] = $imagePath;
         }
 
         $product->update($validated);
