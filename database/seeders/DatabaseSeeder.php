@@ -21,5 +21,9 @@ class DatabaseSeeder extends Seeder
 
         \App\Models\Category::factory(5)->create(); // Tạo sẵn 5 category nếu cần
         $this->call(ProductSeeder::class);
+
+        $this->call([
+            OrderSeeder::class,
+        ]);
     }
 }

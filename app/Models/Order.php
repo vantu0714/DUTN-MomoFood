@@ -23,4 +23,16 @@ class Order extends Model
         'note',
         'cancellation_reason',
     ];
+
+    public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
+public function orderDetails()
+{
+    return $this->hasMany(OrderDetail::class);
+}
+
+
 }
