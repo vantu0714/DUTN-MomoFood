@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\Admin\InfoController;
 use App\Http\Controllers\clients\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\clients\HomeController;
@@ -25,15 +26,23 @@ use App\Http\Controllers\clients\ProducClientController;
 
 // Route::get('/', function () {
 //     return view('home');
-// });
+// // });
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// Route::get('/home', [HomeController::class, 'index'])->name('home.index');
+
+// //shop
+// Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
+// //tin tức
+// Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
+// //lien he
+// Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     });
+    Route::get(('/info'), [InfoController::class, 'info'])->name('info');
 });
 
 //users
@@ -81,14 +90,14 @@ Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
     Route::get('/create', [OrderController::class, 'create'])->name('create');
     Route::post('/store', [OrderController::class, 'store'])->name('store');
-    Route::get('/create', [OrderController::class, 'create'])->name('create');
+    Route::get('/{id}/show', [OrderController::class, 'show'])->name('show');
     Route::get('/create', [OrderController::class, 'create'])->name('create');
 });
 
@@ -115,5 +124,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
     });
-});
 
+});
