@@ -180,15 +180,14 @@
                                         <h5>{{ Auth::user()->name }}</h5>
                                     </div>
                                     <div class="profile_info_details">
-                                        <a href="#">My Profile </a>
-                                        <a href="#">Settings</a>
+                                        <a href="{{ route('info') }}">Thông tin cá nhân </a>
                                         <form id="logout-form" action="{{ route('logout') }}" method="POST"
                                             style="display: none;">
                                             @csrf
                                         </form>
                                         <a href="#"
                                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                            Log Out
+                                            Đăng xuất
                                         </a>
                                     </div>
                                 </div>

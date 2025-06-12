@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\Admin\InfoController;
 use App\Http\Controllers\clients\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\clients\HomeController;
@@ -36,6 +37,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     });
+    Route::get(('/info'), [InfoController::class, 'info'])->name('info');
 });
 
 //users
@@ -114,3 +116,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
     });
 });
+
+//Clients
+Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
