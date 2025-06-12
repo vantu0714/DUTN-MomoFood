@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\Admin\InfoController;
 use App\Http\Controllers\clients\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\clients\HomeController;
@@ -45,6 +46,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return view('admin.dashboard');
     });
+    Route::get(('/info'), [InfoController::class, 'info'])->name('info');
 });
 
 //users
@@ -89,14 +91,14 @@ Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
     Route::get('/create', [OrderController::class, 'create'])->name('create');
     Route::post('/store', [OrderController::class, 'store'])->name('store');
-    Route::get('/create', [OrderController::class, 'create'])->name('create');
+    Route::get('/{id}/show', [OrderController::class, 'show'])->name('show');
     Route::get('/create', [OrderController::class, 'create'])->name('create');
 });
 
@@ -123,3 +125,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
     });
 });
+
+//Clients
+Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');

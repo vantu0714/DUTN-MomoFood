@@ -49,8 +49,10 @@ class ProductController extends Controller
         $categories = Category::all();
         return view('admin.products.create', compact('categories'));
     }
+    
+
     public function store(Request $request)
-    {
+    {   
         $validated = $request->validate([
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code',
@@ -112,6 +114,7 @@ class ProductController extends Controller
             'original_price' => 'nullable|numeric',
             'discounted_price' => 'nullable|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+             'quantity' => 'required|integer|min:0',
 
         ]);
         if ($request->hasFile('image')) {
