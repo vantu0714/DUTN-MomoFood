@@ -35,10 +35,10 @@
                             <a href="cart.html" class="dropdown-item">Giỏ hàng</a>
                             <a href="chackout.html" class="dropdown-item">Thanh toán</a>
                             <a href="testimonial.html" class="dropdown-item">Testimonial</a>
-                            <a href="" class="dropdown-item">Tin tức</a>
+                            <a href="{{ route('news.index') }}" class="dropdown-item">Tin tức</a>
                         </div>
                     </div>
-                    <a href="contact.html" class="nav-item nav-link">Liên hệ</a>
+                    <a href="{{ route('contacts.index') }}" class="nav-item nav-link">Liên hệ</a>
                 </div>
                 <div class="d-flex m-3 me-0">
                     <button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4"
