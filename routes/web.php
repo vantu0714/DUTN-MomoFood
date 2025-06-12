@@ -11,8 +11,6 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
-use App\Http\Controllers\ShopController;
-
 use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
