@@ -10,7 +10,8 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
-
+use App\Http\Controllers\clients\CartController;
+use App\Http\Controllers\clients\ProducClientController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -70,9 +71,12 @@ Route::get('/comments/{id}/edit', [CommentController::class, 'edit'])->name('com
 Route::put('/comments/{id}', [CommentController::class, 'update'])->name('comments.update');
 Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
+// carts
+Route::get('/carts', [CartController::class, 'index'])->name('carts.index');
+// carts
+Route::get('/product', [ProducClientController::class, 'index'])->name('product.index');
 
-
-//Auth
+//Auths
 Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -100,6 +104,7 @@ Route::prefix('promotions')->name('promotions.')->group(function () {
 });
 
 
+
 //product_variants
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('product-variants')->name('product_variants.')->group(function () {
@@ -111,3 +116,4 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
     });
 });
+
