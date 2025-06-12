@@ -119,3 +119,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 //Clients
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
+Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
+Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
