@@ -111,12 +111,13 @@
                 <div id="carouselId" class="carousel slide position-relative" data-bs-ride="carousel">
                     <div class="carousel-inner" role="listbox">
                         <div class="carousel-item active rounded">
-                            <img src="{{ asset('clients/img/hero-img-1.png') }}" class="img-fluid w-100 h-100 bg-secondary rounded"
-                                alt="First slide">
+                            <img src="{{ asset('clients/img/hero-img-1.png') }}"
+                                class="img-fluid w-100 h-100 bg-secondary rounded" alt="First slide">
                             <a href="#" class="btn px-4 py-2 text-white rounded">Fruites</a>
                         </div>
                         <div class="carousel-item rounded">
-                            <img src="{{ asset('clients/img/hero-img-2.jpg') }}" class="img-fluid w-100 h-100 rounded" alt="Second slide">
+                            <img src="{{ asset('clients/img/hero-img-2.jpg') }}" class="img-fluid w-100 h-100 rounded"
+                                alt="Second slide">
                             <a href="#" class="btn px-4 py-2 text-white rounded">Vesitables</a>
                         </div>
                     </div>
@@ -219,7 +220,8 @@
                     <ul class="nav nav-pills d-inline-flex text-center mb-5">
                         <li class="nav-item">
 
-                            <a class="d-flex m-2 py-2 bg-light rounded-pill active" data-bs-toggle="pill" href="#tab-1">
+                            <a class="d-flex m-2 py-2 bg-light rounded-pill active" data-bs-toggle="pill"
+                                href="#tab-1">
 
                                 <span class="text-dark" style="width: 130px;">All Products</span>
                             </a>
@@ -252,30 +254,39 @@
                     <div class="row g-4">
                         <div class="col-lg-12">
                             <div class="row g-4">
-                                <div class="col-md-6 col-lg-4 col-xl-3">
-                                    <div class="rounded position-relative fruite-item">
-                                        <div class="fruite-img">
-
-                                            <img src="{{ asset('clients/img/vegetable-item-5.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
-
-                                        </div>
-                                        <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
-                                            style="top: 10px; left: 10px;">Fruits</div>
-                                        <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                            <h4>Grapes</h4>
-                                            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te
-                                                incididunt</p>
-                                            <div class="d-flex justify-content-between flex-lg-wrap">
-                                                <p class="text-dark fs-5 fw-bold mb-0">$4.99 / kg</p>
-                                                <a href="#"
-                                                    class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                                        class="fa fa-shopping-bag me-2 text-primary"></i> Add to
-                                                    cart</a>
+                                @foreach ($products as $product)
+                                    <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                                        <div class="rounded position-relative fruite-item">
+                                            <div class="fruite-img">
+                                                <img src="{{ asset('storage/' . $product->image) }}"
+                                                    onerror="this.src='{{ asset('clients/img/default.jpg') }}'"
+                                                    alt="{{ $product->product_name }}"
+                                                    class="img-fluid w-100 rounded-top">
+                                            </div>
+                                            <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
+                                                style="top: 10px; left: 10px;">
+                                                {{ $product->category->name ?? 'No Category' }}
+                                            </div>
+                                            <div class="p-4 border border-secondary border-top-0 rounded-bottom">
+                                                <h4>{{ $product->product_name }}</h4>
+                                                <p>Mã sản phẩm: {{ $product->product_code }}</p>
+                                                <div class="d-flex justify-content-between flex-lg-wrap">
+                                                    <p class="text-dark fs-5 fw-bold mb-0">
+                                                        {{ number_format($product->discounted_price ?? $product->original_price, 0, ',', '.') }}
+                                                        VNĐ
+                                                    </p>
+                                                    <a href="#"
+                                                        class="btn border border-secondary rounded-pill px-3 text-primary">
+                                                        <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to
+                                                        cart
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6 col-lg-4 col-xl-3">
+                                @endforeach
+
+                                {{-- <div class="col-md-6 col-lg-4 col-xl-3">
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
@@ -435,7 +446,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>
@@ -448,7 +459,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-2.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                                            <img src="{{ asset('clients/img/vegetable-item-2.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">
 
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
@@ -471,7 +483,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-3.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                                            <img src="{{ asset('clients/img/vegetable-item-3.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">
 
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
@@ -502,7 +515,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-5.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                                            <img src="{{ asset('clients/img/vegetable-item-5.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">
 
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
@@ -525,7 +539,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-6.jpg') }}" class="img-fluid w-100 rounded-top" alt="">c
+                                            <img src="{{ asset('clients/img/vegetable-item-6.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">c
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
                                             style="top: 10px; left: 10px;">Fruits</div>
@@ -555,7 +570,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-2.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                                            <img src="{{ asset('clients/img/vegetable-item-2.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">
 
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
@@ -578,7 +594,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-4.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                                            <img src="{{ asset('clients/img/vegetable-item-4.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">
 
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
@@ -609,7 +626,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-6.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                                            <img src="{{ asset('clients/img/vegetable-item-6.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">
 
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
@@ -632,7 +650,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-5.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                                            <img src="{{ asset('clients/img/vegetable-item-5.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">
 
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
@@ -655,7 +674,8 @@
                                     <div class="rounded position-relative fruite-item">
                                         <div class="fruite-img">
 
-                                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
+                                                class="img-fluid w-100 rounded-top" alt="">
 
                                         </div>
                                         <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
@@ -693,7 +713,8 @@
                 <a href="#">
                     <div class="service-item bg-secondary rounded border border-secondary">
 
-                        <img src="{{ asset('clients/img/featur-1.jpg') }}" class="img-fluid rounded-top w-100" alt="">
+                        <img src="{{ asset('clients/img/featur-1.jpg') }}" class="img-fluid rounded-top w-100"
+                            alt="">
 
                         <div class="px-4 rounded-bottom">
                             <div class="service-content bg-primary text-center p-4 rounded">
@@ -708,7 +729,8 @@
                 <a href="#">
                     <div class="service-item bg-dark rounded border border-dark">
 
-                        <img src="{{ asset('clients/img/featur-2.jpg') }}" class="img-fluid rounded-top w-100" alt="">
+                        <img src="{{ asset('clients/img/featur-2.jpg') }}" class="img-fluid rounded-top w-100"
+                            alt="">
 
                         <div class="px-4 rounded-bottom">
                             <div class="service-content bg-light text-center p-4 rounded">
@@ -723,7 +745,8 @@
                 <a href="#">
                     <div class="service-item bg-primary rounded border border-primary">
 
-                        <img src="{{ asset('clients/img/featur-3.jpg') }}" class="img-fluid rounded-top w-100" alt="">
+                        <img src="{{ asset('clients/img/featur-3.jpg') }}" class="img-fluid rounded-top w-100"
+                            alt="">
 
                         <div class="px-4 rounded-bottom">
                             <div class="service-content bg-secondary text-center p-4 rounded">
@@ -748,9 +771,11 @@
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
+                        alt="">
                 </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top: 10px; right: 10px;">
                     Vegetable</div>
 
                 <div class="p-4 rounded-bottom">
@@ -766,9 +791,11 @@
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
+                        alt="">
                 </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top: 10px; right: 10px;">
                     Vegetable</div>
 
                 <div class="p-4 rounded-bottom">
@@ -784,9 +811,11 @@
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top bg-light" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
+                        class="img-fluid w-100 rounded-top bg-light" alt="">
                 </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top: 10px; right: 10px;">
                     Vegetable</div>
 
                 <div class="p-4 rounded-bottom">
@@ -802,9 +831,11 @@
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
+                        alt="">
                 </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top: 10px; right: 10px;">
                     Vegetable</div>
 
                 <div class="p-4 rounded-bottom">
@@ -820,9 +851,11 @@
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
+                        alt="">
                 </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top: 10px; right: 10px;">
                     Vegetable</div>
 
                 <div class="p-4 rounded-bottom">
@@ -838,9 +871,11 @@
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
+                        alt="">
                 </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top: 10px; right: 10px;">
                     Vegetable</div>
 
                 <div class="p-4 rounded-bottom">
@@ -856,9 +891,11 @@
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
+                        alt="">
                 </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top: 10px; right: 10px;">
                     Vegetable</div>
 
                 <div class="p-4 rounded-bottom">
@@ -874,9 +911,11 @@
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
+                        alt="">
                 </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top: 10px; right: 10px;">
                     Vegetable</div>
 
                 <div class="p-4 rounded-bottom">
@@ -906,14 +945,16 @@
                     <p class="mb-4 text-dark">The generated Lorem Ipsum is therefore always free from repetition
                         injected humour, or non-characteristic words etc.</p>
 
-                    <a href="#" class="banner-btn btn border-2 border-white rounded-pill text-dark py-3 px-5">BUY</a>
+                    <a href="#"
+                        class="banner-btn btn border-2 border-white rounded-pill text-dark py-3 px-5">BUY</a>
 
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="position-relative">
 
-                    <img src="{{ asset('clients/img/baner-1.png') }}" class="img-fluid w-100 rounded" alt="">
+                    <img src="{{ asset('clients/img/baner-1.png') }}" class="img-fluid w-100 rounded"
+                        alt="">
 
                     <div class="d-flex align-items-center justify-content-center bg-white rounded-circle position-absolute"
                         style="width: 140px; height: 140px; top: 0; left: 0;">
@@ -945,7 +986,8 @@
                     <div class="row align-items-center">
                         <div class="col-6">
 
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded-circle w-100" alt="">
+                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
+                                class="img-fluid rounded-circle w-100" alt="">
 
                         </div>
                         <div class="col-6">
@@ -969,7 +1011,8 @@
                     <div class="row align-items-center">
                         <div class="col-6">
 
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded-circle w-100" alt="">
+                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
+                                class="img-fluid rounded-circle w-100" alt="">
 
                         </div>
                         <div class="col-6">
@@ -993,7 +1036,8 @@
                     <div class="row align-items-center">
                         <div class="col-6">
 
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded-circle w-100" alt="">
+                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
+                                class="img-fluid rounded-circle w-100" alt="">
 
                         </div>
                         <div class="col-6">
@@ -1017,7 +1061,8 @@
                     <div class="row align-items-center">
                         <div class="col-6">
 
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded-circle w-100" alt="">
+                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
+                                class="img-fluid rounded-circle w-100" alt="">
 
                         </div>
                         <div class="col-6">
@@ -1041,7 +1086,8 @@
                     <div class="row align-items-center">
                         <div class="col-6">
 
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded-circle w-100" alt="">
+                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
+                                class="img-fluid rounded-circle w-100" alt="">
 
                         </div>
                         <div class="col-6">
@@ -1065,7 +1111,8 @@
                     <div class="row align-items-center">
                         <div class="col-6">
 
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded-circle w-100" alt="">
+                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
+                                class="img-fluid rounded-circle w-100" alt="">
 
                         </div>
                         <div class="col-6">
@@ -1087,7 +1134,8 @@
             <div class="col-md-6 col-lg-6 col-xl-3">
                 <div class="text-center">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
+                        alt="">
 
                     <div class="py-4">
                         <a href="#" class="h5">Organic Tomato</a>
@@ -1106,7 +1154,8 @@
             </div>
             <div class="col-md-6 col-lg-6 col-xl-3">
                 <div class="text-center">
-           <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
+                        alt="">
 
                     <div class="py-4">
                         <a href="#" class="h5">Organic Tomato</a>
@@ -1126,7 +1175,8 @@
             <div class="col-md-6 col-lg-6 col-xl-3">
                 <div class="text-center">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
+                        alt="">
 
                     <div class="py-4">
                         <a href="#" class="h5">Organic Tomato</a>
@@ -1146,7 +1196,8 @@
             <div class="col-md-6 col-lg-6 col-xl-3">
                 <div class="text-center">
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded" alt="">
+                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
+                        alt="">
                     <div class="py-2">
                         <a href="#" class="h5">Organic Tomato</a>
                         <div class="d-flex my-3 justify-content-center">
@@ -1229,7 +1280,6 @@
                         <div class="bg-secondary rounded">
 
                             <img src="{{ asset('clients/img/testimonial-1.jpg') }}" class="img-fluid rounded"
-
                                 style="width: 100px; height: 100px;" alt="">
                         </div>
                         <div class="ms-4 d-block">
@@ -1258,7 +1308,6 @@
                     <div class="d-flex align-items-center flex-nowrap">
                         <div class="bg-secondary rounded">
                             <img src="{{ asset('clients/img/testimonial-1.jpg') }}" class="img-fluid rounded"
-
                                 style="width: 100px; height: 100px;" alt="">
                         </div>
                         <div class="ms-4 d-block">
@@ -1309,4 +1358,3 @@
 <!-- Tastimonial End -->
 
 @include('clients.layouts.footer')
-
