@@ -32,7 +32,7 @@ use App\Http\Controllers\Clients\ContactsController;
 //     return view('home');
 // });
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home.index');
 
 //shop
 Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
