@@ -10,7 +10,8 @@ class ShopController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->where('status', 1)->paginate(12);
-        return view('shop.index', compact('products'));
+        $products = Product::with('category')->where('status', 1)->paginate(6);
+        return view('clients.shop', compact('products'));
+
     }
 }

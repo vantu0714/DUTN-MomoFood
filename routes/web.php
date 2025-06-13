@@ -125,8 +125,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 
 });
-Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+
 
 
 //Clients
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
