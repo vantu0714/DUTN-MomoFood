@@ -9,11 +9,16 @@ use Illuminate\Http\Request;
 class HomeController extends Controller
 {
 
-    public function index()
+ public function index()
     {
-        $products = Product::with('category')->where('status', 1)->paginate(12);
+        $products = Product::with('category')
+            ->where('status', 1)
+            ->where('quantity', '>', 0)
+            ->paginate(6);
+
         return view('clients.home', compact('products'));
     }
+
 
     public function create()
     {

@@ -201,7 +201,7 @@
 
                                             <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
                                                 style="top: 10px; left: 10px;">
-                                                {{ $product->category->name ?? 'No Category' }}
+                                                {{ $product->category?->category_name ?? 'Không có danh mục' }}
                                             </div>
                                             <div class="p-4 border border-secondary border-top-0 rounded-bottom">
                                                 <h4>{{ $product->product_name }}</h4>

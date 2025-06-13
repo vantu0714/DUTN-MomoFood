@@ -62,7 +62,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-success text-uppercase mb-1">Còn hàng</div>
-                                <div class="h5 mb-0">{{ $products->where('status', 'Còn hàng')->count() }}</div>
+                                <div class="h5 mb-0">{{ $availableProductsCount }}</div>
                             </div>
                         </div>
                     </div>
@@ -79,12 +79,13 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-danger text-uppercase mb-1">Hết hàng</div>
-                                <div class="h5 mb-0">{{ $products->where('status', 'Hết hàng')->count() }}</div>
+                                <div class="h5 mb-0">{{ $outOfStockProductsCount }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
             <div class="col-xl-3 col-md-6 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -124,10 +125,7 @@
                             <select class="form-select" name="category_id">
                                 <option value="" style="font-weight: bold;">Tất cả danh mục</option>
                                 @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}"
-                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
+                                    <option value="{{ $category->id }}">{{ $category->category_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -204,9 +202,9 @@
                                     </td>
                                     <td>
                                         <div class="text-center">
-                                            <img src="{{ asset('storage/' . $item->image) }}"
-                                                class="rounded shadow-sm" width="60" height="60"
-                                                style="object-fit: cover;" alt="Product Image">
+                                            <img src="{{ asset('storage/' . $item->image) }}" class="rounded shadow-sm"
+                                                width="60" height="60" style="object-fit: cover;"
+                                                alt="Product Image">
                                         </div>
                                     </td>
                                     <td>
@@ -232,11 +230,11 @@
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center justify-content-center">
-                                            <span class="quantity-badge fw-bold 
-                                                @if($item->quantity <= 10) text-danger border-danger
+                                            <span
+                                                class="quantity-badge fw-bold 
+                                                @if ($item->quantity <= 10) text-danger border-danger
                                                 @elseif($item->quantity <= 50) text-warning border-warning
-                                                @else text-success border-success
-                                                @endif border rounded px-3 py-1">
+                                                @else text-success border-success @endif border rounded px-3 py-1">
                                                 <i class="fas fa-cubes me-1"></i>
                                                 {{ number_format($item->quantity) }}
                                             </span>
@@ -257,7 +255,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if ($item->status == 'Còn hàng')
+                                        @if ($item->quantity > 0)
                                             <span
                                                 class="status-badge status-available fw-bold text-success border border-success rounded px-3 py-1">
                                                 <i class="fas fa-check me-1"></i>Còn hàng
@@ -269,6 +267,7 @@
                                             </span>
                                         @endif
                                     </td>
+
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <i class="fas fa-eye text-muted me-2"></i>
