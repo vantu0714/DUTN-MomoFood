@@ -8,52 +8,49 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-
     <div class="table-responsive">
         <table class="table table-bordered table-hover table-striped">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Họ tên</th>
-                    <th>Email</th>
-                    <th>Điện thoại</th>
-                    <th>Địa chỉ</th>
-                    <th>Mật khẩu</th>
-                    <th>Role ID</th>
+                    <th>Người bình luận</th>
+                    <th>Nội dung</th>
+                    <th>Sản phẩm/Bài viết</th>
+                    <th>Trạng thái</th>
                     <th>Ngày tạo</th>
-                    <th>Cập nhật</th>
                     <th>Hành động</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse ($Comments as $Comment)
+                {{-- @forelse ($comments as $comment)
                 <tr>
-                    <td>{{ $Comment->id }}</td>
-                    <td>{{ $Comment->name }}</td>
-                    <td>{{ $Comment->email }}</td>
-                    <td>{{ $Comment->phone }}</td>
-                    <td>{{ $Comment->address }}</td>
-                    <td>{{ $Comment->password }}</td>
-                    <td>{{ $Comment->role_id }}</td>
-                    <td>{{ $Comment->created_at }}</td>
-                    <td>{{ $Comment->updated_at }}</td>
+                    <td>{{ $comment->id }}</td>
+                    <td>{{ $comment->user->name ?? 'Ẩn danh' }}</td>
+                    <td>{{ Str::limit($comment->content, 50) }}</td>
+                    <td>{{ $comment->product->name ?? 'Không xác định' }}</td>
                     <td>
-                        <a href="{{ route('Comments.edit', $Comment->id) }}" class="btn btn-sm btn-warning">Sửa</a>
-
-                        <a href="{{ route('Comments.show', $Comment->id) }}" class="btn btn-sm btn-info">Xem</a>
-
-                        <form action="{{ route('Comments.destroy', $Comment->id) }}" method="POST" style="display:inline;">
+                        @if($comment->status == 1)
+                            <span class="badge bg-success">Đã duyệt</span>
+                        @else
+                            <span class="badge bg-secondary">Chờ duyệt</span>
+                        @endif
+                    </td>
+                    <td>{{ $comment->created_at->format('d/m/Y H:i') }}</td>
+                    <td>
+                        <a href="{{ route('comments.edit', $comment->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                        <a href="{{ route('comments.show', $comment->id) }}" class="btn btn-sm btn-info">Xem</a>
+                        <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Xoá người dùng này?')">Xoá</button>
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Xoá bình luận này?')">Xoá</button>
                         </form>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" class="text-center">Không có người dùng nào</td>
+                    <td colspan="7" class="text-center">Không có bình luận nào</td>
                 </tr>
-                @endforelse
+                @endforelse --}}
             </tbody>
         </table>
     </div>
