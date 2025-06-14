@@ -13,6 +13,19 @@ class ProductVariant extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+
+    // Hiển thị giá có định dạng nếu cần dùng
+    public function getFormattedPriceAttribute()
+    {
+        return number_format($this->price, 0, ',', '.') . ' đ';
+    }
+
+    // Lọc các biến thể đang hoạt động
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
     
 }
 

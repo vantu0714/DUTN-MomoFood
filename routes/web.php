@@ -31,7 +31,7 @@ use App\Http\Controllers\Clients\ContactsController;
 //     return view('home');
 // });
 
-Route::get('/home', [HomeController::class, 'index'])->name('home.index');
+Route::get('/', [HomeController::class, 'index'])->name('home.index');
 
 //shop
 Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
@@ -131,3 +131,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 //Clients
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
+Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
+
