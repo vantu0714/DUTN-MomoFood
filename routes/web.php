@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
-
+use App\Http\Controllers\Clients\CartClientController;
 use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
@@ -133,3 +133,6 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
 Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
 Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
+
+ // carts
+Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');
