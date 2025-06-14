@@ -129,14 +129,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
 
-
-
-//Clients
 Route::middleware(['auth', 'client'])->group(function () {
     Route::prefix('clients')->name('clients.')->group(function () {
         Route::get('/info', [AuthController::class, 'info'])->name('info');
         Route::get('/edit', [AuthController::class, 'showEditProfile'])->name('edit');
         Route::post('/edit', [AuthController::class, 'editProfile'])->name('update');
+        Route::get('/changepassword', [AuthController::class, 'showChangePassword'])->name('changepassword');
+        Route::post('/changepassword', [AuthController::class, 'updatePassword'])->name('updatepassword');
     });
 });
 
