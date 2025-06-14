@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
-
+use App\Http\Controllers\Clients\CartClientController;
 use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
@@ -127,6 +127,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
+
 
 
 //Clients
@@ -137,3 +139,6 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/edit', [AuthController::class, 'editProfile'])->name('update');
     });
 });
+
+// carts
+Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');
