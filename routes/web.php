@@ -133,3 +133,6 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
 Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
 Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
+//note cho ông nào merge: cứ accept both rồi cop 2 cái route dưới vào request trên (sẽ nhắc lại lần nữa khi làm pull request)
+Route::get('/clients/changepassword', [AuthController::class, 'showChangePassword'])->name('clients.changepassword');
+Route::post('/clients/changepassword', [AuthController::class, 'updatePassword'])->name('clients.updatepassword');

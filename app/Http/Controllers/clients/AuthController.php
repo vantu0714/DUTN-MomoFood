@@ -112,9 +112,34 @@ class AuthController extends Controller
                 'avatar' => $urlAvatar,
             ]);
 
-            return redirect()->route('clients.info');
+            return redirect()->route('clients.info')->with('success', 'Đổi thông tin thành công!');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    public function showChangePassword()
+    {
+        return view('clients.user.change-password');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'currentPassword' => 'required',
+            'newPassword' => 'required|min:8',
+            'confirmPassword' => 'required|same:newPassword',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->currentPassword, $user->password)) {
+            return back()->withErrors(['currentPassword' => 'Mật khẩu hiện tại không đúng.']);
+        }
+
+        $user->password = Hash::make($request->newPassword);
+        $user->save();
+
+        return redirect()->route('clients.info')->with('success', 'Đổi mật khẩu thành công!');
     }
 }
