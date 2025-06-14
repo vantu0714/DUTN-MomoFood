@@ -109,16 +109,18 @@
 
         @if (session('success'))
             <script>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Thành công',
-                    text: '{{ session('success') }}',
-                    confirmButtonColor: '#3085d6',
-                    timer: 2000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "{{ route('clients.info') }}";
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: '{{ session('success') }}',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{{ route('clients.info') }}";
+                        }
+                    });
                 });
             </script>
         @endif

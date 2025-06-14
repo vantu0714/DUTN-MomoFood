@@ -112,7 +112,7 @@ class AuthController extends Controller
                 'avatar' => $urlAvatar,
             ]);
 
-            return redirect()->route('clients.info')->with('success', 'Đổi thông tin thành công!');
+            return back()->with('success', 'Cập nhật thành công!');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
@@ -140,6 +140,6 @@ class AuthController extends Controller
         $user->password = Hash::make($request->newPassword);
         $user->save();
 
-        return redirect()->route('clients.info')->with('success', 'Đổi mật khẩu thành công!');
+        return back()->with('success', 'Đổi mật khẩu thành công!');
     }
 }

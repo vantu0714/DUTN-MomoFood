@@ -57,6 +57,10 @@
                     title: 'Thành công',
                     text: '{{ session('success') }}',
                     confirmButtonColor: '#3085d6'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ route('clients.info') }}";
+                    }
                 });
             </script>
         @endif
