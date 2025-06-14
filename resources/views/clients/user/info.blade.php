@@ -48,12 +48,34 @@
                                     <tr>
                                         <td>
                                             <strong>
+                                                <span class="glyphicon glyphicon-envelope text-primary"></span>
+                                                Địa chỉ
+                                            </strong>
+                                        </td>
+                                        <td class="text-primary">
+                                            {{ Auth::user()->address }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                <span class="glyphicon glyphicon-envelope text-primary"></span>
+                                                Số điện thoại
+                                            </strong>
+                                        </td>
+                                        <td class="text-primary">
+                                            {{ Auth::user()->phone }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>
                                                 <span class="glyphicon glyphicon-calendar text-primary"></span>
                                                 Thời gian tạo
                                             </strong>
                                         </td>
                                         <td class="text-primary">
-                                            {{ Auth::user()->created_at }}
+                                            {{ Auth::user()->created_at->format('d-m-Y') }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -64,7 +86,7 @@
                                             </strong>
                                         </td>
                                         <td class="text-primary">
-                                            {{ Auth::user()->updated_at }}
+                                            {{ Auth::user()->updated_at->format('d-m-Y') }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -72,7 +94,7 @@
                         </div>
 
                         <div class="text-center mt-3">
-                            <a href="#"
+                            <a href="{{ route('clients.edit') }}"
                                 class="btn btn-primary btn-sm px-4 py-2 rounded-pill shadow-sm text-decoration-none">
                                 <i class="glyphicon glyphicon-edit"></i> Sửa thông tin
                             </a>

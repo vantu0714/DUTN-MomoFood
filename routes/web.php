@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\clients\CartController;
 use App\Http\Controllers\clients\ProducClientController;
+use App\Http\Controllers\Clients\ShopController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -28,7 +30,7 @@ use App\Http\Controllers\clients\ProducClientController;
 //     return view('home');
 // // });
 
-// Route::get('/home', [HomeController::class, 'index'])->name('home.index');
+Route::get('/', [HomeController::class, 'index'])->name('home.index');
 
 // //shop
 // Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
@@ -80,10 +82,10 @@ Route::get('/comments/{id}/edit', [CommentController::class, 'edit'])->name('com
 Route::put('/comments/{id}', [CommentController::class, 'update'])->name('comments.update');
 Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
-// carts
-Route::get('/carts', [CartController::class, 'index'])->name('carts.index');
-// carts
-Route::get('/product', [ProducClientController::class, 'index'])->name('product.index');
+// // carts
+// Route::get('/carts', [CartController::class, 'index'])->name('carts.index');
+// // carts
+// Route::get('/product', [ProducClientController::class, 'index'])->name('product.index');
 
 //Auths
 Route::get('/login', [AuthController::class, 'index'])->name('login');
@@ -126,3 +128,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 
 });
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+
+
+//Clients
+Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
+Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
+Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
