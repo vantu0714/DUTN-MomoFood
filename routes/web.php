@@ -130,6 +130,10 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 
 
 //Clients
-Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
-Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
-Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::prefix('clients')->name('clients.')->group(function () {
+        Route::get('/info', [AuthController::class, 'info'])->name('info');
+        Route::get('/edit', [AuthController::class, 'showEditProfile'])->name('edit');
+        Route::post('/edit', [AuthController::class, 'editProfile'])->name('update');
+    });
+});
