@@ -172,12 +172,13 @@
                                 </li>
                             </div>
                             <div class="profile_info">
-                                <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('admins/assets/img/client_img.png') }}"
-                                    alt="avatar" width="100" style="border-radius: 50%;">
+                                <img src="{{ Auth::check() && Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('path/to/default-avatar.png') }}" alt="avatar" width="100" style="border-radius: 50%;">
+
                                 <div class="profile_info_iner">
                                     <div class="profile_author_name">
                                         <p>Admin</p>
-                                        <h5>{{ Auth::user()->name }}</h5>
+                                        <h5>{{ Auth::check() ? Auth::user()->name : 'Guest' }}</h5>
+
                                     </div>
                                     <div class="profile_info_details">
                                         <a href="{{ route('info') }}">Thông tin cá nhân </a>

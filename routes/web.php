@@ -131,8 +131,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
     });
-
 });
+
+
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
 
@@ -145,6 +146,12 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/changepassword', [AuthController::class, 'updatePassword'])->name('updatepassword');
     });
 });
+
+//Clients
+Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
+Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
 
 // carts
 Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');

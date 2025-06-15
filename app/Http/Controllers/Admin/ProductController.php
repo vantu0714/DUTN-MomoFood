@@ -19,9 +19,9 @@ class ProductController extends Controller
             $statusFilter = $request->input('status');
 
             if ($statusFilter === 'Còn hàng') {
-                $query->where('status', 'Còn hàng');
+                $query->where('quantity', '>', 0);
             } elseif ($statusFilter === 'Hết hàng') {
-                $query->where('status', 'Hết hàng');
+                $query->where('quantity', '=', 0);
             }
         }
 
@@ -30,12 +30,10 @@ class ProductController extends Controller
             $query->where('category_id', $request->input('category_id'));
         }
 
-        // Lấy tổng số sản phẩm "Còn hàng" từ toàn bộ DB
-        // Điều này là cần thiết vì $products đã được phân trang
-        $availableProductsCount = Product::where('status', 'Còn hàng')->count();
+    
+        $availableProductsCount = Product::where('quantity', '>', 0)->count();
+        $outOfStockProductsCount = Product::where('quantity', '=', 0)->count();
 
-        // Lấy tổng số sản phẩm "Hết hàng" từ toàn bộ DB (tương tự)
-        $outOfStockProductsCount = Product::where('status', 'Hết hàng')->count();
 
 
         $products = $query->paginate(10);
@@ -57,13 +55,13 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code',
             'category_id' => 'required|exists:categories,id',
-            'status' => 'required|in:1,0',
             'original_price' => 'nullable|numeric',
             'discounted_price' => 'nullable|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'quantity' => 'required|integer|min:0',
         ]);
-        $validated['status'] = (int) $validated['status'];
+        $validated['status'] = $validated['quantity'] > 0 ? 1 : 0;
+
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = $imagePath;
@@ -110,13 +108,14 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code,' . $product->id,
             'category_id' => 'required|exists:categories,id',
-            'status' => 'required|in:1,0',
             'original_price' => 'nullable|numeric',
             'discounted_price' => 'nullable|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'quantity' => 'required|integer|min:0',
 
         ]);
+        $validated['status'] = $validated['quantity'] > 0 ? 1 : 0;
+
         if ($request->hasFile('image')) {
             // Xoá ảnh cũ (nếu có)
             if ($product->image && Storage::disk('public')->exists($product->image)) {

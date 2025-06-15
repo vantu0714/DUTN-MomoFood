@@ -10,8 +10,13 @@ use Illuminate\Support\Facades\Auth;
 class HomeController extends Controller
 {
 
-    public function index()
+ public function index()
     {
+        $products = Product::with('category')
+            ->where('status', 1)
+            ->where('quantity', '>', 0)
+            ->paginate(6);
+
         $user = Auth::user();
         if ($user && $user->role && $user->role->name === 'admin') {
             // dd($user->role->name);
@@ -21,6 +26,7 @@ class HomeController extends Controller
         $products = Product::with('category')->where('status', 1)->paginate(12);
         return view('clients.home', compact('products'));
     }
+
 
     public function create()
     {

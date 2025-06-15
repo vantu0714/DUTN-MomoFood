@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,18 +11,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
+        // Bước 1: Tạo Role trước
+        $this->call(RoleSeeder::class);
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        // Bước 2: Tạo User sau khi có role
 
-        \App\Models\Category::factory(5)->create(); // Tạo sẵn 5 category nếu cần
+        // Bước 3: Các seed khác
+        \App\Models\Category::factory(5)->create();
         $this->call(ProductSeeder::class);
-
+        $this->call(OrderSeeder::class);
         $this->call([
-            OrderSeeder::class,
+            AttributeSeeder::class,
+            AttributeValueSeeder::class,
         ]);
     }
 }
