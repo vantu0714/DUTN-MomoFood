@@ -17,7 +17,7 @@
     </div>
     <div class="container px-0">
         <nav class="navbar navbar-light bg-white navbar-expand-xl">
-            <a href="index.html" class="navbar-brand">
+            <a href="{{ route('home.index') }}" class="navbar-brand">
                 <img class="img-logo" src="{{ asset('clients/img/logo_datn.png') }}" alt="">
             </a>
             <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
