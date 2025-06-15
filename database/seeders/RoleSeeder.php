@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Role;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class RoleSeeder extends Seeder
 {
@@ -14,8 +13,8 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         Role::insert([
-        ['name' => 'admin', 'description' => 'Quản trị viên'],
-        ['name' => 'user', 'description' => 'Khách hàng'],
-    ]);
+            ['id' => 1, 'name' => 'admin', 'description' => 'Quản trị viên'],
+            ['id' => 2, 'name' => 'user', 'description' => 'Khách hàng'],
+        ]);
     }
 }

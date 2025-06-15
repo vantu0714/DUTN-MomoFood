@@ -28,9 +28,8 @@
                 <select name="category_id" class="form-control">
                     <option value="">-- Chọn danh mục --</option>
                     @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
+                        <option value="{{ $category->id }}">{{ $category->category_name }}</option>
+
                     @endforeach
                 </select>
                 @error('category_id')
@@ -60,18 +59,6 @@
                 <input type="number" step="0.01" name="discounted_price" class="form-control"
                     value="{{ old('discounted_price') }}">
                 @error('discounted_price')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label for="status" class="form-label">Trạng thái</label>
-                <select name="status" class="form-control">
-                    <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Còn hàng</option>
-                    <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Hết hàng</option>
-
-                </select>
-                @error('status')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>

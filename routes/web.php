@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
-
+use App\Http\Controllers\Clients\CartClientController;
 use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
@@ -92,6 +92,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+// Xử lý gửi email
+Route::post('/forgot-password', [AuthController::class, 'sendResetRedirect'])->name('password.email');
+// Hiển thị form đổi mật khẩu
+Route::get('/reset-password', [AuthController::class, 'showResetForm'])->name('password.reset');
+// Xử lý cập nhật mật khẩu
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {
@@ -124,12 +131,27 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
     });
-
 });
-Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 
+
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
+
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::prefix('clients')->name('clients.')->group(function () {
+        Route::get('/info', [AuthController::class, 'info'])->name('info');
+        Route::get('/edit', [AuthController::class, 'showEditProfile'])->name('edit');
+        Route::post('/edit', [AuthController::class, 'editProfile'])->name('update');
+        Route::get('/changepassword', [AuthController::class, 'showChangePassword'])->name('changepassword');
+        Route::post('/changepassword', [AuthController::class, 'updatePassword'])->name('updatepassword');
+    });
+});
 
 //Clients
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
 Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
+
+// carts
+Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');

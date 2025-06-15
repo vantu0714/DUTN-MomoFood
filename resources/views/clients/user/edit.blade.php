@@ -7,7 +7,7 @@
             <!-- Account page navigation-->
             <nav class="nav nav-borders">
                 <a class="nav-link active ms-0" href="{{ route('clients.info') }}"target="__blank">Thông tin</a>
-                <a class="nav-link" href="#" target="__blank">Đổi
+                <a class="nav-link" href="{{ route('clients.changepassword') }}" target="__blank">Đổi
                     mật khẩu</a>
             </nav>
             <hr class="mt-0 mb-4">
@@ -104,6 +104,25 @@
         </script>
         <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script type="text/javascript"></script>
+
+        @if (session('success'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công',
+                        text: '{{ session('success') }}',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{{ route('clients.info') }}";
+                        }
+                    });
+                });
+            </script>
+        @endif
     </body>
 @endsection

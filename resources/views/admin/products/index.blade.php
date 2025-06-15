@@ -62,7 +62,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-success text-uppercase mb-1">Còn hàng</div>
-                                <div class="h5 mb-0">{{ $products->where('status', 'Còn hàng')->count() }}</div>
+                                <div class="h5 mb-0">{{ $availableProductsCount }}</div>
                             </div>
                         </div>
                     </div>
@@ -79,12 +79,13 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-danger text-uppercase mb-1">Hết hàng</div>
-                                <div class="h5 mb-0">{{ $products->where('status', 'Hết hàng')->count() }}</div>
+                                <div class="h5 mb-0">{{ $outOfStockProductsCount }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
             <div class="col-xl-3 col-md-6 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -124,10 +125,7 @@
                             <select class="form-select" name="category_id">
                                 <option value="" style="font-weight: bold;">Tất cả danh mục</option>
                                 @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}"
-                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
+                                    <option value="{{ $category->id }}">{{ $category->category_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -204,9 +202,9 @@
                                     </td>
                                     <td>
                                         <div class="text-center">
-                                            <img src="{{ asset('storage/' . $item->image) }}"
-                                                class="rounded shadow-sm" width="60" height="60"
-                                                style="object-fit: cover;" alt="Product Image">
+                                            <img src="{{ asset('storage/' . $item->image) }}" class="rounded shadow-sm"
+                                                width="60" height="60" style="object-fit: cover;"
+                                                alt="Product Image">
                                         </div>
                                     </td>
                                     <td>
@@ -257,7 +255,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if ($item->status == 'Còn hàng')
+                                        @if ($item->quantity > 0)
                                             <span
                                                 class="status-badge status-available fw-bold text-success border border-success rounded px-3 py-1">
                                                 <i class="fas fa-check me-1"></i>Còn hàng
@@ -269,6 +267,7 @@
                                             </span>
                                         @endif
                                     </td>
+
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <i class="fas fa-eye text-muted me-2"></i>
@@ -309,6 +308,9 @@
                             @endforeach
                         </tbody>
                     </table>
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $products->links() }}
+                    </div>
                 </div>
             </div>
             <div class="card-footer bg-white border-top-0">
@@ -326,34 +328,28 @@
 
     <!-- Single Delete Modal -->
     <!-- Modal xác nhận xoá dùng chung -->
-    {{-- <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <!-- Modal xác nhận xóa -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title text-danger" id="deleteModalLabel">
-                        <i class="fas fa-exclamation-triangle me-2"></i> Xác nhận xóa
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content shadow-sm">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-2">
-                        Bạn có chắc chắn muốn xóa sản phẩm <strong id="productName"></strong>?
-                    </p>
-                    <p class="text-muted small mb-0">Hành động này không thể hoàn tác.</p>
+                    Bạn có chắc chắn muốn xóa <strong id="productName"></strong>?
                 </div>
-                <div class="modal-footer border-0 pt-0">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
                     <form id="deleteForm" method="POST">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash me-1"></i> Xóa
-                        </button>
+                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
                     </form>
                 </div>
             </div>
         </div>
-    </div> --}}
+    </div> 
 
     <!-- Nút mở modal -->
     <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $item->id }}">
@@ -388,6 +384,7 @@
             </div>
         </div>
     </div>
+
 
 
     <style>
@@ -560,25 +557,16 @@
             }
 
             // Delete functionality
-            const deleteButtons = document.querySelectorAll('.delete-btn');
-            const deleteModal = document.getElementById('deleteModal');
-            const deleteForm = document.getElementById('deleteForm');
-            const productNameSpan = document.getElementById('productName');
+            document.addEventListener('DOMContentLoaded', function() {
+                const deleteModal = document.getElementById('deleteModal');
 
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const productId = this.getAttribute('data-product-id');
-                    const productName = this.getAttribute('data-product-name');
+                deleteModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const productId = button.getAttribute('data-id');
+                    const productName = button.getAttribute('data-name');
 
-                    // Set product name in modal
-                    productNameSpan.textContent = `"${productName}"`;
-
-                    // Set form action
-                    deleteForm.action = `{{ route('products.destroy', '') }}/${productId}`;
-
-                    // Show modal
-                    const modal = new bootstrap.Modal(deleteModal);
-                    modal.show();
+                    document.getElementById('productName').textContent = productName;
+                    document.getElementById('deleteForm').action = `/admin/products/${productId}`;
                 });
             });
         });

@@ -5,8 +5,12 @@ namespace App\Http\Controllers\clients;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -112,9 +116,81 @@ class AuthController extends Controller
                 'avatar' => $urlAvatar,
             ]);
 
-            return redirect()->route('clients.info');
+            return back()->with('success', 'Cập nhật thành công!');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    public function showChangePassword()
+    {
+        return view('clients.user.change-password');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'currentPassword' => 'required',
+            'newPassword' => 'required|min:8',
+            'confirmPassword' => 'required|same:newPassword',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->currentPassword, $user->password)) {
+            return back()->withErrors(['currentPassword' => 'Mật khẩu hiện tại không đúng.']);
+        }
+
+        $user->password = Hash::make($request->newPassword);
+        $user->save();
+
+        return back()->with('success', 'Đổi mật khẩu thành công!');
+    }
+
+    public function showForgotPassword()
+    {
+        return view('clients.auth.forgot-pass');
+    }
+
+    public function sendResetRedirect(Request $request)
+    {
+        $request->validate(['email' => 'required|email|exists:users,email']);
+
+        $email = $request->email;
+        $token = Str::random(64);
+
+        // Lưu tạm token vào session (không lưu DB, vì không dùng qua email)
+        session(['reset_email' => $email, 'reset_token' => $token]);
+
+        return redirect()->route('password.reset');
+    }
+
+    public function showResetForm()
+    {
+        if (!session()->has('reset_email')) {
+            return redirect()->route('password.request')->withErrors(['email' => 'Vui lòng nhập email trước.']);
+        }
+
+        return view('clients.auth.reset-pass');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|confirmed|min:6',
+        ]);
+
+        $email = session('reset_email');
+        if (!$email) {
+            return redirect()->route('password.request')->withErrors(['email' => 'Phiên đặt lại mật khẩu đã hết hạn.']);
+        }
+
+        $user = User::where('email', $email)->first();
+        $user->update(['password' => Hash::make($request->password)]);
+
+        // Xoá session để không dùng lại được
+        session()->forget(['reset_email', 'reset_token']);
+
+        return redirect('/login')->with('message', 'Đặt lại mật khẩu thành công!');
     }
 }

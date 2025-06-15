@@ -194,14 +194,13 @@
                                 @foreach ($products as $product)
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item">
-                                            <div class="fruite-img">
-                                                <img src="{{ asset('Clients/img/' . ($product->image ?? 'default.jpg')) }}"
-                                                    onerror="if (!this.src.includes('default.jpg')) { this.onerror=null; this.src='{{ asset('Clients/img/default.jpg') }}'; }"
-                                                    alt="Product Image">
-                                            </div>
+                                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                onerror="if (!this.src.includes('default.jpg')) { this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}'; }"
+                                                alt="Product Image" class="img-fluid w-100 rounded-top">
+
                                             <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
                                                 style="top: 10px; left: 10px;">
-                                                {{ $product->category->name ?? 'No Category' }}
+                                                {{ $product->category?->category_name ?? 'Không có danh mục' }}
                                             </div>
                                             <div class="p-4 border border-secondary border-top-0 rounded-bottom">
                                                 <h4>{{ $product->product_name }}</h4>
@@ -702,7 +701,7 @@
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
     <div class="container py-5">
-        <h1 class="mb-0">Fresh Organic Vegetables</h1>
+        <h1 class="mb-0">Sản Phẩm Bán Chạy</h1>
         <div class="owl-carousel vegetable-carousel justify-content-center">
             <div class="border border-primary rounded position-relative vesitable-item">
                 <div class="vesitable-img">
@@ -876,13 +875,12 @@
         <div class="row g-4 align-items-center">
             <div class="col-lg-6">
                 <div class="py-4">
-                    <h1 class="display-3 text-white">Fresh Exotic Fruits</h1>
-                    <p class="fw-normal display-3 text-dark mb-4">in Our Store</p>
-                    <p class="mb-4 text-dark">The generated Lorem Ipsum is therefore always free from repetition
-                        injected humour, or non-characteristic words etc.</p>
-
+                    <h1 class="display-3 text-white">Đồ ăn vặt bán chạy MoMoFood</h1>
+                    {{-- <p class="fw-normal display-3 text-dark mb-4">trong cửa hàng chúng tôi</p> --}}
+                    <p class="mb-4 text-dark">Khám phá ngay các món ăn vặt bán chạy nhất tại MomoFood – hương vị khiến bạn ghiền ngay từ lần đầu!
+                        Từ bánh ngọt, snack giòn rụm đến các món ăn vặt độc đáo, chúng tôi mang đến cho bạn trải nghiệm ẩm thực tuyệt vời. Mua ngay để thưởng thức những món ăn vặt ngon miệng và hấp dẫn nhất!</p></p>
                     <a href="#"
-                        class="banner-btn btn border-2 border-white rounded-pill text-dark py-3 px-5">BUY</a>
+                        class="banner-btn btn border-2 border-white rounded-pill text-dark py-3 px-5">MUA</a>
 
                 </div>
             </div>
@@ -896,8 +894,8 @@
                         style="width: 140px; height: 140px; top: 0; left: 0;">
                         <h1 style="font-size: 100px;">1</h1>
                         <div class="d-flex flex-column">
-                            <span class="h2 mb-0">50$</span>
-                            <span class="h4 text-muted mb-0">kg</span>
+                            <span class="h2 mb-0">50k</span>
+                            <span class="h4 text-muted mb-0">Túi</span>
                         </div>
                     </div>
                 </div>

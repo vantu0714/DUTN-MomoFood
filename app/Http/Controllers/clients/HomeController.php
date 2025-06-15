@@ -5,15 +5,28 @@ namespace App\Http\Controllers\clients;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
 
-    public function index()
+ public function index()
     {
+        $products = Product::with('category')
+            ->where('status', 1)
+            ->where('quantity', '>', 0)
+            ->paginate(6);
+
+        $user = Auth::user();
+        if ($user && $user->role && $user->role->name === 'admin') {
+            // dd($user->role->name);
+            return redirect('/admin/dashboard')
+                ->with('error', 'Admin không được phép truy cập trang chủ.');
+        }
         $products = Product::with('category')->where('status', 1)->paginate(12);
         return view('clients.home', compact('products'));
     }
+
 
     public function create()
     {

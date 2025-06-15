@@ -69,6 +69,6 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
-        // thêm các middleware khác nếu cần
+        'client' => \App\Http\Middleware\ClientMiddleware::class,
     ];
 }
