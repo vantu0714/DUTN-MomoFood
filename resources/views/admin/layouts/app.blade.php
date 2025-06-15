@@ -11,6 +11,7 @@
 </div>
 
 
-
+@yield('scripts')
 @include('admin.layouts.footer')
 @stack('page-js')
+
