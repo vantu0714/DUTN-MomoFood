@@ -35,8 +35,9 @@
                                         <a data-bs-toggle="modal" data-bs-target="#sing_up" data-bs-dismiss="modal"
                                             href="/register">Đăng ký</a>
                                     </p>
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#forgot_password"
-                                        data-bs-dismiss="modal" class="pass_forget_btn">Quên mật khẩu</a>
+                                    <a href="{{ route('password.request') }}" data-bs-toggle="modal"
+                                        data-bs-target="#forgot_password" data-bs-dismiss="modal"
+                                        class="pass_forget_btn">Quên mật khẩu</a>
                                 </div>
                             </form>
                         </div>
