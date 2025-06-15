@@ -30,16 +30,22 @@
                     <tbody>
                         @foreach ($order->orderDetails as $detail)
                             <tr>
+                                {{-- Tên biến thể --}}
                                 <td>
-                                    {{ $detail->productVariant->name ?? 'N/A' }}
+                                    {{ $detail->productVariant->name ?? 'Không có biến thể' }}
                                 </td>
+
+                                {{-- Tên sản phẩm --}}
                                 <td>
-                                    @if ($detail->productVariant)
-                                        {{ $detail->productVariant->product->product_name ?? 'N/A' }}
+                                    @if ($detail->productVariant && $detail->productVariant->product)
+                                        {{ $detail->productVariant->product->product_name }}
+                                    @elseif ($detail->product)
+                                        {{ $detail->product->product_name }}
                                     @else
-                                        {{ $detail->product->product_name ?? 'N/A' }}
+                                        Không rõ sản phẩm
                                     @endif
                                 </td>
+
                                 <td>{{ number_format($detail->price) }}đ</td>
                                 <td>{{ $detail->quantity }}</td>
                                 <td>{{ number_format($detail->price * $detail->quantity) }}đ</td>
@@ -61,6 +67,7 @@
                 <p><strong>Trạng thái đơn hàng:</strong> {{ ucfirst($order->status) }}</p>
             </div>
         </div>
+
         <a href="{{ route('orders.index') }}" class="btn btn-secondary">Quay lại</a>
     </div>
 @endsection
