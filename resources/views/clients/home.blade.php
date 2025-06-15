@@ -194,11 +194,10 @@
                                 @foreach ($products as $product)
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item">
-                                            <div class="fruite-img">
-                                                <img src="{{ asset('Clients/img/' . ($product->image ?? 'default.jpg')) }}"
-                                                    onerror="if (!this.src.includes('default.jpg')) { this.onerror=null; this.src='{{ asset('Clients/img/default.jpg') }}'; }"
-                                                    alt="Product Image">
-                                            </div>
+                                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                onerror="if (!this.src.includes('default.jpg')) { this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}'; }"
+                                                alt="Product Image" class="img-fluid w-100 rounded-top">
+
                                             <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
                                                 style="top: 10px; left: 10px;">
                                                 {{ $product->category?->category_name ?? 'Không có danh mục' }}
