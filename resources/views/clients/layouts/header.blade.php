@@ -28,6 +28,8 @@
 
         <!-- Template Stylesheet -->
         <link href="{{ asset('clients/css/style.css') }}" rel="stylesheet">
+
+         @stack('styles')
     </head>
 
     <body>
