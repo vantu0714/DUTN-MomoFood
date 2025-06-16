@@ -17,7 +17,7 @@
     </div>
     <div class="container px-0">
         <nav class="navbar navbar-light bg-white navbar-expand-xl">
-            <a href="index.html" class="navbar-brand">
+            <a href="{{ route('home.index') }}" class="navbar-brand">
                 <img class="img-logo" src="{{ asset('clients/img/logo_datn.png') }}" alt="">
             </a>
             <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
@@ -32,7 +32,7 @@
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Trang</a>
                         <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                            <a href="cart.html" class="dropdown-item">Giỏ hàng</a>
+                            <a href="{{ route('carts.index') }}" class="dropdown-item">Giỏ hàng</a>
                             <a href="chackout.html" class="dropdown-item">Thanh toán</a>
                             <a href="testimonial.html" class="dropdown-item">Ưu đãi</a>
                             <a href="{{ route('news.index') }}" class="dropdown-item">Tin tức</a>
