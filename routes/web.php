@@ -15,7 +15,7 @@ use App\Http\Controllers\Clients\CartClientController;
 use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
-
+use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,7 +61,6 @@ Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.de
 // categories
 Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
-
     Route::get('/create', [CategoryController::class, 'create'])->name('create');
     Route::get('/{id}/show', [CategoryController::class, 'show'])->name('show');
     Route::post('/store', [CategoryController::class, 'store'])->name('store');
@@ -155,3 +154,4 @@ Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clie
 
 // carts
 Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');
+Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
