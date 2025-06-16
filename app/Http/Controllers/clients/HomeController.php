@@ -49,49 +49,17 @@ class HomeController extends Controller
         $products = $query->paginate(12);
         $categories = Category::withCount('products')->get();
 
-        return view('clients.home', compact('products', 'categories'));
+        // Lấy tất cả danh mục và đếm số sản phẩm trong mỗi danh mục
+        $bestSellingProducts = Product::with('category')
+        ->where('status', 1)
+        ->where('quantity', '>', 0)
+        ->inRandomOrder() 
+        ->take(8) 
+        ->get();
+ 
+        return view('clients.home', compact('products', 'categories', 'bestSellingProducts'));
+
     }
 
-    public function create()
-    {
-        //
-    }
-
-
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    
 }

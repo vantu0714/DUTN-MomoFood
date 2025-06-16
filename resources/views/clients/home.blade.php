@@ -216,7 +216,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="tab-2" class="tab-pane fade show p-0">
+                {{-- <div id="tab-2" class="tab-pane fade show p-0">
                     <div class="row g-4">
                         <div class="col-lg-12">
                             <div class="row g-4">
@@ -462,7 +462,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
             </div>
         </div>
     </div>
@@ -531,171 +531,38 @@
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
     <div class="container py-5">
-        <h1 class="mb-0">Sản Phẩm Bán Chạy</h1>
+        <h1 class="mb-0">SẢN PHẨM BÁN CHẠY</h1>
         <div class="owl-carousel vegetable-carousel justify-content-center">
-            <div class="border border-primary rounded position-relative vesitable-item">
-                <div class="vesitable-img">
+            @foreach ($bestSellingProducts as $product)
+                <div class="border border-primary rounded position-relative vesitable-item">
+                    <div class="vesitable-img">
+                        <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid w-100 rounded-top"
+                             alt="{{ $product->name }}">
+                    </div>
 
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
-                        alt="">
-                </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                    style="top: 10px; right: 10px;">
-                    Vegetable</div>
+                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                         style="top: 10px; right: 10px;">
+                        {{ $product->category->category_name ?? 'Không có danh mục' }}
+                    </div>
 
-                <div class="p-4 rounded-bottom">
-                    <h4>Parsely</h4>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                    <div class="d-flex justify-content-between flex-lg-wrap">
-                        <p class="text-dark fs-5 fw-bold mb-0">$4.99 / kg</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
+                    <div class="p-4 rounded-bottom">
+                        <h4>{{ $product->product_name }}</h4>
+                        <p>{{ Str::limit($product->description, 60) }}</p>
+                        <div class="d-flex justify-content-between flex-lg-wrap">
+                            <p class="text-dark fs-5 fw-bold mb-0">
+                                {{ number_format($product->discounted_price, 0, ',', '.') }} đ
+                            </p>
+                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary">
+                                <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm giỏ hàng
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="border border-primary rounded position-relative vesitable-item">
-                <div class="vesitable-img">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
-                        alt="">
-                </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                    style="top: 10px; right: 10px;">
-                    Vegetable</div>
-
-                <div class="p-4 rounded-bottom">
-                    <h4>Parsely</h4>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                    <div class="d-flex justify-content-between flex-lg-wrap">
-                        <p class="text-dark fs-5 fw-bold mb-0">$4.99 / kg</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="border border-primary rounded position-relative vesitable-item">
-                <div class="vesitable-img">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                        class="img-fluid w-100 rounded-top bg-light" alt="">
-                </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                    style="top: 10px; right: 10px;">
-                    Vegetable</div>
-
-                <div class="p-4 rounded-bottom">
-                    <h4>Banana</h4>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                    <div class="d-flex justify-content-between flex-lg-wrap">
-                        <p class="text-dark fs-5 fw-bold mb-0">$7.99 / kg</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="border border-primary rounded position-relative vesitable-item">
-                <div class="vesitable-img">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
-                        alt="">
-                </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                    style="top: 10px; right: 10px;">
-                    Vegetable</div>
-
-                <div class="p-4 rounded-bottom">
-                    <h4>Bell Papper</h4>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                    <div class="d-flex justify-content-between flex-lg-wrap">
-                        <p class="text-dark fs-5 fw-bold mb-0">$7.99 / kg</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="border border-primary rounded position-relative vesitable-item">
-                <div class="vesitable-img">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
-                        alt="">
-                </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                    style="top: 10px; right: 10px;">
-                    Vegetable</div>
-
-                <div class="p-4 rounded-bottom">
-                    <h4>Potatoes</h4>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                    <div class="d-flex justify-content-between flex-lg-wrap">
-                        <p class="text-dark fs-5 fw-bold mb-0">$7.99 / kg</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="border border-primary rounded position-relative vesitable-item">
-                <div class="vesitable-img">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
-                        alt="">
-                </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                    style="top: 10px; right: 10px;">
-                    Vegetable</div>
-
-                <div class="p-4 rounded-bottom">
-                    <h4>Parsely</h4>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                    <div class="d-flex justify-content-between flex-lg-wrap">
-                        <p class="text-dark fs-5 fw-bold mb-0">$7.99 / kg</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="border border-primary rounded position-relative vesitable-item">
-                <div class="vesitable-img">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
-                        alt="">
-                </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                    style="top: 10px; right: 10px;">
-                    Vegetable</div>
-
-                <div class="p-4 rounded-bottom">
-                    <h4>Potatoes</h4>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                    <div class="d-flex justify-content-between flex-lg-wrap">
-                        <p class="text-dark fs-5 fw-bold mb-0">$7.99 / kg</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="border border-primary rounded position-relative vesitable-item">
-                <div class="vesitable-img">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid w-100 rounded-top"
-                        alt="">
-                </div>
-                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                    style="top: 10px; right: 10px;">
-                    Vegetable</div>
-
-                <div class="p-4 rounded-bottom">
-                    <h4>Parsely</h4>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                    <div class="d-flex justify-content-between flex-lg-wrap">
-                        <p class="text-dark fs-5 fw-bold mb-0">$7.99 / kg</p>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
 </div>
+
 <!-- Vesitable Shop End -->
 
 
@@ -705,7 +572,7 @@
         <div class="row g-4 align-items-center">
             <div class="col-lg-6">
                 <div class="py-4">
-                    <h1 class="display-3 text-white">Đồ ăn vặt bán chạy MoMoFood</h1>
+                    <h1 class="display-3 text-white">Thế giới đồ ăn vặt MoMoFood</h1>
                     {{-- <p class="fw-normal display-3 text-dark mb-4">trong cửa hàng chúng tôi</p> --}}
                     <p class="mb-4 text-dark">Khám phá ngay các món ăn vặt bán chạy nhất tại MomoFood – hương vị khiến bạn ghiền ngay từ lần đầu!
                         Từ bánh ngọt, snack giòn rụm đến các món ăn vặt độc đáo, chúng tôi mang đến cho bạn trải nghiệm ẩm thực tuyệt vời. Mua ngay để thưởng thức những món ăn vặt ngon miệng và hấp dẫn nhất!</p></p>
@@ -717,17 +584,17 @@
             <div class="col-lg-6">
                 <div class="position-relative">
 
-                    <img src="{{ asset('clients/img/baner-1.png') }}" class="img-fluid w-100 rounded"
-                        alt="">
+                    <img src="https://saigonchutla.vn/wp-content/uploads/2023/09/an-vat-kon-tum-3-800x445-1.jpg" class="img-fluid w-100 rounded" alt="Thế giới đồ ăn vặt MoMoFood">
 
-                    <div class="d-flex align-items-center justify-content-center bg-white rounded-circle position-absolute"
+
+                    {{-- <div class="d-flex align-items-center justify-content-center bg-white rounded-circle position-absolute"
                         style="width: 140px; height: 140px; top: 0; left: 0;">
                         <h1 style="font-size: 100px;">1</h1>
                         <div class="d-flex flex-column">
                             <span class="h2 mb-0">50k</span>
                             <span class="h4 text-muted mb-0">Túi</span>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
