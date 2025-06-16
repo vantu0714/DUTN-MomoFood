@@ -170,7 +170,7 @@
                                 <h5 class="mb-0 ps-4 me-4">Tổng cộng</h5>
                                 <p class="mb-0 pe-4">$99.00</p>
                             </div>
-                            <button class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" type="button">Thanh toán</button>
+                            <button class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" ><a href="{{route('clients.order')}}">Thanh Toans</a></button>
                         </div>
                     </div>
                 </div>
