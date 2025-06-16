@@ -290,10 +290,16 @@
                                                 title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
+                                            {{-- <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
                                                 data-product-id="{{ $item->id }}"
                                                 data-product-name="{{ $item->product_name }}" data-bs-toggle="tooltip"
                                                 title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button> --}}
+                                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
+                                                data-product-id="{{ $item->id }}"
+                                                data-product-name="{{ $item->product_name }}" data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal" title="Xóa">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -339,6 +345,40 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div> 
+
+    <!-- Nút mở modal -->
+    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $item->id }}">
+        Xóa
+    </button>
+
+    <!-- Modal riêng cho từng sản phẩm -->
+    <div class="modal fade" id="deleteModal{{ $item->id }}" tabindex="-1"
+        aria-labelledby="deleteModalLabel{{ $item->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-danger" id="deleteModalLabel{{ $item->id }}">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Xác nhận xóa
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Bạn có chắc chắn muốn xóa sản phẩm <strong>{{ $item->name }}</strong>?</p>
+                    <p class="text-muted small mb-0">Hành động này không thể hoàn tác.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                    <form action="{{ route('products.destroy', $item->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash me-1"></i> Xóa
+                        </button>
                     </form>
                 </div>
             </div>
@@ -496,7 +536,7 @@
         }
     </style>
 
-    <script>
+    {{-- <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -530,5 +570,5 @@
                 });
             });
         });
-    </script>
+    </script> --}}
 @endsection

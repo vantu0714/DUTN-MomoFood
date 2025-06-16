@@ -16,6 +16,7 @@ use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
 use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
+use App\Http\Controllers\Clients\ProductDetailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,7 +33,7 @@ use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 //     return view('home');
 // });
 
-Route::get('/', [HomeController::class, 'index'])->name('home.index');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 //shop
 Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
@@ -40,6 +41,8 @@ Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
 //lien he
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
+//chi tiet sp
+Route::get('/chi-tiet', [ProductDetailController::class, 'index'])->name('product-detail.index');
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
