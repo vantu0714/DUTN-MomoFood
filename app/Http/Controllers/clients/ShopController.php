@@ -14,7 +14,7 @@ class ShopController extends Controller
         $products = Product::with('category')
             ->where('status', 1)
             ->where('quantity', '>', 0)
-            ->paginate(6);
+            ->paginate(9);
 
         $categories = Category::withCount('products')->get();
 
@@ -27,7 +27,7 @@ class ShopController extends Controller
         $category = Category::findOrFail($id);
         $products = Product::where('category_id', $category->id)
             ->where('status', 1)
-            ->paginate(12);
+            ->paginate(9);
 
         $categories = Category::withCount('products')->get();
 
