@@ -38,22 +38,35 @@ class PromotionController extends Controller
         $validated = $request->validate([
             'promotion_name' => 'required|string|max:255',
             'discount_type' => 'required|in:fixed,percent',
-            'discount_value' => 'required|numeric|min:0',
+            'discount_value' => [
+                'required',
+                'numeric',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->discount_type === 'percent' && $value > 100) {
+                        $fail('Phần trăm giảm tối đa là 100%.');
+                    }
+                    if ($request->discount_type === 'fixed' && $value < 1000) {
+                        $fail('Giảm theo số tiền phải từ 1000đ trở lên.');
+                    }
+                },
+            ],
+
             'max_discount_value' => 'nullable|numeric|min:0',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'description' => 'nullable|string',
         ]);
 
+        // Bước 2: nếu giảm theo tiền thì bỏ max_discount_value
+        if ($validated['discount_type'] === 'fixed') {
+            $validated['max_discount_value'] = null;
+        }
+
         Promotion::create($validated);
 
         return redirect()->route('promotions.index')->with('success', 'Thêm mã giảm giá thành công!');
     }
 
-
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         //
@@ -61,9 +74,6 @@ class PromotionController extends Controller
         return view('admin.promotions.show', compact('promotion'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         //
@@ -76,7 +86,12 @@ class PromotionController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+
+        $promotion = Promotion::findOrFail($id);
+
+        $request->merge([
+            'discount_type' => $promotion->discount_type,
+        ]);
         $request->validate([
             'promotion_name' => 'required|string|max:255',
             'discount_type' => 'required|in:fixed,percent',
@@ -87,7 +102,6 @@ class PromotionController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $promotion = Promotion::findOrFail($id);
         $promotion->update([
             'promotion_name' => $request->promotion_name,
             'discount_type' => $request->discount_type,

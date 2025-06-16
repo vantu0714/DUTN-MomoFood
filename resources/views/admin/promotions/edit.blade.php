@@ -20,43 +20,48 @@
 
             <div class="mb-3">
                 <label for="promotion_name" class="form-label">Tên khuyến mãi</label>
-                <input type="text" name="promotion_name" class="form-control" required 
+                <input type="text" name="promotion_name" class="form-control" required
                     value="{{ old('promotion_name', $promotion->promotion_name) }}">
             </div>
 
             <div class="mb-3">
                 <label for="discount_type" class="form-label">Loại giảm giá</label>
-                <select name="discount_type" class="form-select" required>
-                    <option value="fixed" {{ old('discount_type', $promotion->discount_type) == 'fixed' ? 'selected' : '' }}>
+                <select class="form-select" disabled>
+                    <option value="fixed" {{ $promotion->discount_type == 'fixed' ? 'selected' : '' }}>
                         Giảm theo số tiền
                     </option>
-                    <option value="percent" {{ old('discount_type', $promotion->discount_type) == 'percent' ? 'selected' : '' }}>
+                    <option value="percent" {{ $promotion->discount_type == 'percent' ? 'selected' : '' }}>
                         Giảm theo phần trăm
                     </option>
                 </select>
+
+                {{-- Gửi giá trị thật bằng input hidden --}}
+                <input type="hidden" name="discount_type" value="{{ $promotion->discount_type }}">
             </div>
 
             <div class="mb-3">
                 <label for="discount_value" class="form-label">Giá trị giảm</label>
-                <input type="number" step="0.01" name="discount_value" class="form-control" required 
+                <input type="number" step="0.01" name="discount_value" class="form-control" required
                     value="{{ old('discount_value', $promotion->discount_value) }}">
             </div>
 
             <div class="mb-3">
                 <label for="max_discount_value" class="form-label">Giảm tối đa (áp dụng cho phần trăm)</label>
-                <input type="number" step="0.01" name="max_discount_value" class="form-control" 
+                <input type="number" step="0.01" name="max_discount_value" class="form-control"
                     value="{{ old('max_discount_value', $promotion->max_discount_value) }}">
             </div>
 
             <div class="mb-3">
                 <label for="start_date" class="form-label">Ngày bắt đầu</label>
-                <input type="datetime-local" name="start_date" class="form-control" required 
+                <input type="datetime-local" name="start_date" class="form-control" required
+                    min="{{ \Carbon\Carbon::now()->addDay()->format('Y-m-d\TH:i') }}"
                     value="{{ old('start_date', \Carbon\Carbon::parse($promotion->start_date)->format('Y-m-d\TH:i')) }}">
             </div>
 
             <div class="mb-3">
                 <label for="end_date" class="form-label">Ngày kết thúc</label>
-                <input type="datetime-local" name="end_date" class="form-control" required 
+                <input type="datetime-local" name="end_date" class="form-control" required
+                    min="{{ old('start_date', \Carbon\Carbon::parse($promotion->start_date)->format('Y-m-d\TH:i')) }}"
                     value="{{ old('end_date', \Carbon\Carbon::parse($promotion->end_date)->format('Y-m-d\TH:i')) }}">
             </div>
 
