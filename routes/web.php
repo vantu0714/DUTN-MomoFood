@@ -15,6 +15,7 @@ use App\Http\Controllers\Clients\CartClientController;
 use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
+use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\VNPayController;
 
@@ -33,7 +34,7 @@ use App\Http\Controllers\VNPayController;
 //     return view('home');
 // });
 
-Route::get('/', [HomeController::class, 'index'])->name('home.index');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 //shop
 Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
@@ -64,7 +65,6 @@ Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.de
 // categories
 Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
-
     Route::get('/create', [CategoryController::class, 'create'])->name('create');
     Route::get('/{id}/show', [CategoryController::class, 'show'])->name('show');
     Route::post('/store', [CategoryController::class, 'store'])->name('store');
@@ -149,6 +149,16 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/changepassword', [AuthController::class, 'updatePassword'])->name('updatepassword');
     });
 });
+Route::prefix('carts')->group(function () {
+    Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
+    Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
+    Route::post('/carts/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.update.ajax');
+    Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
+    Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+    Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
+    Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
+    Route::post('/store', [ClientsOrderController::class, 'store'])->name('order.store');
+});
 
 //Clients
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
@@ -156,10 +166,7 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
 Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
 
-// carts
-Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');
-
-
 //vn-pay
 Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
 Route::get('/vnpay-return', [VNPayController::class, 'return']);
+
