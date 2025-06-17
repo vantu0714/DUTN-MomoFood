@@ -119,21 +119,10 @@
                                             value="Discount">
                                         <label for="Categories-4">Discount</label>
                                     </div>
-<<<<<<< feature/cart-updates-1
-                                    
-                                    <div class="col-lg-12">
-                                        <div class="position-relative">
-                                            <img src="img/banner-fruits.jpg" class="img-fluid w-100 rounded" alt="">
-                                            <div class="position-absolute" style="top: 50%; right: 10px; transform: translateY(-50%);">
-                                                <h3 class="text-secondary fw-bold">Fresh <br> Fruits <br> Banner</h3>
-                                            </div>
-                                        </div>
-=======
                                     <div class="mb-2">
                                         <input type="radio" class="me-2" id="Categories-5" name="category"
                                             value="Expired">
                                         <label for="Categories-5">Expired</label>
->>>>>>> main
                                     </div>
                                 </div>
                             </div>
@@ -239,11 +228,17 @@
                                                     {{ number_format($product->price, 0, ',', '.') }} VND /
                                                     {{ $product->unit ?? 'hộp' }}
                                                 </p>
-                                                <a href="#"
-                                                    class="btn border border-secondary rounded-pill px-3 text-primary">
-                                                    <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ
-                                                    hàng
-                                                </a>
+                                                <form action="{{ route('carts.add') }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="product_id"
+                                                        value="{{ $product->id }}">
+                                                    <button type="submit"
+                                                        class="btn border border-secondary rounded-pill px-3 text-primary">
+                                                        <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào giỏ
+                                                        hàng
+                                                    </button>
+                                                </form>
+
                                             </div>
                                         </div>
                                     </div>
