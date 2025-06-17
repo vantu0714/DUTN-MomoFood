@@ -4,7 +4,7 @@
 <div class="main_content_iner overly_inner ">
     <div class="container-fluid p-0">
 
-              <!-- Single Page Header start -->
+        <!-- Single Page Header start -->
         <div class="container-fluid page-header py-5">
             <h1 class="text-center text-white display-6">Giỏ hàng</h1>
             <ol class="breadcrumb justify-content-center mb-0">
@@ -22,20 +22,22 @@
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
-                          <tr>
-                            <th scope="col">Các sản phẩm</th>
-                            <th scope="col">Tên</th>
-                            <th scope="col">Giá</th>
-                            <th scope="col">Số lượng</th>
-                            <th scope="col">Tổng cộng</th>
-                            <th scope="col">Xử lý</th>
-                          </tr>
+                            <tr>
+                                <th scope="col">Các sản phẩm</th>
+                                <th scope="col">Tên</th>
+                                <th scope="col">Giá</th>
+                                <th scope="col">Số lượng</th>
+                                <th scope="col">Tổng cộng</th>
+                                <th scope="col">Xử lý</th>
+                            </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <th scope="row">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ asset('clients/img/vegetable-item-3.png') }}" class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;" alt="">
+                                        <img src="{{ asset('clients/img/vegetable-item-3.png') }}"
+                                            class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;"
+                                            alt="">
                                     </div>
                                 </th>
                                 <td>
@@ -47,11 +49,12 @@
                                 <td>
                                     <div class="input-group quantity mt-4" style="width: 100px;">
                                         <div class="input-group-btn">
-                                            <button class="btn btn-sm btn-minus rounded-circle bg-light border" >
-                                            <i class="fa fa-minus"></i>
+                                            <button class="btn btn-sm btn-minus rounded-circle bg-light border">
+                                                <i class="fa fa-minus"></i>
                                             </button>
                                         </div>
-                                        <input type="text" class="form-control form-control-sm text-center border-0" value="1">
+                                        <input type="text" class="form-control form-control-sm text-center border-0"
+                                            value="1">
                                         <div class="input-group-btn">
                                             <button class="btn btn-sm btn-plus rounded-circle bg-light border">
                                                 <i class="fa fa-plus"></i>
@@ -63,16 +66,18 @@
                                     <p class="mb-0 mt-4">2.99 $</p>
                                 </td>
                                 <td>
-                                    <button class="btn btn-md rounded-circle bg-light border mt-4" >
+                                    <button class="btn btn-md rounded-circle bg-light border mt-4">
                                         <i class="fa fa-times text-danger"></i>
                                     </button>
                                 </td>
-                            
+
                             </tr>
                             <tr>
                                 <th scope="row">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ asset('clients/img/vegetable-item-5.jpg') }}" class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;" alt="" alt="">
+                                        <img src="{{ asset('clients/img/vegetable-item-5.jpg') }}"
+                                            class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;"
+                                            alt="" alt="">
                                     </div>
                                 </th>
                                 <td>
@@ -84,11 +89,12 @@
                                 <td>
                                     <div class="input-group quantity mt-4" style="width: 100px;">
                                         <div class="input-group-btn">
-                                            <button class="btn btn-sm btn-minus rounded-circle bg-light border" >
-                                            <i class="fa fa-minus"></i>
+                                            <button class="btn btn-sm btn-minus rounded-circle bg-light border">
+                                                <i class="fa fa-minus"></i>
                                             </button>
                                         </div>
-                                        <input type="text" class="form-control form-control-sm text-center border-0" value="1">
+                                        <input type="text" class="form-control form-control-sm text-center border-0"
+                                            value="1">
                                         <div class="input-group-btn">
                                             <button class="btn btn-sm btn-plus rounded-circle bg-light border">
                                                 <i class="fa fa-plus"></i>
@@ -100,7 +106,7 @@
                                     <p class="mb-0 mt-4">2.99 $</p>
                                 </td>
                                 <td>
-                                    <button class="btn btn-md rounded-circle bg-light border mt-4" >
+                                    <button class="btn btn-md rounded-circle bg-light border mt-4">
                                         <i class="fa fa-times text-danger"></i>
                                     </button>
                                 </td>
@@ -108,7 +114,9 @@
                             <tr>
                                 <th scope="row">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ asset('clients/img/vegetable-item-2.jpg') }}" class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;" alt="" alt="">
+                                        <img src="{{ asset('clients/img/vegetable-item-2.jpg') }}"
+                                            class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;"
+                                            alt="" alt="">
                                     </div>
                                 </th>
                                 <td>
@@ -120,11 +128,12 @@
                                 <td>
                                     <div class="input-group quantity mt-4" style="width: 100px;">
                                         <div class="input-group-btn">
-                                            <button class="btn btn-sm btn-minus rounded-circle bg-light border" >
-                                            <i class="fa fa-minus"></i>
+                                            <button class="btn btn-sm btn-minus rounded-circle bg-light border">
+                                                <i class="fa fa-minus"></i>
                                             </button>
                                         </div>
-                                        <input type="text" class="form-control form-control-sm text-center border-0" value="1">
+                                        <input type="text" class="form-control form-control-sm text-center border-0"
+                                            value="1">
                                         <div class="input-group-btn">
                                             <button class="btn btn-sm btn-plus rounded-circle bg-light border">
                                                 <i class="fa fa-plus"></i>
@@ -136,7 +145,7 @@
                                     <p class="mb-0 mt-4">2.99 $</p>
                                 </td>
                                 <td>
-                                    <button class="btn btn-md rounded-circle bg-light border mt-4" >
+                                    <button class="btn btn-md rounded-circle bg-light border mt-4">
                                         <i class="fa fa-times text-danger"></i>
                                     </button>
                                 </td>
@@ -145,8 +154,10 @@
                     </table>
                 </div>
                 <div class="mt-5">
-                    <input type="text" class="border-0 border-bottom rounded me-5 py-3 mb-4" placeholder="Nhập phiếu giảm giá">
-                    <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="button">Áp dụng phiếu giảm giá</button>
+                    <input type="text" class="border-0 border-bottom rounded me-5 py-3 mb-4"
+                        placeholder="Nhập phiếu giảm giá">
+                    <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="button">Áp dụng
+                        phiếu giảm giá</button>
                 </div>
                 <div class="row g-4 justify-content-end">
                     <div class="col-8"></div>
@@ -170,7 +181,9 @@
                                 <h5 class="mb-0 ps-4 me-4">Tổng cộng</h5>
                                 <p class="mb-0 pe-4">$99.00</p>
                             </div>
-                            <button class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" type="button">Thanh toán</button>
+                            <button
+                                class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4"
+                                type="button">Thanh toán</button>
                         </div>
                     </div>
                 </div>
@@ -185,6 +198,3 @@
 
 
 @include('clients.layouts.footer')
-
-
- 

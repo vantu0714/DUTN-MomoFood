@@ -16,6 +16,7 @@ use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
 use App\Http\Controllers\Clients\ProductDetailController;
+use App\Http\Controllers\VNPayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -157,3 +158,8 @@ Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clie
 
 // carts
 Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');
+
+
+//vn-pay
+Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
+Route::get('/vnpay-return', [VNPayController::class, 'return']);
