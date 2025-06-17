@@ -30,6 +30,7 @@
 </div>
 <!-- Modal Search End -->
 
+
 <!-- Hero Start -->
 <div class="container-fluid py-5 mb-5 hero-header">
     <div class="container py-5">
@@ -75,6 +76,7 @@
     </div>
 </div>
 <!-- Hero End -->
+
 
 <!-- Featurs Section Start -->
 <div class="container-fluid featurs py-5">
@@ -122,6 +124,7 @@
                     <div class="featurs-content text-center">
                         <h5>Hỗ trợ trả hàng trong vòng 30 ngày</h5>
                         {{-- <p class="mb-0">Hoàn tiền trong vòng 30 ngày</p> --}}
+
                     </div>
                 </div>
             </div>
@@ -143,42 +146,26 @@
 </div>
 <!-- Featurs Section End -->
 
+
 <!-- Fruits Shop Start-->
 <div class="container-fluid fruite py-5">
     <div class="container py-5">
         <div class="tab-class text-center">
             <div class="row g-4">
                 <div class="col-lg-4 text-start">
-                    <h1>Sản phẩm hữu cơ của chúng tôi</h1>
+                    <h1>MÓN ĂN NỔI BẬT</h1>
                 </div>
                 <div class="col-lg-8 text-end">
                     <ul class="nav nav-pills d-inline-flex text-center mb-5">
 
-                        <a class="d-flex m-2 py-2 bg-light rounded-pill active" data-bs-toggle="pill" href="#tab-1">
+                        {{-- Tất cả sản phẩm --}}
+                        <li class="nav-item">
+                            <a class="d-flex m-2 py-2 bg-warning rounded-pill {{ request('category') == null ? 'active' : '' }}"
+                                href="{{ route('home') }}">
+                                <span class="text-white" style="width: 130px;">Tất cả</span>
+                            </a>
+                        </li>
 
-                            <span class="text-dark" style="width: 130px;">Tất cả sản phẩm</span>
-                        </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="d-flex py-2 m-2 bg-light rounded-pill" data-bs-toggle="pill" href="#tab-2">
-                                <span class="text-dark" style="width: 130px;">Rau</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="d-flex m-2 py-2 bg-light rounded-pill" data-bs-toggle="pill" href="#tab-3">
-                                <span class="text-dark" style="width: 130px;">Trái cây</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="d-flex m-2 py-2 bg-light rounded-pill" data-bs-toggle="pill" href="#tab-4">
-                                <span class="text-dark" style="width: 130px;">Bánh mỳ</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="d-flex m-2 py-2 bg-light rounded-pill" data-bs-toggle="pill" href="#tab-5">
-                                <span class="text-dark" style="width: 130px;">Thịt</span>
-                            </a>
-                        </li>
                         {{-- Danh sách danh mục --}}
                         @foreach ($categories as $category)
                             <li class="nav-item">
@@ -189,15 +176,15 @@
                                 </a>
                             </li>
                         @endforeach
+
                     </ul>
                 </div>
-            </div>
 
+            </div>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane fade show p-0 active">
                     <div class="row g-4">
                         <div class="col-lg-12">
-
                             <div class="row g-4">
                                 @foreach ($products as $product)
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
@@ -226,7 +213,6 @@
                                                         {{ number_format($product->discounted_price ?? $product->original_price, 0, ',', '.') }}
                                                         VNĐ
                                                     </p>
-
                                                     <form action="{{ route('carts.add') }}" method="POST">
                                                         @csrf
                                                         <input type="hidden" name="product_id"
@@ -247,7 +233,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -329,9 +314,17 @@
                                     class="currency">đ</span>
                             </span>
 
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary">
-                                <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm giỏ hàng
-                            </a>
+                            <form action="{{ route('carts.add') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="product_id"
+                                    value="{{ $product->id }}">
+                                <button type="submit"
+                                    class="btn border border-secondary rounded-pill px-3 text-primary">
+                                    <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to
+                                    cart
+                                </button>
+                            </form>
+
                         </div>
                     </div>
                 </div>
@@ -340,6 +333,7 @@
     </div>
 </div>
 <!-- Vesitable Shop End -->
+
 
 <!-- Banner Section Start-->
 <div class="container-fluid banner bg-secondary my-5">
