@@ -105,15 +105,8 @@
                                     <span>{{ number_format($total + $shipping, 0, ',', '.') }} đ</span>
                                 </div>
                             </div>
-                            <div class="px-4 pb-4">
-                                <a href="{{ route('checkout.index') }}" class="btn border-secondary w-100 rounded-pill px-4 py-3 text-primary text-uppercase">
-                                    Thanh toán
-                                </a>
-                            </div>
-<<<<<<< feature/cart-updates-1
-=======
-                            <button class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" ><a href="{{route('clients.order')}}">Thanh Toans</a></button>
->>>>>>> main
+                          
+                            <button class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" ><a href="{{route('clients.order')}}">Thanh Toán</a></button>
                         </div>
                     </div>
                 </div>
