@@ -1,5 +1,7 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
+@vite('resources/css/shop.css')
+
 
 <!-- Spinner Start -->
 <div id="spinner"
@@ -185,27 +187,29 @@
                             <div class="row g-4">
                                 @foreach ($products as $product)
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                                        <div class="rounded position-relative fruite-item">
-                                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                onerror="if (!this.src.includes('default.jpg')) { this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}'; }"
-                                                alt="Product Image" class="img-fluid w-100 rounded-top">
+                                        <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
+                                            
+                                            <div class="product-img-wrapper">
+                                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                                    alt="Product Image">
+                                            </div>
 
                                             <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
                                                 style="top: 10px; left: 10px;">
                                                 {{ $product->category?->category_name ?? 'Không có danh mục' }}
                                             </div>
-                                            <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                                                <h4>{{ $product->product_name }}</h4>
-                                                <p>Mã sản phẩm: {{ $product->product_code }}</p>
-                                                <div class="d-flex justify-content-between flex-lg-wrap">
+
+                                            <div class="product-content p-4 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
+                                                <h4 class="text-truncate" title="{{ $product->product_name }}">{{ $product->product_name }}</h4>
+                                                <p class="text-muted text-truncate">Mã sản phẩm: {{ $product->product_code }}</p>
+
+                                                <div class="d-flex justify-content-between align-items-center mt-auto">
                                                     <p class="text-dark fs-5 fw-bold mb-0">
-                                                        {{ number_format($product->discounted_price ?? $product->original_price, 0, ',', '.') }}
-                                                        VNĐ
+                                                        {{ number_format($product->discounted_price ?? $product->original_price, 0, ',', '.') }} VNĐ
                                                     </p>
-                                                    <a href="#"
-                                                        class="btn border border-secondary rounded-pill px-3 text-primary">
-                                                        <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to
-                                                        cart
+                                                    <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary">
+                                                        <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm giỏ hàng
                                                     </a>
                                                 </div>
                                             </div>
@@ -474,53 +478,36 @@
 <div class="container-fluid service py-5">
     <div class="container py-5">
         <div class="row g-4 justify-content-center">
-            <div class="col-md-6 col-lg-4">
-                <a href="#">
-                    <div class="service-item bg-secondary rounded border border-secondary">
-
-                        <img src="{{ asset('clients/img/featur-1.jpg') }}" class="img-fluid rounded-top w-100"
-                            alt="">
-
-                        <div class="px-4 rounded-bottom">
-                            <div class="service-content bg-primary text-center p-4 rounded">
-                                <h5 class="text-white">Fresh Apples</h5>
-                                <h3 class="mb-0">20% OFF</h3>
-                            </div>
+            <div class="row">
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="promo-box">
+                        <img src="https://file.hstatic.net/200000700229/article/ga-ran-vi-kfc-1_0c2450efe15d4b6f9e6bd2637b71d88d.jpg" alt="Gà rán truyền thống">
+                        <div class="promo-content bg-success text-white">
+                            <h5>Gà rán truyền thống</h5>
+                            <p class="mb-0">Giảm giá 20%</p>
                         </div>
                     </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <a href="#">
-                    <div class="service-item bg-dark rounded border border-dark">
+                </div>
 
-                        <img src="{{ asset('clients/img/featur-2.jpg') }}" class="img-fluid rounded-top w-100"
-                            alt="">
-
-                        <div class="px-4 rounded-bottom">
-                            <div class="service-content bg-light text-center p-4 rounded">
-                                <h5 class="text-primary">Tasty Fruits</h5>
-                                <h3 class="mb-0">Free delivery</h3>
-                            </div>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="promo-box">
+                        <img src="https://cdn.tgdd.vn/Files/2019/07/14/1179531/nuoc-ep-tao-co-tac-dung-gi-ma-ai-cung-thi-nhau-uong-201907142251530613.jpg" alt="Nước cam tươi">
+                        <div class="promo-content bg-dark text-white">
+                            <h5>Nước ép táo</h5>
+                            <p class="mb-0">Miễn phí vận chuyển</p>
                         </div>
                     </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <a href="#">
-                    <div class="service-item bg-primary rounded border border-primary">
+                </div>
 
-                        <img src="{{ asset('clients/img/featur-3.jpg') }}" class="img-fluid rounded-top w-100"
-                            alt="">
-
-                        <div class="px-4 rounded-bottom">
-                            <div class="service-content bg-secondary text-center p-4 rounded">
-                                <h5 class="text-white">Exotic Vegitable</h5>
-                                <h3 class="mb-0">Discount 30$</h3>
-                            </div>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="promo-box">
+                        <img src="https://i.ytimg.com/vi/dZwJgX-IcH8/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLC38hYKpTlqHzCnJl-zQ7256hCeQQ" alt="Pizza món chay">
+                        <div class="promo-content bg-warning text-dark">
+                            <h5>Bánh tráng trộn</h5>
+                            <p class="mb-0">Giảm giá 10vnđ</p>
                         </div>
                     </div>
-                </a>
+                </div>
             </div>
         </div>
     </div>
@@ -534,24 +521,28 @@
         <h1 class="mb-0">SẢN PHẨM BÁN CHẠY</h1>
         <div class="owl-carousel vegetable-carousel justify-content-center">
             @foreach ($bestSellingProducts as $product)
-                <div class="border border-primary rounded position-relative vesitable-item">
-                    <div class="vesitable-img">
-                        <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid w-100 rounded-top"
-                             alt="{{ $product->name }}">
+                <div class="product-card d-flex flex-column h-100">
+                    <div class="position-relative">
+                        <div class="product-img-wrapper">
+                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->product_name }}" class="img-fluid w-100">
+                        </div>
+                        <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                             style="top: 10px; right: 10px;">
+                            {{ $product->category->category_name ?? 'Không có danh mục' }}
+                        </div>
                     </div>
 
-                    <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                         style="top: 10px; right: 10px;">
-                        {{ $product->category->category_name ?? 'Không có danh mục' }}
-                    </div>
+                    <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                        <div>
+                            <h5 class="fw-bold">{{ $product->product_name }}</h5>
+                            <p class="description mb-3">{{ Str::limit($product->description, 80) }}</p>
+                        </div>
 
-                    <div class="p-4 rounded-bottom">
-                        <h4>{{ $product->product_name }}</h4>
-                        <p>{{ Str::limit($product->description, 60) }}</p>
-                        <div class="d-flex justify-content-between flex-lg-wrap">
-                            <p class="text-dark fs-5 fw-bold mb-0">
-                                {{ number_format($product->discounted_price, 0, ',', '.') }} đ
-                            </p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                            <span class="price fw-bold text-dark fs-5 m-0">
+                                {{ number_format($product->discounted_price, 0, ',', '.') }} <span class="currency">đ</span>
+                            </span>
+
                             <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary">
                                 <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm giỏ hàng
                             </a>
@@ -562,7 +553,6 @@
         </div>
     </div>
 </div>
-
 <!-- Vesitable Shop End -->
 
 
