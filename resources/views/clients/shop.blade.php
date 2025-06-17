@@ -174,6 +174,7 @@
                                             <a href="#" class="btn border border-secondary px-4 py-3 rounded-pill text-primary w-100">Xem thêm</a>
                                         </div>
                                     </div>
+                                    
                                     <div class="col-lg-12">
                                         <div class="position-relative">
                                             <img src="img/banner-fruits.jpg" class="img-fluid w-100 rounded" alt="">
