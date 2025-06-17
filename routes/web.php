@@ -148,6 +148,17 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/changepassword', [AuthController::class, 'updatePassword'])->name('updatepassword');
     });
 });
+<<<<<<< feature/cart-updates-1
+Route::prefix('carts')->group(function () {
+    Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
+    Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
+    Route::post('/update', [CartClientController::class, 'updateCart'])->name('carts.update');
+    Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
+    Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+    Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
+    Route::get('/checkout', fn() => 'Trang thanh toán đang phát triển')->name('checkout.index');
+});
+=======
 
 //Clients
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
@@ -158,3 +169,4 @@ Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clie
 // carts
 Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');
 Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
+>>>>>>> main
