@@ -156,6 +156,7 @@ Route::prefix('carts')->group(function () {
     Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
+    Route::post('/store', [ClientsOrderController::class, 'store'])->name('order.store');
 });
 
 //Clients
