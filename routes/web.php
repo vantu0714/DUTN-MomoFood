@@ -17,6 +17,7 @@ use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
 use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\Clients\ProductDetailController;
+use App\Http\Controllers\VNPayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -165,6 +166,7 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
 Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
 
-// carts
-
+//vn-pay
+Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
+Route::get('/vnpay-return', [VNPayController::class, 'return']);
 
