@@ -22,8 +22,14 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Mật khẩu</label>
-                                    <input type="password" id="password" name="password" class="form-control"
-                                        placeholder="Nhập mật khẩu" required>
+                                    <div class="input-group">
+                                        <input type="password" id="password" name="password" class="form-control"
+                                            placeholder="Nhập mật khẩu" required>
+                                        <span class="input-group-text" onclick="togglePassword()"
+                                            style="cursor: pointer;">
+                                            <i class="fa fa-eye" id="togglePasswordIcon"></i>
+                                        </span>
+                                    </div>
                                     @error('password')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -47,3 +53,17 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById("password");
+        const icon = document.getElementById("togglePasswordIcon");
+
+        const isPassword = passwordInput.type === "password";
+        passwordInput.type = isPassword ? "text" : "password";
+
+        // Đổi icon
+        icon.classList.toggle("fa-eye");
+        icon.classList.toggle("fa-eye-slash");
+    }
+</script>
