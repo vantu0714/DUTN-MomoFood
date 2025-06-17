@@ -1,79 +1,69 @@
 @extends('admin.layouts.app')
 
 @section('content')
-    <div class="container mt-4">
+    <div class="container">
         <h2>Chỉnh sửa biến thể sản phẩm</h2>
 
-        <form action="{{ route('admin.product_variants.update', $product_variant->id) }}" method="POST">
+        <form action="{{ route('admin.product_variants.update', $variant->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
-            <div class="mb-3">
-                <label for="name" class="form-label">Tên biến thể</label>
-                <input type="text" name="name" class="form-control" value="{{ old('name', $product_variant->name) }}">
-                @error('name')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label for="price" class="form-label">Giá</label>
-                <input type="number" step="0.01" name="price" class="form-control"
-                    value="{{ old('price', $product_variant->price) }}">
-                @error('price')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label for="quantity_in_stock" class="form-label">Số lượng tồn kho</label>
-                <input type="number" name="quantity_in_stock" class="form-control"
-                    value="{{ old('quantity_in_stock', $product_variant->quantity_in_stock) }}">
-                @error('quantity_in_stock')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label for="sku" class="form-label">SKU</label>
-                <input type="text" name="sku" class="form-control" value="{{ old('sku', $product_variant->sku) }}">
-                @error('sku')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="mb-3">
-                <label for="product_id" class="form-label">Sản phẩm</label>
-                <select name="product_id" class="form-control">
+            <div class="form-group">
+                <label for="product_id">Sản phẩm</label>
+                <select name="product_id" class="form-control" required>
                     @foreach ($products as $product)
-                        <option value="{{ $product->id }}"
-                            {{ $product_variant->product_id == $product->id ? 'selected' : '' }}>
+                        <option value="{{ $product->id }}" {{ $variant->product_id == $product->id ? 'selected' : '' }}>
                             {{ $product->product_name }}
                         </option>
                     @endforeach
                 </select>
-                @error('product_id')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
+            </div>
+            <div class="form-group">
+                <label for="price">Giá</label>
+                <input type="number" name="price" class="form-control" value="{{ $variant->price }}" required>
             </div>
 
-            <div class="mb-3">
-                <label for="status" class="form-label">Trạng thái</label>
+            <div class="form-group">
+                <label for="quantity_in_stock">Số lượng</label>
+                <input type="number" name="quantity_in_stock" class="form-control"
+                    value="{{ $variant->quantity_in_stock }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="sku">SKU</label>
+                <input type="text" name="sku" class="form-control" value="{{ $variant->sku }}">
+            </div>
+
+            <div class="form-group">
+                <label for="image">Hình ảnh</label>
+                @if ($variant->image)
+                    <br>
+                    <img src="{{ asset('storage/' . $variant->image) }}" width="100">
+                @endif
+                <input type="file" name="image" class="form-control-file mt-2">
+            </div>
+
+            <div class="form-group">
+                <label for="status">Trạng thái</label>
                 <select name="status" class="form-control">
-                    <option value="1" {{ $product_variant->status == 1 ? 'selected' : '' }}>Hiển thị</option>
-                    <option value="0" {{ $product_variant->status == 0 ? 'selected' : '' }}>Ẩn</option>
+                    <option value="1" {{ $variant->status == 1 ? 'selected' : '' }}>Hoạt động</option>
+                    <option value="0" {{ $variant->status == 0 ? 'selected' : '' }}>Ngừng</option>
                 </select>
-                @error('status')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
             </div>
 
-            <div class="mb-3">
-                <label for="description" class="form-label">Mô tả</label>
-                <textarea name="description" class="form-control" rows="4">{{ old('description', $product_variant->description) }}</textarea>
-                @error('description')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
+            <h4>Thuộc tính</h4>
+            @foreach ($attributes as $attribute)
+                <label>{{ $attribute->name }}</label>
+                <select name="attribute_values[]" class="form-control">
+                    @foreach ($attribute->values as $value)
+                        <option value="{{ $value->id }}"
+                            {{ $variant->attributeValues->contains('id', $value->id) ? 'selected' : '' }}>
+                            {{ $value->value }}
+                        </option>
+                    @endforeach
+                </select>
+            @endforeach
+
 
             <button type="submit" class="btn btn-primary">Cập nhật</button>
             <a href="{{ route('admin.product_variants.index') }}" class="btn btn-secondary">Huỷ</a>

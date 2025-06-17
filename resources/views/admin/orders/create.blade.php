@@ -35,20 +35,17 @@
             {{-- Thông tin người nhận --}}
             <div class="col-md-4 mb-3">
                 <label for="recipient_name" class="form-label">Tên người nhận</label>
-                <input type="text" name="recipient_name" class="form-control" value="{{ old('recipient_name') }}"
-                    required>
+                <input type="text" name="recipient_name" class="form-control" value="{{ old('recipient_name') }}" required>
             </div>
 
             <div class="col-md-4 mb-3">
                 <label for="recipient_phone" class="form-label">SĐT người nhận</label>
-                <input type="text" name="recipient_phone" class="form-control" value="{{ old('recipient_phone') }}"
-                    required>
+                <input type="text" name="recipient_phone" class="form-control" value="{{ old('recipient_phone') }}" required>
             </div>
 
             <div class="col-md-4 mb-3">
                 <label for="recipient_address" class="form-label">Địa chỉ người nhận</label>
-                <input type="text" name="recipient_address" class="form-control" value="{{ old('recipient_address') }}"
-                    required>
+                <input type="text" name="recipient_address" class="form-control" value="{{ old('recipient_address') }}" required>
             </div>
 
             {{-- Danh sách sản phẩm --}}
@@ -67,10 +64,16 @@
                         <th></th>
                     </tr>
                 </thead>
-                <tbody id="product-rows">
-                    <!-- JavaScript sẽ thêm dòng tại đây -->
-                </tbody>
+                <tbody id="product-rows"></tbody>
             </table>
+
+            {{-- Phí vận chuyển --}}
+            <div class="mb-3 col-md-4">
+                <label for="shipping_fee" class="form-label">Phí vận chuyển</label>
+                <input type="number" name="shipping_fee" id="shipping_fee" class="form-control" value="{{ old('shipping_fee', 0) }}" min="0" step="1000" required>
+            </div>
+
+            {{-- Tổng tiền --}}
             <div class="d-flex justify-content-end mt-3">
                 <strong class="fs-5">Tổng tiền đơn hàng: <span id="order-total">0đ</span></strong>
             </div>
@@ -80,8 +83,7 @@
                 <label for="payment_method" class="form-label">Phương thức thanh toán</label>
                 <select name="payment_method" id="payment_method" class="form-select" required>
                     <option value="">-- Chọn phương thức thanh toán --</option>
-                    <option value="cod" {{ old('payment_method') == 'cod' ? 'selected' : '' }}>COD (Thanh toán khi nhận
-                        hàng)</option>
+                    <option value="cod" {{ old('payment_method') == 'cod' ? 'selected' : '' }}>COD</option>
                     <option value="momo" {{ old('payment_method') == 'momo' ? 'selected' : '' }}>MoMo</option>
                 </select>
             </div>
@@ -90,8 +92,7 @@
             <div class="mb-3">
                 <label for="payment_status" class="form-label">Trạng thái thanh toán</label>
                 <select name="payment_status" id="payment_status" class="form-select" required>
-                    <option value="pending" {{ old('payment_status') == 'pending' ? 'selected' : '' }}>Chưa thanh toán
-                    </option>
+                    <option value="pending" {{ old('payment_status') == 'pending' ? 'selected' : '' }}>Chưa thanh toán</option>
                     <option value="paid" {{ old('payment_status') == 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
                 </select>
             </div>
@@ -122,8 +123,7 @@
             {{-- Lý do hủy --}}
             <div class="mb-3">
                 <label for="cancellation_reason" class="form-label">Lý do hủy đơn (nếu có)</label>
-                <input type="text" name="cancellation_reason" id="cancellation_reason" class="form-control"
-                    value="{{ old('cancellation_reason') }}">
+                <input type="text" name="cancellation_reason" id="cancellation_reason" class="form-control" value="{{ old('cancellation_reason') }}">
             </div>
 
             {{-- Submit --}}
@@ -136,112 +136,125 @@
 @endsection
 
 @section('scripts')
-    <script>
-        let products = @json($products);
-        let index = 0;
+<script>
+    let products = @json($products);
+    let index = 0;
 
-        function addProductRow() {
-            console.log("Đã bấm thêm sản phẩm");
-            const row = document.createElement('tr');
+    function addProductRow() {
+        const row = document.createElement('tr');
 
-            let options = `<option value="">-- Chọn sản phẩm --</option>`;
-            products.forEach(product => {
-                options += `<option value="${product.id}">${product.product_name}</option>`;
-            });
+        let options = `<option value="">-- Chọn sản phẩm --</option>`;
+        products.forEach(product => {
+            options += `<option value="${product.id}">${product.product_name}</option>`;
+        });
 
-            row.innerHTML = `
-        <td>
-            <select name="products[${index}][product_id]" class="form-select"
-                onchange="loadVariants(this, ${index}); updateSubtotal(${index})" required>
-                ${options}
-            </select>
-        </td>
-        <td>
-            <select name="products[${index}][product_variant_id]" class="form-select"
-                onchange="updateSubtotal(${index})">
-                <option value="">-- Không có biến thể --</option>
-            </select>
-        </td>
-        <td>
-            <input type="number" name="products[${index}][quantity]" min="1" value="1" class="form-control"
-                oninput="updateSubtotal(${index})" required>
-        </td>
-        <td>
-            <input type="text" class="form-control" name="products[${index}][subtotal]" id="subtotal-${index}" value="0" readonly>
-        </td>
-        <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Xóa</button>
-        </td>
+        row.innerHTML = `
+            <td>
+                <select name="products[${index}][product_id]" class="form-select"
+                    onchange="loadVariants(this, ${index}); updateSubtotal(${index})" required>
+                    ${options}
+                </select>
+            </td>
+            <td>
+                <select name="products[${index}][product_variant_id]" class="form-select"
+                    onchange="updateSubtotal(${index})">
+                    <option value="">-- Không có biến thể --</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" name="products[${index}][quantity]" min="1" value="1" class="form-control"
+                    oninput="updateSubtotal(${index})" required>
+            </td>
+            <td>
+                <input type="text" class="form-control" id="subtotal-${index}" value="0đ" readonly>
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Xóa</button>
+            </td>
         `;
 
-            document.getElementById('product-rows').appendChild(row);
-            index++;
+        document.getElementById('product-rows').appendChild(row);
+        index++;
+    }
+
+    function loadVariants(selectElement, index) {
+        const productId = selectElement.value;
+        const product = products.find(p => p.id == productId);
+
+        const variantSelect = document.querySelector(`select[name="products[${index}][product_variant_id]"]`);
+        variantSelect.innerHTML = `<option value="">-- Không có biến thể --</option>`;
+
+        if (product?.variants?.length > 0) {
+            product.variants.forEach(variant => {
+                variantSelect.innerHTML += `<option value="${variant.id}">${variant.name} (${variant.price.toLocaleString()}đ)</option>`;
+            });
         }
+    }
 
-        function loadVariants(selectElement, index) {
-            const productId = selectElement.value;
-            const product = products.find(p => p.id == productId);
+    function updateSubtotal(index) {
+        const productId = document.querySelector(`select[name="products[${index}][product_id]"]`).value;
+        const variantId = document.querySelector(`select[name="products[${index}][product_variant_id]"]`).value;
+        const quantity = parseInt(document.querySelector(`input[name="products[${index}][quantity]"]`)?.value || 0);
 
-            const variantSelect = document.querySelector(`select[name="products[${index}][product_variant_id]"]`);
-            variantSelect.innerHTML = `<option value="">-- Không có biến thể --</option>`;
+        const product = products.find(p => p.id == productId);
+        let price = 0;
 
-            if (product && product.variants && product.variants.length > 0) {
-                product.variants.forEach(variant => {
-                    variantSelect.innerHTML +=
-                        `<option value="${variant.id}">${variant.name} (${variant.price.toLocaleString()}đ)</option>`;
-                });
+        if (variantId && product?.variants?.length > 0) {
+            const variant = product.variants.find(v => v.id == variantId);
+            price = variant?.price || 0;
+        } else {
+            if (product) {
+                price = product.discounted_price > 0 ? product.discounted_price : product.original_price;
             }
         }
 
-        function updateSubtotal(index) {
-            const productId = document.querySelector(`select[name="products[${index}][product_id]"]`).value;
-            const variantId = document.querySelector(`select[name="products[${index}][product_variant_id]"]`).value;
-            const quantityInput = document.querySelector(`input[name="products[${index}][quantity]"]`);
-            const quantity = parseInt(quantityInput?.value || 0);
+        const subtotal = price * quantity;
+        const subtotalInput = document.getElementById(`subtotal-${index}`);
+        if (subtotalInput) {
+            subtotalInput.value = subtotal.toLocaleString('vi-VN') + 'đ';
+        }
 
-            const product = products.find(p => p.id == productId);
-            let price = 0;
+        calculateTotal();
+    }
 
-            if (variantId && product?.variants?.length > 0) {
-                // Có biến thể
-                const variant = product.variants.find(v => v.id == variantId);
-                price = variant?.price || 0;
-            } else {
-                // Không có biến thể → lấy discounted_price nếu có, nếu không thì original_price
-                if (product) {
-                    price = product.discounted_price > 0 ? product.discounted_price : product.original_price;
-                }
-            }
-
-            const subtotal = price * quantity;
-            const subtotalInput = document.getElementById(`subtotal-${index}`);
+    function calculateTotal() {
+        let total = 0;
+        for (let i = 0; i < index; i++) {
+            const subtotalInput = document.getElementById(`subtotal-${i}`);
             if (subtotalInput) {
-                subtotalInput.value = subtotal.toLocaleString('vi-VN') + 'đ';
+                const value = subtotalInput.value.replace(/[^\d]/g, '');
+                total += parseInt(value) || 0;
             }
-
-            calculateTotal();
         }
 
-        function calculateTotal() {
-            let total = 0;
-            for (let i = 0; i < index; i++) {
-                const subtotalInput = document.getElementById(`subtotal-${i}`);
-                if (subtotalInput) {
-                    const value = subtotalInput.value.replace(/[^\d]/g, '');
-                    total += parseInt(value) || 0;
-                }
-            }
-            document.getElementById('order-total').innerText = total.toLocaleString('vi-VN') + 'đ';
-        }
+        const shipping = parseInt(document.getElementById('shipping_fee')?.value || 0);
+        total += shipping;
+        document.getElementById('order-total').innerText = total.toLocaleString('vi-VN') + 'đ';
+    }
 
-        function removeRow(button) {
-            const row = button.closest('tr');
-            row.remove();
-            calculateTotal();
-        }
+    function removeRow(button) {
+        const row = button.closest('tr');
+        row.remove();
+        calculateTotal();
+    }
 
-        window.onload = () => {
-            addProductRow();
+    window.onload = () => {
+        addProductRow();
+        document.getElementById('shipping_fee').addEventListener('input', calculateTotal);
+    };
+
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const selectedProducts = document.querySelectorAll('select[name^="products"][name$="[product_id]"]');
+        let valid = false;
+
+        selectedProducts.forEach(sp => {
+            if (sp.value) valid = true;
+        });
+
+        if (!valid) {
+            e.preventDefault();
+            alert('Vui lòng chọn ít nhất một sản phẩm.');
         }
-    </script>
+    });
+</script>
 @endsection

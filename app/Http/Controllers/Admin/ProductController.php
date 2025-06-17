@@ -19,9 +19,9 @@ class ProductController extends Controller
             $statusFilter = $request->input('status');
 
             if ($statusFilter === 'Còn hàng') {
-                $query->where('status', 'Còn hàng');
+                $query->where('quantity', '>', 0);
             } elseif ($statusFilter === 'Hết hàng') {
-                $query->where('status', 'Hết hàng');
+                $query->where('quantity', '=', 0);
             }
         }
 
@@ -30,12 +30,10 @@ class ProductController extends Controller
             $query->where('category_id', $request->input('category_id'));
         }
 
-        // Lấy tổng số sản phẩm "Còn hàng" từ toàn bộ DB
-        // Điều này là cần thiết vì $products đã được phân trang
-        $availableProductsCount = Product::where('status', 'Còn hàng')->count();
 
-        // Lấy tổng số sản phẩm "Hết hàng" từ toàn bộ DB (tương tự)
-        $outOfStockProductsCount = Product::where('status', 'Hết hàng')->count();
+        $availableProductsCount = Product::where('quantity', '>', 0)->count();
+        $outOfStockProductsCount = Product::where('quantity', '=', 0)->count();
+
 
 
         $products = $query->paginate(10);
@@ -57,44 +55,31 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code',
             'category_id' => 'required|exists:categories,id',
-            'status' => 'required|in:1,0',
             'original_price' => 'nullable|numeric',
             'discounted_price' => 'nullable|numeric',
+            'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'quantity' => 'required|integer|min:0',
+            'quantity' => 'required_if:product_type,simple|nullable|integer|min:0',
+            'product_type' => 'required|in:simple,variant',
         ]);
-        $validated['status'] = (int) $validated['status'];
+
+        $validated['status'] = ($validated['product_type'] == 'simple' && isset($validated['quantity']) && $validated['quantity'] > 0) ? 1 : 0;
+
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = $imagePath;
         }
 
-        // Tạo sản phẩm
         $product = Product::create($validated);
 
-        // Lưu biến thể (nếu có)
-        if ($request->has('variants')) {
-            foreach ($request->input('variants') as $variantData) {
-                // Validate dữ liệu biến thể
-                if (
-                    !empty($variantData['name']) &&
-                    isset($variantData['price']) &&
-                    isset($variantData['quantity_in_stock']) &&
-                    isset($variantData['sku'])
-                ) {
-                    $product->variants()->create([
-                        'name' => $variantData['name'],
-                        'price' => $variantData['price'],
-                        'quantity_in_stock' => $variantData['quantity_in_stock'],
-                        'sku' => $variantData['sku'],
-                        'status' => $variantData['status'] ?? 1,
-                    ]);
-                }
-            }
+        if ($validated['product_type'] === 'variant') {
+            return redirect()->route('admin.product_variants.create', ['product_id' => $product->id])
+                ->with('success', 'Thêm sản phẩm thành công. Bây giờ hãy thêm các biến thể.');
         }
 
-        return redirect()->route('products.index')->with('success', 'Thêm sản phẩm thành công');
+        return redirect()->route('products.index')->with('success', 'Sản phẩm không biến thể đã được thêm thành công.');
     }
+
 
     public function edit($id)
     {
@@ -110,13 +95,15 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code,' . $product->id,
             'category_id' => 'required|exists:categories,id',
-            'status' => 'required|in:1,0',
+            'description' => 'nullable|string',
             'original_price' => 'nullable|numeric',
             'discounted_price' => 'nullable|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'quantity' => 'required|integer|min:0',
 
         ]);
+        $validated['status'] = $validated['quantity'] > 0 ? 1 : 0;
+
         if ($request->hasFile('image')) {
             // Xoá ảnh cũ (nếu có)
             if ($product->image && Storage::disk('public')->exists($product->image)) {
@@ -154,5 +141,14 @@ class ProductController extends Controller
     {
         $product = Product::with('variants')->findOrFail($id);
         return view('products.variants', compact('product'));
+    }
+    public function show($id)
+    {
+        $product = Product::with([
+            'category',
+            'variants.attributeValues.attribute'
+        ])->findOrFail($id);
+
+        return view('admin.products.show', compact('product'));
     }
 }

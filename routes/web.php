@@ -15,7 +15,8 @@ use App\Http\Controllers\Clients\CartClientController;
 use App\Http\Controllers\Clients\ShopController;
 use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
-
+use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
+use App\Http\Controllers\Clients\ProductDetailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,7 +33,7 @@ use App\Http\Controllers\Clients\ContactsController;
 //     return view('home');
 // });
 
-Route::get('/', [HomeController::class, 'index'])->name('home.index');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 //shop
 Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
@@ -40,6 +41,8 @@ Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
 //lien he
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
+//chi tiet sp
+Route::get('/chi-tiet', [ProductDetailController::class, 'index'])->name('product-detail.index');
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -61,7 +64,6 @@ Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.de
 // categories
 Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
-
     Route::get('/create', [CategoryController::class, 'create'])->name('create');
     Route::get('/{id}/show', [CategoryController::class, 'show'])->name('show');
     Route::post('/store', [CategoryController::class, 'store'])->name('store');
@@ -92,6 +94,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+// Xử lý gửi email
+Route::post('/forgot-password', [AuthController::class, 'sendResetRedirect'])->name('password.email');
+// Hiển thị form đổi mật khẩu
+Route::get('/reset-password', [AuthController::class, 'showResetForm'])->name('password.reset');
+// Xử lý cập nhật mật khẩu
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {
@@ -124,8 +133,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
     });
-
 });
+
+
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
 
@@ -138,6 +148,7 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/changepassword', [AuthController::class, 'updatePassword'])->name('updatepassword');
     });
 });
+<<<<<<< feature/cart-updates-1
 Route::prefix('carts')->group(function () {
     Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
     Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
@@ -147,3 +158,15 @@ Route::prefix('carts')->group(function () {
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
     Route::get('/checkout', fn() => 'Trang thanh toán đang phát triển')->name('checkout.index');
 });
+=======
+
+//Clients
+Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('clients.edit');
+Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
+
+// carts
+Route::get('/carts', [CartClientController::class, 'index'])->name('carts.index');
+Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
+>>>>>>> main
