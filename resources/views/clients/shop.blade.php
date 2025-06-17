@@ -127,7 +127,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-12">
-                                <h4 class="mb-3">Sản phẩm nổi bật</h4>
+                                <h4 class="mb-3">SANE PHẨM NỔI BẬT</h4>
                                 <div class="d-flex align-items-center justify-content-start">
                                     <div class="rounded me-4" style="width: 100px; height: 100px;">
                                         <img src="{{ asset('storage/products/6bdnSqSQ20goGJtQqRsBDoYPY2538avaRiqRLmOO.jpg') }}"
@@ -226,8 +226,7 @@
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-auto">
                                                 <p class="text-dark fs-5 fw-bold mb-0">
-                                                    {{ number_format($product->price, 0, ',', '.') }} VND /
-                                                    {{ $product->unit ?? 'hộp' }}
+                                                    {{ number_format($product->discounted_price, 0, ',', '.') }} VND
                                                 </p>
                                                 <form action="{{ route('carts.add') }}" method="POST">
                                                     @csrf
@@ -254,5 +253,6 @@
             </div>
         </div>
     </div>
-    <!-- Fruits Shop End-->
-    @include('clients.layouts.footer')
+<!-- Fruits Shop End-->
+
+@include('clients.layouts.footer')
