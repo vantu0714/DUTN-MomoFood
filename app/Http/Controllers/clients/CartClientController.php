@@ -38,17 +38,31 @@ public function addToCart(Request $request)
 }
 
 
-    public function updateCart(Request $request)
-    {
-        $cart = session()->get('cart', []);
-        foreach ($request->input('quantities', []) as $productId => $quantity) {
-            if (isset($cart[$productId])) {
-                $cart[$productId]['quantity'] = max(1, (int) $quantity); // Không cho phép số lượng <= 0
-            }
+   public function updateQuantity(Request $request, $id)
+{
+    $cart = session()->get('cart', []);
+
+    if (isset($cart[$id])) {
+        $quantity = max(1, (int) $request->input('quantity'));
+        $cart[$id]['quantity'] = $quantity;
+
+        session(['cart' => $cart]);
+
+        // Tính lại tổng
+        $total = 0;
+        foreach ($cart as $item) {
+            $total += $item['price'] * $item['quantity'];
         }
-        session()->put('cart', $cart);
-        return redirect()->back()->with('success', 'Giỏ hàng đã được cập nhật.');
+
+        return response()->json([
+            'success' => true,
+            'subtotal' => number_format($cart[$id]['price'] * $quantity, 0, ',', '.'),
+            'total' => number_format($total + 30000, 0, ',', '.') // bao gồm phí ship
+        ]);
     }
+
+    return response()->json(['success' => false], 404);
+}
 
     public function removeFromCart($productId)
     {
