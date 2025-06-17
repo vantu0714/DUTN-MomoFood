@@ -20,6 +20,7 @@ class ProductVariant extends Model
     {
         return $this->belongsTo(Product::class);
     }
+    
 
 
     // Hiển thị giá có định dạng nếu cần dùng
