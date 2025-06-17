@@ -18,12 +18,6 @@
                     @endforeach
                 </select>
             </div>
-
-            <div class="form-group">
-                <label for="name">Tên biến thể</label>
-                <input type="text" name="name" class="form-control" value="{{ $variant->name }}" required>
-            </div>
-
             <div class="form-group">
                 <label for="price">Giá</label>
                 <input type="number" name="price" class="form-control" value="{{ $variant->price }}" required>
