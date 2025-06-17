@@ -228,11 +228,17 @@
                                                     {{ number_format($product->price, 0, ',', '.') }} VND /
                                                     {{ $product->unit ?? 'hộp' }}
                                                 </p>
-                                                <a href="#"
-                                                    class="btn border border-secondary rounded-pill px-3 text-primary">
-                                                    <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ
-                                                    hàng
-                                                </a>
+                                                <form action="{{ route('carts.add') }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="product_id"
+                                                        value="{{ $product->id }}">
+                                                    <button type="submit"
+                                                        class="btn border border-secondary rounded-pill px-3 text-primary">
+                                                        <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào giỏ
+                                                        hàng
+                                                    </button>
+                                                </form>
+
                                             </div>
                                         </div>
                                     </div>
