@@ -18,12 +18,29 @@ class ProductController extends Controller
         if ($request->filled('status')) {
             $statusFilter = $request->input('status');
 
-            if ($statusFilter === 'Còn hàng') {
-                $query->where('quantity', '>', 0);
-            } elseif ($statusFilter === 'Hết hàng') {
-                $query->where('quantity', '=', 0);
-            }
+            $query->where(function ($q) use ($statusFilter) {
+                $q->where(function ($subQuery) use ($statusFilter) {
+                    // Sản phẩm đơn
+                    $subQuery->where('product_type', 'simple');
+
+                    if ($statusFilter === 'Còn hàng') {
+                        $subQuery->where('quantity', '>', 0);
+                    } elseif ($statusFilter === 'Hết hàng') {
+                        $subQuery->where('quantity', '=', 0);
+                    }
+                })->orWhere(function ($subQuery) use ($statusFilter) {
+                    // Sản phẩm có biến thể
+                    $subQuery->where('product_type', 'variant')->whereHas('variants', function ($variantQuery) use ($statusFilter) {
+                        if ($statusFilter === 'Còn hàng') {
+                            $variantQuery->where('quantity', '>', 0);
+                        } elseif ($statusFilter === 'Hết hàng') {
+                            $variantQuery->where('quantity', '=', 0);
+                        }
+                    });
+                });
+            });
         }
+
 
         // Lọc theo danh mục (nếu có)
         if ($request->filled('category_id')) {
@@ -31,8 +48,26 @@ class ProductController extends Controller
         }
 
 
-        $availableProductsCount = Product::where('quantity', '>', 0)->count();
-        $outOfStockProductsCount = Product::where('quantity', '=', 0)->count();
+        $availableProductsCount = Product::where(function ($query) {
+            $query->where(function ($q) {
+                $q->where('product_type', 'simple')->where('quantity', '>', 0);
+            })->orWhere(function ($q) {
+                $q->where('product_type', 'variant')->whereHas('variants', function ($variantQuery) {
+                    $variantQuery->where('quantity', '>', 0);
+                });
+            });
+        })->count();
+
+        $outOfStockProductsCount = Product::where(function ($query) {
+            $query->where(function ($q) {
+                $q->where('product_type', 'simple')->where('quantity', '=', 0);
+            })->orWhere(function ($q) {
+                $q->where('product_type', 'variant')->whereDoesntHave('variants', function ($variantQuery) {
+                    $variantQuery->where('quantity', '>', 0);
+                });
+            });
+        })->count();
+
 
 
 
@@ -63,15 +98,23 @@ class ProductController extends Controller
             'product_type' => 'required|in:simple,variant',
         ]);
 
-        $validated['status'] = ($validated['product_type'] == 'simple' && isset($validated['quantity']) && $validated['quantity'] > 0) ? 1 : 0;
+        // ✅ Gán status theo loại sản phẩm
+        if ($validated['product_type'] === 'simple') {
+            $validated['status'] = isset($validated['quantity']) && $validated['quantity'] > 0 ? 1 : 0;
+        } else {
+            $validated['status'] = 0; // Mặc định cho sản phẩm có biến thể, sẽ cập nhật sau khi thêm biến thể
+        }
 
+        // ✅ Xử lý upload ảnh nếu có
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = $imagePath;
         }
 
+        // ✅ Tạo sản phẩm
         $product = Product::create($validated);
 
+        // ✅ Điều hướng sau khi tạo xong
         if ($validated['product_type'] === 'variant') {
             return redirect()->route('admin.product_variants.create', ['product_id' => $product->id])
                 ->with('success', 'Thêm sản phẩm thành công. Bây giờ hãy thêm các biến thể.');

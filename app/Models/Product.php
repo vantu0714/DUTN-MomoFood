@@ -23,7 +23,8 @@ class Product extends Model
         'view',
         'is_show_home',
         'category_id',
-        'quantity', 
+        'quantity',
+        'product_type',
     ];
 
     /**
@@ -61,5 +62,4 @@ class Product extends Model
     {
         return $this->hasMany(ProductVariant::class);
     }
-    
 }
