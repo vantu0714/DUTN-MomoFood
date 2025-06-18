@@ -13,56 +13,86 @@ class CartClientController extends Controller
         $carts = session()->get('cart', []);
         return view('clients.carts.index', compact('carts'));
     }
-public function addToCart(Request $request)
-{
-    $productId = $request->input('product_id');
-    $product = Product::findOrFail($productId);
+    
+    public function addToCart(Request $request)
+    {
+        $productId = $request->input('product_id');
+        $variantId = $request->input('product_variant_id');
 
-    $cart = session()->get('cart', []);
+        $cart = session()->get('cart', []);
 
-    if (isset($cart[$productId])) {
-        $cart[$productId]['quantity']++;
-    } else {
-        $cart[$productId] = [
-            'product_name'  => $product->product_name,
-            'product_code'  => $product->product_code,
-            'price'         => $product->discounted_price ?? $product->original_price,
-            'image'         => $product->image ?? 'default.jpg',
-            'quantity'      => 1,
-        ];
-    }
+        if ($variantId) {
+            // Nếu có biến thể sản phẩm
+            $variant = \App\Models\ProductVariant::findOrFail($variantId);
+            $product = $variant->product; // quan hệ product() trong model ProductVariant
 
-    session(['cart' => $cart]);
+            $key = 'variant_' . $variantId; // dùng key riêng để tránh trùng
 
-    return redirect()->route('carts.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
-}
+            if (isset($cart[$key])) {
+                $cart[$key]['quantity']++;
+            } else {
+                $cart[$key] = [
+                    'product_id'         => $product->id,
+                    'product_variant_id' => $variant->id,
+                    'product_name'       => $product->product_name,
+                    'variant_name'       => $variant->name, // Tên biến thể
+                    'product_code'       => $product->product_code,
+                    'price'              => $variant->price ?? $product->discounted_price ?? $product->original_price,
+                    'image'              => $product->image ?? 'default.jpg',
+                    'quantity'           => 1,
+                ];
+            }
+        } else {
+            // Nếu không có biến thể
+            $product = \App\Models\Product::findOrFail($productId);
+            $key = 'product_' . $productId;
 
-
-   public function updateQuantity(Request $request, $id)
-{
-    $cart = session()->get('cart', []);
-
-    if (isset($cart[$id])) {
-        $quantity = max(1, (int) $request->input('quantity'));
-        $cart[$id]['quantity'] = $quantity;
+            if (isset($cart[$key])) {
+                $cart[$key]['quantity']++;
+            } else {
+                $cart[$key] = [
+                    'product_id'         => $product->id,
+                    'product_variant_id' => null,
+                    'product_name'       => $product->product_name,
+                    'variant_name'       => null, // Không có biến thể
+                    'product_code'       => $product->product_code,
+                    'price'              => $product->discounted_price ?? $product->original_price,
+                    'image'              => $product->image ?? 'default.jpg',
+                    'quantity'           => 1,
+                ];
+            }
+        }
 
         session(['cart' => $cart]);
 
-        // Tính lại tổng
-        $total = 0;
-        foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
-        }
-
-        return response()->json([
-            'success' => true,
-            'subtotal' => number_format($cart[$id]['price'] * $quantity, 0, ',', '.'),
-            'total' => number_format($total + 30000, 0, ',', '.') // bao gồm phí ship
-        ]);
+        return redirect()->route('carts.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
     }
 
-    return response()->json(['success' => false], 404);
-}
+    public function updateQuantity(Request $request, $id)
+    {
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$id])) {
+            $quantity = max(1, (int) $request->input('quantity'));
+            $cart[$id]['quantity'] = $quantity;
+
+            session(['cart' => $cart]);
+
+            // Tính lại tổng
+            $total = 0;
+            foreach ($cart as $item) {
+                $total += $item['price'] * $item['quantity'];
+            }
+
+            return response()->json([
+                'success' => true,
+                'subtotal' => number_format($cart[$id]['price'] * $quantity, 0, ',', '.'),
+                'total' => number_format($total + 30000, 0, ',', '.') // bao gồm phí ship
+            ]);
+        }
+
+        return response()->json(['success' => false], 404);
+    }
 
     public function removeFromCart($productId)
     {
