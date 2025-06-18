@@ -43,7 +43,7 @@
 
                                 <a href="{{ route('users.show', $user->id) }}" class="btn  btn-info">Xem</a>
 
-                                <form id="delete-form-{{ $user->id }}"
+                                {{-- <form id="delete-form-{{ $user->id }}"
                                     action="{{ route('users.destroy', $user->id) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
@@ -52,7 +52,7 @@
                                         onclick="confirmDelete({{ $user->id }})">
                                         Xóa
                                     </button>
-                                </form>
+                                </form> --}}
 
                             </td>
                         </tr>
