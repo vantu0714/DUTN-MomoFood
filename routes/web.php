@@ -156,6 +156,9 @@ Route::prefix('carts')->group(function () {
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
     Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
+});
+
+Route::middleware(['auth'])->group(function () {
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
     Route::post('/store', [ClientsOrderController::class, 'store'])->name('order.store');
 });
@@ -169,4 +172,3 @@ Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clie
 //vn-pay
 Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
 Route::get('/vnpay-return', [VNPayController::class, 'return']);
-
