@@ -66,6 +66,24 @@
             </div>
 
             <div class="mb-3">
+                <label for="status" class="form-label">Trạng thái</label>
+                @php
+                    $selectedStatus = old('status', $promotion->status);
+                @endphp
+                <select name="status" id="status" class="form-select">
+                    <option value="active" {{ $selectedStatus === 'active' ? 'selected' : '' }}>Đang hoạt động</option>
+                    <option value="inactive" {{ $selectedStatus === 'inactive' ? 'selected' : '' }}>Không hoạt động
+                    </option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="usage_limit" class="form-label">Tổng số lượt sử dụng</label>
+                <input type="number" min="0" name="usage_limit" class="form-control"
+                    value="{{ old('usage_limit', $promotion->usage_limit) }}">
+            </div>
+
+            <div class="mb-3">
                 <label for="description" class="form-label">Mô tả</label>
                 <textarea name="description" class="form-control" rows="3">{{ old('description', $promotion->description) }}</textarea>
             </div>

@@ -36,28 +36,34 @@ class PromotionController extends Controller
     {
         //
         $validated = $request->validate([
-            'promotion_name' => 'required|string|max:255',
-            'discount_type' => 'required|in:fixed,percent',
-            'discount_value' => [
+            'promotion_name'      => 'required|string|max:255',
+            'discount_type'       => 'required|in:fixed,percent',
+            'discount_value'      => [
                 'required',
                 'numeric',
                 function ($attribute, $value, $fail) use ($request) {
-                    if ($request->discount_type === 'percent' && $value > 100) {
-                        $fail('Phần trăm giảm tối đa là 100%.');
+                    if ($request->discount_type === 'percent') {
+                        if ($value < 1 || $value > 100) {
+                            $fail('Phần trăm giảm phải nằm trong khoảng 1-100%.');
+                        }
                     }
+
                     if ($request->discount_type === 'fixed' && $value < 1000) {
-                        $fail('Giảm theo số tiền phải từ 1000đ trở lên.');
+                        $fail('Số tiền giảm tối thiểu là 1000đ.');
                     }
                 },
             ],
-
-            'max_discount_value' => 'nullable|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'description' => 'nullable|string',
+            'max_discount_value'  => 'nullable|numeric|min:0',
+            'usage_limit'         => 'nullable|integer|min:1',
+            'start_date'          => 'required|date|after_or_equal:' . Carbon::now()->subMinute()->toDateTimeString(),
+            'end_date'            => 'required|date|after:start_date',
+            'description'         => 'nullable|string',
         ]);
 
-        // Bước 2: nếu giảm theo tiền thì bỏ max_discount_value
+        if (empty($validated['usage_limit'])) {
+            $validated['usage_limit'] = null; 
+        }
+
         if ($validated['discount_type'] === 'fixed') {
             $validated['max_discount_value'] = null;
         }
@@ -100,6 +106,7 @@ class PromotionController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'description' => 'nullable|string',
+            'status' => 'required|in:0,1',
         ]);
 
         $promotion->update([
@@ -110,6 +117,7 @@ class PromotionController extends Controller
             'start_date' => Carbon::parse($request->start_date),
             'end_date' => Carbon::parse($request->end_date),
             'description' => $request->description,
+            'status'             => $request->status,
         ]);
 
         return redirect()->route('promotions.index')->with('success', 'Cập nhật mã giảm giá thành công!');

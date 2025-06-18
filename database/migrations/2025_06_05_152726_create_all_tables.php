@@ -71,17 +71,17 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('promotions', function (Blueprint $table) {
-            $table->id();
-            $table->string('promotion_name');
-            $table->string('discount_type');
-            $table->decimal('discount_value', 10, 2);
-            $table->decimal('max_discount_value', 10, 2)->nullable();
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->text('description')->nullable();
-            $table->timestamps();
-        });
+        // Schema::create('promotions', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string('promotion_name');
+        //     $table->string('discount_type');
+        //     $table->decimal('discount_value', 10, 2);
+        //     $table->decimal('max_discount_value', 10, 2)->nullable();
+        //     $table->dateTime('start_date');
+        //     $table->dateTime('end_date');
+        //     $table->text('description')->nullable();
+        //     $table->timestamps();
+        // });
 
         Schema::create('orders', function (Blueprint $table) {
             $table->id();

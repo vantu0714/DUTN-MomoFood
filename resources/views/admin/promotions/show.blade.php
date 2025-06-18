@@ -4,17 +4,19 @@
 <div class="container mt-4">
     <h2 class="mb-4">Chi tiết mã giảm giá</h2>
 
-    <div class="card">
+    <div class="card shadow">
         <div class="card-header bg-primary text-white">
             {{ $promotion->promotion_name }}
         </div>
+
         <div class="card-body">
             <table class="table table-borderless">
                 <tbody>
                     <tr>
                         <th>Loại giảm:</th>
-                        <td>{{ ucfirst($promotion->discount_type) }}</td>
+                        <td>{{ $promotion->discount_type === 'percent' ? 'Giảm phần trăm' : 'Giảm số tiền' }}</td>
                     </tr>
+
                     <tr>
                         <th>Giá trị giảm:</th>
                         <td>
@@ -25,6 +27,7 @@
                             @endif
                         </td>
                     </tr>
+
                     <tr>
                         <th>Giảm tối đa:</th>
                         <td>
@@ -34,22 +37,46 @@
                                 Không giới hạn
                             @endif
                         </td>
+                    </tr>
+
                     <tr>
                         <th>Ngày bắt đầu:</th>
-                        <td>{{ \Carbon\Carbon::parse($promotion->start_date)->format('d/m/Y H:i') }}</td>
+                        <td>{{ $promotion->start_date->format('d/m/Y H:i') }}</td>
                     </tr>
+
                     <tr>
                         <th>Ngày kết thúc:</th>
-                        <td>{{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}</td>
+                        <td>{{ $promotion->end_date->format('d/m/Y H:i') }}</td>
                     </tr>
+
+                    <tr>
+                        <th>Số lượt sử dụng:</th>
+                        <td>{{ $promotion->used_count ?? 0 }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Giới hạn lượt sử dụng:</th>
+                        <td>
+                            {{ $promotion->usage_limit ?? 'Không giới hạn' }}
+                        </td>
+                    </tr>
+
                     <tr>
                         <th>Mô tả:</th>
                         <td>{{ $promotion->description ?? 'Không có mô tả' }}</td>
                     </tr>
+
                     <tr>
                         <th>Trạng thái:</th>
                         <td>
-                            @if(\Carbon\Carbon::now()->between(\Carbon\Carbon::parse($promotion->start_date), \Carbon\Carbon::parse($promotion->end_date)))
+                            @php
+                                $now = now();
+                                $isValidTime = $now->between($promotion->start_date, $promotion->end_date);
+                                $isActive = $promotion->status === 'active';
+                                $limitOK = is_null($promotion->usage_limit) || $promotion->used_count < $promotion->usage_limit;
+                            @endphp
+
+                            @if ($isActive && $isValidTime && $limitOK)
                                 <span class="badge bg-success">Đang hoạt động</span>
                             @else
                                 <span class="badge bg-secondary">Không hoạt động</span>
@@ -59,6 +86,7 @@
                 </tbody>
             </table>
         </div>
+
         <div class="card-footer text-end">
             <a href="{{ route('promotions.index') }}" class="btn btn-secondary">Quay về danh sách</a>
             <a href="{{ route('promotions.edit', $promotion->id) }}" class="btn btn-warning">Sửa</a>
