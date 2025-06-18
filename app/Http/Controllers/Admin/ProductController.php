@@ -17,7 +17,6 @@ class ProductController extends Controller
         // Lọc theo trạng thái sản phẩm
         if ($request->filled('status')) {
             $statusFilter = $request->input('status');
-
             $query->where(function ($q) use ($statusFilter) {
                 $q->where(function ($subQuery) use ($statusFilter) {
                     // Sản phẩm đơn
@@ -69,13 +68,17 @@ class ProductController extends Controller
         })->count();
 
 
+        // Lấy sản phẩm phân trang
+        $products = Product::with('category')->paginate(10);
 
+        // Đếm tổng số sản phẩm (kể cả hết hàng)
+        $totalProducts = Product::count();
 
         $products = $query->paginate(10);
 
         $categories = Category::all();
 
-        return view('admin.products.index', compact('products', 'categories', 'availableProductsCount', 'outOfStockProductsCount'));
+        return view('admin.products.index', compact('products', 'categories', 'availableProductsCount', 'outOfStockProductsCount', 'totalProducts'));
     }
     public function create()
     {
@@ -90,19 +93,21 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code',
             'category_id' => 'required|exists:categories,id',
-            'original_price' => 'nullable|numeric',
-            'discounted_price' => 'nullable|numeric',
+            'original_price' => 'nullable|numeric|min:0',
+            'discounted_price' => 'nullable|numeric|min:0|lte:original_price', // ✅ So sánh với giá gốc
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'quantity' => 'required_if:product_type,simple|nullable|integer|min:0',
             'product_type' => 'required|in:simple,variant',
+        ], [
+            'discounted_price.lte' => 'Giá khuyến mãi không được lớn hơn giá gốc.',
         ]);
 
         // ✅ Gán status theo loại sản phẩm
         if ($validated['product_type'] === 'simple') {
             $validated['status'] = isset($validated['quantity']) && $validated['quantity'] > 0 ? 1 : 0;
         } else {
-            $validated['status'] = 0; // Mặc định cho sản phẩm có biến thể, sẽ cập nhật sau khi thêm biến thể
+            $validated['status'] = 0; // Mặc định cho sản phẩm có biến thể
         }
 
         // ✅ Xử lý upload ảnh nếu có
@@ -122,6 +127,7 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')->with('success', 'Sản phẩm không biến thể đã được thêm thành công.');
     }
+
 
 
     public function edit($id)
@@ -163,23 +169,23 @@ class ProductController extends Controller
     }
     public function destroy($id)
     {
-        try {
-            $product = Product::findOrFail($id);
+        $product = Product::findOrFail($id);
 
-            // Xóa ảnh nếu có
-            if ($product->image && Storage::exists('public/' . $product->image)) {
-                Storage::delete('public/' . $product->image);
-            }
+        // Kiểm tra nếu sản phẩm có đơn hàng (qua orderDetails hoặc variants)
+        $hasOrders = $product->orderDetails()->exists() ||
+            $product->variants()->whereHas('orderDetails')->exists();
 
-            $product->delete();
-
-            return redirect()->route('products.index')
-                ->with('success', 'Sản phẩm đã được xóa thành công!');
-        } catch (\Exception $e) {
-            return redirect()->route('products.index')
-                ->with('error', 'Có lỗi xảy ra khi xóa sản phẩm: ' . $e->getMessage());
+        if ($hasOrders) {
+            return redirect()->route('products.index')->with('error', 'Không thể xóa sản phẩm vì đã có đơn hàng liên quan.');
         }
+
+        // Nếu không có đơn hàng, thì xóa
+        $product->delete();
+
+        return redirect()->route('products.index')->with('success', 'Xóa sản phẩm thành công.');
     }
+
+
     public function showVariants($id)
     {
         $product = Product::with('variants')->findOrFail($id);
