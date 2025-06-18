@@ -17,6 +17,13 @@ class OrderController extends Controller
     {
 
         $cart = session()->get('cart', []);
+        $recipient = session()->get('recipient', [
+            'recipient_name' => '',
+            'recipient_phone' => '',
+            'recipient_address' => '',
+            'note' => '',
+        ]);
+
         return view('clients.order', compact('cart'));
     }
     public function store(Request $request)
@@ -34,14 +41,19 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Giỏ hàng đang trống.');
         }
 
+        session()->put('recipient', $request->only([
+            'recipient_name',
+            'recipient_phone',
+            'recipient_address',
+            'note'
+        ]));
+
         // Tính tổng tiền hàng
         $total = 0;
         foreach ($cartItems as $item) {
             $total += $item['price'] * $item['quantity'];
         }
 
-        // Áp dụng mã giảm giá nếu có
-        // Áp dụng mã giảm giá nếu có
         $discount = 0;
         $promotionCode = null;
 
@@ -51,30 +63,28 @@ class OrderController extends Controller
                 ->where('end_date', '>=', now())
                 ->first();
 
-            if (!$promotion) {
+            if ($promotion) {
+                $promotionCode = $promotion->promotion_name;
+
+                if ($promotion->discount_type === 'percent') {
+                    $discount = ($promotion->discount_value / 100) * $total;
+                } elseif ($promotion->discount_type === 'fixed') {
+                    $discount = $promotion->discount_value;
+                }
+
+                if ($promotion->max_discount_value !== null) {
+                    $discount = min($discount, $promotion->max_discount_value);
+                }
+            } else {
                 return redirect()->back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết hạn.');
             }
-
-            $promotionCode = $promotion->promotion_name;
-
-            if ($promotion->discount_type === 'percent') {
-                $discount = ($promotion->discount_value / 100) * $total;
-            } elseif ($promotion->discount_type === 'fixed') {
-                $discount = $promotion->discount_value;
-            }
-
-            if ($promotion->max_discount_value !== null) {
-                $discount = min($discount, $promotion->max_discount_value);
-            }
         }
-
 
         $grandTotal = $total + $request->shipping_fee - $discount;
 
         try {
             DB::beginTransaction();
 
-            // Tạo đơn hàng
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'recipient_name' => $request->recipient_name,
@@ -89,24 +99,31 @@ class OrderController extends Controller
                 'status' => 'pending',
             ]);
 
-            // Lưu chi tiết đơn hàng
-            foreach ($cartItems as $productId => $item) {
+            foreach ($cartItems as $item) {
+                $productId = $item['product_id'] ?? null;
+                $variantId = $item['product_variant_id'] ?? null;
+
+                if (!$productId) {
+                    throw new \Exception("Thiếu product_id cho sản phẩm trong giỏ hàng.");
+                }
+
                 OrderDetail::create([
-                    'order_id' => $order->id,
-                    'product_variant_id' => $item['product_variant_id'] ?? null,
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
+                    'order_id'           => $order->id,
+                    'product_id'         => $productId,
+                    'product_variant_id' => $variantId, // null nếu không có biến thể
+                    'quantity'           => $item['quantity'],
+                    'price'              => $item['price'],
                 ]);
             }
 
             DB::commit();
-
-            // Xóa giỏ hàng sau khi đặt
             session()->forget('cart');
+            session()->forget('recipient');
 
             if ($request->payment_method === 'vnpay') {
                 return redirect()->route('vnpay.payment', ['order_id' => $order->id]);
             }
+
 
             return redirect()->route('carts.index')->with('success', 'Đặt hàng thành công!');
         } catch (\Exception $e) {

@@ -10,6 +10,7 @@ use App\Models\AttributeValue;
 use App\Models\ProductVariantValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProductVariantController extends Controller
 {
@@ -19,13 +20,11 @@ class ProductVariantController extends Controller
         return view('admin.product_variants.index', compact('variants'));
     }
 
-
     public function create(Request $request)
     {
         $productId = $request->input('product_id');
         $product = Product::findOrFail($productId);
-
-        $attributes = Attribute::with('values')->get(); // Lấy toàn bộ thuộc tính + giá trị
+        $attributes = Attribute::with('values')->get(); // Gợi ý: bạn có thể gửi $attributes xuống view nếu cần
 
         return view('admin.product_variants.create', compact('product'));
     }
@@ -37,23 +36,20 @@ class ProductVariantController extends Controller
 
         try {
             foreach ($request->variants as $variantData) {
-                // Lưu ảnh nếu có (có thể thêm sau nếu form hỗ trợ ảnh)
                 $imagePath = null;
+
                 if (isset($variantData['image'])) {
                     $imagePath = $variantData['image']->store('variants', 'public');
                 }
 
-                // Tạo biến thể sản phẩm
                 $variant = ProductVariant::create([
                     'product_id' => $request->product_id,
                     'price' => $variantData['price'],
                     'quantity_in_stock' => $variantData['quantity_in_stock'],
                     'sku' => $variantData['sku'],
                     'image' => $imagePath,
-                    // 'status' => $variantData['status'] ?? 1, // nếu có
                 ]);
 
-                // Thêm thuộc tính
                 if (!empty($variantData['attributes'])) {
                     foreach ($variantData['attributes'] as $attr) {
                         $attribute = Attribute::firstOrCreate(['name' => $attr['name']]);
@@ -69,6 +65,8 @@ class ProductVariantController extends Controller
                     }
                 }
             }
+
+            $this->updateProductStatus($request->product_id);
 
             DB::commit();
             return redirect()->route('admin.product_variants.index')->with('success', 'Tạo biến thể thành công!');
@@ -89,7 +87,6 @@ class ProductVariantController extends Controller
         return view('admin.product_variants.edit', compact('variant', 'products', 'attributes'));
     }
 
-
     public function update(Request $request, $id)
     {
         DB::beginTransaction();
@@ -99,6 +96,10 @@ class ProductVariantController extends Controller
 
             $imagePath = $variant->image;
             if ($request->hasFile('image')) {
+                if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+                    Storage::disk('public')->delete($variant->image);
+                }
+
                 $imagePath = $request->file('image')->store('variants', 'public');
             }
 
@@ -107,16 +108,11 @@ class ProductVariantController extends Controller
                 'price' => $request->price,
                 'quantity_in_stock' => $request->quantity_in_stock,
                 'sku' => $request->sku,
-                'status' => $request->status,
                 'image' => $imagePath,
             ]);
 
-
-
-            // Xóa attribute value cũ
             ProductVariantValue::where('product_variant_id', $variant->id)->delete();
 
-            // Gắn attribute values mới
             if ($request->attribute_values) {
                 foreach ($request->attribute_values as $attribute_value_id) {
                     ProductVariantValue::create([
@@ -125,6 +121,8 @@ class ProductVariantController extends Controller
                     ]);
                 }
             }
+
+            $this->updateProductStatus($request->product_id);
 
             DB::commit();
             return redirect()->route('admin.product_variants.index')->with('success', 'Cập nhật thành công!');
@@ -135,8 +133,6 @@ class ProductVariantController extends Controller
     }
     
 
-
-
     public function destroy($id)
     {
         $variant = ProductVariant::findOrFail($id);
@@ -145,11 +141,31 @@ class ProductVariantController extends Controller
             return back()->with('error', 'Không thể xoá vì biến thể đã được sử dụng trong đơn hàng.');
         }
 
-        // Xóa các liên kết attribute values (nếu cần)
+        $productId = $variant->product_id;
+
         ProductVariantValue::where('product_variant_id', $variant->id)->delete();
+
+        if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+            Storage::disk('public')->delete($variant->image);
+        }
 
         $variant->delete();
 
+        $this->updateProductStatus($productId);
+
         return redirect()->route('admin.product_variants.index')->with('success', 'Đã xóa biến thể!');
+    }
+
+    /**
+     * Cập nhật trạng thái "còn hàng / hết hàng" cho sản phẩm cha
+     */
+    protected function updateProductStatus($productId)
+    {
+        $product = Product::find($productId);
+
+        if ($product) {
+            $hasStock = $product->variants()->where('quantity_in_stock', '>', 0)->exists();
+            $product->update(['status' => $hasStock ? 1 : 0]);
+        }
     }
 }

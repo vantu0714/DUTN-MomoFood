@@ -46,9 +46,15 @@
             </div>
 
             <div class="mb-3">
+                <label for="usage_limit" class="form-label">Giới hạn lượt sử dụng</label>
+                <input type="number" name="usage_limit" class="form-control"
+                    value="{{ old('usage_limit') }}" placeholder="VD: 100 (để trống nếu không giới hạn)">
+            </div>
+
+            <div class="mb-3">
                 <label for="start_date" class="form-label">Ngày bắt đầu</label>
                 <input type="datetime-local" name="start_date" class="form-control" required
-                    value="{{ old('start_date', \Carbon\Carbon::now()->format('Y-m-d\TH:i')) }}"
+                    value="{{ old('start_date', \Carbon\Carbon::now()->addMinutes(1)->format('Y-m-d\TH:i')) }}"
                     min="{{ \Carbon\Carbon::now()->format('Y-m-d\TH:i') }}">
             </div>
 

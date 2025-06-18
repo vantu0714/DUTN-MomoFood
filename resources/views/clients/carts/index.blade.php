@@ -19,10 +19,10 @@
             <div class="container py-5">
 
                 <!-- Thông báo -->
-                @if(session('success'))
+                @if (session('success'))
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
-                @if(session('error'))
+                @if (session('error'))
                     <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
 
@@ -48,21 +48,29 @@
                                 @endphp
                                 <tr class="cart-item" data-id="{{ $id }}">
                                     <td>
-                                        <img src="{{ asset($item['image'] ?? 'clients/img/default.png') }}" class="img-fluid rounded-circle" style="width: 80px; height: 80px;" />
+                                        <img src="{{ asset($item['image'] ?? 'clients/img/default.png') }}"
+                                            class="img-fluid rounded-circle" style="width: 80px; height: 80px;" />
                                     </td>
-                                    <td>{{ $item['product_name'] }}</td>
-                                    <td class="price" data-price="{{ $item['price'] }}">{{ number_format($item['price'], 0, ',', '.') }} đ</td>
+
+                                    <td>{{ $item['product_name'] }}
+                                        @if (!empty($item['variant_name']))
+                                            <br><small class="text-muted">Biến thể: {{ $item['variant_name'] }}</small>
+                                        @endif
+                                    </td>
+
+                                    <td class="price" data-price="{{ $item['price'] }}">
+                                        {{ number_format($item['price'], 0, ',', '.') }} đ</td>
                                     <td>
-                                        <input type="number"
-                                               class="form-control quantity-input"
-                                               name="quantities[{{ $id }}]"
-                                               value="{{ $item['quantity'] }}"
-                                               min="1"
-                                               style="width: 60px;">
+                                        <input type="number" class="form-control quantity-input"
+                                            name="quantities[{{ $id }}]" value="{{ $item['quantity'] }}"
+                                            min="1" style="width: 60px;">
                                     </td>
+                                    
                                     <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
+                                    
                                     <td>
-                                        <a href="{{ route('carts.remove', $id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                        <a href="{{ route('carts.remove', $id) }}" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
                                             <i class="fa fa-times"></i>
                                         </a>
                                     </td>
@@ -80,8 +88,11 @@
                 <div class="mt-5">
                     <form action="{{ route('carts.applyCoupon') }}" method="POST" class="d-flex">
                         @csrf
-                        <input type="text" name="coupon_code" class="form-control border-0 border-bottom rounded me-3 py-3" placeholder="Nhập mã giảm giá">
-                        <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="submit">Áp dụng mã</button>
+                        <input type="text" name="coupon_code"
+                            class="form-control border-0 border-bottom rounded me-3 py-3"
+                            placeholder="Nhập mã giảm giá">
+                        <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="submit">Áp dụng
+                            mã</button>
                     </form>
                 </div>
 
@@ -103,11 +114,15 @@
                                 <hr>
                                 <div class="d-flex justify-content-between fw-bold">
                                     <span>Tổng cộng:</span>
-                                    <span id="grand-total">{{ number_format($total + $shipping, 0, ',', '.') }} đ</span>
+                                    <span id="grand-total">{{ number_format($total + $shipping, 0, ',', '.') }}
+                                        đ</span>
                                 </div>
                             </div>
-                          
-                            <a href="{{route('clients.order')}}" class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">Thanh Toán</a>
+
+                            <a href="{{ route('clients.order') }}"
+                                class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">Thanh
+                                Toán
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -123,8 +138,8 @@
 
 <!-- JavaScript xử lý tính tổng động -->
 <script>
-    document.querySelectorAll('.quantity-input').forEach(function (input) {
-        input.addEventListener('change', function () {
+    document.querySelectorAll('.quantity-input').forEach(function(input) {
+        input.addEventListener('change', function() {
             let row = this.closest('.cart-item');
             let price = parseFloat(row.querySelector('.price').dataset.price);
             let quantity = parseInt(this.value);
@@ -139,7 +154,7 @@
 
     function updateTotal() {
         let total = 0;
-        document.querySelectorAll('.cart-item').forEach(function (row) {
+        document.querySelectorAll('.cart-item').forEach(function(row) {
             let price = parseFloat(row.querySelector('.price').dataset.price);
             let quantity = parseInt(row.querySelector('.quantity-input').value);
             total += price * quantity;

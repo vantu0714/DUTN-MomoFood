@@ -10,56 +10,50 @@ use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
-
-//  public function index()
-//     {
-//         $products = Product::with('category')
-//             ->where('status', 1)
-//             ->where('quantity', '>', 0)
-//             ->paginate(6);
-
-//         $user = Auth::user();
-//         if ($user && $user->role && $user->role->name === 'admin') {
-//             // dd($user->role->name);
-//             return redirect('/admin/dashboard')
-//                 ->with('error', 'Admin không được phép truy cập trang chủ.');
-//         }
-        
-//         $products = Product::with('category')->where('status', 1)->paginate(12);
-//         return view('clients.home', compact('products'));
-//     }
-
     public function index(Request $request)
     {
         $user = Auth::user();
         if ($user && $user->role && $user->role->name === 'admin') {
-            return redirect('/admin/dashboard')
-                ->with('error', 'Admin không được phép truy cập trang chủ.');
+            return redirect('/admin/dashboard')->with('error', 'Admin không được phép truy cập trang chủ.');
         }
 
-        $query = Product::with('category')
-            ->where('status', 1)
-            ->where('quantity', '>', 0);
+        $query = Product::with(['category', 'variants'])
+            ->where(function ($q) {
+                // Điều kiện cho sản phẩm đơn
+                $q->where(function ($q1) {
+                    $q1->where('product_type', 'simple')
+                        ->where('quantity', '>', 0)
+                        ->where('status', 1);
+                })
+                    // Hoặc điều kiện cho sản phẩm có biến thể CÒN HÀNG
+                    ->orWhere(function ($q2) {
+                        $q2->where('product_type', 'variant')
+                            ->where('status', 1)
+                            ->whereHas('variants', function ($q3) {
+                                $q3->where('quantity_in_stock', '>', 0);
+                            });
+                    });
+            });
 
-        // Nếu có ?category=ID thì lọc theo danh mục
+
+        // Lọc theo danh mục nếu có
         if ($request->has('category')) {
             $query->where('category_id', $request->category);
         }
 
         $products = $query->paginate(12);
+
         $categories = Category::withCount('products')->get();
 
-        // Lấy tất cả danh mục và đếm số sản phẩm trong mỗi danh mục
+        // Đổi bestSellingProducts để không lấy sản phẩm hết hàng
         $bestSellingProducts = Product::with('category')
-        ->where('status', 1)
-        ->where('quantity', '>', 0)
-        ->inRandomOrder() 
-        ->take(8) 
-        ->get();
- 
+            ->where('product_type', 'simple')
+            ->where('status', 1) // Đã đổi từ 'Còn hàng' sang 1
+            ->where('quantity', '>', 0)
+            ->inRandomOrder()
+            ->take(8)
+            ->get();
+
         return view('clients.home', compact('products', 'categories', 'bestSellingProducts'));
-
     }
-
-    
 }
