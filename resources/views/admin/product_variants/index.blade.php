@@ -1,5 +1,5 @@
+@php $disableMapScript = true; @endphp
 @extends('admin.layouts.app')
-
 @section('content')
 <div class="container">
     <h2>Danh sách biến thể sản phẩm</h2>

@@ -121,7 +121,8 @@
 
                             <a href="{{ route('clients.order') }}"
                                 class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">Thanh
-                                Toán</a>
+                                Toán
+                            </a>
                         </div>
                     </div>
                 </div>

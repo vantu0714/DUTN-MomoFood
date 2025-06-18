@@ -187,15 +187,33 @@
                         <div class="col-lg-12">
                             <div class="row g-4">
                                 @foreach ($products as $product)
+                                    @php
+                                        $firstVariant = null;
+                                        $price = null;
+
+                                        if ($product->product_type === 'variant') {
+                                            $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                                            $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
+                                        } elseif ($product->product_type === 'simple') {
+                                            $price = $product->discounted_price ?? $product->original_price;
+                                        }
+
+                                        $isOutOfStock = false;
+
+                                        if ($product->product_type === 'simple') {
+                                            $isOutOfStock = $product->quantity <= 0;
+                                        } elseif ($product->product_type === 'variant') {
+                                            $isOutOfStock = $product->variants->sum('quantity_in_stock') <= 0;
+                                        }
+                                    @endphp
+
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
-
                                             <div class="product-img-wrapper">
                                                 <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                                     onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
                                                     alt="Product Image">
                                             </div>
-
                                             <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
                                                 style="top: 10px; left: 10px;">
                                                 {{ $product->category?->category_name ?? 'Không có danh mục' }}
@@ -210,20 +228,24 @@
 
                                                 <div class="d-flex justify-content-between align-items-center mt-auto">
                                                     <p class="text-dark fs-5 fw-bold mb-0">
-                                                        {{ number_format($product->discounted_price ?? $product->original_price, 0, ',', '.') }}
-                                                        VNĐ
+                                                        {{ $price ? number_format($price, 0, ',', '.') . ' VNĐ' : 'Liên hệ' }}
                                                     </p>
-                                                    <form action="{{ route('carts.add') }}" method="POST">
-                                                        @csrf
-                                                        <input type="hidden" name="product_id"
-                                                            value="{{ $product->id }}">
-                                                        <button type="submit"
-                                                            class="btn border border-secondary rounded-pill px-3 text-primary">
-                                                            <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào giỏ
-                                                            hàng
-                                                        </button>
-                                                    </form>
 
+                                                    @if (!$isOutOfStock)
+                                                        <form action="{{ route('carts.add') }}" method="POST">
+                                                            @csrf
+                                                            <input type="hidden" name="product_id"
+                                                                value="{{ $product->id }}">
+                                                            <button type="submit"
+                                                                class="btn border border-secondary rounded-pill px-3 text-primary">
+                                                                <i
+                                                                    class="fa fa-shopping-bag me-2 text-primary"></i>Thêm
+                                                                vào giỏ hàng
+                                                            </button>
+                                                        </form>
+                                                    @else
+                                                        <span class="badge bg-danger text-white">Hết hàng</span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -316,8 +338,7 @@
 
                             <form action="{{ route('carts.add') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="product_id"
-                                    value="{{ $product->id }}">
+                                <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <button type="submit"
                                     class="btn border border-secondary rounded-pill px-3 text-primary">
                                     <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào giỏ

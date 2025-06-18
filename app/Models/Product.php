@@ -23,12 +23,9 @@ class Product extends Model
         'view',
         'is_show_home',
         'category_id',
-        'quantity', 
+        'quantity',
+        'product_type',
     ];
-
-    /**
-     * Get the category that owns the Product.
-     */
     public function category(): BelongsTo // Khuyến nghị thêm kiểu trả về để code rõ ràng hơn
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
@@ -61,5 +58,19 @@ class Product extends Model
     {
         return $this->hasMany(ProductVariant::class);
     }
-    
+    public function index()
+    {
+        $products = Product::with('category')->paginate(10); // pagination
+        $totalProducts = Product::count(); // đếm toàn bộ sản phẩm (không phân trang)
+
+        return view('admin.products.index', compact('products', 'totalProducts'));
+    }
+    public function orderItems()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
 }

@@ -45,7 +45,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-primary text-uppercase mb-1">Tổng sản phẩm</div>
-                                <div class="h5 mb-0">{{ $products->count() }}</div>
+                                <div class="h5 mb-0">{{ $totalProducts }}</div>
                             </div>
                         </div>
                     </div>
@@ -280,30 +280,113 @@
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-1">
+                                            <!-- Nút xem -->
                                             <a href="{{ route('products.show', $item->id) }}"
                                                 class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip"
                                                 title="Xem chi tiết">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            <!-- Nút sửa -->
                                             <a href="{{ route('products.edit', $item->id) }}"
                                                 class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip"
                                                 title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            {{-- <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
-                                                data-product-id="{{ $item->id }}"
-                                                data-product-name="{{ $item->product_name }}" data-bs-toggle="tooltip"
-                                                title="Xóa">
-                                                <i class="fas fa-trash"></i>
-                                            </button> --}}
-                                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
-                                                data-product-id="{{ $item->id }}"
-                                                data-product-name="{{ $item->product_name }}" data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal" title="Xóa">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            <!-- Form xóa đơn giản -->
+                                            <form action="{{ route('products.destroy', $item->id) }}" method="POST"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm \'{{ $item->product_name }}\'?\n\nHành động này không thể hoàn tác!')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="tooltip" title="Xóa sản phẩm">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
+                                    <!-- Script đơn giản -->
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            // Khởi tạo tooltip
+                                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                                                return new bootstrap.Tooltip(tooltipTriggerEl);
+                                            });
+                                            // Log để debug
+                                            console.log('Page loaded, tooltips initialized');
+                                            // Kiểm tra CSRF token
+                                            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                                            if (csrfToken) {
+                                                console.log('CSRF Token found:', csrfToken.getAttribute('content'));
+                                            } else {
+                                                console.error('CSRF Token not found!');
+                                            }
+                                        });
+                                        // Function để test AJAX delete (nếu cần)
+                                        function testAjaxDelete(productId) {
+                                            if (!confirm('Test AJAX delete?')) return;
+
+                                            fetch(`/admin/products/${productId}`, {
+                                                    method: 'DELETE',
+                                                    headers: {
+                                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                                        'Accept': 'application/json',
+                                                        'Content-Type': 'application/json'
+                                                    }
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    console.log('Response:', data);
+                                                    if (data.success) {
+                                                        alert('Xóa thành công!');
+                                                        location.reload();
+                                                    } else {
+                                                        alert('Lỗi: ' + data.message);
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error:', error);
+                                                    alert('Có lỗi xảy ra!');
+                                                });
+                                        }
+                                    </script>
+
+                                    <style>
+                                        /* CSS cho form xóa */
+                                        .d-inline {
+                                            display: inline-block !important;
+                                        }
+
+                                        .btn-group-sm>.btn,
+                                        .btn-sm {
+                                            padding: 0.25rem 0.5rem;
+                                            font-size: 0.875rem;
+                                            border-radius: 0.375rem;
+                                        }
+
+                                        .btn-outline-danger:hover {
+                                            background-color: #dc3545;
+                                            border-color: #dc3545;
+                                            color: #fff;
+                                        }
+
+                                        .gap-1 {
+                                            gap: 0.25rem !important;
+                                        }
+
+                                        /* Tooltip styling */
+                                        .tooltip {
+                                            font-size: 0.875rem;
+                                        }
+
+                                        .tooltip-inner {
+                                            background-color: #000;
+                                            color: #fff;
+                                            border-radius: 0.375rem;
+                                            padding: 0.25rem 0.5rem;
+                                        }
+                                    </style>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -325,68 +408,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Single Delete Modal -->
-    <!-- Modal xác nhận xoá dùng chung -->
-    <!-- Modal xác nhận xóa -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-sm">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger">Xác nhận xóa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    Bạn có chắc chắn muốn xóa <strong id="productName"></strong>?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
-                    <form id="deleteForm" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div> 
-
-    <!-- Nút mở modal -->
-    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $item->id }}">
-        Xóa
-    </button>
-
-    <!-- Modal riêng cho từng sản phẩm -->
-    <div class="modal fade" id="deleteModal{{ $item->id }}" tabindex="-1"
-        aria-labelledby="deleteModalLabel{{ $item->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title text-danger" id="deleteModalLabel{{ $item->id }}">
-                        <i class="fas fa-exclamation-triangle me-2"></i> Xác nhận xóa
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-2">Bạn có chắc chắn muốn xóa sản phẩm <strong>{{ $item->name }}</strong>?</p>
-                    <p class="text-muted small mb-0">Hành động này không thể hoàn tác.</p>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
-                    <form action="{{ route('products.destroy', $item->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash me-1"></i> Xóa
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
     <style>
         .card {
             transition: all 0.3s ease;
@@ -535,40 +556,17 @@
             }
         }
     </style>
-
-    {{-- <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-
-            // Select all checkbox functionality
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
-
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
-                    itemCheckboxes.forEach(checkbox => {
-                        checkbox.checked = this.checked;
-                    });
-                });
-            }
-
-            // Delete functionality
-            document.addEventListener('DOMContentLoaded', function() {
-                const deleteModal = document.getElementById('deleteModal');
-
-                deleteModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const productId = button.getAttribute('data-id');
-                    const productName = button.getAttribute('data-name');
-
-                    document.getElementById('productName').textContent = productName;
-                    document.getElementById('deleteForm').action = `/admin/products/${productId}`;
-                });
-            });
-        });
-    </script> --}}
 @endsection
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
