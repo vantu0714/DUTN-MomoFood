@@ -30,7 +30,7 @@
 
 .product-description {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    /* -webkit-line-clamp: 2; */
     -webkit-box-orient: vertical;
     overflow: hidden;
     min-height: 48px;
@@ -72,3 +72,92 @@
     color: #fff;
     border-color: #ff5500;
 }
+.product-img-wrapper {
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background-color: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.product-img-wrapper img:hover {
+    transform: scale(1.05);
+}
+
+
+/* Sản phẩm bán chạy */
+.product-card {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-img-wrapper {
+    height: 200px;
+    overflow: hidden;
+}
+
+.product-img-wrapper img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+    transition: transform 0.3s ease;
+}
+
+.product-img-wrapper img:hover {
+    transform: scale(1.05);
+}
+
+.description {
+    min-height: 60px; 
+}
+.price {
+    white-space: nowrap;
+}
+
+.currency {
+    margin-left: 2px;
+    font-weight: normal;
+    font-size: 95%;
+}
+
+/* Featurs Start */
+.promo-box {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+.promo-box img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    display: block;
+    border-radius: 10px 10px 0 0;
+}
+
+.promo-content {
+    padding: 20px;
+    text-align: center;
+    border-radius: 0 0 10px 10px;
+}
+
+
+

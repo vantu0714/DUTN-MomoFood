@@ -17,7 +17,7 @@
     </div>
     <div class="container px-0">
         <nav class="navbar navbar-light bg-white navbar-expand-xl">
-            <a href="{{ route('home.index') }}" class="navbar-brand">
+            <a href="{{ route('home') }}" class="navbar-brand">
                 <img class="img-logo" src="{{ asset('clients/img/logo_datn.png') }}" alt="">
             </a>
             <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
@@ -26,7 +26,7 @@
             </button>
             <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
                 <div class="navbar-nav mx-auto">
-                    <a href="{{ route('home.index') }}" class="nav-item nav-link active">Trang chủ</a>
+                    <a href="{{ route('home') }}" class="nav-item nav-link active">Trang chủ</a>
                     <a href="{{ route('shop.index') }}" class="nav-item nav-link">Cửa hàng</a>
                     <a href="{{ route('news.index') }}" class="nav-item nav-link">Tin tức</a>
                     <a href="{{ route('news.index') }}" class="nav-item nav-link">Ưu đãi</a>
