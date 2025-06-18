@@ -67,7 +67,7 @@
                                     </td>
                                     
                                     <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
-
+                                    
                                     <td>
                                         <a href="{{ route('carts.remove', $id) }}" class="btn btn-sm btn-danger"
                                             onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
