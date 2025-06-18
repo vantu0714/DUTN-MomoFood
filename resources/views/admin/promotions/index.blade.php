@@ -13,8 +13,7 @@
                         <th>Tên</th>
                         <th>Loại giảm</th>
                         <th>Giá trị</th>
-                        <th>Ngày bắt đầu</th>
-                        <th>Ngày kết thúc</th>
+                        <th>Trạng thái</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
@@ -24,12 +23,19 @@
                             <td>{{ $promotion->promotion_name }}</td>
                             <td>{{ ucfirst($promotion->discount_type) }}</td>
                             <td>{{ $promotion->discount_value }}</td>
-                            <td>{{ \Carbon\Carbon::parse($promotion->start_date)->format('d/m/Y H:i') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}</td>
                             <td>
-                                <a href="{{route('promotions.show', $promotion->id)}}" class="btn btn-info btn-sm">Xem</a>
-                                <a href="{{route('promotions.edit', $promotion->id)}}" class="btn btn-warning btn-sm">Sửa</a>
-                                <form action="{{ route('promotions.destroy', $promotion->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xoá không?')">
+                                @if ($promotion->isActive())
+                                    <span class="badge bg-success">Đang hoạt động</span>
+                                @else
+                                    <span class="badge bg-secondary">Không hoạt động</span>
+                                @endif
+                            </td>
+                            <td>
+                                <a href="{{ route('promotions.show', $promotion->id) }}" class="btn btn-info btn-sm">Xem</a>
+                                <a href="{{ route('promotions.edit', $promotion->id) }}"
+                                    class="btn btn-warning btn-sm">Sửa</a>
+                                <form action="{{ route('promotions.destroy', $promotion->id) }}" method="POST"
+                                    onsubmit="return confirm('Bạn có chắc chắn muốn xoá không?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
