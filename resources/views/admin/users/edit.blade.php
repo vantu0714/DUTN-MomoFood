@@ -250,8 +250,8 @@
                     </div>
 
                     <div class="card-body p-4">
-                        <form action="{{ route('users.update', $user->id) }}" method="POST"
-                            enctype="multipart/form-data" class="row g-4">
+                        <form action="{{ route('users.update', $user->id) }}" method="POST" enctype="multipart/form-data"
+                            class="row g-4">
                             @csrf
                             @method('PUT')
 
@@ -276,6 +276,8 @@
                                             @case('user')
                                                 Người dùng
                                             @break
+
+
                                         @break
 
                                         @default
@@ -335,27 +337,28 @@
                                             @enderror
                                         </div>
                                     </div>
-                                                                        <div class="col-md-6">
+                                    <div class="col-md-6">
                                         <div class="form-floating position-relative">
                                             <i class="ri-mail-line input-icon"></i>
-                                            <input  type="text"
-                                                class="form-control @error('address') is-invalid @enderror" name="address"
-                                                placeholder="Nhập địa chỉ" id="inputAddress" value="{{ $user->address }}"
-                                                style="padding-left: 2.5rem;">
+                                            <input type="text"
+                                                class="form-control @error('address') is-invalid @enderror"
+                                                name="address" placeholder="Nhập địa chỉ" id="inputAddress"
+                                                value="{{ $user->address }}" style="padding-left: 2.5rem;">
                                             <label for="inputAddress" style="padding-left: 2.5rem;">Địa chỉ</label>
                                             @error('address')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     </div>
-                                                                        <div class="col-md-6">
+                                    <div class="col-md-6">
                                         <div class="form-floating position-relative">
                                             <i class="ri-mail-line input-icon"></i>
-                                            <input  type="text"
+                                            <input type="text"
                                                 class="form-control @error('phone') is-invalid @enderror" name="phone"
-                                                id="inputphone4" placeholder="Nhập số điện thoại" value="{{ $user->phone }}"
-                                                style="padding-left: 2.5rem;">
-                                            <label for="inputphone4" style="padding-left: 2.5rem;">Số điện thoại</label>
+                                                id="inputphone4" placeholder="Nhập số điện thoại"
+                                                value="{{ $user->phone }}" style="padding-left: 2.5rem;">
+                                            <label for="inputphone4" style="padding-left: 2.5rem;">Số điện
+                                                thoại</label>
                                             @error('phone')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -382,6 +385,23 @@
                                         </div>
                                     </div>
 
+                                    <div class="col-md-6">
+                                        <div class="form-floating position-relative">
+                                            <i class="ri-toggle-line input-icon"></i>
+                                            <select class="form-select @error('status') is-invalid @enderror"
+                                                name="status" id="inputStatus" style="padding-left: 2.5rem;">
+                                                <option value="1" {{ $user->status == 1 ? 'selected' : '' }}>Kích
+                                                    hoạt</option>
+                                                <option value="0" {{ $user->status == 0 ? 'selected' : '' }}>Khóa
+                                                </option>
+                                            </select>
+                                            <label for="inputStatus" style="padding-left: 2.5rem;">Trạng thái</label>
+                                            @error('status')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
                                     <!-- Hidden file input -->
                                     <input type="file" name="avatar" id="imageInput" accept="image/*"
                                         class="d-none">
@@ -391,8 +411,7 @@
 
                                     <div class="col-12">
                                         <div class="hstack gap-2 justify-content-end mt-3">
-                                            <a class="btn btn-light"
-                                                href="{{ route('users.index') }}">
+                                            <a class="btn btn-light" href="{{ route('users.index') }}">
                                                 <i class="ri-arrow-left-line align-bottom me-1"></i> Quay lại
                                             </a>
                                             <button type="submit" class="btn btn-primary">
@@ -403,7 +422,7 @@
                                 </div>
                             </div>
                         </div>
-                         </form>
+                    </form>
                 </div>
             </div>
         </div>

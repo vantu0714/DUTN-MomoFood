@@ -179,7 +179,7 @@
 @endpush
 @section('content')
     <div class="container mt-4">
-              <div class="row">
+        <div class="row">
             <div class="col-12">
                 <div class="card user-card">
                     <div class="card-header user-card-header">
@@ -246,9 +246,25 @@
                                         </div>
                                     </div>
 
+                                    <div class="row user-info-row">
+                                        <div class="col-md-3 user-info-label">
+                                            <i class="mdi mdi-account-check user-info-icon"></i>Trạng thái:
+                                        </div>
+                                        <div class="col-md-9 user-info-value">
+                                            @if (isset($user->status))
+                                                @if ($user->status == 1)
+                                                    <span class="badge bg-success">Kích hoạt</span>
+                                                @else
+                                                    <span class="badge bg-danger">Khóa</span>
+                                                @endif
+                                            @else
+                                                <span class="text-muted fst-italic">Không rõ trạng thái</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
                                     <div class="action-buttons">
-                                        <a href="{{ route('users.index') }}"
-                                            class="btn btn-light">
+                                        <a href="{{ route('users.index') }}" class="btn btn-light">
                                             <i class="mdi mdi-arrow-left"></i>Quay lại
                                         </a>
                                     </div>
