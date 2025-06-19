@@ -48,8 +48,9 @@
                                 @endphp
                                 <tr class="cart-item" data-id="{{ $id }}">
                                     <td>
-                                        <img src="{{ asset($item['image'] ?? 'clients/img/default.png') }}"
+                                        <img src="{{ asset('storage/' . ($item['image'] ?? 'clients/img/default.png')) }}"
                                             class="img-fluid rounded-circle" style="width: 80px; height: 80px;" />
+
                                     </td>
 
                                     <td>{{ $item['product_name'] }}
@@ -65,9 +66,9 @@
                                             name="quantities[{{ $id }}]" value="{{ $item['quantity'] }}"
                                             min="1" style="width: 60px;">
                                     </td>
-                                    
+
                                     <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
-                                    
+
                                     <td>
                                         <a href="{{ route('carts.remove', $id) }}" class="btn btn-sm btn-danger"
                                             onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
