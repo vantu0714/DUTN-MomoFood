@@ -89,7 +89,6 @@
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
-
             <div class="mb-3">
                 <label class="form-label">Loại sản phẩm</label>
                 <select name="product_type" class="form-control" required>

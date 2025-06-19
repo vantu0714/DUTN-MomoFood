@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('password');
             $table->foreignId('role_id')->constrained('roles');
             $table->string('avatar')->nullable();
+            $table->boolean('status')->default(1); // 1: kích hoạt, 0: khóa
             $table->timestamps();
         });
 

@@ -29,6 +29,7 @@ class ProductVariantController extends Controller
         return view('admin.product_variants.create', compact('product'));
     }
 
+
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -74,6 +75,8 @@ class ProductVariantController extends Controller
             return back()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
+
+
 
     public function edit($id)
     {
@@ -128,6 +131,7 @@ class ProductVariantController extends Controller
             return back()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
+    
 
     public function destroy($id)
     {
