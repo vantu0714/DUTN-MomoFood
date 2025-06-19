@@ -15,6 +15,7 @@
                         <th>Ảnh đại diện</th>
                         <th>Email</th>
                         <th>Vai trò</th>
+                        <th>Trạng thái</th>
                         <th>Ngày tạo</th>
                         <th>Cập nhật</th>
                         <th>Hành động</th>
@@ -28,6 +29,13 @@
                             <td><img src="{{ asset('storage/' . $user->avatar) }}" alt="avatar" width="100"></td>
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->role->name }}</td>
+                            <td>
+                                @if($user->status == 1)
+                                    <span class="badge bg-success">Kích hoạt</span>
+                                @else
+                                    <span class="badge bg-secondary">Khóa</span>
+                                @endif
+                            </td>
                             <td> {{ $user->created_at->format('d-m-Y') }}</td>
                             <td> {{ $user->updated_at->format('d-m-Y') }}</td>
                             <td>
@@ -35,7 +43,7 @@
 
                                 <a href="{{ route('users.show', $user->id) }}" class="btn  btn-info">Xem</a>
 
-                                <form id="delete-form-{{ $user->id }}"
+                                {{-- <form id="delete-form-{{ $user->id }}"
                                     action="{{ route('users.destroy', $user->id) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
@@ -44,7 +52,7 @@
                                         onclick="confirmDelete({{ $user->id }})">
                                         Xóa
                                     </button>
-                                </form>
+                                </form> --}}
 
                             </td>
                         </tr>
@@ -78,4 +86,6 @@
     }
     
 </script>
+
+
 

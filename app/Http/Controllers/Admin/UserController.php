@@ -59,6 +59,7 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
             'role_id' => $request->role_id,
             'avatar' => $urlAvatar,
+            'status' => $request->status ?? 1,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Đã thêm người dùng thành công');
@@ -115,6 +116,7 @@ class UserController extends Controller
                 'address' => $request->address,
                 'role_id' => $request->role_id,
                 'avatar' => $urlAvatar,
+                'status' => $request->status ?? $user->status,
             ]);
 
             return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công');
