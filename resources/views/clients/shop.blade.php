@@ -203,7 +203,7 @@
                                     <div class="product-card w-100 d-flex flex-column position-relative">
                                         <div class="product-image">
                                             <a href="{{ route('product-detail.index', $product->id) }}">
-                                                <img src="{{ asset('storage/' . $product->image_product ) }}"
+                                                <img src="{{ asset('storage/' . $product->image) }}"
                                                     onerror="this.onerror=null;this.src='{{ asset('clients/img/default.jpg') }}';"
                                                     class="img-fluid w-100 rounded-top"
                                                     alt="{{ $product->product_name }}">
@@ -219,7 +219,7 @@
                                         <div
                                             class="product-body p-3 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
                                             <div>
-                                                <h5 class="product-title">{{ $product->image }}</h5>
+                                                <h5 class="product-title">{{ $product->product_name }}</h5>
                                                 <p class="product-description">
                                                     {{ $product->description ?? 'No description available.' }}
                                                 </p>
