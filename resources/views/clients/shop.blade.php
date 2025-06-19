@@ -127,7 +127,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-12">
-                                <h4 class="mb-3">SANE PHẨM NỔI BẬT</h4>
+                                <h4 class="mb-3">SẢN PHẨM NỔI BẬT</h4>
                                 <div class="d-flex align-items-center justify-content-start">
                                     <div class="rounded me-4" style="width: 100px; height: 100px;">
                                         <img src="{{ asset('storage/products/6bdnSqSQ20goGJtQqRsBDoYPY2538avaRiqRLmOO.jpg') }}"
