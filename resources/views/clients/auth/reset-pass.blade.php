@@ -39,11 +39,9 @@
                     <div class="reset-left">
                         <h2>Đặt lại mật khẩu</h2>
                         <p class="text-muted">Nhập mật khẩu mới cho tài khoản của bạn</p>
-
-                        <form method="POST" action="{{ route('password.update') }}">
+                        <form method="POST" action="{{ route('password.update') }}" novalidate>
                             @csrf
                             <input type="hidden" name="email" value="{{ $email ?? old('email') }}">
-
                             <div class="mb-3">
                                 <label for="password">Mật khẩu mới</label>
                                 <div class="input-group">
@@ -58,7 +56,6 @@
                                     <div class="text-danger mt-1" style="font-size: 0.875rem;">{{ $message }}</div>
                                 @enderror
                             </div>
-
                             <div class="mb-3">
                                 <label for="password_confirmation">Xác nhận mật khẩu</label>
                                 <div class="input-group">
@@ -70,7 +67,6 @@
                                     </span>
                                 </div>
                             </div>
-
                             <div class="text-end">
                                 <button type="submit" class="btn btn-green px-4">Đặt lại mật khẩu</button>
                             </div>
@@ -94,3 +90,21 @@
         }
     </script>
 @endsection
+
+@if (session('success'))
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        window.onload = function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: '{{ session('success') }}',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#9cd62b',
+            }).then(() => {
+                fetch("{{ route('reset.session.clear') }}")
+                    .then(() => window.location.href = "{{ route('login') }}");
+            });
+        };
+    </script>
+@endif

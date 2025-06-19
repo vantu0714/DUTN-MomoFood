@@ -43,12 +43,10 @@
             <div class="row justify-content-center">
                 <div class="col-lg-10 login-card shadow">
                     <div class="row">
-                        {{-- Left --}}
                         <div class="col-md-7 login-left">
                             <h2>Login</h2>
                             <p class="text-muted">Đăng Nhập</p>
 
-                            {{-- Hiển thị lỗi chung --}}
                             @if (session('error'))
                                 <div class="alert alert-danger text-center" style="font-size: 0.9rem;">
                                     {{ session('error') }}
@@ -77,7 +75,6 @@
                             </form>
                         </div>
 
-                        {{-- Right --}}
                         <div class="col-md-5 login-right">
                             <h2>Đăng ký tài khoản</h2>
                             <p class="text-white text-center px-2">Đăng ký ngay hôm nay để có các ưu đãi đặc biệt!</p>
