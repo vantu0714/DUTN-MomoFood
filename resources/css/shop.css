@@ -160,4 +160,14 @@
 }
 
 
+/* detail */
+.rating .star {
+    cursor: pointer;
+    transition: color 0.3s;
+}
+.rating .star:hover,
+.rating .star.hovered {
+    color: #ffc107 !important; /* Màu vàng */
+}
+
 

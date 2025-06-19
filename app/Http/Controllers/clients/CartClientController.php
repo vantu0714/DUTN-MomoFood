@@ -13,7 +13,7 @@ class CartClientController extends Controller
         $carts = session()->get('cart', []);
         return view('clients.carts.index', compact('carts'));
     }
-    
+
     public function addToCart(Request $request)
     {
         $productId = $request->input('product_id');
@@ -121,5 +121,34 @@ class CartClientController extends Controller
             session()->flash('error', 'Mã giảm giá không hợp lệ!');
         }
         return redirect()->back();
+    }
+
+    public function updateAjax(Request $request)
+    {
+        $id = $request->id;
+        $quantity = max(1, (int) $request->quantity);
+
+        $cart = session('cart', []);
+        if (isset($cart[$id])) {
+            $cart[$id]['quantity'] = $quantity;
+            session(['cart' => $cart]);
+
+            // Tính toán lại
+            $subTotal = $cart[$id]['quantity'] * $cart[$id]['price'];
+            $total = collect($cart)->sum(function ($item) {
+                return $item['price'] * $item['quantity'];
+            });
+            $shipping = 30000;
+            $grandTotal = $total + $shipping;
+
+            return response()->json([
+                'success' => true,
+                'sub_total' => number_format($subTotal, 0, ',', '.'),
+                'total' => number_format($total, 0, ',', '.'),
+                'grand_total' => number_format($grandTotal, 0, ',', '.'),
+            ]);
+        }
+
+        return response()->json(['success' => false], 404);
     }
 }

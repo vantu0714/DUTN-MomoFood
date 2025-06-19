@@ -4,7 +4,6 @@
 <div class="main_content_iner overly_inner">
     <div class="container-fluid p-0">
 
-        <!-- Header -->
         <div class="container-fluid page-header py-5">
             <h1 class="text-center text-white display-6">Giỏ hàng</h1>
             <ol class="breadcrumb justify-content-center mb-0">
@@ -14,11 +13,9 @@
             </ol>
         </div>
 
-        <!-- Cart Page Start -->
         <div class="container-fluid py-5">
             <div class="container py-5">
 
-                <!-- Thông báo -->
                 @if (session('success'))
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
@@ -26,7 +23,6 @@
                     <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
 
-                <!-- Bảng giỏ hàng -->
                 <div class="table-responsive">
                     <table class="table" id="cart-table">
                         <thead>
@@ -52,19 +48,22 @@
                                             class="img-fluid rounded-circle" style="width: 80px; height: 80px;" />
 
                                     </td>
-
                                     <td>{{ $item['product_name'] }}
                                         @if (!empty($item['variant_name']))
                                             <br><small class="text-muted">Biến thể: {{ $item['variant_name'] }}</small>
                                         @endif
                                     </td>
-
                                     <td class="price" data-price="{{ $item['price'] }}">
-                                        {{ number_format($item['price'], 0, ',', '.') }} đ</td>
+                                        {{ number_format($item['price'], 0, ',', '.') }} đ
+                                    </td>
                                     <td>
-                                        <input type="number" class="form-control quantity-input"
-                                            name="quantities[{{ $id }}]" value="{{ $item['quantity'] }}"
-                                            min="1" style="width: 60px;">
+                                        <div class="input-group justify-content-center" style="width: 120px;">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrease">-</button>
+                                            <input type="number" name="quantities[{{ $id }}]"
+                                                class="form-control text-center quantity-input mx-1" min="1"
+                                                value="{{ $item['quantity'] }}">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm quantity-increase">+</button>
+                                        </div>
                                     </td>
 
                                     <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
@@ -85,18 +84,17 @@
                     </table>
                 </div>
 
-                <!-- Mã giảm giá -->
                 <div class="mt-5">
                     <form action="{{ route('carts.applyCoupon') }}" method="POST" class="d-flex">
                         @csrf
-                        <input type="text" name="coupon_code"
+                        <input type="text" name="promotion"
                             class="form-control border-0 border-bottom rounded me-3 py-3"
                             placeholder="Nhập mã giảm giá">
-                        <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="submit">Áp dụng
-                            mã</button>
+                        <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="submit">
+                            Áp dụng mã
+                        </button>
                     </form>
                 </div>
-
                 <!-- Tổng cộng -->
                 @php $shipping = 30000; @endphp
                 <div class="row g-4 justify-content-end mt-5">
@@ -115,54 +113,74 @@
                                 <hr>
                                 <div class="d-flex justify-content-between fw-bold">
                                     <span>Tổng cộng:</span>
-                                    <span id="grand-total">{{ number_format($total + $shipping, 0, ',', '.') }}
-                                        đ</span>
+                                    <span id="grand-total">{{ number_format($total + $shipping, 0, ',', '.') }} đ</span>
                                 </div>
                             </div>
-
-                            <a href="{{ route('clients.order') }}"
-                                class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">Thanh
-                                Toán
-                            </a>
+                            <a href="{{ route('clients.order') }}" class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">Thanh Toán</a>
                         </div>
                     </div>
                 </div>
 
             </div>
         </div>
-        <!-- Cart Page End -->
 
     </div>
 </div>
 
 @include('clients.layouts.footer')
 
-<!-- JavaScript xử lý tính tổng động -->
 <script>
-    document.querySelectorAll('.quantity-input').forEach(function(input) {
-        input.addEventListener('change', function() {
-            let row = this.closest('.cart-item');
-            let price = parseFloat(row.querySelector('.price').dataset.price);
-            let quantity = parseInt(this.value);
-            let subtotalCell = row.querySelector('.sub-total');
-            let newSubtotal = price * quantity;
-            subtotalCell.textContent = newSubtotal.toLocaleString('vi-VN') + ' đ';
+    document.addEventListener('DOMContentLoaded', function () {
+        const rows = document.querySelectorAll('.cart-item');
+        const shippingFee = parseFloat({{ $shipping ?? 0 }});
 
-            // Cập nhật tổng tiền
-            updateTotal();
+        function updateQuantityAjax(id, quantity, row) {
+            fetch("{{ route('carts.updateAjax') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ id, quantity })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    row.querySelector('.sub-total').textContent = data.sub_total + ' đ';
+                    document.getElementById('total-price').textContent = data.total + ' đ';
+                    document.getElementById('grand-total').textContent = data.grand_total + ' đ';
+                }
+            });
+        }
+
+        rows.forEach(row => {
+            const input = row.querySelector('.quantity-input');
+            const btnIncrease = row.querySelector('.quantity-increase');
+            const btnDecrease = row.querySelector('.quantity-decrease');
+            const id = row.dataset.id;
+
+            btnIncrease.addEventListener('click', () => {
+                let quantity = parseInt(input.value) || 1;
+                quantity++;
+                input.value = quantity;
+                updateQuantityAjax(id, quantity, row);
+            });
+
+            btnDecrease.addEventListener('click', () => {
+                let quantity = parseInt(input.value) || 1;
+                if (quantity > 1) {
+                    quantity--;
+                    input.value = quantity;
+                    updateQuantityAjax(id, quantity, row);
+                }
+            });
+
+            input.addEventListener('change', () => {
+                let quantity = parseInt(input.value) || 1;
+                if (quantity < 1) quantity = 1;
+                input.value = quantity;
+                updateQuantityAjax(id, quantity, row);
+            });
         });
     });
-
-    function updateTotal() {
-        let total = 0;
-        document.querySelectorAll('.cart-item').forEach(function(row) {
-            let price = parseFloat(row.querySelector('.price').dataset.price);
-            let quantity = parseInt(row.querySelector('.quantity-input').value);
-            total += price * quantity;
-        });
-
-        let shipping = {{ $shipping }};
-        document.getElementById('total-price').textContent = total.toLocaleString('vi-VN') + ' đ';
-        document.getElementById('grand-total').textContent = (total + shipping).toLocaleString('vi-VN') + ' đ';
-    }
 </script>

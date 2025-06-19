@@ -58,7 +58,9 @@ class OrderController extends Controller
         $promotionCode = null;
 
         if ($request->filled('promotion')) {
-            $promotion = Promotion::where('promotion_name', $request->promotion)
+            $promotionName = trim($request->promotion);
+            $promotion = Promotion::where('promotion_name', $promotionName)
+                ->where('status', 'active')
                 ->where('start_date', '<=', now())
                 ->where('end_date', '>=', now())
                 ->first();
