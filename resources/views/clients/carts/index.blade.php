@@ -66,9 +66,9 @@
                                             name="quantities[{{ $id }}]" value="{{ $item['quantity'] }}"
                                             min="1" style="width: 60px;">
                                     </td>
-                                    
+
                                     <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
-                                    
+
                                     <td>
                                         <a href="{{ route('carts.remove', $id) }}" class="btn btn-sm btn-danger"
                                             onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
@@ -89,14 +89,14 @@
                 <div class="mt-5">
                     <form action="{{ route('carts.applyCoupon') }}" method="POST" class="d-flex">
                         @csrf
-                        <input type="text" name="coupon_code"
+                        <input type="text" name="promotion"
                             class="form-control border-0 border-bottom rounded me-3 py-3"
                             placeholder="Nhập mã giảm giá">
-                        <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="submit">Áp dụng
-                            mã</button>
+                        <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="submit">
+                            Áp dụng mã
+                        </button>
                     </form>
                 </div>
-
                 <!-- Tổng cộng -->
                 @php $shipping = 30000; @endphp
                 <div class="row g-4 justify-content-end mt-5">
