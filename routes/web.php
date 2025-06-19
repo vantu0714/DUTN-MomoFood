@@ -157,6 +157,8 @@ Route::prefix('carts')->group(function () {
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
     Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
+    Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
+
 });
 
 Route::middleware(['auth'])->group(function () {
