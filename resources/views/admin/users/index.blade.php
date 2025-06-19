@@ -30,7 +30,7 @@
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->role->name }}</td>
                             <td>
-                                @if($user->status == 1)
+                                @if ($user->status == 1)
                                     <span class="badge bg-success">Kích hoạt</span>
                                 @else
                                     <span class="badge bg-secondary">Khóa</span>
@@ -53,6 +53,18 @@
                                         Xóa
                                     </button>
                                 </form> --}}
+
+                                {{-- Nút đổi trạng thái --}}
+                                <form action="" method="POST"
+                                    style="display:inline-block;">
+                                    @csrf
+                                    @method('PATCH')
+                                    @if ($user->status == 1)
+                                        <button type="submit" class="btn btn-secondary ">Khóa</button>
+                                    @else
+                                        <button type="submit" class="btn btn-success ">Kích hoạt</button>
+                                    @endif
+                                </form>
 
                             </td>
                         </tr>
@@ -84,8 +96,4 @@
             }
         });
     }
-    
 </script>
-
-
-
