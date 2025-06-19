@@ -63,12 +63,10 @@
                     <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" novalidate>
                         @csrf
                         <div class="row">
-                            {{-- Form đăng ký --}}
                             <div class="col-md-7 register-left">
                                 <h2>Đăng ký</h2>
                                 <p class="text-muted">Tạo tài khoản mới</p>
 
-                                {{-- Name --}}
                                 <div class="mb-3">
                                     <label for="name">Họ và tên</label>
                                     <input type="text" class="form-control" name="name" placeholder="Nhập họ tên"
@@ -78,7 +76,6 @@
                                     @enderror
                                 </div>
 
-                                {{-- Email --}}
                                 <div class="mb-3">
                                     <label for="email">Email</label>
                                     <input type="email" class="form-control" name="email" placeholder="Nhập email"
@@ -88,27 +85,6 @@
                                     @enderror
                                 </div>
 
-                                {{-- Address --}}
-                                <div class="mb-3">
-                                    <label for="address">Địa chỉ</label>
-                                    <input type="text" class="form-control" name="address" placeholder="Nhập địa chỉ"
-                                        required>
-                                    @error('address')
-                                        <div class="text-danger mt-1" style="font-size: 0.875rem;">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Phone --}}
-                                <div class="mb-3">
-                                    <label for="phone">Số điện thoại</label>
-                                    <input type="tel" class="form-control" name="phone"
-                                        placeholder="Nhập số điện thoại" required>
-                                    @error('phone')
-                                        <div class="text-danger mt-1" style="font-size: 0.875rem;">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Password --}}
                                 <div class="mb-3">
                                     <label for="password">Mật khẩu</label>
                                     <div class="input-group">
@@ -123,7 +99,6 @@
                                     @enderror
                                 </div>
 
-                                {{-- Confirm Password --}}
                                 <div class="mb-3">
                                     <label for="password_confirmation">Nhập lại mật khẩu</label>
                                     <input type="password" class="form-control" name="password_confirmation"
@@ -139,7 +114,6 @@
                                 </div>
                             </div>
 
-                            {{-- Avatar --}}
                             <div class="col-md-5 register-right">
                                 <h4>Ảnh đại diện</h4>
                                 <img id="avatarPreview" class="avatar-preview"
