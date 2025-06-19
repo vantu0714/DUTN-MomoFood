@@ -48,8 +48,9 @@
                                 @endphp
                                 <tr class="cart-item" data-id="{{ $id }}">
                                     <td>
-                                        <img src="{{ asset($item['image'] ?? 'clients/img/default.png') }}"
-                                            class="img-fluid rounded-circle" style="width: 80px; height: 80px;" />
+                                        <img src="{{ asset('storage/' . ($item['image'] ?? 'clients/img/default.png')) }}"
+     class="img-fluid rounded-circle" style="width: 80px; height: 80px;" />
+
                                     </td>
 
                                     <td>{{ $item['product_name'] }}

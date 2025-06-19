@@ -124,10 +124,11 @@ class OrderController extends Controller
                 return redirect()->route('vnpay.payment', ['order_id' => $order->id]);
             }
 
-            return redirect()->route('carts.index')->with('success', '🎉 Đặt hàng thành công!');
+
+            return redirect()->route('carts.index')->with('success', 'Đặt hàng thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
     }
 }

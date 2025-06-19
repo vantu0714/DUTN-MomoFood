@@ -12,7 +12,8 @@ return new class extends Migration
    public function up()
 {
     Schema::table('product_variants', function (Blueprint $table) {
-        $table->dropColumn('name');
+       $table->dropColumn('name');
+
     });
 }
 

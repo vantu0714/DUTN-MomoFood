@@ -25,10 +25,9 @@
             <div class="col-md-12">
                 <label class="form-label">Avatar</label>
                 <input type="file" name="avatar" id="imageInput" accept="image/*" class="form-control">
-                <img class="mt-2" id="imagePreview"
-                        style="display: none; max-width: 100%; max-height: 300px;">
+                <img class="mt-2" id="imagePreview" style="display: none; max-width: 100%; max-height: 300px;">
                 @error('avatar')
-                <span class="text-danger mt-2">{{ $message }}</span>
+                    <span class="text-danger mt-2">{{ $message }}</span>
                 @enderror
             </div>
             <div class="mb-3">
@@ -67,6 +66,18 @@
                     {{ $message }}
                 @enderror
             </div>
+
+            <div class="mb-3">
+                <label for="status" class="form-label">Trạng thái</label>
+                <select name="status" class="form-control">
+                    <option value="1" selected>Kích hoạt</option>
+                    <option value="0">Khóa</option>
+                </select>
+                @error('status')
+                    {{ $message }}
+                @enderror
+            </div>
+
 
             <button type="submit" class="btn btn-success">Lưu</button>
             <a href="{{ route('users.index') }}" class="btn btn-secondary">Huỷ</a>

@@ -173,3 +173,5 @@ Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clie
 //vn-pay
 Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
 Route::get('/vnpay-return', [VNPayController::class, 'return']);
+
+

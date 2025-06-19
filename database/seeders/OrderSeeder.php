@@ -45,7 +45,6 @@ class OrderSeeder extends Seeder
         // Tạo 2 product_variant mẫu
         $variant1 = DB::table('product_variants')->insertGetId([
             'product_id' => 1, // bạn cần có sản phẩm ID 1
-            'name' => 'Hộp nhỏ',
             'price' => 120000,
             'quantity_in_stock' => 50,
             'sku' => 'SP001-A',
@@ -56,8 +55,7 @@ class OrderSeeder extends Seeder
         ]);
 
         $variant2 = DB::table('product_variants')->insertGetId([
-            'product_id' => 1,
-            'name' => 'Hộp lớn',
+            'product_id' => 1, 
             'price' => 60000,
             'quantity_in_stock' => 30,
             'sku' => 'SP001-B',
