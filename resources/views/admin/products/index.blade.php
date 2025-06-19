@@ -123,12 +123,19 @@
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Danh mục</label>
                             <select class="form-select" name="category_id">
-                                <option value="" style="font-weight: bold;">Tất cả danh mục</option>
+                                <option value="" style="font-weight: bold;"
+                                    {{ request('category_id') == '' ? 'selected' : '' }}>
+                                    Tất cả danh mục
+                                </option>
                                 @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->category_name }}</option>
+                                    <option value="{{ $category->id }}"
+                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->category_name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
+
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Trạng thái</label>
                             <select class="form-select" name="status">

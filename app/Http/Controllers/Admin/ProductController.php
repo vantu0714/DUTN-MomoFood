@@ -14,6 +14,10 @@ class ProductController extends Controller
     {
         $query = Product::with('category');
         $query = Product::with('category')->orderBy('created_at', 'desc');
+        // Tìm kiếm theo tên sản phẩm
+        if ($request->filled('search')) {
+            $query->where('product_name', 'like', '%' . $request->search . '%');
+        }
 
 
         // Lọc theo trạng thái sản phẩm
@@ -172,7 +176,7 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công');
+        return redirect()->route('products.index')->with('success', 'Cập nhật sản phẩm thành công');
     }
     public function destroy($id)
     {
