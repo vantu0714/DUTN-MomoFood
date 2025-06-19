@@ -5,12 +5,8 @@ namespace App\Http\Controllers\clients;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -48,13 +44,10 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // Validate dữ liệu đầu vào
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|confirmed|min:6',
-            'address' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ], [
             'name.required' => 'Vui lòng nhập họ và tên.',
@@ -68,30 +61,20 @@ class AuthController extends Controller
             'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
             'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
 
-            'address.required' => 'Vui lòng nhập địa chỉ.',
-            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
-
-            'phone.required' => 'Vui lòng nhập số điện thoại.',
-            'phone.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
-
             'avatar.image' => 'Ảnh đại diện phải là một hình ảnh.',
             'avatar.mimes' => 'Ảnh đại diện phải có định dạng jpeg, png hoặc jpg.',
             'avatar.max' => 'Ảnh đại diện không được vượt quá 5MB.',
         ]);
 
-        // Xử lý avatar nếu có tải lên
         $avatarPath = null;
         if ($request->hasFile('avatar')) {
             $avatarPath = $request->file('avatar')->store('avatars', 'public');
         }
 
-        // Tạo user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'address' => $request->address,
-            'phone' => $request->phone,
             'avatar' => $avatarPath,
             'role_id' => 2,
         ]);
@@ -133,14 +116,11 @@ class AuthController extends Controller
                 $file = $request->file('avatar');
                 $filename = time() . '_' . $file->getClientOriginalName();
 
-                // Lưu vào storage/app/public/avatar
                 $file->storeAs('public/avatar', $filename);
 
-                // Cập nhật đường dẫn avatar
                 $urlAvatar = 'avatar/' . $filename;
             }
 
-            // dd($request->all());
             $user->update([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -166,6 +146,10 @@ class AuthController extends Controller
             'currentPassword' => 'required',
             'newPassword' => 'required|min:8',
             'confirmPassword' => 'required|same:newPassword',
+        ], [
+            'required' => 'Vui lòng nhập :attribute.',
+            'min' => ':attribute phải có ít nhất :min ký tự.',
+            'same' => ':attribute khớp nhau.',
         ]);
 
         $user = Auth::user();
@@ -187,13 +171,15 @@ class AuthController extends Controller
 
     public function sendResetRedirect(Request $request)
     {
-        $request->validate(['email' => 'required|email|exists:users,email']);
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ], [
+            'email.required' => 'Vui lòng nhập email.',
+            'email.email' => 'Email không hợp lệ.',
+            'email.exists' => 'Email không tồn tại trong hệ thống.',
+        ]);
 
-        $email = $request->email;
-        $token = Str::random(64);
-
-        // Lưu tạm token vào session (không lưu DB, vì không dùng qua email)
-        session(['reset_email' => $email, 'reset_token' => $token]);
+        session(['reset_email' => $request->email]);
 
         return redirect()->route('password.reset');
     }
@@ -211,6 +197,10 @@ class AuthController extends Controller
     {
         $request->validate([
             'password' => 'required|confirmed|min:6',
+        ], [
+            'password.required' => 'Vui lòng nhập mật khẩu.',
+            'password.confirmed' => 'Mật khẩu xác nhận không khớp nhau.',
+            'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.',
         ]);
 
         $email = session('reset_email');
@@ -221,9 +211,6 @@ class AuthController extends Controller
         $user = User::where('email', $email)->first();
         $user->update(['password' => Hash::make($request->password)]);
 
-        // Xoá session để không dùng lại được
-        session()->forget(['reset_email', 'reset_token']);
-
-        return redirect('/login')->with('message', 'Đặt lại mật khẩu thành công!');
+        return back()->with('success', 'Đặt lại mật khẩu thành công!');
     }
 }

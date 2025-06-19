@@ -96,12 +96,13 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-// Xử lý gửi email
 Route::post('/forgot-password', [AuthController::class, 'sendResetRedirect'])->name('password.email');
-// Hiển thị form đổi mật khẩu
 Route::get('/reset-password', [AuthController::class, 'showResetForm'])->name('password.reset');
-// Xử lý cập nhật mật khẩu
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+Route::get('/clear-reset-session', function () {
+    session()->forget('reset_email');
+    return response()->json(['status' => 'ok']);
+})->name('reset.session.clear');
 
 // orders
 Route::prefix('orders')->name('orders.')->group(function () {

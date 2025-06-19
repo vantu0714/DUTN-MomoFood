@@ -47,7 +47,6 @@
             <div class="row justify-content-center">
                 <div class="col-lg-10 register-card shadow">
                     <div class="row">
-                        {{-- Form quên mật khẩu --}}
                         <div class="col-md-7 register-left">
                             <h2>Quên mật khẩu</h2>
                             <p class="text-muted">Nhập địa chỉ email để nhận liên kết đặt lại mật khẩu</p>
@@ -69,7 +68,6 @@
                             </form>
                         </div>
 
-                        {{-- Phần giới thiệu bên phải --}}
                         <div class="col-md-5 register-right">
                             <h4>Quay lại trang đăng nhập</h4>
                             <p class="mt-2 text-white text-center">
