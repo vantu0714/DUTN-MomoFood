@@ -13,6 +13,8 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with('category');
+        $query = Product::with('category')->orderBy('created_at', 'desc');
+
 
         // Lọc theo trạng thái sản phẩm
         if ($request->filled('status')) {
@@ -69,7 +71,7 @@ class ProductController extends Controller
 
 
         // Lấy sản phẩm phân trang
-        $products = Product::with('category')->paginate(10);
+        // $products = Product::with('category')->paginate(10);
 
         // Đếm tổng số sản phẩm (kể cả hết hàng)
         $totalProducts = Product::count();
@@ -94,7 +96,7 @@ class ProductController extends Controller
             'product_code' => 'required|string|max:50|unique:products,product_code',
             'category_id' => 'required|exists:categories,id',
             'original_price' => 'nullable|numeric|min:0',
-            'discounted_price' => 'nullable|numeric|min:0|lte:original_price', // ✅ So sánh với giá gốc
+            'discounted_price' => 'nullable|numeric|min:0|lte:original_price',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'quantity' => 'required_if:product_type,simple|nullable|integer|min:0',
@@ -103,11 +105,16 @@ class ProductController extends Controller
             'discounted_price.lte' => 'Giá khuyến mãi không được lớn hơn giá gốc.',
         ]);
 
+        if (!array_key_exists('discounted_price', $validated)) {
+            $validated['discounted_price'] = null;
+        }
+
+
         // ✅ Gán status theo loại sản phẩm
         if ($validated['product_type'] === 'simple') {
             $validated['status'] = isset($validated['quantity']) && $validated['quantity'] > 0 ? 1 : 0;
         } else {
-            $validated['status'] = 0; // Mặc định cho sản phẩm có biến thể
+            $validated['status'] = 0;
         }
 
         // ✅ Xử lý upload ảnh nếu có
@@ -127,6 +134,7 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')->with('success', 'Sản phẩm không biến thể đã được thêm thành công.');
     }
+
 
 
     public function edit($id)

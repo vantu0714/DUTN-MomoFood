@@ -244,7 +244,7 @@
                                         <span class="fw-semibold">{{ number_format($item->original_price) }}đ</span>
                                     </td>
                                     <td>
-                                        @if ($item->discounted_price && $item->discounted_price < $item->original_price)
+                                        @if (!is_null($item->discounted_price) && $item->discounted_price < $item->original_price)
                                             <span
                                                 class="fw-semibold text-danger">{{ number_format($item->discounted_price) }}đ</span>
                                             <div class="small text-muted">

@@ -45,7 +45,7 @@ return new class extends Migration
             $table->text('ingredients')->nullable();
             $table->date('expiration_date')->nullable();
             $table->decimal('original_price', 10, 2);
-            $table->decimal('discounted_price', 10, 2);
+            $table->decimal('discounted_price', 10, 2)->nullable();
             $table->boolean('status')->default(1);
             $table->integer('view')->default(0);
             $table->boolean('is_show_home')->default(0);
