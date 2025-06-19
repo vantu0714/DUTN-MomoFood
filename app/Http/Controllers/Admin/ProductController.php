@@ -156,16 +156,25 @@ class ProductController extends Controller
             'product_code' => 'required|string|max:50|unique:products,product_code,' . $product->id,
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'original_price' => 'nullable|numeric',
-            'discounted_price' => 'nullable|numeric',
+            'original_price' => 'nullable|numeric|min:0',
+            'discounted_price' => 'nullable|numeric|min:0|max:100', // đây là % giảm
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'quantity' => 'required|integer|min:0',
-
         ]);
+
+        // Cập nhật trạng thái
         $validated['status'] = $validated['quantity'] > 0 ? 1 : 0;
 
+        // Tính giá khuyến mãi từ phần trăm giảm giá
+        if (!empty($validated['discounted_price']) && !empty($validated['original_price'])) {
+            $percent = $validated['discounted_price'];
+            $validated['discounted_price'] = round($validated['original_price'] * (1 - $percent / 100), 0);
+        } else {
+            $validated['discounted_price'] = null;
+        }
+
+        // Xử lý ảnh
         if ($request->hasFile('image')) {
-            // Xoá ảnh cũ (nếu có)
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
@@ -178,6 +187,7 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')->with('success', 'Cập nhật sản phẩm thành công');
     }
+
     public function destroy($id)
     {
         $product = Product::findOrFail($id);

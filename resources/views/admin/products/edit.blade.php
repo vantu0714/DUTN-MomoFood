@@ -199,13 +199,13 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="discounted_price" class="form-label fw-semibold">Giá khuyến mãi</label>
+                                   <label for="discounted_price" class="form-label fw-semibold">Phần trăm giảm giá</label>
                                     <div class="input-group">
                                         <input type="number" class="form-control @error('discounted_price') is-invalid @enderror" 
                                                id="discounted_price" name="discounted_price" 
                                                value="{{ old('discounted_price', $product->discounted_price) }}" 
                                                placeholder="Nhập giá khuyến mãi" min="0">
-                                        <span class="input-group-text">đ</span>
+                                        <span class="input-group-text">%</span>
                                         @error('discounted_price')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
