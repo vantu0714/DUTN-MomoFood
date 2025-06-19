@@ -209,11 +209,13 @@
 
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
-                                            <div class="product-img-wrapper">
-                                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                                    alt="Product Image">
-                                            </div>
+                                            <a href="{{ route('product-detail.index', $product->id) }}">
+                                                <div class="product-img-wrapper">
+                                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                                        alt="Product Image">
+                                                </div>
+                                            </a>
                                             <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
                                                 style="top: 10px; left: 10px;">
                                                 {{ $product->category?->category_name ?? 'Không có danh mục' }}

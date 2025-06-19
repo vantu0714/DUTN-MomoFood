@@ -34,15 +34,11 @@ class AuthController extends Controller
                 return redirect()->intended('/');
             } else {
                 Auth::logout();
-                return back()->withErrors([
-                    'email' => 'Tài khoản không có quyền truy cập hợp lệ.',
-                ])->withInput();
+                return back()->with('error', 'Tài khoản không có quyền truy cập hợp lệ.')->withInput();
             }
         }
 
-        return back()->withErrors([
-            'email' => 'Email hoặc mật khẩu không chính xác.',
-        ])->withInput();
+        return back()->with('error', 'Email hoặc mật khẩu không chính xác.')->withInput();
     }
 
     public function showRegister()
@@ -52,18 +48,55 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // Create user
+        // Validate dữ liệu đầu vào
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|confirmed|min:6',
+            'address' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+        ], [
+            'name.required' => 'Vui lòng nhập họ và tên.',
+            'name.max' => 'Họ và tên không được vượt quá 255 ký tự.',
+
+            'email.required' => 'Vui lòng nhập email.',
+            'email.email' => 'Email không hợp lệ.',
+            'email.unique' => 'Email đã tồn tại trong hệ thống.',
+
+            'password.required' => 'Vui lòng nhập mật khẩu.',
+            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+            'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
+
+            'address.required' => 'Vui lòng nhập địa chỉ.',
+            'address.max' => 'Địa chỉ không được vượt quá 255 ký tự.',
+
+            'phone.required' => 'Vui lòng nhập số điện thoại.',
+            'phone.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
+
+            'avatar.image' => 'Ảnh đại diện phải là một hình ảnh.',
+            'avatar.mimes' => 'Ảnh đại diện phải có định dạng jpeg, png hoặc jpg.',
+            'avatar.max' => 'Ảnh đại diện không được vượt quá 5MB.',
+        ]);
+
+        // Xử lý avatar nếu có tải lên
+        $avatarPath = null;
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        // Tạo user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'address' => $request->address,
+            'phone' => $request->phone,
+            'avatar' => $avatarPath,
             'role_id' => 2,
         ]);
 
-        // Đăng nhập người dùng sau khi đăng ký (nếu cần)
-        auth()->login($user);
-
-        return redirect()->intended('/login');
+        return redirect()->route('register')->with('success', 'Đăng ký thành công! Vui lòng đăng nhập.');
     }
 
     public function logout()

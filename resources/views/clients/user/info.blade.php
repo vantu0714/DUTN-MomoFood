@@ -1,111 +1,127 @@
 @extends('clients.layouts.app')
 
-@section('content')
-    <style type="text/css">
-        .inf-content {
-            border: 1px solid #DDDDDD;
-            -webkit-border-radius: 10px;
-            -moz-border-radius: 10px;
-            border-radius: 10px;
-            box-shadow: 7px 7px 7px rgba(0, 0, 0, 0.3);
+@push('styles')
+    <style>
+        body {
+            background-color: #fff;
+            color: #1a202c;
+        }
+
+        .main-wrapper {
+            min-height: calc(100vh - 120px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 80px;
+            padding-bottom: 0px;
+        }
+
+        .content-box {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-container {
+            max-width: 1400px;
+        }
+
+        .card {
+            width: 100%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .1), 0 1px 2px rgba(0, 0, 0, .06);
+            border-radius: 0.5rem;
+        }
+
+        .info-row {
+            margin-bottom: 12px;
+        }
+
+        .info-divider {
+            border-top: 1px solid #dee2e6;
+            margin: 12px 0;
+        }
+
+        .btn-success {
+            background-color: #28a745 !important;
+            border-color: #28a745;
         }
     </style>
+@endpush
 
-    <body style="margin-top: 200px;">
-        <div class="container bootstrap snippets bootdey" style="margin-top: 200px;">
-            <div class="panel-body inf-content">
-                <div class="row">
-                    <div class="col-md-4">
-                        <img alt="" style="width:600px;" title="" class="img-circle img-thumbnail isTooltip"
-                            src="{{ Storage::url(Auth::user()->avatar) }}" data-original-title="Usuario">
-                    </div>
-                    <div class="col-md-6">
-                        <div class="table-responsive">
-                            <table class="table table-user-information">
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <strong>
-                                                <span class="glyphicon glyphicon-user  text-primary"></span>
-                                                Tên
-                                            </strong>
-                                        </td>
-                                        <td class="text-primary">
-                                            {{ Auth::user()->name }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <strong>
-                                                <span class="glyphicon glyphicon-envelope text-primary"></span>
-                                                Email
-                                            </strong>
-                                        </td>
-                                        <td class="text-primary">
-                                            {{ Auth::user()->email }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <strong>
-                                                <span class="glyphicon glyphicon-envelope text-primary"></span>
-                                                Địa chỉ
-                                            </strong>
-                                        </td>
-                                        <td class="text-primary">
-                                            {{ Auth::user()->address }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <strong>
-                                                <span class="glyphicon glyphicon-envelope text-primary"></span>
-                                                Số điện thoại
-                                            </strong>
-                                        </td>
-                                        <td class="text-primary">
-                                            {{ Auth::user()->phone }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <strong>
-                                                <span class="glyphicon glyphicon-calendar text-primary"></span>
-                                                Thời gian tạo
-                                            </strong>
-                                        </td>
-                                        <td class="text-primary">
-                                            {{ Auth::user()->created_at->format('d-m-Y') }}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <strong>
-                                                <span class="glyphicon glyphicon-calendar text-primary"></span>
-                                                Thời gian cập nhật
-                                            </strong>
-                                        </td>
-                                        <td class="text-primary">
-                                            {{ Auth::user()->updated_at->format('d-m-Y') }}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+@section('content')
+    <div class="main-wrapper">
+        <div class="container custom-container">
+            <h2 class="text-center mb-4 text-success">Thông tin khách hàng</h2>
+            <div class="row gutters-sm justify-content-center">
+                <div class="col-md-10">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex flex-column align-items-center text-center">
+                                        <img src="{{ Storage::url(Auth::user()->avatar) }}" alt="Avatar"
+                                            class="rounded-circle" width="150">
+                                        <div class="mt-3">
+                                            <h4>{{ Auth::user()->name }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        <div class="col-md-8">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="row info-row">
+                                        <div class="col-sm-3"><strong>Tên</strong></div>
+                                        <div class="col-sm-9">{{ Auth::user()->name }}</div>
+                                    </div>
+                                    <hr class="info-divider">
+                                    <div class="row info-row">
+                                        <div class="col-sm-3"><strong>Email</strong></div>
+                                        <div class="col-sm-9">{{ Auth::user()->email }}</div>
+                                    </div>
+                                    <hr class="info-divider">
 
-                        <div class="text-center mt-3">
-                            <a href="{{ route('clients.edit') }}"
-                                class="btn btn-primary btn-sm px-4 py-2 rounded-pill shadow-sm text-decoration-none">
-                                <i class="glyphicon glyphicon-edit"></i> Sửa thông tin
-                            </a>
+                                    <div class="row info-row">
+                                        <div class="col-sm-3"><strong>Số điện thoại</strong></div>
+                                        <div class="col-sm-9">{{ Auth::user()->phone }}</div>
+                                    </div>
+                                    <hr class="info-divider">
+
+                                    <div class="row info-row">
+                                        <div class="col-sm-3"><strong>Địa chỉ</strong></div>
+                                        <div class="col-sm-9">{{ Auth::user()->address }}</div>
+                                    </div>
+                                    <hr class="info-divider">
+
+                                    <div class="row info-row">
+                                        <div class="col-sm-3"><strong>Ngày tạo</strong></div>
+                                        <div class="col-sm-9">{{ Auth::user()->created_at->format('d-m-Y') }}
+                                        </div>
+                                    </div>
+                                    <hr class="info-divider">
+
+                                    <div class="row info-row mb-4">
+                                        <div class="col-sm-3"><strong>Cập nhật</strong></div>
+                                        <div class="col-sm-9">{{ Auth::user()->updated_at->format('d-m-Y') }}
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <a class="btn btn-success" href="{{ route('clients.edit') }}">
+                                                <i class="glyphicon glyphicon-edit"></i> Sửa thông tin
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-        <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-        <script src="https://netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-        <script type="text/javascript"></script>
-    </body>
+    </div>
 @endsection
