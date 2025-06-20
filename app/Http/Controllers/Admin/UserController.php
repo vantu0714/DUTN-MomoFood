@@ -138,11 +138,19 @@ class UserController extends Controller
     }
 
     public function toggleStatus($id)
-{
-    $user = User::findOrFail($id);
-    $user->status = !$user->status; // Đảo trạng thái
-    $user->save();
+    {
+        $user = User::findOrFail($id);
 
-    return redirect()->route('users.index')->with('success', 'Trạng thái người dùng đã được cập nhật.');
-}
+        if ($user->role && $user->role->name === 'admin') {
+            return redirect()->route('users.index')
+                ->with('error', 'Không thể khóa tài khoản quản trị viên.');
+        }
+
+        // Đảo trạng thái: 1 => 0, 0 => 1
+        $user->status = $user->status == 1 ? 0 : 1;
+        $user->save();
+
+        return redirect()->route('users.index')
+            ->with('success', 'Đã cập nhật trạng thái tài khoản.');
+    }
 }
