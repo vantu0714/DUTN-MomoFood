@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Promotion;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class CartClientController extends Controller
@@ -112,17 +114,6 @@ class CartClientController extends Controller
         return redirect()->back()->with('success', 'Giỏ hàng đã được xóa.');
     }
 
-    public function applyCoupon(Request $request)
-    {
-        $coupon = $request->input('coupon_code');
-        if ($coupon === 'GIAM10') {
-            session()->flash('success', 'Áp dụng mã giảm giá thành công!');
-        } else {
-            session()->flash('error', 'Mã giảm giá không hợp lệ!');
-        }
-        return redirect()->back();
-    }
-
     public function updateAjax(Request $request)
     {
         $id = $request->id;
@@ -150,5 +141,66 @@ class CartClientController extends Controller
         }
 
         return response()->json(['success' => false], 404);
+    }
+    public function applyCoupon(Request $request)
+    {
+        $code = $request->input('promotion');
+        $now = Carbon::now();
+
+        // Tìm mã khuyến mãi hợp lệ trong DB
+        $promotion = Promotion::where('promotion_name', $code)
+            ->where('status', 'active')
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->first();
+
+        if (!$promotion) {
+            session()->flash('error', 'Mã giảm giá không hợp lệ!');
+            return redirect()->back();
+        }
+
+        // Kiểm tra usage_limit
+        if ($promotion->usage_limit !== null && $promotion->used_count >= $promotion->usage_limit) {
+            session()->flash('error', 'Mã giảm giá đã hết lượt sử dụng!');
+            return redirect()->back();
+        }
+        // TÍNH TỔNG GIỎ HÀNG
+        $cart = session()->get('cart', []);
+        $subtotal = 0;
+        foreach ($cart as $item) {
+            $subtotal += $item['price'] * $item['quantity'];
+        }
+        // TÍNH SỐ TIỀN GIẢM
+        $discount = 0;
+        if ($promotion->discount_type === 'percent') {
+            $discount = round($subtotal * ($promotion->discount_value / 100));
+            // Giới hạn giảm tối đa nếu có
+            if ($promotion->max_discount_value && $discount > $promotion->max_discount_value) {
+                $discount = $promotion->max_discount_value;
+            }
+        } elseif ($promotion->discount_type === 'fixed') {
+            $discount = $promotion->discount_value;
+        }
+
+        // Lưu vào session
+        session()->put('promotion', [
+            'id' => $promotion->id,
+            'name' => $promotion->promotion_name,
+            'type' => $promotion->discount_type,
+            'value' => $promotion->discount_value,
+            'max' => $promotion->max_discount_value
+        ]);
+        session()->put('discount', $discount); 
+        session()->put('promotion_name', $promotion->promotion_name);
+
+        session()->flash('success', 'Áp dụng mã giảm giá thành công!');
+        return redirect()->back();
+    }
+    public function removeCoupon(Request $request)
+    {
+        session()->forget('promotion');
+        session()->forget('discount');
+        session()->forget('promotion_name');
+        return redirect()->back()->with('success', 'Đã hủy mã giảm giá.');
     }
 }
