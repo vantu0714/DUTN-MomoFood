@@ -18,9 +18,16 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
+        $credentials['status'] = 1; // Chỉ cho phép tài khoản được kích hoạt
+
+        $user = User::where('email', $credentials['email'])->first();
+        if ($user && $user->status == 0) {
+        return back()->with('error', 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.')->withInput();
+    }
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+            
 
             $user = Auth::user();
 

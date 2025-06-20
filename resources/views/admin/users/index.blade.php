@@ -55,14 +55,30 @@
                                 </form> --}}
 
                                 {{-- Nút đổi trạng thái --}}
-                                <form action="" method="POST"
+                                {{-- <form action="{{ url('/users/' . $user->id . '/toggle-status') }}" method="POST"
                                     style="display:inline-block;">
                                     @csrf
                                     @method('PATCH')
+
                                     @if ($user->status == 1)
-                                        <button type="submit" class="btn btn-secondary ">Khóa</button>
+                                        <button type="submit" class="btn btn-secondary">Khóa</button>
                                     @else
-                                        <button type="submit" class="btn btn-success ">Kích hoạt</button>
+                                        <button type="submit" class="btn btn-success">Kích hoạt</button>
+                                    @endif
+                                </form> --}}
+
+                                <form id="toggle-status-form-{{ $user->id }}"
+                                    action="{{ url('/users/' . $user->id . '/toggle-status') }}" method="POST"
+                                    style="display:inline-block;">
+                                    @csrf
+                                    @method('PATCH')
+
+                                    @if ($user->status == 1)
+                                        <button type="button" class="btn btn-secondary "
+                                            onclick="confirmToggle({{ $user->id }}, false)">Khóa</button>
+                                    @else
+                                        <button type="button" class="btn btn-success "
+                                            onclick="confirmToggle({{ $user->id }}, true)">Kích hoạt</button>
                                     @endif
                                 </form>
 
@@ -93,6 +109,28 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 document.getElementById('delete-form-' + userId).submit();
+            }
+        });
+    }
+</script>
+
+<script>
+    function confirmToggle(userId, isActivating) {
+        const actionText = isActivating ? 'kích hoạt' : 'khóa';
+        const buttonText = isActivating ? 'Kích hoạt' : 'Khóa';
+        const buttonColor = isActivating ? '#198754' : '#6c757d';
+
+        Swal.fire({
+            title: `Bạn có chắc chắn muốn ${actionText} tài khoản này?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: buttonColor,
+            cancelButtonColor: '#d33',
+            confirmButtonText: buttonText,
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('toggle-status-form-' + userId).submit();
             }
         });
     }

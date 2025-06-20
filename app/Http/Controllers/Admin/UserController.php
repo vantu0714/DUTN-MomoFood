@@ -137,12 +137,12 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Đã xoá người dùng');
     }
 
-//     public function toggleStatus($id)
-// {
-//     $user = User::findOrFail($id);
-//     $user->status = !$user->status; // Đảo trạng thái
-//     $user->save();
+    public function toggleStatus($id)
+{
+    $user = User::findOrFail($id);
+    $user->status = !$user->status; // Đảo trạng thái
+    $user->save();
 
-//     return redirect()->route('users.index')->with('success', 'Trạng thái người dùng đã được cập nhật.');
-// }
+    return redirect()->route('users.index')->with('success', 'Trạng thái người dùng đã được cập nhật.');
+}
 }
