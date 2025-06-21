@@ -58,10 +58,11 @@ class PromotionController extends Controller
             'start_date'          => 'required|date|after_or_equal:' . Carbon::now()->subMinute()->toDateTimeString(),
             'end_date'            => 'required|date|after:start_date',
             'description'         => 'nullable|string',
+            'status'              => 'nullable|boolean',
         ]);
 
         if (empty($validated['usage_limit'])) {
-            $validated['usage_limit'] = null; 
+            $validated['usage_limit'] = null;
         }
 
         if ($validated['discount_type'] === 'fixed') {
@@ -77,7 +78,14 @@ class PromotionController extends Controller
     {
         //
         $promotion = Promotion::findOrFail($id);
-        return view('admin.promotions.show', compact('promotion'));
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+
+
+
+        $isActive = $promotion->status == 1
+            && $now->gte($promotion->start_date)
+            && $now->lte($promotion->end_date);
+        return view('admin.promotions.show', compact('promotion', 'isActive'));
     }
 
     public function edit(string $id)
@@ -103,11 +111,18 @@ class PromotionController extends Controller
             'discount_type' => 'required|in:fixed,percent',
             'discount_value' => 'required|numeric|min:0',
             'max_discount_value' => 'nullable|numeric|min:0',
-            'start_date' => 'required|date',
+            'start_date' => 'required|date|after_or_equal:' . Carbon::today()->toDateString(),
             'end_date' => 'required|date|after_or_equal:start_date',
             'description' => 'nullable|string',
-            'status' => 'required|in:0,1',
+            'status' => 'required|boolean',
+            'usage_limit' => 'nullable|integer|min:1',
         ]);
+
+        if (empty($validated['usage_limit'])) {
+            $validated['usage_limit'] = null;
+        }
+
+        $validated['status'] = $request->has('status') ? (bool) $request->status : false;
 
         $promotion->update([
             'promotion_name' => $request->promotion_name,
@@ -118,6 +133,7 @@ class PromotionController extends Controller
             'end_date' => Carbon::parse($request->end_date),
             'description' => $request->description,
             'status'             => $request->status,
+            'usage_limit'        => $request->usage_limit,
         ]);
 
         return redirect()->route('promotions.index')->with('success', 'Cập nhật mã giảm giá thành công!');

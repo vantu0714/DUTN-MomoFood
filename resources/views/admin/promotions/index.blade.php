@@ -24,7 +24,12 @@
                             <td>{{ ucfirst($promotion->discount_type) }}</td>
                             <td>{{ $promotion->discount_value }}</td>
                             <td>
-                                @if ($promotion->isActive())
+                                @php
+                                    $now = \Carbon\Carbon::now();
+                                    $isActive = $promotion->status && $now->between($promotion->start_date, $promotion->end_date);
+                                @endphp
+                
+                                @if ($isActive)
                                     <span class="badge bg-success">Đang hoạt động</span>
                                 @else
                                     <span class="badge bg-secondary">Không hoạt động</span>
@@ -49,6 +54,7 @@
                     @endforelse
                 </tbody>
             </table>
+            
 
             <div class="d-flex justify-content-center">
                 {{ $promotions->links() }}
@@ -56,3 +62,5 @@
         </div>
     </div>
 @endsection
+
+
