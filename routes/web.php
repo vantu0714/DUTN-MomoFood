@@ -152,6 +152,8 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/edit', [AuthController::class, 'editProfile'])->name('update');
         Route::get('/changepassword', [AuthController::class, 'showChangePassword'])->name('changepassword');
         Route::post('/changepassword', [AuthController::class, 'updatePassword'])->name('updatepassword');
+        Route::get('/orders', [ClientsOrderController::class, 'orderList'])->name('orders');
+        Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
     });
 });
 Route::prefix('carts')->group(function () {
