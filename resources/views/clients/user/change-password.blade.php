@@ -5,34 +5,42 @@
     <body style="margin-top: 200px;">
         <div class="container-xl px-4 mt-4">
             <nav class="nav nav-borders">
-                <a class="nav-link active ms-0" href="{{ route('clients.edit') }}"target="__blank">Thông tin</a>
+                <a class="nav-link active ms-0" href="{{ route('clients.info') }}"target="__blank">Thông tin</a>
                 <a class="nav-link" href="{{ route('clients.changepassword') }}" target="__blank">Đổi
                     mật khẩu</a>
+                <a class="nav-link" href="{{ route('clients.orders') }}">Đơn hàng</a>
+                <a href="#" class="nav-link"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    Đăng xuất
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
             </nav>
             <hr class="mt-0 mb-4">
-            <div class="row">
+            <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <div class="card mb-4">
-                        <div class="card-header">Change Password</div>
+                        <div class="card-header">Đổi mật khẩu</div>
                         <div class="card-body">
                             <form method="POST" action="{{ route('clients.updatepassword') }}">
                                 @csrf
                                 <div class="mb-3">
-                                    <label class="small mb-1" for="currentPassword">Current Password</label>
+                                    <label class="small mb-1" for="currentPassword">Mật khẩu hiện tại</label>
                                     <input class="form-control" id="currentPassword" type="password" name="currentPassword"
-                                        placeholder="Enter current password">
+                                        placeholder="Nhập mật khẩu hiện tại">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="small mb-1" for="newPassword">New Password</label>
+                                    <label class="small mb-1" for="newPassword">Mật khẩu mới</label>
                                     <input class="form-control" id="newPassword" type="password" name="newPassword"
-                                        placeholder="Enter new password">
+                                        placeholder="Nhập mật khẩu mới">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="small mb-1" for="confirmPassword">Confirm Password</label>
+                                    <label class="small mb-1" for="confirmPassword">Xác nhận mật khẩu mới</label>
                                     <input class="form-control" id="confirmPassword" type="password" name="confirmPassword"
-                                        placeholder="Confirm new password">
+                                        placeholder="Xác nhận mật khẩu mới">
                                 </div>
-                                <button class="btn btn-primary" type="submit">Save</button>
+                                <button class="btn btn-primary" type="submit">Cập nhật</button>
                             </form>
                         </div>
                     </div>
