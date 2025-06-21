@@ -148,9 +148,15 @@ class OrderController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Order $order)
+    public function edit(string $id)
     {
         //
+     $order = Order::with(['user', 'orderDetails.product', 'orderDetails.productVariant'])->findOrFail($id);
+    $customers = User::whereHas('role', fn ($q) => $q->where('name', 'user'))->get();
+    $products = Product::with('variants')->get();
+
+    return view('admin.orders.edit', compact('order', 'customers', 'products'));
+        // return view('admin.orders.edit', compact('order'));
     }
 
     /**

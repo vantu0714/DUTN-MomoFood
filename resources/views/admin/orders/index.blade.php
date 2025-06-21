@@ -32,7 +32,7 @@
                             </td>
                             <td>
                                 <a href="{{ route('orders.show', ['id' => $order->id]) }}" class="btn btn-sm btn-primary">Xem</a>
-                                <a href="#" class="btn btn-sm btn-warning">Sửa</a>
+                                <a href="{{route('orders.edit', ['id' => $order->id]) }}" class="btn btn-sm btn-warning">Sửa</a>
                             </td>
                         </tr>
                     @empty

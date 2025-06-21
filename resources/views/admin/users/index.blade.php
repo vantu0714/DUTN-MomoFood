@@ -4,6 +4,18 @@
     <div class="container mt-4">
         <h2 class="mb-4">Danh sách người dùng</h2>
 
+        @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <a href="{{ route('users.create') }}" class="btn btn-primary mb-3">Thêm người dùng</a>
 
         <div class="table-responsive">
@@ -30,7 +42,7 @@
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->role->name }}</td>
                             <td>
-                                @if($user->status == 1)
+                                @if ($user->status == 1)
                                     <span class="badge bg-success">Kích hoạt</span>
                                 @else
                                     <span class="badge bg-secondary">Khóa</span>
@@ -53,6 +65,34 @@
                                         Xóa
                                     </button>
                                 </form> --}}
+
+                                {{-- Nút đổi trạng thái --}}
+                                {{-- <form action="{{ url('/users/' . $user->id . '/toggle-status') }}" method="POST"
+                                    style="display:inline-block;">
+                                    @csrf
+                                    @method('PATCH')
+
+                                    @if ($user->status == 1)
+                                        <button type="submit" class="btn btn-secondary">Khóa</button>
+                                    @else
+                                        <button type="submit" class="btn btn-success">Kích hoạt</button>
+                                    @endif
+                                </form> --}}
+
+                                <form id="toggle-status-form-{{ $user->id }}"
+                                    action="{{ url('/users/' . $user->id . '/toggle-status') }}" method="POST"
+                                    style="display:inline-block;">
+                                    @csrf
+                                    @method('PATCH')
+
+                                    @if ($user->status == 1)
+                                        <button type="button" class="btn btn-secondary "
+                                            onclick="confirmToggle({{ $user->id }}, false)">Khóa</button>
+                                    @else
+                                        <button type="button" class="btn btn-success "
+                                            onclick="confirmToggle({{ $user->id }}, true)">Kích hoạt</button>
+                                    @endif
+                                </form>
 
                             </td>
                         </tr>
@@ -84,8 +124,26 @@
             }
         });
     }
-    
 </script>
 
+<script>
+    function confirmToggle(userId, isActivating) {
+        const actionText = isActivating ? 'kích hoạt' : 'khóa';
+        const buttonText = isActivating ? 'Kích hoạt' : 'Khóa';
+        const buttonColor = isActivating ? '#198754' : '#6c757d';
 
-
+        Swal.fire({
+            title: `Bạn có chắc chắn muốn ${actionText} tài khoản này?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: buttonColor,
+            cancelButtonColor: '#d33',
+            confirmButtonText: buttonText,
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('toggle-status-form-' + userId).submit();
+            }
+        });
+    }
+</script>

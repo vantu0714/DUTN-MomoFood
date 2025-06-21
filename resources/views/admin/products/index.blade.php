@@ -123,12 +123,19 @@
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Danh mục</label>
                             <select class="form-select" name="category_id">
-                                <option value="" style="font-weight: bold;">Tất cả danh mục</option>
+                                <option value="" style="font-weight: bold;"
+                                    {{ request('category_id') == '' ? 'selected' : '' }}>
+                                    Tất cả danh mục
+                                </option>
                                 @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->category_name }}</option>
+                                    <option value="{{ $category->id }}"
+                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->category_name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
+
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Trạng thái</label>
                             <select class="form-select" name="status">
@@ -244,7 +251,7 @@
                                         <span class="fw-semibold">{{ number_format($item->original_price) }}đ</span>
                                     </td>
                                     <td>
-                                        @if ($item->discounted_price && $item->discounted_price < $item->original_price)
+                                        @if (!is_null($item->discounted_price) && $item->discounted_price < $item->original_price)
                                             <span
                                                 class="fw-semibold text-danger">{{ number_format($item->discounted_price) }}đ</span>
                                             <div class="small text-muted">

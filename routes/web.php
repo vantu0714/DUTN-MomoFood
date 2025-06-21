@@ -61,6 +61,9 @@ Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
 Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
 Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
 Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+Route::patch('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
+
+
 
 // categories
 Route::prefix('categories')->name('categories.')->group(function () {
@@ -110,7 +113,8 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/create', [OrderController::class, 'create'])->name('create');
     Route::post('/store', [OrderController::class, 'store'])->name('store');
     Route::get('/{id}/show', [OrderController::class, 'show'])->name('show');
-    Route::get('/create', [OrderController::class, 'create'])->name('create');
+    Route::get('/{id}/edit', [OrderController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [OrderController::class, 'update'])->name('update');
 });
 
 // promotions
@@ -157,8 +161,8 @@ Route::prefix('carts')->group(function () {
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
     Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
+    Route::post('/cart/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
     Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
-
 });
 
 Route::middleware(['auth'])->group(function () {
