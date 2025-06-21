@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use App\Models\Category;
-
+use App\Models\CartItem;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,5 +26,18 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         Paginator::useBootstrap();
+
+        // Tự động chia sẻ biến $cartCount đến tất cả các view
+        View::composer('*', function ($view) {
+            $cartCount = 0;
+
+            if (Auth::check()) {
+                $cartCount = CartItem::whereHas('cart', function ($query) {
+                    $query->where('user_id', Auth::id());
+                })->count(); // Đếm số sản phẩm khác nhau
+            }
+
+            $view->with('cartCount', $cartCount);
+        });
     }
 }

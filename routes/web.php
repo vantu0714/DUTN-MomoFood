@@ -160,13 +160,18 @@ Route::middleware(['auth', 'client'])->group(function () {
 Route::prefix('carts')->group(function () {
     Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
     Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
-    Route::post('/carts/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.update.ajax');
+    
+    // sửa lại để tránh trùng 'carts/carts/...'
+    Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
+    Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
+    
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
     Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
-    Route::post('/cart/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
-    Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
+    Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
 });
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
