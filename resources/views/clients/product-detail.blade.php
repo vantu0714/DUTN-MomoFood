@@ -40,7 +40,7 @@
                             <div class="col-lg-6">
                                 <div class="border rounded">
                                     <a href="#">
-                                        <img src="{{ asset('clients/img/vegetable-item-6.jpg') }}" class="img-fluid rounded" alt="Image" >
+                                        <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid w-100 rounded-top" alt="">
                                     </a>
                                 </div>
                             </div>

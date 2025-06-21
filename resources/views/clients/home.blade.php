@@ -209,7 +209,8 @@
 
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
-                                            <a href="{{ route('product-detail.index', $product->id) }}">
+                                            {{-- <a href="{{ route('product-detail.index', $product->id) }}"> --}}
+                                                <a href="{{ route('product-detail.show', $product->id) }}">
                                                 <div class="product-img-wrapper">
                                                     <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                                         onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
