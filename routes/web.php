@@ -43,7 +43,7 @@ Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
 //lien he
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 //chi tiet sp
-Route::get('/chi-tiet', [ProductDetailController::class, 'index'])->name('product-detail.index');
+// Route::get('/chi-tiet', [ProductDetailController::class, 'index'])->name('product-detail.index');
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -179,3 +179,7 @@ Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clie
 //vn-pay
 Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
 Route::get('/vnpay-return', [VNPayController::class, 'return']);
+
+// product detail
+Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
+
