@@ -385,7 +385,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
+                                    {{-- <div class="col-md-6">
                                         <div class="form-floating position-relative">
                                             <i class="ri-toggle-line input-icon"></i>
                                             <select class="form-select @error('status') is-invalid @enderror"
@@ -400,7 +400,7 @@
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                    </div>
+                                    </div> --}}
 
                                     <!-- Hidden file input -->
                                     <input type="file" name="avatar" id="imageInput" accept="image/*"

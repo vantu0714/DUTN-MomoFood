@@ -43,7 +43,7 @@ Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
 //lien he
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 //chi tiet sp
-Route::get('/chi-tiet', [ProductDetailController::class, 'index'])->name('product-detail.index');
+// Route::get('/chi-tiet', [ProductDetailController::class, 'index'])->name('product-detail.index');
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -83,6 +83,9 @@ Route::get('/products/{id}', [ProductController::class, 'show'])->name('products
 Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
 Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
 Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+// routes/web.php
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+Route::get('/search', [HomeController::class, 'search'])->name('clients.search');
 //comments
 Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
 Route::get('/comments/{id}', [CommentController::class, 'show'])->name('comments.show');
@@ -181,3 +184,7 @@ Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clie
 //vn-pay
 Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
 Route::get('/vnpay-return', [VNPayController::class, 'return']);
+
+// product detail
+Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
+

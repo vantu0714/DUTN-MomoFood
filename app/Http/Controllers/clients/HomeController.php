@@ -56,4 +56,16 @@ class HomeController extends Controller
 
         return view('clients.home', compact('products', 'categories', 'bestSellingProducts'));
     }
+      public function search(Request $request)
+    {
+        $keyword = $request->input('keyword');
+
+        $products = Product::where('product_name', 'like', "%$keyword%")
+            ->orWhere('product_code', 'like', "%$keyword%")
+            ->orWhere('description', 'like', "%$keyword%")
+            ->orWhere('ingredients', 'like', "%$keyword%")
+            ->get();
+
+        return view('clients.search', compact('products', 'keyword'));
+    }
 }

@@ -17,58 +17,60 @@ class CartClientController extends Controller
     }
 
     public function addToCart(Request $request)
-    {
-        $productId = $request->input('product_id');
-        $variantId = $request->input('product_variant_id');
+{
+    $productId = $request->input('product_id');
+    $variantId = $request->input('product_variant_id');
+    $quantity = max(1, (int) $request->input('quantity', 1)); // ✅ Lấy quantity từ form
 
-        $cart = session()->get('cart', []);
+    $cart = session()->get('cart', []);
 
-        if ($variantId) {
-            // Nếu có biến thể sản phẩm
-            $variant = \App\Models\ProductVariant::findOrFail($variantId);
-            $product = $variant->product; // quan hệ product() trong model ProductVariant
+    if ($variantId) {
+        // Nếu có biến thể sản phẩm
+        $variant = \App\Models\ProductVariant::findOrFail($variantId);
+        $product = $variant->product;
 
-            $key = 'variant_' . $variantId; // dùng key riêng để tránh trùng
+        $key = 'variant_' . $variantId;
 
-            if (isset($cart[$key])) {
-                $cart[$key]['quantity']++;
-            } else {
-                $cart[$key] = [
-                    'product_id'         => $product->id,
-                    'product_variant_id' => $variant->id,
-                    'product_name'       => $product->product_name,
-                    'variant_name'       => $variant->name, // Tên biến thể
-                    'product_code'       => $product->product_code,
-                    'price'              => $variant->price ?? $product->discounted_price ?? $product->original_price,
-                    'image'              => $product->image ?? 'default.jpg',
-                    'quantity'           => 1,
-                ];
-            }
+        if (isset($cart[$key])) {
+            $cart[$key]['quantity'] += $quantity; // ✅ Cộng thêm quantity
         } else {
-            // Nếu không có biến thể
-            $product = \App\Models\Product::findOrFail($productId);
-            $key = 'product_' . $productId;
-
-            if (isset($cart[$key])) {
-                $cart[$key]['quantity']++;
-            } else {
-                $cart[$key] = [
-                    'product_id'         => $product->id,
-                    'product_variant_id' => null,
-                    'product_name'       => $product->product_name,
-                    'variant_name'       => null, // Không có biến thể
-                    'product_code'       => $product->product_code,
-                    'price'              => $product->discounted_price ?? $product->original_price,
-                    'image'              => $product->image ?? 'default.jpg',
-                    'quantity'           => 1,
-                ];
-            }
+            $cart[$key] = [
+                'product_id'         => $product->id,
+                'product_variant_id' => $variant->id,
+                'product_name'       => $product->product_name,
+                'variant_name'       => $variant->name,
+                'product_code'       => $product->product_code,
+                'price'              => $variant->price ?? $product->discounted_price ?? $product->original_price,
+                'image'              => $product->image ?? 'default.jpg',
+                'quantity'           => $quantity, // ✅ Số lượng gửi từ form
+            ];
         }
+    } else {
+        // Không có biến thể
+        $product = \App\Models\Product::findOrFail($productId);
+        $key = 'product_' . $productId;
 
-        session(['cart' => $cart]);
-
-        return redirect()->route('carts.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
+        if (isset($cart[$key])) {
+            $cart[$key]['quantity'] += $quantity; // ✅ Cộng thêm quantity
+        } else {
+            $cart[$key] = [
+                'product_id'         => $product->id,
+                'product_variant_id' => null,
+                'product_name'       => $product->product_name,
+                'variant_name'       => null,
+                'product_code'       => $product->product_code,
+                'price'              => $product->discounted_price ?? $product->original_price,
+                'image'              => $product->image ?? 'default.jpg',
+                'quantity'           => $quantity, // ✅ Số lượng từ form
+            ];
+        }
     }
+
+    session(['cart' => $cart]);
+
+    return redirect()->route('carts.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
+}
+
 
     public function updateQuantity(Request $request, $id)
     {
