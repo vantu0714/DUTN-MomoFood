@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Contracts\Cache\Store;
 use App\Http\Requests\Admin\User\StoreUserRequest;
 use App\Http\Requests\Admin\User\UpdateUserRequest;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -129,28 +130,44 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
-    {
-        $user = User::findOrFail($id);
-        $user->delete();
+    // public function destroy($id)
+    // {
+    //     $user = User::findOrFail($id);
+    //     $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'Đã xoá người dùng');
-    }
+    //     return redirect()->route('users.index')->with('success', 'Đã xoá người dùng');
+    // }
+
+    // public function toggleStatus($id)
+    // {
+    //     $user = User::findOrFail($id);
+
+    //     if ($user->role && $user->role->name === 'admin') {
+    //         return redirect()->route('users.index')
+    //             ->with('error', 'Không thể khóa tài khoản quản trị viên.');
+    //     }
+
+    //     // Đảo trạng thái: 1 => 0, 0 => 1
+    //     $user->status = $user->status == 1 ? 0 : 1;
+    //     $user->save();
+
+    //     return redirect()->route('users.index')
+    //         ->with('success', 'Đã cập nhật trạng thái tài khoản.');
+    // }
 
     public function toggleStatus($id)
-    {
-        $user = User::findOrFail($id);
+{
+    $user = User::findOrFail($id);
 
-        if ($user->role && $user->role->name === 'admin') {
-            return redirect()->route('users.index')
-                ->with('error', 'Không thể khóa tài khoản quản trị viên.');
-        }
-
-        // Đảo trạng thái: 1 => 0, 0 => 1
-        $user->status = $user->status == 1 ? 0 : 1;
-        $user->save();
-
+    if (Auth::id() == $user->id) {
         return redirect()->route('users.index')
-            ->with('success', 'Đã cập nhật trạng thái tài khoản.');
+            ->with('error', 'Bạn không thể khóa tài khoản đang đăng nhập.');
     }
+
+    $user->status = $user->status ? 0 : 1;
+    $user->save();
+
+    return redirect()->route('users.index')
+        ->with('success', 'Đã cập nhật trạng thái tài khoản.');
+}
 }
