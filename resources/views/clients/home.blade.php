@@ -18,16 +18,23 @@
                 <h5 class="modal-title" id="exampleModalLabel">Search by keyword</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body d-flex align-items-center">
-                <div class="input-group w-75 mx-auto d-flex">
-                    <input type="search" class="form-control p-3" placeholder="keywords"
-                        aria-describedby="search-icon-1">
-                    <span id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></span>
-                </div>
-            </div>
+
+            {{-- FORM SEARCH --}}
+           <form action="{{ route('clients.search') }}" method="GET">
+    <div class="modal-body d-flex align-items-center">
+        <div class="input-group w-75 mx-auto d-flex">
+            <input type="search" name="keyword" class="form-control p-3" placeholder="Tìm kiếm sản phẩm" required>
+            <button type="submit" class="input-group-text p-3 bg-primary text-white border-0">
+                <i class="fa fa-search"></i>
+            </button>
+        </div>
+    </div>
+</form>
+
         </div>
     </div>
 </div>
+
 <!-- Modal Search End -->
 
 
