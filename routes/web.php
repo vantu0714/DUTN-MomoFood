@@ -83,6 +83,9 @@ Route::get('/products/{id}', [ProductController::class, 'show'])->name('products
 Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
 Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
 Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+// routes/web.php
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+Route::get('/search', [HomeController::class, 'search'])->name('clients.search');
 //comments
 Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
 Route::get('/comments/{id}', [CommentController::class, 'show'])->name('comments.show');
