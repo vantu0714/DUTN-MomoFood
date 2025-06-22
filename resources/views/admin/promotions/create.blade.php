@@ -54,14 +54,14 @@
             <div class="mb-3">
                 <label for="start_date" class="form-label">Ngày bắt đầu</label>
                 <input type="datetime-local" name="start_date" class="form-control" required
-                    value="{{ old('start_date', \Carbon\Carbon::now()->addMinutes(1)->format('Y-m-d\TH:i')) }}"
+                    value="{{ old('start_date', \Carbon\Carbon::now()->addMinutes(1)->format('Y-m-d')) }}"
                     min="{{ \Carbon\Carbon::now()->format('Y-m-d\TH:i') }}">
             </div>
 
             <div class="mb-3">
                 <label for="end_date" class="form-label">Ngày kết thúc</label>
                 <input type="datetime-local" name="end_date" class="form-control" required
-                    value="{{ old('end_date', \Carbon\Carbon::now()->addDays(1)->format('Y-m-d\TH:i')) }}">
+                    value="{{ old('end_date', \Carbon\Carbon::now()->addDays(1)->format('Y-m-d')) }}">
             </div>
 
             <div class="mb-3">

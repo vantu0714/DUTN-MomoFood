@@ -2,27 +2,6 @@
 @include('clients.layouts.sidebar')
 @vite('resources/css/shop.css')
 
-
-        <!-- Modal Search Start -->
-        {{-- <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-fullscreen">
-                <div class="modal-content rounded-0">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Search by keyword</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body d-flex align-items-center">
-                        <div class="input-group w-75 mx-auto d-flex">
-                            <input type="search" class="form-control p-3" placeholder="keywords" aria-describedby="search-icon-1">
-                            <span id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
-        <!-- Modal Search End -->
-
-
         <!-- Single Page Header start -->
         <div class="container-fluid page-header py-5">
             <h1 class="text-center text-white display-6">Chi Tiết Sản Phẩm</h1>
@@ -40,37 +19,40 @@
                             <div class="col-lg-6">
                                 <div class="border rounded">
                                     <a href="#">
-                                        <img src="{{ asset('clients/img/vegetable-item-6.jpg') }}" class="img-fluid rounded" alt="Image" >
+                                        <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid w-100 rounded-top" alt="">
                                     </a>
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <h4 class="fw-bold mb-3">Brocoli</h4>
-                                <p class="mb-3">Category: Vegetables</p>
-                                <h5 class="fw-bold mb-3">3,35 $</h5>
+                                <h4 class="fw-bold mb-3">{{ $product->product_name }}</h4>
+                                <p class="mb-3">Danh mục sản phẩm: {{ $product->category?->category_name ?? 'Không có danh mục' }}</p>
+                                <h5 class="fw-bold mb-3">{{ number_format($product->discounted_price, 0, ',', '.') }} VND</h5>
+
                                 <div class="d-flex mb-4">
-                                    <i class="fa fa-star text-secondary"></i>
-                                    <i class="fa fa-star text-secondary"></i>
-                                    <i class="fa fa-star text-secondary"></i>
-                                    <i class="fa fa-star text-secondary"></i>
-                                    <i class="fa fa-star"></i>
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="fa fa-star {{ $i <= 4 ? 'text-secondary' : '' }}"></i>
+                                    @endfor
                                 </div>
-                                <p class="mb-4">The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic words etc.</p>
-                                <p class="mb-4">Susp endisse ultricies nisi vel quam suscipit. Sabertooth peacock flounder; chain pickerel hatchetfish, pencilfish snailfish</p>
-                                <div class="input-group quantity mb-5" style="width: 100px;">
-                                    <div class="input-group-btn">
-                                        <button class="btn btn-sm btn-minus rounded-circle bg-light border" >
+
+                                <p class="mb-4">{{ $product->description ?? 'Không có mô tả.' }}</p>
+
+                                <form action="{{ route('carts.add') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                                    <div class="input-group quantity mb-3" style="width: 120px;">
+                                        <button type="button" class="btn btn-sm btn-minus rounded-circle bg-light border">
                                             <i class="fa fa-minus"></i>
                                         </button>
-                                    </div>
-                                    <input type="text" class="form-control form-control-sm text-center border-0" value="1">
-                                    <div class="input-group-btn">
-                                        <button class="btn btn-sm btn-plus rounded-circle bg-light border">
+                                        <input type="number" name="quantity" id="quantity" class="form-control form-control-sm text-center border-0" value="1" min="1">
+                                        <button type="button" class="btn btn-sm btn-plus rounded-circle bg-light border">
                                             <i class="fa fa-plus"></i>
                                         </button>
                                     </div>
-                                </div>
-                                <a href="#" class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
+                                    <button type="submit" class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary">
+                                        <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ hàng
+                                    </button>
+                                </form>
                             </div>
                             <div class="col-lg-12">
                                 <nav>
@@ -136,44 +118,51 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
-                                        <div class="d-flex">
-                                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
-                                            <div class="">
-                                                <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
-                                                <div class="d-flex justify-content-between">
-                                                    <h5>Jason Smith</h5>
-                                                    <div class="d-flex mb-3">
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star"></i>
-                                                    </div>
-                                                </div>
-                                                <p>The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic 
-                                                    words etc. Susp endisse ultricies nisi vel quam suscipit </p>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex">
-                                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
-                                            <div class="">
-                                                <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
-                                                <div class="d-flex justify-content-between">
-                                                    <h5>Sam Peters</h5>
-                                                    <div class="d-flex mb-3">
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star"></i>
-                                                        <i class="fa fa-star"></i>
-                                                    </div>
-                                                </div>
-                                                <p class="text-dark">The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic 
-                                                    words etc. Susp endisse ultricies nisi vel quam suscipit </p>
-                                            </div>
-                                        </div>
-                                    </div>
+    <div class="tab-pane fade" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
+    <h4 class="mb-4 fw-bold text-uppercase text-primary">Đánh giá của người dùng</h4>
+
+    @forelse($product->comments as $comment)
+        <div class="d-flex mb-4 border rounded shadow-sm p-3 bg-white">
+            <!-- Avatar người dùng -->
+            <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('img/avatar.jpg') }}"
+                 class="img-fluid rounded-circle me-3"
+                 style="width: 80px; height: 80px;" alt="Avatar người dùng">
+
+            <!-- Nội dung bình luận -->
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ $comment->user->name ?? 'Ẩn danh' }}</h5>
+                    <small class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
+                </div>
+
+<div class="d-flex mb-2">
+    @php
+        $rate = is_numeric($comment->rating) ? (int) $comment->rating : 0;
+    @endphp
+
+    @for($i = 1; $i <= 5; $i++)
+        <i class="fa fa-star {{ $i <= $rate ? 'text-warning' : 'text-secondary' }}"></i>
+    @endfor
+</div>
+
+
+
+
+
+
+
+  
+
+                <!-- Nội dung -->
+                <p class="mb-0 text-dark">{{ $comment->content }}</p>
+            </div>
+        </div>
+    @empty
+        <p class="text-muted">Chưa có bình luận nào cho sản phẩm này.</p>
+    @endforelse
+</div>
+
+
                                     <div class="tab-pane" id="nav-vision" role="tabpanel">
                                         <p class="text-dark">Tempor erat elitr rebum at clita. Diam dolor diam ipsum et tempor sit. Aliqu diam
                                             amet diam et eos labore. 3</p>
@@ -182,31 +171,43 @@
                                     </div>
                                 </div>
                             </div>
-                            <form action="#" class="bg-light p-4 p-md-5 rounded shadow-sm">
-                                <h4 class="mb-4 fw-bold text-uppercase text-primary">Bình luận</h4>
-                                
-                                <div class="mb-4">
-                                    <label for="comment" class="form-label fw-semibold">Đánh giá của bạn *</label>
-                                    <textarea id="comment" name="comment" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
-                                </div>
+                            @if(Auth::check())
+<form action="{{ route('comments.store') }}" method="POST" class="bg-light p-4 p-md-5 rounded shadow-sm">
+    @csrf
 
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold d-block">Chọn số sao:</label>
-                                    <div class="rating d-flex gap-2">
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="1"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="2"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="3"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="4"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="5"></i>
-                                    </div>
-                                </div>
+    <h4 class="mb-4 fw-bold text-uppercase text-primary">Bình luận</h4>
 
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
-                                        <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
-                                    </button>
-                                </div>
-                            </form>
+    <!-- Hidden: ID sản phẩm -->
+    <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+    <!-- Nội dung bình luận -->
+    <div class="mb-4">
+        <label for="content" class="form-label fw-semibold">Đánh giá của bạn *</label>
+        <textarea id="content" name="content" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
+    </div>
+
+    <!-- Số sao đánh giá -->
+    <div class="mb-4">
+        <label class="form-label fw-semibold d-block">Chọn số sao:</label>
+        <div class="rating d-flex gap-2">
+            @for($i = 1; $i <= 5; $i++)
+                <i class="fa fa-star fa-lg text-muted star" data-rating="{{ $i }}"></i>
+            @endfor
+        </div>
+        <!-- Input thật để lưu số sao -->
+        <input type="hidden" name="rating" id="rating-value" value="0">
+    </div>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
+            <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
+        </button>
+    </div>
+</form>
+@else
+    <p><a href="{{ route('login') }}">Đăng nhập</a> để gửi bình luận.</p>
+@endif
+
                         </div>
                     </div>                   
                 </div>
@@ -331,7 +332,9 @@
         </div>
         <!-- Single Product End -->
 
-        <script>
+     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Xử lý rating (chọn sao)
             const stars = document.querySelectorAll('.star');
             let selectedRating = 0;
 
@@ -356,7 +359,63 @@
                     console.log('Đã chọn sao:', selectedRating);
                 });
             });
-        </script>
 
+            const minusBtn = document.querySelector('.btn-minus');
+            const plusBtn = document.querySelector('.btn-plus');
+            const quantityInput = document.querySelector('#quantity');
+
+            if (quantityInput) {
+                quantityInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            if (minusBtn) {
+                minusBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    let value = parseInt(quantityInput.value) || 1;
+                    if (value > 1) {
+                        quantityInput.value = value - 1;
+                    }
+                });
+            }
+
+            if (plusBtn) {
+                plusBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    let value = parseInt(quantityInput.value) || 1;
+                    quantityInput.value = value + 1;
+                });
+            }
+        });
+     </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('rating-value');
+
+        stars.forEach(star => {
+            star.addEventListener('click', function () {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+
+                // Reset màu toàn bộ
+                stars.forEach(s => s.classList.remove('text-warning'));
+                stars.forEach(s => s.classList.add('text-muted'));
+
+                // Đổi màu từ 1 đến ngôi sao được chọn
+                for (let i = 0; i < rating; i++) {
+                    stars[i].classList.remove('text-muted');
+                    stars[i].classList.add('text-warning');
+                }
+            });
+        });
+    });
+</script>
+
+
+        <!-- Footer Start -->
 
 @include('clients.layouts.footer')

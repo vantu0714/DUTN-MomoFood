@@ -1,14 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\Clients;
+namespace App\Http\Controllers\clients;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Product;
 
 class ProductDetailController extends Controller
 {
-    public function index()
+    public function show($id)
     {
-        return view('clients.product-detail');
+        $product = Product::with([
+    'category',
+    'comments' => function ($query) {
+        $query->latest(); // sắp xếp theo created_at DESC
+    },
+    'comments.user'
+])->findOrFail($id);
+
+        return view('clients.product-detail', compact('product'));
     }
 }
+

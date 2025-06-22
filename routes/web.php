@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\clients\HomeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ComboItemController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Clients\ContactsController;
 use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\VNPayController;
+use App\Http\Controllers\clients\CommentController as ClientCommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +45,7 @@ Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
 //lien he
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 //chi tiet sp
-Route::get('/chi-tiet', [ProductDetailController::class, 'index'])->name('product-detail.index');
+// Route::get('/chi-tiet', [ProductDetailController::class, 'index'])->name('product-detail.index');
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -83,9 +85,13 @@ Route::get('/products/{id}', [ProductController::class, 'show'])->name('products
 Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
 Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
 Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+// routes/web.php
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+Route::get('/search', [HomeController::class, 'search'])->name('clients.search');
 //comments
 Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
 Route::get('/comments/{id}', [CommentController::class, 'show'])->name('comments.show');
+Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
 Route::get('/comments/{id}/edit', [CommentController::class, 'edit'])->name('comments.edit');
 Route::put('/comments/{id}', [CommentController::class, 'update'])->name('comments.update');
 Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
@@ -157,17 +163,28 @@ Route::middleware(['auth', 'client'])->group(function () {
 Route::prefix('carts')->group(function () {
     Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
     Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
-    Route::post('/carts/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.update.ajax');
+    
+    // sửa lại để tránh trùng 'carts/carts/...'
+    Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
+    Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
+    
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
     Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
-    Route::post('/cart/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
-    Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
+    Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
 });
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
     Route::post('/store', [ClientsOrderController::class, 'store'])->name('order.store');
+});
+//Combo
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('combo_items', \App\Http\Controllers\Admin\ComboItemController::class)->except(['show', 'edit', 'update']);
+    Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])->name('combo_items.delete_combo');
+
 });
 
 //Clients
@@ -179,3 +196,7 @@ Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clie
 //vn-pay
 Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
 Route::get('/vnpay-return', [VNPayController::class, 'return']);
+
+// product detail
+Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
+
