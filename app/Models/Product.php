@@ -73,4 +73,8 @@ class Product extends Model
     {
         return $this->hasMany(OrderDetail::class);
     }
+    public function comboItems()
+    {
+        return $this->hasMany(comboItem::class, 'combo_id');
+    }
 }

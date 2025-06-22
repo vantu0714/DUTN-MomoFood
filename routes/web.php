@@ -172,6 +172,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
     Route::post('/store', [ClientsOrderController::class, 'store'])->name('order.store');
 });
+//Combo
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('combo_items', \App\Http\Controllers\Admin\ComboItemController::class)->except(['show', 'edit', 'update']);
+});
 
 //Clients
 Route::get('/clients/info', [AuthController::class, 'info'])->name('clients.info');
