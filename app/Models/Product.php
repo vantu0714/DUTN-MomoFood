@@ -67,11 +67,30 @@ class Product extends Model
     }
     public function orderItems()
     {
-        return $this->hasMany(OrderDetail::class);
+        return $this->hasMany(OrderDetail::class,'combo_id');
     }
     public function orderDetails()
     {
-        return $this->hasMany(OrderDetail::class);
+        return $this->hasMany(OrderDetail::class,'combo_id');
+    }
+    public function comboItems()
+    {
+        return $this->hasMany(comboItem::class, 'combo_id');
+    }
+    protected static function booted()
+    {
+        static::deleting(function ($product) {
+            // Nếu là combo
+            if ($product->is_combo) {
+                // Nếu có trong đơn hàng thì không cho xóa
+                if ($product->orderDetails()->exists()) {
+                    throw new \Exception("Không thể xóa combo đã tồn tại trong đơn hàng.");
+                }
+
+                // Xóa các combo_items liên quan
+                $product->comboItems()->delete();
+            }
+        });
     }
     public function comments()
 {
