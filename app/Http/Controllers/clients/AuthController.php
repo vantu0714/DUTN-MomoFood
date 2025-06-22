@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\clients;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -220,4 +221,16 @@ class AuthController extends Controller
 
         return back()->with('success', 'Đặt lại mật khẩu thành công!');
     }
+    public function search(Request $request)
+{
+    $keyword = $request->input('keyword');
+
+    $products = Product::where('product_name', 'like', "%$keyword%")
+        ->orWhere('product_code', 'like', "%$keyword%")
+        ->orWhere('description', 'like', "%$keyword%")
+        ->orWhere('ingredients', 'like', "%$keyword%")
+        ->get();
+
+    return view('products.search', compact('products', 'keyword'));
+}
 }

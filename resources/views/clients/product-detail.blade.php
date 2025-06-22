@@ -184,24 +184,40 @@
                                     <label for="comment" class="form-label fw-semibold">Đánh giá của bạn</label>
                                     <textarea id="comment" name="comment" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
                                 </div>
+                            @if(Auth::check())
+                                <form action="{{ route('comments.store') }}" method="POST" class="bg-light p-4 p-md-5 rounded shadow-sm">
+                                    @csrf
 
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold d-block">Chọn số sao:</label>
-                                    <div class="rating d-flex gap-2">
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="1"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="2"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="3"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="4"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="5"></i>
+                                    <h4 class="mb-4 fw-bold text-uppercase text-primary">Bình luận</h4>
+
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                                    <div class="mb-4">
+                                        <label for="content" class="form-label fw-semibold">Đánh giá của bạn *</label>
+                                        <textarea id="content" name="content" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
                                     </div>
-                                </div>
 
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
-                                        <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
-                                    </button>
-                                </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold d-block">Chọn số sao:</label>
+                                        <div class="rating d-flex gap-2">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <i class="fa fa-star fa-lg text-muted star" data-rating="{{ $i }}"></i>
+                                            @endfor
+                                        </div>
+                                        <input type="hidden" name="rating" id="rating-value" value="0">
+                                    </div>
+
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
+                                            <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
+                                        </button>
+                                    </div>
+                                </form>
+                                @else
+                                    <p><a href="{{ route('login') }}">Đăng nhập</a> để gửi bình luận.</p>
+                                @endif
                             </form>
+
                         </div>
                     </div>                   
                 </div>
@@ -296,7 +312,7 @@
                 });
             }
         });
+        
      </script>
  <!-- Footer Start -->
-
 @include('clients.layouts.footer')
