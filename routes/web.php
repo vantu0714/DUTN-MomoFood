@@ -84,16 +84,17 @@ Route::get('/products/{id}', [ProductController::class, 'show'])->name('products
 Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
 Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
 Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+
 // routes/web.php
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 Route::get('/search', [HomeController::class, 'search'])->name('clients.search');
+
 //comments
-Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
-Route::get('/comments/{id}', [CommentController::class, 'show'])->name('comments.show');
+Route::prefix('admin')->middleware('auth')->group(function () {
+    Route::resource('comments', App\Http\Controllers\Admin\CommentController::class)->only(['index', 'destroy']);
+});
 Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
-Route::get('/comments/{id}/edit', [CommentController::class, 'edit'])->name('comments.edit');
-Route::put('/comments/{id}', [CommentController::class, 'update'])->name('comments.update');
-Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
 
 
 
