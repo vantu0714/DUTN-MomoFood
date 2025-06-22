@@ -110,11 +110,11 @@ class OrderController extends Controller
                 }
 
                 OrderDetail::create([
-                    'order_id'           => $order->id,
-                    'product_id'         => $productId,
+                    'order_id' => $order->id,
+                    'product_id' => $productId,
                     'product_variant_id' => $variantId, // null nếu không có biến thể
-                    'quantity'           => $item['quantity'],
-                    'price'              => $item['price'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
                 ]);
             }
 
@@ -133,5 +133,26 @@ class OrderController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
+    }
+
+    public function orderList()
+    {
+        $orders = Order::where('user_id', auth()->id())->latest()->get();
+        return view('clients.user.orders', compact('orders'));
+    }
+
+    public function orderDetail($id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $items = DB::table('order_details')
+            ->join('products', 'order_details.product_id', '=', 'products.id')
+            ->where('order_id', $id)
+            ->select('order_details.*', 'products.product_name as product_name')
+            ->get();
+
+        return view('clients.user.show-order', compact('order', 'items'));
     }
 }

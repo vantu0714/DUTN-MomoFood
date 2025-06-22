@@ -55,31 +55,22 @@
                     <!-- Cart -->
                     <a href="{{ route('carts.index') }}" class="position-relative me-4 my-auto">
                         <i class="fa fa-shopping-bag fa-2x"></i>
-                                                   <span id="cart-count"
-    class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
-    style="top: -5px; left: 15px; height: 20px; min-width: 20px;">
-    {{ count(array_column(session('cart', []), 'product_name')) }}
-
-</span>
-
-
+                        <span id="cart-count"
+                            class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
+                            style="top: -5px; left: 15px; height: 20px; min-width: 20px;">
+                            {{ array_sum(array_column(session('cart', []), 'quantity')) }}
+                        </span>
                     </a>
 
                     <!-- User -->
                     @auth
-                    <div class="dropdown dropdown-hover position-relative d-flex">
-                        <a href="#" class="dropdown-toggle d-flex align-items-center" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('admins/assets/img/client_img.png') }}" alt="avatar" width="40" height="40" style="border-radius: 50%;">
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="userDropdown" style="top: 100%; left: 0;">
-                            <li><a class="dropdown-item" href="{{ route('clients.info') }}">Trang cá nhân</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
-                                <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Đăng xuất</a>
-                            </li>
-                        </ul>
-                    </div>
+                        <div class="position-relative d-flex">
+                            <a href="{{ route('clients.info') }}" class="d-flex align-items-center" id="userDropdown"
+                                role="button">
+                                <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('admins/assets/img/client_img.png') }}"
+                                    alt="avatar" width="40" height="40" style="border-radius: 50%;">
+                            </a>
+                        </div>
                     @endauth
 
                     @guest
