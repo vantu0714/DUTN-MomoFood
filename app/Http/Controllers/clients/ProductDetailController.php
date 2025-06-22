@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 
 class ProductDetailController extends Controller
-{
-    
+{ 
 
      public function show($id)
 {
@@ -30,7 +29,5 @@ class ProductDetailController extends Controller
 
     // Trả về view với đầy đủ dữ liệu
     return view('clients.product-detail', compact('product', 'relatedProducts'));
-}
-
 }
 
