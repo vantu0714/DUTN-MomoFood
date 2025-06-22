@@ -24,7 +24,7 @@ class OrderController extends Controller
             'note' => '',
         ]);
 
-        return view('clients.order', compact('cart'));
+        return view('clients.order', compact('cart', 'recipient'));
     }
     public function store(Request $request)
     {
@@ -60,7 +60,7 @@ class OrderController extends Controller
         if ($request->filled('promotion')) {
             $promotionName = trim($request->promotion);
             $promotion = Promotion::where('promotion_name', $promotionName)
-                ->where('status', 'active')
+                ->where('status', 1)
                 ->where('start_date', '<=', now())
                 ->where('end_date', '>=', now())
                 ->first();
@@ -120,7 +120,8 @@ class OrderController extends Controller
 
             DB::commit();
             session()->forget('cart');
-            session()->forget('recipient');
+            session()->forget('promotion');
+            session()->forget('discount');
 
             if ($request->payment_method === 'vnpay') {
                 return redirect()->route('vnpay.payment', ['order_id' => $order->id]);

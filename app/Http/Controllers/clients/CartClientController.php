@@ -151,7 +151,7 @@ class CartClientController extends Controller
 
         // Tìm mã khuyến mãi hợp lệ trong DB
         $promotion = Promotion::where('promotion_name', $code)
-            ->where('status', 'active')
+            ->where('status', 1)
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
             ->first();
@@ -190,7 +190,8 @@ class CartClientController extends Controller
             'name' => $promotion->promotion_name,
             'type' => $promotion->discount_type,
             'value' => $promotion->discount_value,
-            'max' => $promotion->max_discount_value
+            'max' => $promotion->max_discount_value,
+            'discount' => $discount
         ]);
         session()->put('discount', $discount); 
         session()->put('promotion_name', $promotion->promotion_name);
