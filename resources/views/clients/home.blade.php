@@ -45,13 +45,23 @@
             <div class="col-md-12 col-lg-7">
                 <h4 class="mb-3 text-secondary">100% MomoFood</h4>
                 <h1 class="mb-5 display-3 text-primary">Shop bán đồ ăn vặt MomoFood</h1>
-                <div class="position-relative mx-auto">
-                    <input class="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" type="number"
-                        placeholder="Tìm kiếm">
-                    <button type="submit"
-                        class="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
-                        style="top: 0; right: 25%;">Tìm kiếm</button>
-                </div>
+               <form action="{{ route('clients.search') }}" method="GET">
+    <div class="position-relative mx-auto">
+        <input 
+            class="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" 
+            type="text" 
+            name="keyword" 
+            placeholder="Tìm kiếm sản phẩm..."
+            value="{{ request('keyword') }}"
+        >
+        <button type="submit"
+            class="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
+            style="top: 0; right: 25%;">
+            Tìm kiếm
+        </button>
+    </div>
+</form>
+
             </div>
             <div class="col-md-12 col-lg-5">
                 <div id="carouselId" class="carousel slide position-relative" data-bs-ride="carousel">
