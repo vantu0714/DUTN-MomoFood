@@ -118,44 +118,51 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
-                                        <div class="d-flex">
-                                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
-                                            <div class="">
-                                                <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
-                                                <div class="d-flex justify-content-between">
-                                                    <h5>Jason Smith</h5>
-                                                    <div class="d-flex mb-3">
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star"></i>
-                                                    </div>
-                                                </div>
-                                                <p>The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic 
-                                                    words etc. Susp endisse ultricies nisi vel quam suscipit </p>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex">
-                                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
-                                            <div class="">
-                                                <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
-                                                <div class="d-flex justify-content-between">
-                                                    <h5>Sam Peters</h5>
-                                                    <div class="d-flex mb-3">
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star text-secondary"></i>
-                                                        <i class="fa fa-star"></i>
-                                                        <i class="fa fa-star"></i>
-                                                    </div>
-                                                </div>
-                                                <p class="text-dark">The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic 
-                                                    words etc. Susp endisse ultricies nisi vel quam suscipit </p>
-                                            </div>
-                                        </div>
-                                    </div>
+    <div class="tab-pane fade" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
+    <h4 class="mb-4 fw-bold text-uppercase text-primary">Đánh giá của người dùng</h4>
+
+    @forelse($product->comments as $comment)
+        <div class="d-flex mb-4 border rounded shadow-sm p-3 bg-white">
+            <!-- Avatar người dùng -->
+            <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('img/avatar.jpg') }}"
+                 class="img-fluid rounded-circle me-3"
+                 style="width: 80px; height: 80px;" alt="Avatar người dùng">
+
+            <!-- Nội dung bình luận -->
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ $comment->user->name ?? 'Ẩn danh' }}</h5>
+                    <small class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
+                </div>
+
+<div class="d-flex mb-2">
+    @php
+        $rate = is_numeric($comment->rating) ? (int) $comment->rating : 0;
+    @endphp
+
+    @for($i = 1; $i <= 5; $i++)
+        <i class="fa fa-star {{ $i <= $rate ? 'text-warning' : 'text-secondary' }}"></i>
+    @endfor
+</div>
+
+
+
+
+
+
+
+  
+
+                <!-- Nội dung -->
+                <p class="mb-0 text-dark">{{ $comment->content }}</p>
+            </div>
+        </div>
+    @empty
+        <p class="text-muted">Chưa có bình luận nào cho sản phẩm này.</p>
+    @endforelse
+</div>
+
+
                                     <div class="tab-pane" id="nav-vision" role="tabpanel">
                                         <p class="text-dark">Tempor erat elitr rebum at clita. Diam dolor diam ipsum et tempor sit. Aliqu diam
                                             amet diam et eos labore. 3</p>
@@ -164,31 +171,43 @@
                                     </div>
                                 </div>
                             </div>
-                            <form action="#" class="bg-light p-4 p-md-5 rounded shadow-sm">
-                                <h4 class="mb-4 fw-bold text-uppercase text-primary">Bình luận</h4>
-                                
-                                <div class="mb-4">
-                                    <label for="comment" class="form-label fw-semibold">Đánh giá của bạn *</label>
-                                    <textarea id="comment" name="comment" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
-                                </div>
+                            @if(Auth::check())
+<form action="{{ route('comments.store') }}" method="POST" class="bg-light p-4 p-md-5 rounded shadow-sm">
+    @csrf
 
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold d-block">Chọn số sao:</label>
-                                    <div class="rating d-flex gap-2">
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="1"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="2"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="3"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="4"></i>
-                                        <i class="fa fa-star fa-lg text-muted star" data-rating="5"></i>
-                                    </div>
-                                </div>
+    <h4 class="mb-4 fw-bold text-uppercase text-primary">Bình luận</h4>
 
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
-                                        <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
-                                    </button>
-                                </div>
-                            </form>
+    <!-- Hidden: ID sản phẩm -->
+    <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+    <!-- Nội dung bình luận -->
+    <div class="mb-4">
+        <label for="content" class="form-label fw-semibold">Đánh giá của bạn *</label>
+        <textarea id="content" name="content" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
+    </div>
+
+    <!-- Số sao đánh giá -->
+    <div class="mb-4">
+        <label class="form-label fw-semibold d-block">Chọn số sao:</label>
+        <div class="rating d-flex gap-2">
+            @for($i = 1; $i <= 5; $i++)
+                <i class="fa fa-star fa-lg text-muted star" data-rating="{{ $i }}"></i>
+            @endfor
+        </div>
+        <!-- Input thật để lưu số sao -->
+        <input type="hidden" name="rating" id="rating-value" value="0">
+    </div>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
+            <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
+        </button>
+    </div>
+</form>
+@else
+    <p><a href="{{ route('login') }}">Đăng nhập</a> để gửi bình luận.</p>
+@endif
+
                         </div>
                     </div>                   
                 </div>
@@ -372,6 +391,29 @@
             }
         });
      </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('rating-value');
+
+        stars.forEach(star => {
+            star.addEventListener('click', function () {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+
+                // Reset màu toàn bộ
+                stars.forEach(s => s.classList.remove('text-warning'));
+                stars.forEach(s => s.classList.add('text-muted'));
+
+                // Đổi màu từ 1 đến ngôi sao được chọn
+                for (let i = 0; i < rating; i++) {
+                    stars[i].classList.remove('text-muted');
+                    stars[i].classList.add('text-warning');
+                }
+            });
+        });
+    });
+</script>
 
 
         <!-- Footer Start -->

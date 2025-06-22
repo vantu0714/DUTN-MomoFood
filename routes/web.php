@@ -18,6 +18,7 @@ use App\Http\Controllers\Clients\ContactsController;
 use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\VNPayController;
+use App\Http\Controllers\clients\CommentController as ClientCommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +90,7 @@ Route::get('/search', [HomeController::class, 'search'])->name('clients.search')
 //comments
 Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
 Route::get('/comments/{id}', [CommentController::class, 'show'])->name('comments.show');
+Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
 Route::get('/comments/{id}/edit', [CommentController::class, 'edit'])->name('comments.edit');
 Route::put('/comments/{id}', [CommentController::class, 'update'])->name('comments.update');
 Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
@@ -160,13 +162,18 @@ Route::middleware(['auth', 'client'])->group(function () {
 Route::prefix('carts')->group(function () {
     Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
     Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
-    Route::post('/carts/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.update.ajax');
+    
+    // sửa lại để tránh trùng 'carts/carts/...'
+    Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
+    Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
+    
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
     Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
-    Route::post('/cart/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
-    Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
+    Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
 });
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
