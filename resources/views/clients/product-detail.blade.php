@@ -22,35 +22,45 @@
                                         <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid w-100 rounded-top" alt="">
                                     </a>
                                 </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <h4 class="fw-bold mb-3">{{ $product->product_name }}</h4>
-                                <p class="mb-3">Danh mục sản phẩm: {{ $product->category?->category_name ?? 'Không có danh mục' }}</p>
-                                <h5 class="fw-bold mb-3">{{ number_format($product->discounted_price, 0, ',', '.') }} VND</h5>
+                            </div>                          
+                            <div class="col-lg-6 product-info">
+                                <h4 class="fw-bold text-dark mb-2">{{ $product->product_name }}</h4>
 
-                                <div class="d-flex mb-4">
+                                <p class="text-muted mb-2">
+                                    <strong>Danh mục:</strong> {{ $product->category?->category_name ?? 'Không có danh mục' }}
+                                </p>
+
+                                <h5 class="product-price mb-3 d-flex align-items-baseline">
+                                    <span class="price-amount">{{ number_format($product->discounted_price, 0, ',', '.') }}</span>
+                                    <span class="currency ms-1">VND</span>
+                                </h5>
+                              
+                                <div class="rating-stars mb-3">
                                     @for ($i = 1; $i <= 5; $i++)
-                                        <i class="fa fa-star {{ $i <= 4 ? 'text-secondary' : '' }}"></i>
+                                        <i class="fa fa-star {{ $i <= 4 ? 'text-warning' : 'text-muted' }}"></i>
                                     @endfor
                                 </div>
 
-                                <p class="mb-4">{{ $product->description ?? 'Không có mô tả.' }}</p>
-
-                                <form action="{{ route('carts.add') }}" method="POST">
+                                <p class="text-muted mb-4">{{ $product->description ?? 'Không có mô tả.' }}</p>
+                             
+                                <form action="{{ route('carts.add') }}" method="POST" class="d-flex flex-column align-items-start gap-3">
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
 
-                                    <div class="input-group quantity mb-3" style="width: 120px;">
-                                        <button type="button" class="btn btn-sm btn-minus rounded-circle bg-light border">
+                                    
+                                    <div class="input-group quantity" style="width: 140px;">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-minus">
                                             <i class="fa fa-minus"></i>
                                         </button>
-                                        <input type="number" name="quantity" id="quantity" class="form-control form-control-sm text-center border-0" value="1" min="1">
-                                        <button type="button" class="btn btn-sm btn-plus rounded-circle bg-light border">
+                                        <input type="number" name="quantity" id="quantity" class="form-control text-center border-0 fw-bold" value="1" min="1">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-plus">
                                             <i class="fa fa-plus"></i>
                                         </button>
                                     </div>
-                                    <button type="submit" class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary">
-                                        <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ hàng
+
+                                    
+                                    <button type="submit" class="btn btn-outline-success rounded-pill px-4 py-2 fw-semibold">
+                                        <i class="fa fa-shopping-bag me-2"></i> Thêm vào giỏ hàng
                                     </button>
                                 </form>
                             </div>
@@ -59,14 +69,17 @@
                                     <div class="nav nav-tabs mb-3">
                                         <button class="nav-link active border-white border-bottom-0" type="button" role="tab"
                                             id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about"
-                                            aria-controls="nav-about" aria-selected="true">Description</button>
+                                            aria-controls="nav-about" aria-selected="true">Mô tả</button>
                                         <button class="nav-link border-white border-bottom-0" type="button" role="tab"
                                             id="nav-mission-tab" data-bs-toggle="tab" data-bs-target="#nav-mission"
-                                            aria-controls="nav-mission" aria-selected="false">Reviews</button>
+                                            aria-controls="nav-mission" aria-selected="false">Đánh giá</button>
                                     </div>
                                 </nav>
-                                <div class="tab-content mb-5">
+                                <div class="tab-content mb-5">                               
                                     <div class="tab-pane active" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab">
+                                        <p>{!! nl2br(e($product->description ?? 'Không có mô tả.')) !!}</p>
+                                    </div>
+                                     {{-- <div class="tab-pane active" id="nav-about" role="tabpanel" aria-labelledby="nav-about-tab">
                                         <p>The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic words etc. 
                                             Susp endisse ultricies nisi vel quam suscipit </p>
                                         <p>Sabertooth peacock flounder; chain pickerel hatchetfish, pencilfish snailfish filefish Antarctic 
@@ -117,88 +130,93 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div> --}}
+                                    <div class="tab-pane" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
+                                        <div class="d-flex">
+                                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
+                                            <div class="">
+                                                <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
+                                                <div class="d-flex justify-content-between">
+                                                    <h5>Jason Smith</h5>
+                                                    <div class="d-flex mb-3">
+                                                        <i class="fa fa-star text-secondary"></i>
+                                                        <i class="fa fa-star text-secondary"></i>
+                                                        <i class="fa fa-star text-secondary"></i>
+                                                        <i class="fa fa-star text-secondary"></i>
+                                                        <i class="fa fa-star"></i>
+                                                    </div>
+                                                </div>
+                                                <p>The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic 
+                                                    words etc. Susp endisse ultricies nisi vel quam suscipit </p>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex">
+                                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
+                                            <div class="">
+                                                <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
+                                                <div class="d-flex justify-content-between">
+                                                    <h5>Sam Peters</h5>
+                                                    <div class="d-flex mb-3">
+                                                        <i class="fa fa-star text-secondary"></i>
+                                                        <i class="fa fa-star text-secondary"></i>
+                                                        <i class="fa fa-star text-secondary"></i>
+                                                        <i class="fa fa-star"></i>
+                                                        <i class="fa fa-star"></i>
+                                                    </div>
+                                                </div>
+                                                <p class="text-dark">The generated Lorem Ipsum is therefore always free from repetition injected humour, or non-characteristic 
+                                                    words etc. Susp endisse ultricies nisi vel quam suscipit </p>
+                                            </div>
+                                        </div>
                                     </div>
-    <div class="tab-pane fade" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
-    <h4 class="mb-4 fw-bold text-uppercase text-primary">Đánh giá của người dùng</h4>
-
-    @forelse($product->comments as $comment)
-        <div class="d-flex mb-4 border rounded shadow-sm p-3 bg-white">
-            <!-- Avatar người dùng -->
-           <img src="{{ asset('storage/' . $comment->user->avatar) }}" alt="avatar" width="100"
-                 class="img-fluid rounded-circle me-3"
-                 style="width: 80px; height: 80px;" alt="Avatar người dùng">
-
-            <!-- Nội dung bình luận -->
-            <div class="flex-grow-1">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">{{ $comment->user->name ?? 'Ẩn danh' }}</h5>
-                    <small class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
-                </div>
-
-<div class="d-flex mb-2">
-    @php
-        $rate = is_numeric($comment->rating) ? (int) $comment->rating : 0;
-    @endphp
-
-    @for($i = 1; $i <= 5; $i++)
-        <i class="fa fa-star {{ $i <= $rate ? 'text-warning' : 'text-secondary' }}"></i>
-    @endfor
-</div>
-
-                <!-- Nội dung -->
-                <p class="mb-0 text-dark">{{ $comment->content }}</p>
-            </div>
-        </div>
-    @empty
-        <p class="text-muted">Chưa có bình luận nào cho sản phẩm này.</p>
-    @endforelse
-</div>
-
-
-                                    <div class="tab-pane" id="nav-vision" role="tabpanel">
+                                    {{-- <div class="tab-pane" id="nav-vision" role="tabpanel">
                                         <p class="text-dark">Tempor erat elitr rebum at clita. Diam dolor diam ipsum et tempor sit. Aliqu diam
                                             amet diam et eos labore. 3</p>
                                         <p class="mb-0">Diam dolor diam ipsum et tempor sit. Aliqu diam amet diam et eos labore.
                                             Clita erat ipsum et lorem et sit</p>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
+                            <form action="#" class="bg-light p-4 p-md-5 rounded shadow-sm">
+                                <h4 class="mb-4 fw-bold text-uppercase text-primary">Bình luận</h4>
+                                
+                                <div class="mb-4">
+                                    <label for="comment" class="form-label fw-semibold">Đánh giá của bạn</label>
+                                    <textarea id="comment" name="comment" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
+                                </div>
                             @if(Auth::check())
-<form action="{{ route('comments.store') }}" method="POST" class="bg-light p-4 p-md-5 rounded shadow-sm">
-    @csrf
+                                <form action="{{ route('comments.store') }}" method="POST" class="bg-light p-4 p-md-5 rounded shadow-sm">
+                                    @csrf
 
-    <h4 class="mb-4 fw-bold text-uppercase text-primary">Bình luận</h4>
+                                    <h4 class="mb-4 fw-bold text-uppercase text-primary">Bình luận</h4>
 
-    <!-- Hidden: ID sản phẩm -->
-    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
 
-    <!-- Nội dung bình luận -->
-    <div class="mb-4">
-        <label for="content" class="form-label fw-semibold">Đánh giá của bạn *</label>
-        <textarea id="content" name="content" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
-    </div>
+                                    <div class="mb-4">
+                                        <label for="content" class="form-label fw-semibold">Đánh giá của bạn *</label>
+                                        <textarea id="content" name="content" class="form-control rounded-3" rows="6" placeholder="Hãy viết gì đó..." required></textarea>
+                                    </div>
 
-    <!-- Số sao đánh giá -->
-    <div class="mb-4">
-        <label class="form-label fw-semibold d-block">Chọn số sao:</label>
-        <div class="rating d-flex gap-2">
-            @for($i = 1; $i <= 5; $i++)
-                <i class="fa fa-star fa-lg text-muted star" data-rating="{{ $i }}"></i>
-            @endfor
-        </div>
-        <!-- Input thật để lưu số sao -->
-        <input type="hidden" name="rating" id="rating-value" value="0">
-    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold d-block">Chọn số sao:</label>
+                                        <div class="rating d-flex gap-2">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <i class="fa fa-star fa-lg text-muted star" data-rating="{{ $i }}"></i>
+                                            @endfor
+                                        </div>
+                                        <input type="hidden" name="rating" id="rating-value" value="0">
+                                    </div>
 
-    <div class="text-end">
-        <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
-            <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
-        </button>
-    </div>
-</form>
-@else
-    <p><a href="{{ route('login') }}">Đăng nhập</a> để gửi bình luận.</p>
-@endif
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
+                                            <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
+                                        </button>
+                                    </div>
+                                </form>
+                                @else
+                                    <p><a href="{{ route('login') }}">Đăng nhập</a> để gửi bình luận.</p>
+                                @endif
+                            </form>
 
                         </div>
                     </div>                   
@@ -206,123 +224,34 @@
                 <h1 class="fw-bold mb-0">SẢN PHẨM LIÊN QUAN</h1>
                 <div class="vesitable">
                     <div class="owl-carousel vegetable-carousel justify-content-center">
-                        <div class="border border-primary rounded position-relative vesitable-item">
-                            <div class="vesitable-img">
-                                <img src="img/vegetable-item-6.jpg" class="img-fluid w-100 rounded-top" alt="">
-                            </div>
-                            <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Vegetable</div>
-                            <div class="p-4 pb-0 rounded-bottom">
-                                <h4>Parsely</h4>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                                <div class="d-flex justify-content-between flex-lg-wrap">
-                                    <p class="text-dark fs-5 fw-bold">$4.99 / kg</p>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
+                        @foreach ($relatedProducts as $item)
+                            <div class="border border-success rounded vesitable-item h-100 d-flex flex-column">
+                                <div class="vesitable-img">
+                                    <img src="{{ asset('storage/' . $item->image) }}" class="img-fluid w-100 rounded-top" alt="">
                                 </div>
+                                <div class="text-white bg-success px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">
+                                    {{ $item->category?->category_name ?? 'Sản phẩm' }}
+                                </div>
+                                <div class="p-4 pb-0 rounded-bottom d-flex flex-column flex-grow-1">
+                                    <h5>{{ $item->product_name }}</h5>
+                                    <p class="flex-grow-1 text-muted">{{ Str::limit($item->description, 60) }}</p>
+                                    <div class="d-flex justify-content-between flex-wrap align-items-end">
+                                        <p class="text-dark fs-6 fw-bold mb-0">
+                                            {{ number_format($item->discounted_price ?? 0, 0, ',', '.') }} VND
+                                        </p>
+                                        <a href="{{ route('product-detail.show', $item->id) }}"
+                                            class="btn btn-outline-success rounded-pill btn-sm mt-2">
+                                            <i class="fa fa-shopping-bag me-1 text-success"></i> Xem chi tiết
+                                        </a>
+                                    </div>
                             </div>
                         </div>
-                        <div class="border border-primary rounded position-relative vesitable-item">
-                            <div class="vesitable-img">
-                                <img src="img/vegetable-item-1.jpg" class="img-fluid w-100 rounded-top" alt="">
-                            </div>
-                            <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Vegetable</div>
-                            <div class="p-4 pb-0 rounded-bottom">
-                                <h4>Parsely</h4>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                                <div class="d-flex justify-content-between flex-lg-wrap">
-                                    <p class="text-dark fs-5 fw-bold">$4.99 / kg</p>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-primary rounded position-relative vesitable-item">
-                            <div class="vesitable-img">
-                                <img src="img/vegetable-item-3.png" class="img-fluid w-100 rounded-top bg-light" alt="">
-                            </div>
-                            <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Vegetable</div>
-                            <div class="p-4 pb-0 rounded-bottom">
-                                <h4>Banana</h4>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                                <div class="d-flex justify-content-between flex-lg-wrap">
-                                    <p class="text-dark fs-5 fw-bold">$7.99 / kg</p>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-primary rounded position-relative vesitable-item">
-                            <div class="vesitable-img">
-                                <img src="img/vegetable-item-4.jpg" class="img-fluid w-100 rounded-top" alt="">
-                            </div>
-                            <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Vegetable</div>
-                            <div class="p-4 pb-0 rounded-bottom">
-                                <h4>Bell Papper</h4>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                                <div class="d-flex justify-content-between flex-lg-wrap">
-                                    <p class="text-dark fs-5 fw-bold">$7.99 / kg</p>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-primary rounded position-relative vesitable-item">
-                            <div class="vesitable-img">
-                                <img src="img/vegetable-item-5.jpg" class="img-fluid w-100 rounded-top" alt="">
-                            </div>
-                            <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Vegetable</div>
-                            <div class="p-4 pb-0 rounded-bottom">
-                                <h4>Potatoes</h4>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                                <div class="d-flex justify-content-between flex-lg-wrap">
-                                    <p class="text-dark fs-5 fw-bold">$7.99 / kg</p>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-primary rounded position-relative vesitable-item">
-                            <div class="vesitable-img">
-                                <img src="img/vegetable-item-6.jpg" class="img-fluid w-100 rounded-top" alt="">
-                            </div>
-                            <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Vegetable</div>
-                            <div class="p-4 pb-0 rounded-bottom">
-                                <h4>Parsely</h4>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                                <div class="d-flex justify-content-between flex-lg-wrap">
-                                    <p class="text-dark fs-5 fw-bold">$7.99 / kg</p>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-primary rounded position-relative vesitable-item">
-                            <div class="vesitable-img">
-                                <img src="img/vegetable-item-5.jpg" class="img-fluid w-100 rounded-top" alt="">
-                            </div>
-                            <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Vegetable</div>
-                            <div class="p-4 pb-0 rounded-bottom">
-                                <h4>Potatoes</h4>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                                <div class="d-flex justify-content-between flex-lg-wrap">
-                                    <p class="text-dark fs-5 fw-bold">$7.99 / kg</p>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="border border-primary rounded position-relative vesitable-item">
-                            <div class="vesitable-img">
-                                <img src="img/vegetable-item-6.jpg" class="img-fluid w-100 rounded-top" alt="">
-                            </div>
-                            <div class="text-white bg-primary px-3 py-1 rounded position-absolute" style="top: 10px; right: 10px;">Vegetable</div>
-                            <div class="p-4 pb-0 rounded-bottom">
-                                <h4>Parsely</h4>
-                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod te incididunt</p>
-                                <div class="d-flex justify-content-between flex-lg-wrap">
-                                    <p class="text-dark fs-5 fw-bold">$7.99 / kg</p>
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
-            </div>
-        </div>
-        <!-- Single Product End -->
+             </div>
+         </div>
+    </div>
+<!-- Single Product End -->
 
      <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -352,6 +281,7 @@
                 });
             });
 
+            // Xử lý tăng giảm số lượng
             const minusBtn = document.querySelector('.btn-minus');
             const plusBtn = document.querySelector('.btn-plus');
             const quantityInput = document.querySelector('#quantity');
@@ -382,32 +312,7 @@
                 });
             }
         });
+        
      </script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const stars = document.querySelectorAll('.star');
-        const ratingInput = document.getElementById('rating-value');
-
-        stars.forEach(star => {
-            star.addEventListener('click', function () {
-                const rating = this.getAttribute('data-rating');
-                ratingInput.value = rating;
-
-                // Reset màu toàn bộ
-                stars.forEach(s => s.classList.remove('text-warning'));
-                stars.forEach(s => s.classList.add('text-muted'));
-
-                // Đổi màu từ 1 đến ngôi sao được chọn
-                for (let i = 0; i < rating; i++) {
-                    stars[i].classList.remove('text-muted');
-                    stars[i].classList.add('text-warning');
-                }
-            });
-        });
-    });
-</script>
-
-
-        <!-- Footer Start -->
-
+ <!-- Footer Start -->
 @include('clients.layouts.footer')
