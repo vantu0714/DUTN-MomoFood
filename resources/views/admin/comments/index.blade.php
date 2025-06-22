@@ -8,51 +8,50 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover table-striped">
-            <thead class="table-dark">
+    <table class="table table-bordered table-hover" >
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Người dùng</th>
+                <th>Sản phẩm</th>
+                <th>Nội dung</th>
+                <th>Số sao</th>
+                <th>Thời gian</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($comments as $key => $comment)
                 <tr>
-                    <th>ID</th>
-                    <th>Người bình luận</th>
-                    <th>Nội dung</th>
-                    <th>Sản phẩm/Bài viết</th>
-                    <th>Trạng thái</th>
-                    <th>Ngày tạo</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- @forelse ($comments as $comment)
-                <tr>
-                    <td>{{ $comment->id }}</td>
-                    <td>{{ $comment->user->name ?? 'Ẩn danh' }}</td>
-                    <td>{{ Str::limit($comment->content, 50) }}</td>
-                    <td>{{ $comment->product->name ?? 'Không xác định' }}</td>
+                    <td>{{ $key + 1 }}</td>
+                    <td>{{ $comment->user->email ?? 'Ẩn danh' }}</td>
+                    <td>{{ $comment->product->product_name ?? 'Không tìm thấy' }}</td>
+                    <td>{{ $comment->content }}</td>
                     <td>
-                        @if($comment->status == 1)
-                            <span class="badge bg-success">Đã duyệt</span>
-                        @else
-                            <span class="badge bg-secondary">Chờ duyệt</span>
-                        @endif
+                        @for($i = 1; $i <= 5; $i++)
+                            <i class="fa fa-star {{ $i <= $comment->rating ? 'text-warning' : 'text-secondary' }}"></i>
+                        @endfor
                     </td>
                     <td>{{ $comment->created_at->format('d/m/Y H:i') }}</td>
                     <td>
-                        <a href="{{ route('comments.edit', $comment->id) }}" class="btn btn-sm btn-warning">Sửa</a>
-                        <a href="{{ route('comments.show', $comment->id) }}" class="btn btn-sm btn-info">Xem</a>
-                        <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" style="display:inline;">
+                        <form action="{{ route('comments.destroy', $comment->id) }}" method="POST"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa bình luận này?')">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Xoá bình luận này?')">Xoá</button>
+                            <button class="btn btn-sm btn-danger">Xóa</button>
                         </form>
                     </td>
                 </tr>
-                @empty
+            @empty
                 <tr>
-                    <td colspan="7" class="text-center">Không có bình luận nào</td>
+                    <td colspan="7" class="text-center">Chưa có bình luận nào.</td>
                 </tr>
-                @endforelse --}}
-            </tbody>
-        </table>
+            @endforelse
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-end">
+        {{ $comments->links() }}
     </div>
 </div>
 @endsection

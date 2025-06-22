@@ -124,7 +124,7 @@
     @forelse($product->comments as $comment)
         <div class="d-flex mb-4 border rounded shadow-sm p-3 bg-white">
             <!-- Avatar người dùng -->
-            <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('img/avatar.jpg') }}"
+           <img src="{{ asset('storage/' . $comment->user->avatar) }}" alt="avatar" width="100"
                  class="img-fluid rounded-circle me-3"
                  style="width: 80px; height: 80px;" alt="Avatar người dùng">
 
@@ -144,14 +144,6 @@
         <i class="fa fa-star {{ $i <= $rate ? 'text-warning' : 'text-secondary' }}"></i>
     @endfor
 </div>
-
-
-
-
-
-
-
-  
 
                 <!-- Nội dung -->
                 <p class="mb-0 text-dark">{{ $comment->content }}</p>
