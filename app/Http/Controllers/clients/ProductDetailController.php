@@ -6,18 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 
 class ProductDetailController extends Controller
-{ 
-
-     public function show($id)
 {
+
+    public function show($id)
+    {
     // Lấy sản phẩm cùng category, cùng comments và user
-    $product = Product::with([
-        'category',
-        'comments' => function ($query) {
+        $product = Product::with([
+            'category',
+            'comments' => function ($query) {
             $query->latest(); // sắp xếp bình luận mới nhất trước
-        },
-        'comments.user'
-    ])->findOrFail($id);
+            },
+            'comments.user'
+        ])->findOrFail($id);
 
     // Lấy các sản phẩm liên quan (khác ID, cùng danh mục, status = 1)
     $relatedProducts = Product::where('category_id', $product->category_id)
@@ -29,5 +29,5 @@ class ProductDetailController extends Controller
 
     // Trả về view với đầy đủ dữ liệu
     return view('clients.product-detail', compact('product', 'relatedProducts'));
+    }
 }
-
