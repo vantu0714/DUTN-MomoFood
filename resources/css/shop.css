@@ -170,4 +170,84 @@
     color: #ffc107 !important; /* Màu vàng */
 }
 
+/* // sản phẩm liên quan */
+  .vesitable-item {
+        min-height: 100%;
+        border-width: 2px !important;
+        transition: transform 0.2s;
+        overflow: hidden;
+    }
 
+    .vesitable-item:hover {
+        transform: translateY(-5px);
+    }
+
+    .vesitable-img {
+        height: 200px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .vesitable-img img {
+        height: 100%;
+        width: auto;
+        object-fit: cover;
+    }
+
+    .vesitable .owl-carousel .owl-stage {
+        display: flex;
+    }
+
+    .owl-carousel .owl-item {
+        display: flex;
+    }
+
+/* css giá */
+.product-info h4 {
+    font-size: 1.8rem;
+}
+
+.product-info .rating-stars .fa-star {
+    font-size: 1.2rem;
+    margin-right: 2px;
+}
+
+.product-info .quantity .btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-info .quantity input {
+    width: 60px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.product-info .btn-outline-success {
+    border: 2px solid #28a745;
+    color: #28a745;
+    transition: 0.3s ease;
+}
+
+.product-info .btn-outline-success:hover {
+    background-color: #28a745;
+    color: white;
+}
+.product-price {
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #ff0008;
+}
+
+.product-price .price-amount,
+.product-price .currency {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1;
+}
