@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\clients\HomeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ComboItemController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
@@ -175,6 +176,8 @@ Route::middleware(['auth'])->group(function () {
 //Combo
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('combo_items', \App\Http\Controllers\Admin\ComboItemController::class)->except(['show', 'edit', 'update']);
+    Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])->name('combo_items.delete_combo');
+
 });
 
 //Clients

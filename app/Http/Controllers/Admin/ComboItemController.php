@@ -37,31 +37,78 @@ class ComboItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'combo_id' => 'required|exists:products,id',
-            'itemable_type' => 'required|in:product,variant',
-            'itemable_id' => 'required|integer',
-            'quantity' => 'required|integer|min:1',
+            'combo_id' => 'nullable|exists:products,id',
+            'new_combo_name' => 'nullable|string|max:255',
+            'items' => 'required|array|min:1',
+            'items.*.itemable_type' => 'required|in:product,variant',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.variant_id' => 'nullable|exists:product_variants,id',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $typeMap = [
-            'product' => \App\Models\Product::class,
-            'variant' => \App\Models\ProductVariant::class,
-        ];
+        $comboId = $validated['combo_id'];
 
-        ComboItem::create([
-            'combo_id' => $validated['combo_id'],
-            'itemable_id' => $validated['itemable_id'],
-            'itemable_type' => $typeMap[$validated['itemable_type']],
-            'quantity' => $validated['quantity'],
-        ]);
+        if (!$comboId && !empty($validated['new_combo_name'])) {
+            $combo = Product::create([
+                'product_name' => $validated['new_combo_name'],
+                'product_code' => 'COMBO-' . strtoupper(uniqid()),
+                'original_price' => 0,
+                'discounted_price' => 0,
+                'status' => true,
+                'is_combo' => true,
+                'category_id' => 1,
+            ]);
+            $comboId = $combo->id;
+        }
 
-        return redirect()->route('admin.combo_items.index')->with('success', 'Thêm thành phần combo thành công!');
+        if (!$comboId) {
+            return back()->withErrors(['combo_id' => 'Vui lòng chọn combo có sẵn hoặc nhập tên combo mới.'])->withInput();
+        }
+
+        foreach ($validated['items'] as $item) {
+            $itemableType = $item['itemable_type'] === 'product'
+                ? Product::class
+                : ProductVariant::class;
+
+            $itemableId = $item['itemable_type'] === 'product'
+                ? $item['product_id']
+                : $item['variant_id'];
+
+            if ($itemableId) {
+                ComboItem::create([
+                    'combo_id' => $comboId,
+                    'itemable_type' => $itemableType,
+                    'itemable_id' => $itemableId,
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.combo_items.index')->with('success', 'Đã thêm thành phần vào combo.');
     }
 
-    public function destroy($id)
+
+
+
+    // Xóa một thành phần trong combo
+    public function destroyCombo($comboId)
     {
-        $item = ComboItem::findOrFail($id);
-        $item->delete();
-        return redirect()->back()->with('success', 'Đã xoá thành phần combo');
+        $combo = Product::with(['comboItems'])->findOrFail($comboId);
+
+        // Kiểm tra nếu combo có trong đơn hàng hoặc giỏ hàng
+        $usedInOrder = $combo->orderDetails()->exists();
+        $usedInCart = $combo->cartItems()->exists();
+
+        if ($usedInOrder || $usedInCart) {
+            return redirect()->back()->with('error', 'Không thể xoá combo vì đã tồn tại trong giỏ hàng hoặc đơn hàng.');
+        }
+
+        // Xoá các thành phần combo trước
+        $combo->comboItems()->delete();
+
+        // Xoá combo
+        $combo->delete();
+
+        return redirect()->route('admin.combo_items.index')->with('success', 'Đã xoá combo thành công.');
     }
 }
