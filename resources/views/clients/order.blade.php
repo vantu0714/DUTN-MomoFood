@@ -88,7 +88,9 @@
                                 }
 
                                 $grandTotal = $total + $shipping - $discount;
-                                if ($grandTotal < 0) $grandTotal = 0;
+                                if ($grandTotal < 0) {
+                                    $grandTotal = 0;
+                                }
                             @endphp
 
                             {{-- DANH SÁCH SẢN PHẨM --}}
@@ -125,7 +127,8 @@
 
                             @if ($discount > 0)
                                 <div class="mb-2 text-success">
-                                    Giảm giá (<strong>{{ $promotionName }}</strong>): <strong>-{{ number_format($discount) }}đ</strong>
+                                    Giảm giá (<strong>{{ $promotionName }}</strong>):
+                                    <strong>-{{ number_format($discount) }}đ</strong>
                                 </div>
                             @else
                                 <div class="mb-2 text-muted">
@@ -140,16 +143,18 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Phí vận chuyển</label>
-                                <input type="number" name="shipping_fee" class="form-control"
-                                       value="{{ $shipping }}" required>
+                                <input type="number" name="shipping_fee" class="form-control" value="{{ $shipping }}"
+                                    required>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Phương thức thanh toán</label>
                                 <select name="payment_method" class="form-select" required>
                                     <option value="">-- Chọn phương thức --</option>
-                                    <option value="cod" {{ old('payment_method') == 'cod' ? 'selected' : '' }}>Thanh toán khi nhận hàng (COD)</option>
-                                    <option value="vnpay" {{ old('payment_method') == 'vnpay' ? 'selected' : '' }}>Thanh toán qua VNPAY</option>
+                                    <option value="cod" {{ old('payment_method') == 'cod' ? 'selected' : '' }}>Thanh
+                                        toán khi nhận hàng (COD)</option>
+                                    <option value="vnpay" {{ old('payment_method') == 'vnpay' ? 'selected' : '' }}>Thanh
+                                        toán qua VNPAY</option>
                                 </select>
                             </div>
 
