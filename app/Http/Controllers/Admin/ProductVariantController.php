@@ -11,6 +11,8 @@ use App\Models\ProductVariantValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
 
 class ProductVariantController extends Controller
 {
@@ -50,6 +52,7 @@ class ProductVariantController extends Controller
         try {
             $product = Product::findOrFail($request->product_id);
             $originalPrice = $product->original_price;
+            $productCode = $product->product_code;
 
             foreach ($request->variants as $variantData) {
                 $mainAttr = $variantData['main_attribute'] ?? null;
@@ -60,36 +63,43 @@ class ProductVariantController extends Controller
                     $imagePath = $variantData['image']->store('variants', 'public');
                 }
 
+                if ($mainAttr && !empty($mainAttr['value'])) {
+                    $attribute = Attribute::firstOrCreate(['name' => $mainAttr['name']]);
+                    $mainAttributeValue = AttributeValue::firstOrCreate([
+                        'attribute_id' => $attribute->id,
+                        'value' => $mainAttr['value'],
+                    ]);
+                } else {
+                    $mainAttributeValue = null;
+                }
+
                 foreach ($subAttrs as $subAttr) {
-                    // 🔴 Kiểm tra giá
                     if ($subAttr['price'] < $originalPrice) {
                         return back()->withInput()->with('error', 'Giá biến thể không được thấp hơn giá gốc của sản phẩm (' . number_format($originalPrice) . '₫)');
+                    }
+
+                    // Generate SKU (Chỉ dùng product_code + vị)
+                    $sku = $productCode;
+                    if ($mainAttributeValue) {
+                        $sku .= '-' . strtoupper(Str::slug($mainAttributeValue->value));
                     }
 
                     $variant = ProductVariant::create([
                         'product_id' => $request->product_id,
                         'price' => $subAttr['price'],
                         'quantity_in_stock' => $subAttr['quantity'],
-                        'sku' => uniqid('SKU_'),
+                        'sku' => $sku,
                         'image' => $imagePath,
                     ]);
 
-                    // Tạo thuộc tính chính (vị)
-                    if ($mainAttr && !empty($mainAttr['value'])) {
-                        $attribute = Attribute::firstOrCreate(['name' => $mainAttr['name']]);
-                        $value = AttributeValue::firstOrCreate([
-                            'attribute_id' => $attribute->id,
-                            'value' => $mainAttr['value'],
-                        ]);
-
+                    if ($mainAttributeValue) {
                         ProductVariantValue::create([
                             'product_variant_id' => $variant->id,
-                            'attribute_value_id' => $value->id,
+                            'attribute_value_id' => $mainAttributeValue->id,
                             'price_adjustment' => 0,
                         ]);
                     }
 
-                    // Gắn attribute_value_id của Size
                     if (!empty($subAttr['attribute_value_id'])) {
                         ProductVariantValue::create([
                             'product_variant_id' => $variant->id,
@@ -101,14 +111,15 @@ class ProductVariantController extends Controller
             }
 
             $this->updateProductStatus($request->product_id);
-
             DB::commit();
+
             return redirect()->route('admin.product_variants.index')->with('success', 'Tạo biến thể thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
+
 
     public function edit($id)
     {
@@ -119,12 +130,18 @@ class ProductVariantController extends Controller
         return view('admin.product_variants.edit', compact('variant', 'products', 'attributes'));
     }
 
+
     public function update(Request $request, $id)
     {
         DB::beginTransaction();
 
         try {
             $variant = ProductVariant::findOrFail($id);
+
+            $product = Product::findOrFail($request->product_id);
+            if ($request->price < $product->original_price) {
+                return back()->withInput()->with('error', 'Giá biến thể không được thấp hơn giá gốc (' . number_format($product->original_price) . '₫)');
+            }
 
             $imagePath = $variant->image;
             if ($request->hasFile('image')) {
@@ -141,20 +158,28 @@ class ProductVariantController extends Controller
                 'quantity_in_stock' => $request->quantity_in_stock,
                 'sku' => $request->sku,
                 'image' => $imagePath,
+                'status' => $request->status ?? 1,
             ]);
 
-            // Xóa các attribute cũ
+            // Xoá hết attribute cũ
             ProductVariantValue::where('product_variant_id', $variant->id)->delete();
 
-            // Lưu lại các attribute mới với giá điều chỉnh
-            if ($request->attribute_values) {
-                foreach ($request->attribute_values as $attr) {
-                    ProductVariantValue::create([
-                        'product_variant_id' => $variant->id,
-                        'attribute_value_id' => $attr['id'],
-                        'price_adjustment' => $attr['price_adjustment'] ?? 0,
-                    ]);
-                }
+            // Gắn thuộc tính chính (Vị)
+            if ($request->main_attribute_id) {
+                ProductVariantValue::create([
+                    'product_variant_id' => $variant->id,
+                    'attribute_value_id' => $request->main_attribute_id,
+                    'price_adjustment' => 0,
+                ]);
+            }
+
+            // Gắn thuộc tính phụ (Size)
+            if ($request->sub_attribute_id) {
+                ProductVariantValue::create([
+                    'product_variant_id' => $variant->id,
+                    'attribute_value_id' => $request->sub_attribute_id,
+                    'price_adjustment' => 0,
+                ]);
             }
 
             $this->updateProductStatus($request->product_id);

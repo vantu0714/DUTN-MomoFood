@@ -18,7 +18,8 @@
                 <table class="table table-bordered m-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Biến thể (Thuộc tính)</th>
+                            <th>Biến thể</th>
+                            <th>SKU</th>
                             <th>Giá</th>
                             <th>Số lượng</th>
                             <th>Ảnh</th>
@@ -37,11 +38,12 @@
                                         <em>Không có</em>
                                     @endif
                                 </td>
+                                <td>{{ $variant->sku ?? '-' }}</td>
                                 <td>{{ number_format($variant->price, 0, ',', '.') }} đ</td>
                                 <td>{{ $variant->quantity_in_stock }}</td>
                                 <td>
                                     @if ($variant->image)
-                                        <img src="{{ asset('storage/' . $variant->image) }}" alt="" width="60">
+                                        <img src="{{ asset('storage/' . $variant->image) }}" alt="Ảnh" width="60">
                                     @else
                                         <em>Không có</em>
                                     @endif
