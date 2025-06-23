@@ -1,6 +1,6 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-  {{-- ForMatCode --}}
+{{-- ForMatCode --}}
 <div class="main_content_iner overly_inner">
     <div class="container-fluid p-0">
         <div class="container-fluid page-header py-5">
@@ -172,6 +172,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const rows = document.querySelectorAll('.cart-item');
+
         function updateQuantityAjax(id, quantity, row) {
             fetch("{{ route('carts.updateAjax') }}", {
                     method: 'POST',
