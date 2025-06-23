@@ -31,3 +31,4 @@ class ProductDetailController extends Controller
     return view('clients.product-detail', compact('product', 'relatedProducts'));
 }
 
+}
