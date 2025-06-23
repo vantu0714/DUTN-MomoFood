@@ -20,7 +20,7 @@ class ProductVariant extends Model
     {
         return $this->belongsTo(\App\Models\Product::class);
     }
-    
+
 
 
 
@@ -39,11 +39,26 @@ class ProductVariant extends Model
 
     public function attributeValues()
     {
-        return $this->belongsToMany(AttributeValue::class, 'product_variant_values', 'product_variant_id', 'attribute_value_id');
+        return $this->belongsToMany(AttributeValue::class, 'product_variant_values', 'product_variant_id', 'attribute_value_id')
+            ->withPivot('price_adjustment');
     }
+
 
     public function orderDetails()
     {
         return $this->hasMany(OrderDetail::class, 'product_variant_id');
+    }
+    public function getFinalPriceAttribute()
+    {
+        $adjustment = $this->attributeValues->sum(function ($value) {
+            return $value->pivot->price_adjustment ?? 0;
+        });
+
+        return $this->price + $adjustment;
+    }
+
+    public function getFormattedFinalPriceAttribute()
+    {
+        return number_format($this->final_price, 0, ',', '.') . ' đ';
     }
 }

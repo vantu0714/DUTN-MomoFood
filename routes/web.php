@@ -166,11 +166,11 @@ Route::middleware(['auth', 'client'])->group(function () {
 Route::prefix('carts')->group(function () {
     Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
     Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
-    
+
     // sửa lại để tránh trùng 'carts/carts/...'
     Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
     Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
-    
+
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
     Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
 
@@ -187,7 +187,6 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('combo_items', \App\Http\Controllers\Admin\ComboItemController::class)->except(['show', 'edit', 'update']);
     Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])->name('combo_items.delete_combo');
-
 });
 
 //Clients
@@ -202,4 +201,3 @@ Route::get('/vnpay-return', [VNPayController::class, 'return']);
 
 // product detail
 Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
-

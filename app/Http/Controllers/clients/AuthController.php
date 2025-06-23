@@ -23,12 +23,12 @@ class AuthController extends Controller
 
         $user = User::where('email', $credentials['email'])->first();
         if ($user && $user->status == 0) {
-        return back()->with('error', 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.')->withInput();
-    }
+            return back()->with('error', 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.')->withInput();
+        }
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            
+
 
             $user = Auth::user();
 
@@ -222,15 +222,15 @@ class AuthController extends Controller
         return back()->with('success', 'Đặt lại mật khẩu thành công!');
     }
     public function search(Request $request)
-{
-    $keyword = $request->input('keyword');
+    {
+        $keyword = $request->input('keyword');
 
-    $products = Product::where('product_name', 'like', "%$keyword%")
-        ->orWhere('product_code', 'like', "%$keyword%")
-        ->orWhere('description', 'like', "%$keyword%")
-        ->orWhere('ingredients', 'like', "%$keyword%")
-        ->get();
+        $products = Product::where('product_name', 'like', "%$keyword%")
+            ->orWhere('product_code', 'like', "%$keyword%")
+            ->orWhere('description', 'like', "%$keyword%")
+            ->orWhere('ingredients', 'like', "%$keyword%")
+            ->get();
 
-    return view('products.search', compact('products', 'keyword'));
-}
+        return view('products.search', compact('products', 'keyword'));
+    }
 }
