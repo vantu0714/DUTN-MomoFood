@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AttributeSeeder::class,
             AttributeValueSeeder::class,
+            SizeAttributeSeeder::class,
         ]);
     }
 }

@@ -207,7 +207,6 @@
                                                     onerror="this.onerror=null;this.src='{{ asset('clients/img/default.jpg') }}';"
                                                     class="img-fluid w-100 rounded-top"
                                                     alt="{{ $product->product_name }}">
-                                                    
                                             </a>
                                         </div>
 
@@ -234,7 +233,8 @@
                                                         value="{{ $product->id }}">
                                                     <button type="submit"
                                                         class="btn border border-secondary rounded-pill px-3 text-primary">
-                                                        <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào giỏ
+                                                        <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào
+                                                        giỏ
                                                         hàng
                                                     </button>
                                                 </form>
@@ -253,6 +253,6 @@
             </div>
         </div>
     </div>
-<!-- Fruits Shop End-->
+    <!-- Fruits Shop End-->
 
-@include('clients.layouts.footer')
+    @include('clients.layouts.footer')
