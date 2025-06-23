@@ -5,8 +5,10 @@
     <div class="container topbar bg-primary d-none d-lg-block">
         <div class="d-flex justify-content-between">
             <div class="top-info ps-2">
-                <small class="me-3"><i class="fas fa-map-marker-alt me-2 text-secondary"></i><a href="#" class="text-white">1 Trịnh Văn Bô, Hà Nội</a></small>
-                <small class="me-3"><i class="fas fa-envelope me-2 text-secondary"></i><a href="#" class="text-white">momofood@gmail.com</a></small>
+                <small class="me-3"><i class="fas fa-map-marker-alt me-2 text-secondary"></i><a href="#"
+                        class="text-white">1 Trịnh Văn Bô, Hà Nội</a></small>
+                <small class="me-3"><i class="fas fa-envelope me-2 text-secondary"></i><a href="#"
+                        class="text-white">momofood@gmail.com</a></small>
             </div>
             <div class="top-link pe-2">
                 <a href="#" class="text-white"><small class="text-white mx-2">Chính sách bảo mật</small></a>
@@ -48,7 +50,8 @@
                 <!-- Right side icons -->
                 <div class="d-flex align-items-center">
                     <!-- Search -->
-                    <button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4" data-bs-toggle="modal" data-bs-target="#searchModal">
+                    <button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4"
+                        data-bs-toggle="modal" data-bs-target="#searchModal">
                         <i class="fas fa-search text-primary"></i>
                     </button>
 
@@ -58,11 +61,10 @@
                         <span id="cart-count"
                             class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
                             style="top: -5px; left: 15px; height: 20px; min-width: 20px;">
-                            {{ array_sum(array_column(session('cart', []), 'product_name')) }}
+                            {{ $cartCount }}
                         </span>
-                    </a>
 
-                    <!-- User -->
+                    </a>
                     @auth
                         <div class="position-relative d-flex">
                             <a href="{{ route('clients.info') }}" class="d-flex align-items-center" id="userDropdown"
@@ -74,11 +76,11 @@
                     @endauth
 
                     @guest
-                    <div class="position-relative d-flex">
-                        <a href="{{ route('login') }}" class="d-flex align-items-center">
-                            <i class="fas fa-user fa-2x"></i>
-                        </a>
-                    </div>
+                        <div class="position-relative d-flex">
+                            <a href="{{ route('login') }}" class="d-flex align-items-center">
+                                <i class="fas fa-user fa-2x"></i>
+                            </a>
+                        </div>
                     @endguest
                 </div>
             </div>
