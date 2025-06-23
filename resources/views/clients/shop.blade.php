@@ -208,7 +208,6 @@
                                                     onerror="this.onerror=null;this.src='{{ asset('clients/img/default.jpg') }}';"
                                                     class="img-fluid w-100 rounded-top"
                                                     alt="{{ $product->product_name }}">
-
                                             </a>
                                         </div>
 

@@ -7,7 +7,6 @@ use App\Models\Product;
 
 class ProductDetailController extends Controller
 {
-
     public function show($id)
     {
         // Lấy sản phẩm cùng category, cùng comments và user
