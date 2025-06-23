@@ -58,7 +58,7 @@
                         <span id="cart-count"
                             class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
                             style="top: -5px; left: 15px; height: 20px; min-width: 20px;">
-                            {{ array_sum(array_column(session('cart', []), 'quantity')) }}
+                            {{ array_sum(array_column(session('cart', []), 'product_name')) }}
                         </span>
                     </a>
 
