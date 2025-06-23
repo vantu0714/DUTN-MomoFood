@@ -7,43 +7,49 @@
         <form method="POST" action="{{ route('admin.product_variants.store') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="product_id" value="{{ $product->id }}">
+            <input type="hidden" id="original_price" value="{{ $product->original_price }}">
 
             <div id="variants-container">
                 <div class="variant-item border p-3 mb-4">
                     <h5>Biến thể #1</h5>
 
-                    <div class="attribute-group mb-3">
-                        <label>Thuộc tính & Giá trị</label>
-                        <div class="row attribute-row mb-2">
-                            <div class="col-md-5">
-                                <input type="text" name="variants[0][attributes][0][name]" class="form-control"
-                                    placeholder="Tên thuộc tính ">
-                            </div>
-                            <div class="col-md-5">
-                                <input type="text" name="variants[0][attributes][0][value]" class="form-control"
-                                    placeholder="Giá trị ">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="button" class="btn btn-danger remove-attribute">Xoá</button>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-secondary add-attribute">+ Thêm thuộc tính</button>
+                    {{-- Thuộc tính chính --}}
+                    <div class="mb-3">
+                        <label>Thuộc tính chính (Vị)</label>
+                        <input type="text" name="variants[0][main_attribute][name]" value="Vị" class="form-control" readonly>
+                        <input type="text" name="variants[0][main_attribute][value]" class="form-control mt-2" placeholder="Nhập ví dụ: Cay">
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label>Giá</label>
-                            <input type="number" name="variants[0][price]" class="form-control" required>
+                    {{-- Lựa chọn phụ --}}
+                    <div class="sub-attributes-group mb-3">
+                        <label>Các lựa chọn (Size, Giá, Số lượng)</label>
+                        <div class="row sub-attribute-row mb-2">
+                            <div class="col-md-3">
+                                <select name="variants[0][sub_attributes][0][attribute_value_id]" class="form-select">
+                                    @foreach ($sizeValues as $size)
+                                        <option value="{{ $size->id }}">{{ $size->value }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" name="variants[0][sub_attributes][0][price]" class="form-control" placeholder="Giá">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" name="variants[0][sub_attributes][0][quantity]" class="form-control" placeholder="Số lượng">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-danger remove-sub-attribute">Xoá</button>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label>Số lượng</label>
-                            <input type="number" name="variants[0][quantity_in_stock]" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label>SKU</label>
-                            <input type="text" name="variants[0][sku]" class="form-control" required>
-                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary add-sub-attribute">+ Thêm lựa chọn</button>
                     </div>
+
+                    {{-- Ảnh --}}
+                    <div class="mb-3">
+                        <label>Ảnh biến thể</label>
+                        <input type="file" name="variants[0][image]" class="form-control">
+                    </div>
+
                     <button type="button" class="btn btn-danger remove-variant">Xoá biến thể</button>
                 </div>
             </div>
@@ -60,94 +66,93 @@
     <script>
         let variantIndex = 1;
 
-        // Gán sự kiện sau khi DOM sẵn sàng
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            const variantsContainer = document.getElementById('variants-container');
 
-            // Nút thêm biến thể
-            document.getElementById('add-variant').addEventListener('click', function() {
-                const container = document.getElementById('variants-container');
+            // Thêm biến thể mới
+            document.getElementById('add-variant').addEventListener('click', function () {
                 const template = document.querySelector('.variant-item');
                 const clone = template.cloneNode(true);
 
-                // Tăng chỉ số biến thể
                 clone.querySelector('h5').textContent = `Biến thể #${variantIndex + 1}`;
 
-                // Reset input & cập nhật name
-                const inputs = clone.querySelectorAll('input');
-                inputs.forEach(input => {
-                    input.value = '';
+                // Reset input/select values và cập nhật name
+                clone.querySelectorAll('input, select').forEach(el => {
+                    if (el.type !== 'file') el.value = '';
 
-                    let name = input.getAttribute('name');
-                    if (!name) return;
-
-                    // Lấy tên trường cuối cùng: price, quantity_in_stock, sku, attributes
-                    const fieldMatch = name.match(/\[(\w+)]$/);
-                    const field = fieldMatch ? fieldMatch[1] : '';
-
-                    // Nếu là attribute thì cần cả chỉ số attribute
-                    if (name.includes('[attributes]')) {
-                        name = `variants[${variantIndex}][attributes][0][${field}]`;
-                    } else {
-                        name = `variants[${variantIndex}][${field}]`;
+                    let name = el.getAttribute('name');
+                    if (name) {
+                        name = name.replace(/variants\[\d+]/, `variants[${variantIndex}]`);
+                        name = name.replace(/sub_attributes\[\d+]/g, 'sub_attributes[0]');
+                        el.setAttribute('name', name);
                     }
+                });
 
-                    input.setAttribute('name', name);
-                });;
+                // Xóa các dòng sub attribute trừ dòng đầu tiên
+                const subRows = clone.querySelectorAll('.sub-attribute-row');
+                for (let i = 1; i < subRows.length; i++) subRows[i].remove();
 
-
-                // Xoá các attribute-row trừ dòng đầu tiên
-                const attrRows = clone.querySelectorAll('.attribute-row');
-                for (let i = 1; i < attrRows.length; i++) {
-                    attrRows[i].remove();
-                }
-
-                container.appendChild(clone);
+                variantsContainer.appendChild(clone);
                 variantIndex++;
             });
 
-            // Sự kiện xoá biến thể
-            document.addEventListener('click', function(e) {
+            // Xử lý sự kiện động
+            document.addEventListener('click', function (e) {
+                // Xoá biến thể
                 if (e.target.classList.contains('remove-variant')) {
-                    const variants = document.querySelectorAll('.variant-item');
-                    if (variants.length > 1) {
-                        e.target.closest('.variant-item').remove();
-                    }
+                    const items = document.querySelectorAll('.variant-item');
+                    if (items.length > 1) e.target.closest('.variant-item').remove();
                 }
-            });
 
-            // Thêm thuộc tính
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('add-attribute')) {
+                // Thêm lựa chọn size
+                if (e.target.classList.contains('add-sub-attribute')) {
                     const variantItem = e.target.closest('.variant-item');
-                    const group = variantItem.querySelector('.attribute-group');
-                    const attrRows = group.querySelectorAll('.attribute-row');
-                    const lastAttr = attrRows[attrRows.length - 1];
-                    const newRow = lastAttr.cloneNode(true);
+                    const group = variantItem.querySelector('.sub-attributes-group');
+                    const rows = group.querySelectorAll('.sub-attribute-row');
+                    const lastRow = rows[rows.length - 1];
+                    const newRow = lastRow.cloneNode(true);
 
-                    // Tìm index biến thể
-                    const variantIdx = variantItem.querySelector('input[name^="variants["]').name.match(
-                        /variants\[(\d+)]/)[1];
-                    const attrIdx = attrRows.length;
+                    const variantIdx = variantItem.querySelector('input[name^="variants["]').name.match(/variants\[(\d+)]/)[1];
+                    const subIdx = rows.length;
 
-                    // Cập nhật name cho inputs trong row mới
-                    newRow.querySelectorAll('input').forEach((input, index) => {
-                        input.value = '';
-                        input.name =
-                            `variants[${variantIdx}][attributes][${attrIdx}][${index === 0 ? 'name' : 'value'}]`;
+                    const fields = ['attribute_value_id', 'price', 'quantity'];
+
+                    newRow.querySelectorAll('input, select').forEach((el, i) => {
+                        el.value = '';
+                        const field = fields[i];
+                        el.name = `variants[${variantIdx}][sub_attributes][${subIdx}][${field}]`;
                     });
 
                     group.insertBefore(newRow, e.target);
                 }
+
+                // Xoá lựa chọn size
+                if (e.target.classList.contains('remove-sub-attribute')) {
+                    const group = e.target.closest('.sub-attributes-group');
+                    const rows = group.querySelectorAll('.sub-attribute-row');
+                    if (rows.length > 1) {
+                        e.target.closest('.sub-attribute-row').remove();
+                    }
+                }
             });
 
-            // Xoá thuộc tính
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-attribute')) {
-                    const attrGroup = e.target.closest('.attribute-group');
-                    const rows = attrGroup.querySelectorAll('.attribute-row');
-                    if (rows.length > 1) {
-                        e.target.closest('.attribute-row').remove();
+            // Kiểm tra giá không thấp hơn giá gốc
+            document.querySelector('form').addEventListener('submit', function (e) {
+                const originalPrice = parseFloat(document.getElementById('original_price').value);
+                let valid = true;
+                let errorMsg = '';
+
+                document.querySelectorAll('input[name*="[price]"]').forEach(input => {
+                    const price = parseFloat(input.value);
+                    if (!isNaN(price) && price < originalPrice) {
+                        valid = false;
+                        errorMsg = 'Giá biến thể không được thấp hơn giá gốc: ' + originalPrice + '₫';
                     }
+                });
+
+                if (!valid) {
+                    e.preventDefault();
+                    alert(errorMsg);
                 }
             });
         });
