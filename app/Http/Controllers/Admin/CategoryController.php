@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -15,7 +16,7 @@ class CategoryController extends Controller
     }
     public function create()
     {
-        $categories = Category::all(); 
+        $categories = Category::all();
         return view('admin.categories.create', compact('categories'));
     }
 
@@ -71,13 +72,12 @@ class CategoryController extends Controller
 
         return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
     }
-    
+
     public function toggleStatus(Category $category)
     {
-        $category->status = !$category->status; 
+        $category->status = !$category->status;
         $category->save();
 
         return redirect()->route('categories.index')->with('success', 'Cập nhật trạng thái danh mục thành công!');
     }
-
 }

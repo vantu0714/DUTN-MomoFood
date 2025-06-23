@@ -151,11 +151,11 @@ class OrderController extends Controller
     public function edit(string $id)
     {
         //
-     $order = Order::with(['user', 'orderDetails.product', 'orderDetails.productVariant'])->findOrFail($id);
-    $customers = User::whereHas('role', fn ($q) => $q->where('name', 'user'))->get();
-    $products = Product::with('variants')->get();
+        $order = Order::with(['user', 'orderDetails.product', 'orderDetails.productVariant'])->findOrFail($id);
+        $customers = User::whereHas('role', fn($q) => $q->where('name', 'user'))->get();
+        $products = Product::with('variants')->get();
 
-    return view('admin.orders.edit', compact('order', 'customers', 'products'));
+        return view('admin.orders.edit', compact('order', 'customers', 'products'));
         // return view('admin.orders.edit', compact('order'));
     }
 
