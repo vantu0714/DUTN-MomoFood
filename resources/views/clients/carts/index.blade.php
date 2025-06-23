@@ -1,6 +1,6 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-
+  {{-- ForMatCode --}}
 <div class="main_content_iner overly_inner">
     <div class="container-fluid p-0">
         <div class="container-fluid page-header py-5">
@@ -35,58 +35,58 @@
                                 <th>Xử lý</th>
                             </tr>
                         </thead>
-                      <tbody>
-    @php $total = 0; @endphp
-    @forelse($carts as $item)
-        @php
-            $product = $item->product;
-            $variant = $item->productVariant;
-            $image = $product->image ?? 'clients/img/default.png';
-            $productName = $product->product_name ?? 'Không có tên';
-            $variantName = $variant->name ?? null;
-            $price = $item->discounted_price ?? 0;
-            $subTotal = $price * $item->quantity;
-            $total += $subTotal;
-        @endphp
-        <tr class="cart-item" data-id="{{ $item->id }}">
-            <td>
-                <img src="{{ asset('storage/' . $image) }}"
-                     class="img-fluid rounded-circle"
-                     style="width: 80px; height: 80px;" />
-            </td>
-            <td>
-                {{ $productName }}
-                @if ($variantName)
-                    <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
-                @endif
-            </td>
-            <td class="price" data-price="{{ $price }}">
-                {{ number_format($price, 0, ',', '.') }} đ
-            </td>
-            <td>
-                <div class="input-group justify-content-center" style="width: 120px;">
-                    <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrease">-</button>
-                    <input type="number" name="quantities[{{ $item->id }}]"
-                        class="form-control text-center quantity-input mx-1" min="1"
-                        value="{{ $item->quantity }}">
-                    <button type="button" class="btn btn-outline-secondary btn-sm quantity-increase">+</button>
-                </div>
-            </td>
-            <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
-            <td>
-                <a href="{{ route('carts.remove', $item->id) }}"
-                   class="btn btn-sm btn-danger"
-                   onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                    <i class="fa fa-times"></i>
-                </a>
-            </td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="6" class="text-center">Giỏ hàng trống</td>
-        </tr>
-    @endforelse
-</tbody>
+                        <tbody>
+                            @php $total = 0; @endphp
+                            @forelse($carts as $item)
+                                @php
+                                    $product = $item->product;
+                                    $variant = $item->productVariant;
+                                    $image = $product->image ?? 'clients/img/default.png';
+                                    $productName = $product->product_name ?? 'Không có tên';
+                                    $variantName = $variant->name ?? null;
+                                    $price = $item->discounted_price ?? 0;
+                                    $subTotal = $price * $item->quantity;
+                                    $total += $subTotal;
+                                @endphp
+                                <tr class="cart-item" data-id="{{ $item->id }}">
+                                    <td>
+                                        <img src="{{ asset('storage/' . $image) }}" class="img-fluid rounded-circle"
+                                            style="width: 80px; height: 80px;" />
+                                    </td>
+                                    <td>
+                                        {{ $productName }}
+                                        @if ($variantName)
+                                            <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
+                                        @endif
+                                    </td>
+                                    <td class="price" data-price="{{ $price }}">
+                                        {{ number_format($price, 0, ',', '.') }} đ
+                                    </td>
+                                    <td>
+                                        <div class="input-group justify-content-center" style="width: 120px;">
+                                            <button type="button"
+                                                class="btn btn-outline-secondary btn-sm quantity-decrease">-</button>
+                                            <input type="number" name="quantities[{{ $item->id }}]"
+                                                class="form-control text-center quantity-input mx-1" min="1"
+                                                value="{{ $item->quantity }}">
+                                            <button type="button"
+                                                class="btn btn-outline-secondary btn-sm quantity-increase">+</button>
+                                        </div>
+                                    </td>
+                                    <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
+                                    <td>
+                                        <a href="{{ route('carts.remove', $item->id) }}" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                            <i class="fa fa-times"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center">Giỏ hàng trống</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
 
                     </table>
                 </div>
@@ -123,7 +123,6 @@
                             }
                         }
                     }
-
                     $grandTotal = max(0, $total + $shipping - $discount);
                 @endphp
 
@@ -167,33 +166,33 @@
 
     </div>
 </div>
-
 @include('clients.layouts.footer')
 
 {{-- AJAX cập nhật số lượng --}}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const rows = document.querySelectorAll('.cart-item');
-
         function updateQuantityAjax(id, quantity, row) {
             fetch("{{ route('carts.updateAjax') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ id, quantity })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    row.querySelector('.sub-total').textContent = data.sub_total + ' đ';
-                    document.getElementById('total-price').textContent = data.total + ' đ';
-                    document.getElementById('grand-total').textContent = data.grand_total + ' đ';
-                }
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        id,
+                        quantity
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        row.querySelector('.sub-total').textContent = data.sub_total + ' đ';
+                        document.getElementById('total-price').textContent = data.total + ' đ';
+                        document.getElementById('grand-total').textContent = data.grand_total + ' đ';
+                    }
+                });
         }
-
         rows.forEach(row => {
             const input = row.querySelector('.quantity-input');
             const btnIncrease = row.querySelector('.quantity-increase');
@@ -206,7 +205,6 @@
                 input.value = quantity;
                 updateQuantityAjax(id, quantity, row);
             });
-
             btnDecrease.addEventListener('click', () => {
                 let quantity = parseInt(input.value) || 1;
                 if (quantity > 1) {
