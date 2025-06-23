@@ -156,18 +156,18 @@ class UserController extends Controller
     // }
 
     public function toggleStatus($id)
-{
-    $user = User::findOrFail($id);
+    {
+        $user = User::findOrFail($id);
 
-    if (Auth::id() == $user->id) {
+        if (Auth::id() == $user->id) {
+            return redirect()->route('users.index')
+                ->with('error', 'Bạn không thể khóa tài khoản đang đăng nhập.');
+        }
+
+        $user->status = $user->status ? 0 : 1;
+        $user->save();
+
         return redirect()->route('users.index')
-            ->with('error', 'Bạn không thể khóa tài khoản đang đăng nhập.');
+            ->with('success', 'Đã cập nhật trạng thái tài khoản.');
     }
-
-    $user->status = $user->status ? 0 : 1;
-    $user->save();
-
-    return redirect()->route('users.index')
-        ->with('success', 'Đã cập nhật trạng thái tài khoản.');
-}
 }
