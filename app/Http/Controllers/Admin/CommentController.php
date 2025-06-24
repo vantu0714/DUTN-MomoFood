@@ -13,7 +13,7 @@ class CommentController extends Controller
         $comments = Comment::with(['user', 'product'])->latest()->paginate(10);
         return view('admin.comments.index', compact('comments'));
     }
-
+ // comnet
     public function destroy($id)
     {
         $comment = Comment::findOrFail($id);
