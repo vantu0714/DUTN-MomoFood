@@ -22,7 +22,7 @@ class OrderController extends Controller
         $cart = Cart::with('items.product', 'items.productVariant')
             ->where('user_id', $userId)
             ->first();
-            
+
         $recipient = session()->get('recipient', [
             'recipient_name' => '',
             'recipient_phone' => '',
@@ -61,7 +61,7 @@ class OrderController extends Controller
         // Tính tổng tiền hàng
         $total = 0;
         foreach ($cartItems as $item) {
-            $total += $item['price'] * $item['quantity'];
+            $total += $item->discounted_price * $item->quantity;
         }
 
         $discount = 0;
