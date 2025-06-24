@@ -41,28 +41,23 @@ class CartClientController extends Controller
         $product = Product::findOrFail($productId);
         $variant = $variantId ? ProductVariant::find($variantId) : null;
 
-        // ✅ Tạo cart nếu chưa có
+        $stock = $variant ? $variant->quantity : $product->quantity;
+        if ($quantity > $stock) {
+            return back()->with('error', 'Số lượng vượt quá tồn kho.');
+        }
+
         $cart = Cart::firstOrCreate(
             ['user_id' => $userId],
             ['created_at' => now(), 'updated_at' => now()]
         );
 
-        // ✅ Tính giá
-        if ($variant) {
-            $originalPrice = $variant->original_price ?? $variant->price;
-            $discountedPrice = $variant->discounted_price ?? $originalPrice;
-        } else {
-            $originalPrice = $product->original_price ?? $product->price;
-            $discountedPrice = $product->discounted_price ?? $originalPrice;
-        }
+        $originalPrice = $variant ? ($variant->original_price ?? $variant->price) : ($product->original_price ?? $product->price);
+        $discountedPrice = $variant ? ($variant->discounted_price ?? $originalPrice) : ($product->discounted_price ?? $originalPrice);
 
-        // Nếu vẫn null thì báo lỗi
         if (is_null($originalPrice)) {
             return back()->with('error', 'Sản phẩm chưa có giá.');
         }
 
-
-        // ✅ Kiểm tra item đã tồn tại chưa
         $query = CartItem::where('cart_id', $cart->id)
             ->where('product_id', $productId);
 
@@ -75,6 +70,9 @@ class CartClientController extends Controller
         $existingItem = $query->first();
 
         if ($existingItem) {
+            if ($existingItem->quantity + $quantity > $stock) {
+                return back()->with('error', 'Không thể thêm quá số lượng tồn kho.');
+            }
             $existingItem->quantity += $quantity;
             $existingItem->total_price = $existingItem->discounted_price * $existingItem->quantity;
             $existingItem->save();
@@ -92,6 +90,7 @@ class CartClientController extends Controller
 
         return redirect()->route('carts.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
     }
+
 
 
     public function updateQuantity(Request $request, $id)
@@ -164,6 +163,17 @@ class CartClientController extends Controller
 
         if ($item) {
             $quantity = max(1, (int) $request->quantity);
+            $stock = $item->product_variant_id
+                ? $item->productVariant?->quantity
+                : $item->product?->quantity;
+
+            if ($quantity > $stock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vượt quá số lượng tồn kho: ' . $stock
+                ]);
+            }
+
             $item->quantity = $quantity;
             $item->total_price = $item->discounted_price * $quantity;
             $item->save();
@@ -174,9 +184,9 @@ class CartClientController extends Controller
             $grandTotal = $total + $shipping;
 
             return response()->json([
-                'success'     => true,
-                'sub_total'   => number_format($subTotal, 0, ',', '.'),
-                'total'       => number_format($total, 0, ',', '.'),
+                'success' => true,
+                'sub_total' => number_format($subTotal, 0, ',', '.'),
+                'total' => number_format($total, 0, ',', '.'),
                 'grand_total' => number_format($grandTotal, 0, ',', '.'),
             ]);
         }

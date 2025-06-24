@@ -35,8 +35,12 @@
                                 <th>Xử lý</th>
                             </tr>
                         </thead>
+                        @php $total = 0; @endphp
+
+                        {{-- VÙNG THÔNG BÁO LỖI AJAX --}}
+                        <div id="cart-error-alert" class="alert alert-danger text-center d-none"></div>
+
                         <tbody>
-                            @php $total = 0; @endphp
                             @forelse($carts as $item)
                                 @php
                                     $product = $item->product;
@@ -44,11 +48,12 @@
                                     $image = $product->image ?? 'clients/img/default.png';
                                     $productName = $product->product_name ?? 'Không có tên';
                                     $variantName = $variant->name ?? null;
+                                    $stock = $variant->quantity ?? ($product->quantity ?? 0);
                                     $price = $item->discounted_price ?? 0;
                                     $subTotal = $price * $item->quantity;
                                     $total += $subTotal;
                                 @endphp
-                                <tr class="cart-item" data-id="{{ $item->id }}">
+                                <tr class="cart-item" data-id="{{ $item->id }}" data-stock="{{ $stock }}">
                                     <td>
                                         <img src="{{ asset('storage/' . $image) }}" class="img-fluid rounded-circle"
                                             style="width: 80px; height: 80px;" />
@@ -58,6 +63,7 @@
                                         @if ($variantName)
                                             <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
                                         @endif
+                                        <br><small class="text-danger">Tồn kho: {{ $stock }}</small>
                                     </td>
                                     <td class="price" data-price="{{ $price }}">
                                         {{ number_format($price, 0, ',', '.') }} đ
@@ -87,6 +93,7 @@
                                 </tr>
                             @endforelse
                         </tbody>
+
 
                     </table>
                 </div>
@@ -167,13 +174,26 @@
     </div>
 </div>
 @include('clients.layouts.footer')
-
 {{-- AJAX cập nhật số lượng --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const rows = document.querySelectorAll('.cart-item');
+        const alertBox = document.getElementById('cart-error-alert');
 
-        function updateQuantityAjax(id, quantity, row) {
+        function showError(message) {
+            if (alertBox) {
+                alertBox.textContent = message;
+                alertBox.classList.remove('d-none');
+                alertBox.classList.add('d-block');
+
+                setTimeout(() => {
+                    alertBox.classList.add('d-none');
+                    alertBox.classList.remove('d-block');
+                }, 3000);
+            }
+        }
+
+        function updateQuantityAjax(id, quantity, row, input) {
             fetch("{{ route('carts.updateAjax') }}", {
                     method: 'POST',
                     headers: {
@@ -191,35 +211,59 @@
                         row.querySelector('.sub-total').textContent = data.sub_total + ' đ';
                         document.getElementById('total-price').textContent = data.total + ' đ';
                         document.getElementById('grand-total').textContent = data.grand_total + ' đ';
+                    } else {
+                        showError(data.message || 'Vượt quá số lượng sản phẩm còn trong kho.');
+                        if (input && input.dataset.oldValue) {
+                            input.value = input.dataset.oldValue;
+                        } else {
+                            location.reload();
+                        }
                     }
                 });
         }
+
         rows.forEach(row => {
             const input = row.querySelector('.quantity-input');
             const btnIncrease = row.querySelector('.quantity-increase');
             const btnDecrease = row.querySelector('.quantity-decrease');
             const id = row.dataset.id;
+            const stock = parseInt(row.dataset.stock) || 1;
+
+            input.dataset.oldValue = input.value;
 
             btnIncrease.addEventListener('click', () => {
                 let quantity = parseInt(input.value) || 1;
+                if (quantity >= stock) {
+                    showError('Không thể vượt quá số lượng tồn tồn kho: ' + stock);
+                    return;
+                }
+                input.dataset.oldValue = quantity;
                 quantity++;
                 input.value = quantity;
-                updateQuantityAjax(id, quantity, row);
+                updateQuantityAjax(id, quantity, row, input);
             });
+
             btnDecrease.addEventListener('click', () => {
                 let quantity = parseInt(input.value) || 1;
+                input.dataset.oldValue = quantity;
                 if (quantity > 1) {
                     quantity--;
                     input.value = quantity;
-                    updateQuantityAjax(id, quantity, row);
+                    updateQuantityAjax(id, quantity, row, input);
                 }
             });
 
             input.addEventListener('change', () => {
                 let quantity = parseInt(input.value) || 1;
                 if (quantity < 1) quantity = 1;
+                if (quantity > stock) {
+                    showError('Không thể vượt quá tồn kho: ' + stock);
+                    input.value = input.dataset.oldValue;
+                    return;
+                }
+                input.dataset.oldValue = quantity;
                 input.value = quantity;
-                updateQuantityAjax(id, quantity, row);
+                updateQuantityAjax(id, quantity, row, input);
             });
         });
     });
