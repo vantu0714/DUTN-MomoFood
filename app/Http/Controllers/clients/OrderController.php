@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Promotion;
@@ -16,7 +17,12 @@ class OrderController extends Controller
     public function index()
     {
 
-        $cart = session()->get('cart', []);
+        $userId = Auth::id();
+
+        $cart = Cart::with('items.product', 'items.productVariant')
+            ->where('user_id', $userId)
+            ->first();
+            
         $recipient = session()->get('recipient', [
             'recipient_name' => '',
             'recipient_phone' => '',
@@ -36,10 +42,14 @@ class OrderController extends Controller
             'payment_method' => 'required|in:cod,vnpay',
         ]);
 
-        $cartItems = session('cart', []);
-        if (empty($cartItems)) {
+        $userId = Auth::id();
+        $cart = Cart::with('items')->where('user_id', $userId)->first();
+
+        if (!$cart || $cart->items->isEmpty()) {
             return redirect()->back()->with('error', 'Giỏ hàng đang trống.');
         }
+
+        $cartItems = $cart->items;
 
         session()->put('recipient', $request->only([
             'recipient_name',
@@ -102,24 +112,17 @@ class OrderController extends Controller
             ]);
 
             foreach ($cartItems as $item) {
-                $productId = $item['product_id'] ?? null;
-                $variantId = $item['product_variant_id'] ?? null;
-
-                if (!$productId) {
-                    throw new \Exception("Thiếu product_id cho sản phẩm trong giỏ hàng.");
-                }
-
                 OrderDetail::create([
                     'order_id' => $order->id,
-                    'product_id' => $productId,
-                    'product_variant_id' => $variantId, // null nếu không có biến thể
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
+                    'product_id' => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->discounted_price,
                 ]);
             }
 
             DB::commit();
-            session()->forget('cart');
+            $cart->items()->delete(); // Xóa cart items
             session()->forget('promotion');
             session()->forget('discount');
 
