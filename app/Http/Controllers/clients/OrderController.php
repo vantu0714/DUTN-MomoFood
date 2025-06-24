@@ -61,7 +61,7 @@ class OrderController extends Controller
         // Tính tổng tiền hàng
         $total = 0;
         foreach ($cartItems as $item) {
-            $total += $item['price'] * $item['quantity'];
+            $total += $item->discounted_price * $item->quantity;
         }
 
         $discount = 0;
