@@ -93,7 +93,7 @@ class AuthController extends Controller
     public function logout()
     {
         Auth::logout();
-        return redirect('/');
+        return redirect()->route('login')->with('success', 'Đăng xuat thanh cong');
     }
 
     public function info()

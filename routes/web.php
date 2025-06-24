@@ -104,7 +104,7 @@ Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetRedirect'])->name('password.email');
 Route::get('/reset-password', [AuthController::class, 'showResetForm'])->name('password.reset');
@@ -163,7 +163,7 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
     });
 });
-Route::prefix('carts')->group(function () {
+Route::prefix('carts')->middleware(['client'])->group(function () {
     Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
     Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
 
