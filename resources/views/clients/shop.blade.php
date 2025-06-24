@@ -202,13 +202,11 @@
                                 <div class="col-md-6 col-lg-4 d-flex">
                                     <div class="product-card w-100 d-flex flex-column position-relative">
                                         <div class="product-image">
-                                            {{-- <a href="{{ route('product-detail.index', $product->id) }}"> --}}
                                             <a href="{{ route('product-detail.show', $product->id) }}">
                                                 <img src="{{ asset('storage/' . $product->image) }}"
                                                     onerror="this.onerror=null;this.src='{{ asset('clients/img/default.jpg') }}';"
                                                     class="img-fluid w-100 rounded-top"
                                                     alt="{{ $product->product_name }}">
-
                                             </a>
                                         </div>
 
