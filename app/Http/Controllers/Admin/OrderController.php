@@ -165,6 +165,25 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         //
+        DB::beginTransaction();
+
+        try {
+            // Cập nhật thông tin đơn hàng
+            $order->update([
+                'payment_status' => $request->payment_status,
+                'status' => $request->status,
+                'note' => $request->note,
+                'cancellation_reason' => $request->status == 6 ? $request->cancellation_reason : null
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('orders.index')->with('success', 'Cập nhật đơn hàng thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->withInput()->with('error', 'Cập nhật thất bại: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -173,5 +192,17 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         //
+        try {
+            DB::beginTransaction();
+
+            $order->orderDetails()->delete();
+            $order->delete();
+
+            DB::commit();
+            return redirect()->route('orders.index')->with('success', 'Xóa đơn hàng thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Xóa đơn hàng thất bại: ' . $e->getMessage());
+        }
     }
 }
