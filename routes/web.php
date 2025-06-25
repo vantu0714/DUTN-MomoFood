@@ -185,7 +185,7 @@ Route::middleware(['auth'])->group(function () {
 });
 //Combo
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('combo_items', \App\Http\Controllers\Admin\ComboItemController::class)->except(['show', 'edit', 'update']);
+    Route::resource('combo_items',ComboItemController::class)->except(['show', 'edit', 'update']);
     Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])->name('combo_items.delete_combo');
 });
 

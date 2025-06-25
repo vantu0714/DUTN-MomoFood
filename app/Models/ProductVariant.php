@@ -20,10 +20,6 @@ class ProductVariant extends Model
     {
         return $this->belongsTo(\App\Models\Product::class);
     }
-
-
-
-
     // Hiển thị giá có định dạng nếu cần dùng
     public function getFormattedPriceAttribute()
     {
@@ -60,5 +56,9 @@ class ProductVariant extends Model
     public function getFormattedFinalPriceAttribute()
     {
         return number_format($this->final_price, 0, ',', '.') . ' đ';
+    }
+    public function comboItems()
+    {
+        return $this->morphMany(ComboItem::class, 'itemable');
     }
 }
