@@ -162,28 +162,20 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Order $order)
+    public function update(Request $request, $id)
     {
         //
-        DB::beginTransaction();
+        $order = Order::findOrFail($id);
 
-        try {
-            // Cập nhật thông tin đơn hàng
-            $order->update([
-                'payment_status' => $request->payment_status,
-                'status' => $request->status,
-                'note' => $request->note,
-                'cancellation_reason' => $request->status == 6 ? $request->cancellation_reason : null
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('orders.index')->with('success', 'Cập nhật đơn hàng thành công!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return back()->withInput()->with('error', 'Cập nhật thất bại: ' . $e->getMessage());
-        }
+        $order->update([
+            'status' => $request->status,
+            'payment_status' => $request->payment_status,
+            'note' => $request->note,
+            'cancellation_reason' => $request->status == 6 ? $request->cancellation_reason : null,
+        ]);
+    
+        return redirect()->route('orders.index')->with('success', 'Cập nhật thành công');
+       
     }
 
     /**
