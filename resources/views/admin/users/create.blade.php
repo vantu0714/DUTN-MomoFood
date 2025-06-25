@@ -4,7 +4,7 @@
     <div class="container mt-4">
         <h2>Thêm người dùng mới</h2>
 
-        <form action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.users.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <div class="mb-3">
@@ -80,7 +80,7 @@
 
 
             <button type="submit" class="btn btn-success">Lưu</button>
-            <a href="{{ route('users.index') }}" class="btn btn-secondary">Huỷ</a>
+            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Huỷ</a>
         </form>
     </div>
 @endsection

@@ -4,7 +4,7 @@
     <div class="container mt-4">
         <h2 class="mb-4">Danh sách mã giảm giá</h2>
 
-        <a href="{{ route('promotions.create') }}" class="btn btn-primary mb-3">Thêm mã giảm giá</a>
+        <a href="{{ route('admin.promotions.create') }}" class="btn btn-primary mb-3">Thêm mã giảm giá</a>
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover table-striped">
@@ -36,10 +36,10 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('promotions.show', $promotion->id) }}" class="btn btn-info btn-sm">Xem</a>
-                                <a href="{{ route('promotions.edit', $promotion->id) }}"
+                                <a href="{{ route('admin.promotions.show', $promotion->id) }}" class="btn btn-info btn-sm">Xem</a>
+                                <a href="{{ route('admin.promotions.edit', $promotion->id) }}"
                                     class="btn btn-warning btn-sm">Sửa</a>
-                                <form action="{{ route('promotions.destroy', $promotion->id) }}" method="POST"
+                                <form action="{{ route('admin.promotions.destroy', $promotion->id) }}" method="POST"
                                     onsubmit="return confirm('Bạn có chắc chắn muốn xoá không?')">
                                     @csrf
                                     @method('DELETE')
