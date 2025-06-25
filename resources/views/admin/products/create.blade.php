@@ -8,7 +8,7 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <form id="product-form" action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
+        <form id="product-form" action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <div class="mb-3">
@@ -103,7 +103,7 @@
 
             <div class="mb-3">
                 <button type="submit" class="btn btn-success">Lưu sản phẩm</button>
-                <a href="{{ route('products.index') }}" class="btn btn-secondary">Huỷ</a>
+                <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">Huỷ</a>
             </div>
         </form>
     </div>
