@@ -49,11 +49,18 @@
 
                 <!-- Right side icons -->
                 <div class="d-flex align-items-center">
-                    <!-- Search -->
-                    <button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4"
-                        data-bs-toggle="modal" data-bs-target="#searchModal">
-                        <i class="fas fa-search text-primary"></i>
-                    </button>
+                    <!-- Search Form (Hiển thị trực tiếp) -->
+                    <form action="{{ route('clients.search') }}" method="GET" class="d-flex align-items-center me-4"
+                        style="max-width: 300px;">
+                        <div class="input-group">
+                            <input type="search" name="keyword" class="form-control border-secondary"
+                                placeholder="Tìm kiếm..." required>
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
 
                     <!-- Cart -->
                     <a href="{{ route('carts.index') }}" class="position-relative me-4 my-auto">
