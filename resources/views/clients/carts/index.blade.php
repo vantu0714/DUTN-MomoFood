@@ -73,7 +73,7 @@
                                         @if ($variantName)
                                             <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
                                         @endif
-                                        <br><small class="text-danger">Tồn kho: {{ $stock }}</small>
+                                        
                                     </td>
                                     <td class="price" data-price="{{ $price }}">
                                         {{ number_format($price, 0, ',', '.') }} đ

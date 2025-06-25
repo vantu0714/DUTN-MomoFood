@@ -13,14 +13,19 @@ class Comment extends Model
         'content',
         'rating'
     ];
-
+    // Liên kết đến người dùng
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
+    // Liên kết đến sản phẩm
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+    // Scope để lọc những bình luận có rating (testimonials)
+    public function scopeHasRating($query)
+    {
+        return $query->where('rating', '>', 0);
     }
 }
