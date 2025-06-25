@@ -120,12 +120,6 @@
                 <textarea name="note" id="note" class="form-control">{{ old('note') }}</textarea>
             </div>
 
-            {{-- Lý do hủy --}}
-            <div class="mb-3">
-                <label for="cancellation_reason" class="form-label">Lý do hủy đơn (nếu có)</label>
-                <input type="text" name="cancellation_reason" id="cancellation_reason" class="form-control" value="{{ old('cancellation_reason') }}">
-            </div>
-
             {{-- Submit --}}
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">Tạo đơn hàng</button>

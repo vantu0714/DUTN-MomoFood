@@ -172,7 +172,9 @@ Route::prefix('carts')->middleware(['client'])->group(function () {
     Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
 
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
-    Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+    // Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+    Route::post('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+
 
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
     Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
@@ -185,7 +187,7 @@ Route::middleware(['auth'])->group(function () {
 });
 //Combo
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('combo_items', \App\Http\Controllers\Admin\ComboItemController::class)->except(['show', 'edit', 'update']);
+    Route::resource('combo_items',ComboItemController::class)->except(['show', 'edit', 'update']);
     Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])->name('combo_items.delete_combo');
 });
 

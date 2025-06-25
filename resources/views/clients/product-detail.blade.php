@@ -59,7 +59,7 @@
                                     class="form-control text-center border-0 fw-bold" value="1" min="1">
                                 <button type="button" class="btn btn-outline-secondary btn-sm btn-plus">
                                     <i class="fa fa-plus"></i>
-</button>
+                                </button>
                             </div>
 
 
@@ -102,7 +102,7 @@
                                                 <small
                                                     class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
                                             </div>
-<div class="d-flex mb-2">
+                                            <div class="d-flex mb-2">
                                                 @php
                                                     $rate = is_numeric($comment->rating) ? (int) $comment->rating : 0;
                                                 @endphp
@@ -153,7 +153,7 @@
                                     <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
                                 </button>
                             </div>
-</form>
+                        </form>
                     @else
                         <p><a href="{{ route('login') }}">Đăng nhập</a> để gửi bình luận.</p>
                     @endif
@@ -216,7 +216,7 @@
             star.addEventListener('click', () => {
                 selectedRating = index + 1;
                 stars.forEach((s, i) => {
-s.classList.toggle('hovered', i < selectedRating);
+                    s.classList.toggle('hovered', i < selectedRating);
                 });
                 console.log('Đã chọn sao:', selectedRating);
             });

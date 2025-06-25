@@ -23,6 +23,16 @@
                 @endif
 
                 {{-- BẢNG GIỎ HÀNG --}}
+                @if (count($carts) > 0)
+                    <form action="{{ route('carts.clear') }}" method="POST"
+                        onsubmit="return confirm('Bạn có chắc muốn xóa tất cả sản phẩm trong giỏ hàng?')">
+                        @csrf
+                        <button type="submit" class="btn btn-danger mb-3">
+                            🗑️ Xóa tất cả
+                        </button>
+                    </form>
+                @endif
+
                 <div class="table-responsive">
                     <table class="table" id="cart-table">
                         <thead>
