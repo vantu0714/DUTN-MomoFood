@@ -59,7 +59,7 @@
                                     class="form-control text-center border-0 fw-bold" value="1" min="1">
                                 <button type="button" class="btn btn-outline-secondary btn-sm btn-plus">
                                     <i class="fa fa-plus"></i>
-</button>
+                                </button>
                             </div>
 
 
@@ -91,9 +91,10 @@
                                 @forelse($product->comments as $comment)
                                     <div class="d-flex mb-4 border rounded shadow-sm p-3 bg-white">
                                         <!-- Avatar người dùng -->
-                                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('img/avatar.jpg') }}"
-                                            class="img-fluid rounded-circle me-3" style="width: 80px; height: 80px;"
-                                            alt="Avatar người dùng">
+
+                                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                                            class="img-fluid rounded-circle me-3" style="width: 100px; height: 100px;"
+                                            alt="Avatar">
 
                                         <!-- Nội dung bình luận -->
                                         <div class="flex-grow-1">
@@ -102,14 +103,10 @@
                                                 <small
                                                     class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
                                             </div>
-<div class="d-flex mb-2">
-                                                @php
-                                                    $rate = is_numeric($comment->rating) ? (int) $comment->rating : 0;
-                                                @endphp
-
+                                            <div class="d-flex pe-5">
                                                 @for ($i = 1; $i <= 5; $i++)
                                                     <i
-                                                        class="fa fa-star {{ $i <= $rate ? 'text-warning' : 'text-secondary' }}"></i>
+                                                        class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
                                                 @endfor
                                             </div>
                                             <!-- Nội dung -->
@@ -153,7 +150,7 @@
                                     <i class="fa fa-paper-plane me-2"></i> Gửi Bình Luận
                                 </button>
                             </div>
-</form>
+                        </form>
                     @else
                         <p><a href="{{ route('login') }}">Đăng nhập</a> để gửi bình luận.</p>
                     @endif
@@ -216,7 +213,7 @@
             star.addEventListener('click', () => {
                 selectedRating = index + 1;
                 stars.forEach((s, i) => {
-s.classList.toggle('hovered', i < selectedRating);
+                    s.classList.toggle('hovered', i < selectedRating);
                 });
                 console.log('Đã chọn sao:', selectedRating);
             });
