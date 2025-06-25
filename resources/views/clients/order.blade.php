@@ -8,11 +8,9 @@
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
-
         @if (session('error'))
             <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
-
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -26,7 +24,6 @@
         {{-- FORM --}}
         <form action="{{ route('order.store') }}" method="POST">
             @csrf
-
             <div class="row g-4">
                 {{-- THÔNG TIN NGƯỜI NHẬN --}}
                 <div class="col-md-6">
@@ -63,10 +60,12 @@
                             <h5 class="card-title mb-4">Giỏ hàng</h5>
 
                             @php
-                                $cartItems = session('cart', []);
+                                $cartItems = $cart->items ?? [];
                                 $total = 0;
+
                                 foreach ($cartItems as $item) {
-                                    $total += $item['price'] * $item['quantity'];
+                                    $price = $item->discounted_price ?? $item->original_price ?? 0;
+                                    $total += $price * $item->quantity;
                                 }
 
                                 $shipping = old('shipping_fee', 30000);
@@ -88,9 +87,7 @@
                                 }
 
                                 $grandTotal = $total + $shipping - $discount;
-                                if ($grandTotal < 0) {
-                                    $grandTotal = 0;
-                                }
+                                if ($grandTotal < 0) $grandTotal = 0;
                             @endphp
 
                             {{-- DANH SÁCH SẢN PHẨM --}}
@@ -106,12 +103,16 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($cartItems as $item)
+                                        @php
+                                            $price = $item->discounted_price ?? $item->original_price ?? 0;
+                                            $itemTotal = $price * $item->quantity;
+                                        @endphp
                                         <tr>
-                                            <td>{{ $item['product_name'] ?? '---' }}</td>
-                                            <td>{{ $item['product_code'] ?? '---' }}</td>
-                                            <td>{{ $item['quantity'] }}</td>
-                                            <td>{{ number_format($item['price']) }}đ</td>
-                                            <td>{{ number_format($item['price'] * $item['quantity']) }}đ</td>
+                                            <td>{{ $item->product->product_name ?? '---' }}</td>
+                                            <td>{{ $item->product->product_code ?? '---' }}</td>
+                                            <td>{{ $item->quantity }}</td>
+                                            <td>{{ number_format($price) }}đ</td>
+                                            <td>{{ number_format($itemTotal) }}đ</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -121,40 +122,33 @@
                                 </tbody>
                             </table>
 
-                            {{-- TỔNG KẾT ĐƠN HÀNG --}}
+                            {{-- TỔNG KẾT --}}
                             <div class="mb-2">Tạm tính: <strong>{{ number_format($total) }}đ</strong></div>
                             <div class="mb-2">Phí vận chuyển: <strong>{{ number_format($shipping) }}đ</strong></div>
 
                             @if ($discount > 0)
                                 <div class="mb-2 text-success">
-                                    Giảm giá (<strong>{{ $promotionName }}</strong>):
-                                    <strong>-{{ number_format($discount) }}đ</strong>
+                                    Giảm giá (<strong>{{ $promotionName }}</strong>): <strong>-{{ number_format($discount) }}đ</strong>
                                 </div>
                             @else
-                                <div class="mb-2 text-muted">
-                                    Không có mã giảm giá
-                                </div>
+                                <div class="mb-2 text-muted">Không có mã giảm giá</div>
                             @endif
 
-                            {{-- Nếu có mã thì gửi sang controller --}}
                             @if ($promotionName && $promotionName !== 'Không có mã giảm giá')
                                 <input type="hidden" name="promotion" value="{{ $promotionName }}">
                             @endif
 
                             <div class="mb-3">
                                 <label class="form-label">Phí vận chuyển</label>
-                                <input type="number" name="shipping_fee" class="form-control" value="{{ $shipping }}"
-                                    required>
+                                <input type="number" name="shipping_fee" class="form-control" value="{{ $shipping }}" required>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Phương thức thanh toán</label>
                                 <select name="payment_method" class="form-select" required>
                                     <option value="">-- Chọn phương thức --</option>
-                                    <option value="cod" {{ old('payment_method') == 'cod' ? 'selected' : '' }}>Thanh
-                                        toán khi nhận hàng (COD)</option>
-                                    <option value="vnpay" {{ old('payment_method') == 'vnpay' ? 'selected' : '' }}>Thanh
-                                        toán qua VNPAY</option>
+                                    <option value="cod" {{ old('payment_method') == 'cod' ? 'selected' : '' }}>Thanh toán khi nhận hàng (COD)</option>
+                                    <option value="vnpay" {{ old('payment_method') == 'vnpay' ? 'selected' : '' }}>Thanh toán qua VNPAY</option>
                                 </select>
                             </div>
 

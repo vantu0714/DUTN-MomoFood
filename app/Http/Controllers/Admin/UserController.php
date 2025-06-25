@@ -160,6 +160,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         if (Auth::id() == $user->id) {
+            dd(Auth::id(), $id, $user);
             return redirect()->route('users.index')
                 ->with('error', 'Bạn không thể khóa tài khoản đang đăng nhập.');
         }
