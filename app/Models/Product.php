@@ -64,21 +64,19 @@ class Product extends Model
 
         return view('admin.products.index', compact('products', 'totalProducts'));
     }
-    public function orderItems()
-    {
-        return $this->hasMany(OrderDetail::class, 'combo_id');
-    }
+
     public function orderDetails()
     {
-        return $this->hasMany(OrderDetail::class, 'combo_id');
+        return $this->hasMany(OrderDetail::class, 'product_id');
     }
+
     public function comboItems()
     {
         return $this->hasMany(comboItem::class, 'combo_id');
     }
     public function cartItems()
     {
-        return $this->hasMany(CartItem::class); 
+        return $this->hasMany(CartItem::class);
     }
     protected static function booted()
     {
