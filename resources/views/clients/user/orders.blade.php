@@ -30,7 +30,8 @@
                                 <tr>
                                     <th>#Mã đơn</th>
                                     <th>Ngày đặt</th>
-                                    <th>Trạng thái</th>
+                                    <th>Trạng thái đơn hàng</th>
+                                    <th>Trạng thái thanh toán</th>
                                     <th>Tổng tiền</th>
                                     <th>Chi tiết</th>
                                 </tr>
@@ -41,6 +42,7 @@
                                         <td>#{{ $order->id }}</td>
                                         <td>{{ $order->created_at->format('d-m-Y') }}</td>
                                         <td>{{ $order->status }}</td>
+                                        <td>{{ $order->payment_status }}</td>
                                         <td>{{ number_format($order->total_price, 0, ',', '.') }}₫</td>
                                         <td>
                                             <a href="{{ route('clients.orderdetail', $order->id) }}"

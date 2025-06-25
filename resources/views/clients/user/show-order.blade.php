@@ -37,6 +37,7 @@
                                 <p><strong>Địa chỉ giao hàng:</strong>
                                     {{ $order->recipient_address ?? Auth::user()->address }}</p>
                                 <p><strong>SĐT:</strong> {{ $order->recipient_phone ?? Auth::user()->phone }}</p>
+                                <p><strong>Phí vận chuyển:</strong> {{ $order->shipping_fee }}</p>
                             </div>
                         </div>
 
