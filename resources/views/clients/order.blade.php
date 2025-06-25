@@ -139,11 +139,6 @@
                             @endif
 
                             <div class="mb-3">
-                                <label class="form-label">Phí vận chuyển</label>
-                                <input type="number" name="shipping_fee" class="form-control" value="{{ $shipping }}" required>
-                            </div>
-
-                            <div class="mb-3">
                                 <label class="form-label">Phương thức thanh toán</label>
                                 <select name="payment_method" class="form-select" required>
                                     <option value="">-- Chọn phương thức --</option>

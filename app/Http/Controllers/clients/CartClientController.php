@@ -246,4 +246,17 @@ class CartClientController extends Controller
         session()->forget(['promotion', 'discount', 'promotion_name']);
         return back()->with('success', 'Đã hủy mã giảm giá.');
     }
+
+    public function clear(Request $request)
+    {
+        $userId = Auth::id();
+
+        // Dùng session:
+        session()->forget('cart');
+
+        // Nếu giỏ hàng lưu trong database:
+        \App\Models\Cart::where('user_id', $userId)->delete();
+
+        return redirect()->back()->with('success', 'Đã xóa toàn bộ sản phẩm trong giỏ hàng.');
+    }
 }

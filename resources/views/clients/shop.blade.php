@@ -85,7 +85,6 @@
                                     </ul>
                                 </div>
                             </div>
-
                             <div class="col-lg-12">
                                 <div class="mb-3">
                                     <h4 class="mb-2">Giá</h4>
@@ -224,9 +223,25 @@
                                                 </p>
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                <p class="text-dark fs-5 fw-bold mb-0">
-                                                    {{ number_format($product->discounted_price, 0, ',', '.') }} VND
-                                                </p>
+                                                @if ($product->discounted_price && $product->discounted_price < $product->original_price)
+                                                    <div>
+                                                        <h5 class="fw-bold mb-0 text-dark">
+                                                            {{ number_format($product->discounted_price, 0, ',', '.') }}
+                                                            VND
+                                                        </h5>
+                                                        <h6 class="text-danger text-decoration-line-through mb-0">
+                                                            {{ number_format($product->original_price, 0, ',', '.') }}
+                                                            VND
+                                                        </h6>
+                                                    </div>
+                                                @elseif ($product->original_price)
+                                                    <h5 class="fw-bold mb-0 text-dark">
+                                                        {{ number_format($product->original_price, 0, ',', '.') }} VND
+                                                    </h5>
+                                                @else
+                                                    <h6 class="text-muted mb-0">Liên hệ để biết giá</h6>
+                                                @endif
+
                                                 <form action="{{ route('carts.add') }}" method="POST">
                                                     @csrf
                                                     <input type="hidden" name="product_id"
@@ -234,12 +249,11 @@
                                                     <button type="submit"
                                                         class="btn border border-secondary rounded-pill px-3 text-primary">
                                                         <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào
-                                                        giỏ
-                                                        hàng
+                                                        giỏ hàng
                                                     </button>
                                                 </form>
-
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>
