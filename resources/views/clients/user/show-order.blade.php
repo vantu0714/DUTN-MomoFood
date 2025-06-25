@@ -5,8 +5,8 @@
     <body style="margin-top: 200px;">
         <div class="container-xl px-4 mt-4" style="margin-top: 200px;">
             <nav class="nav nav-borders">
-                <a class="nav-link active ms-0" href="{{ route('clients.info') }}"target="__blank">Thông tin</a>
-                <a class="nav-link" href="{{ route('clients.changepassword') }}" target="__blank">Đổi
+                <a class="nav-link active ms-0" href="{{ route('clients.info') }}">Thông tin</a>
+                <a class="nav-link" href="{{ route('clients.changepassword') }}">Đổi
                     mật khẩu</a>
                 <a class="nav-link" href="{{ route('clients.orders') }}">Đơn hàng</a>
                 <a href="#" class="nav-link"
@@ -70,6 +70,26 @@
 
                         <div class="text-end mt-3">
                             <a href="{{ route('clients.orders') }}" class="btn btn-secondary">Quay lại</a>
+                            @if ($order->status === 'Chờ xử lý')
+                                <div class="mt-4">
+                                    <button class="btn btn-danger"
+                                        onclick="document.getElementById('cancel-form').classList.remove('d-none')">
+                                        Huỷ đơn hàng
+                                    </button>
+                                </div>
+
+                                <form id="cancel-form" class="mt-3 d-none" method="POST"
+                                    action="{{ route('clients.cancelOrder', $order->id) }}">
+                                    @csrf
+                                    <div class="mb-3">
+                                        <label for="cancel_reason" class="form-label">Lý do huỷ đơn hàng</label>
+                                        <textarea name="cancel_reason" id="cancel_reason" class="form-control" rows="3" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
+                                    <button type="button" class="btn btn-secondary"
+                                        onclick="document.getElementById('cancel-form').classList.add('d-none')">Đóng</button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 </div>
