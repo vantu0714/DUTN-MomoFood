@@ -172,7 +172,9 @@ Route::prefix('carts')->middleware(['client'])->group(function () {
     Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
 
     Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
-    Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+    // Route::get('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+    Route::post('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
+
 
     Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
     Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
