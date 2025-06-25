@@ -39,7 +39,7 @@ use App\Http\Controllers\clients\CommentController as ClientCommentController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 //shop
-Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
+// Route::get('/cua-hang', [ShopController::class, 'index'])->name('shop.index');
 //tin tức
 Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
 //lien he

@@ -1,6 +1,8 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-@vite('resources/css/shop.css')
+{{-- @vite('resources/css/shop.css') --}}
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
+
 
 <!-- Single Page Header start -->
 <div class="container-fluid page-header py-5">
@@ -90,12 +92,12 @@
 
                                 @forelse($product->comments as $comment)
                                     <div class="d-flex mb-4 border rounded shadow-sm p-3 bg-white">
-                                        <!-- Avatar người dùng -->
+                                        
                                         <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('img/avatar.jpg') }}"
                                             class="img-fluid rounded-circle me-3" style="width: 80px; height: 80px;"
                                             alt="Avatar người dùng">
 
-                                        <!-- Nội dung bình luận -->
+
                                         <div class="flex-grow-1">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <h5 class="mb-0">{{ $comment->user->name ?? 'Ẩn danh' }}</h5>
@@ -112,7 +114,7 @@
                                                         class="fa fa-star {{ $i <= $rate ? 'text-warning' : 'text-secondary' }}"></i>
                                                 @endfor
                                             </div>
-                                            <!-- Nội dung -->
+                                            
                                             <p class="mb-0 text-dark">{{ $comment->content }}</p>
                                         </div>
                                     </div>

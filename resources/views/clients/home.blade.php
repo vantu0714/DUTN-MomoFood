@@ -1,6 +1,7 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-@vite('resources/css/shop.css')
+{{-- @vite('resources/css/shop.css') --}}
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 
 <!-- Spinner Start -->
@@ -20,16 +21,17 @@
             </div>
 
             {{-- FORM SEARCH --}}
-           <form action="{{ route('clients.search') }}" method="GET">
-    <div class="modal-body d-flex align-items-center">
-        <div class="input-group w-75 mx-auto d-flex">
-            <input type="search" name="keyword" class="form-control p-3" placeholder="Tìm kiếm sản phẩm" required>
-            <button type="submit" class="input-group-text p-3 bg-primary text-white border-0">
-                <i class="fa fa-search"></i>
-            </button>
-        </div>
-    </div>
-</form>
+            <form action="{{ route('clients.search') }}" method="GET">
+                <div class="modal-body d-flex align-items-center">
+                    <div class="input-group w-75 mx-auto d-flex">
+                        <input type="search" name="keyword" class="form-control p-3" placeholder="Tìm kiếm sản phẩm"
+                            required>
+                        <button type="submit" class="input-group-text p-3 bg-primary text-white border-0">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
 
         </div>
     </div>
@@ -45,22 +47,17 @@
             <div class="col-md-12 col-lg-7">
                 <h4 class="mb-3 text-secondary">100% MomoFood</h4>
                 <h1 class="mb-5 display-3 text-primary">Shop bán đồ ăn vặt MomoFood</h1>
-               <form action="{{ route('clients.search') }}" method="GET">
-    <div class="position-relative mx-auto">
-        <input 
-            class="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" 
-            type="text" 
-            name="keyword" 
-            placeholder="Tìm kiếm sản phẩm..."
-            value="{{ request('keyword') }}"
-        >
-        <button type="submit"
-            class="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
-            style="top: 0; right: 25%;">
-            Tìm kiếm
-        </button>
-    </div>
-</form>
+                <form action="{{ route('clients.search') }}" method="GET">
+                    <div class="position-relative mx-auto">
+                        <input class="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" type="text"
+                            name="keyword" placeholder="Tìm kiếm sản phẩm..." value="{{ request('keyword') }}">
+                        <button type="submit"
+                            class="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
+                            style="top: 0; right: 25%;">
+                            Tìm kiếm
+                        </button>
+                    </div>
+                </form>
 
             </div>
             <div class="col-md-12 col-lg-5">
@@ -227,7 +224,7 @@
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
                                             {{-- <a href="{{ route('product-detail.index', $product->id) }}"> --}}
-                                                <a href="{{ route('product-detail.show', $product->id) }}">
+                                            <a href="{{ route('product-detail.show', $product->id) }}">
                                                 <div class="product-img-wrapper">
                                                     <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                                         onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
