@@ -12,11 +12,11 @@
                 <p class="text-muted mb-0">Cập nhật thông tin sản phẩm: {{ $product->product_name }}</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('products.index') }}" class="btn btn-outline-secondary btn-sm">
+                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i>
                     Quay lại
                 </a>
-                <a href="{{ route('products.show', $product->id) }}" class="btn btn-info btn-sm">
+                <a href="{{ route('admin.products.show', $product->id) }}" class="btn btn-info btn-sm">
                     <i class="fas fa-eye me-1"></i>
                     Xem chi tiết
                 </a>
@@ -83,7 +83,7 @@
         </div>
 
         <!-- Edit Form -->
-        <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             
@@ -320,7 +320,7 @@
                                     <i class="fas fa-save me-2"></i>
                                     Cập nhật sản phẩm
                                 </button>
-                                <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
+                                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
                                     <i class="fas fa-times me-2"></i>
                                     Hủy bỏ
                                 </a>

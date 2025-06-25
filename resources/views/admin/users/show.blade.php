@@ -264,7 +264,7 @@
                                     </div>
 
                                     <div class="action-buttons">
-                                        <a href="{{ route('users.index') }}" class="btn btn-light">
+                                        <a href="{{ route('admin.users.index') }}" class="btn btn-light">
                                             <i class="mdi mdi-arrow-left"></i>Quay lại
                                         </a>
                                     </div>

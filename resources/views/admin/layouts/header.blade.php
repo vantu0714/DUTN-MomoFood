@@ -51,7 +51,7 @@
         <div class="container-fluid g-0">
             <div class="row">
                 <div class="col-lg-12 p-0">
-                    <div class="header_iner d-flex justify-content-between align-items-center" >
+                    <div class="header_iner d-flex justify-content-between align-items-center">
                         <div class="sidebar_icon d-lg-none">
                             <i class="ti-menu"></i>
                         </div>
@@ -172,7 +172,8 @@
                                 </li>
                             </div>
                             <div class="profile_info">
-                                <img src="{{ Auth::check() && Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('path/to/default-avatar.png') }}" alt="avatar" width="100" style="border-radius: 50%;">
+                                <img src="{{ Auth::check() && Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('path/to/default-avatar.png') }}"
+                                    alt="avatar" width="100" style="border-radius: 50%;">
 
                                 <div class="profile_info_iner">
                                     <div class="profile_author_name">
@@ -181,7 +182,7 @@
 
                                     </div>
                                     <div class="profile_info_details">
-                                        <a href="{{ route('info') }}">Thông tin cá nhân </a>
+                                        <a href="{{ route('admin.info') }}">Thông tin cá nhân </a>
                                         <form id="logout-form" action="{{ route('logout') }}" method="POST"
                                             style="display: none;">
                                             @csrf

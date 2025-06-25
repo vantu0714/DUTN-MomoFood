@@ -16,7 +16,7 @@
             </div>
         @endif
 
-        <a href="{{ route('users.create') }}" class="btn btn-primary mb-3">Thêm người dùng</a>
+        <a href="{{ route('admin.users.create') }}" class="btn btn-primary mb-3">Thêm người dùng</a>
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover table-striped">
@@ -51,12 +51,12 @@
                             <td> {{ $user->created_at->format('d-m-Y') }}</td>
                             <td> {{ $user->updated_at->format('d-m-Y') }}</td>
                             <td>
-                                <a href="{{ route('users.edit', $user->id) }}" class="btn  btn-warning">Sửa</a>
+                                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn  btn-warning">Sửa</a>
 
-                                <a href="{{ route('users.show', $user->id) }}" class="btn  btn-info">Xem</a>
+                                <a href="{{ route('admin.users.show', $user->id) }}" class="btn  btn-info">Xem</a>
 
                                 {{-- <form id="delete-form-{{ $user->id }}"
-                                    action="{{ route('users.destroy', $user->id) }}" method="POST"
+                                    action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
