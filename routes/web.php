@@ -196,7 +196,8 @@ Route::get('/clients/edit', [AuthController::class, 'showEditProfile'])->name('c
 Route::post('/clients/edit', [AuthController::class, 'editProfile'])->name('clients.update');
 
 //vn-pay
-Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
+Route::get('/vnpay/payment/{order_id}', [VNPayController::class, 'create'])->name('vnpay.payment');
+
 Route::get('/vnpay-return', [VNPayController::class, 'return']);
 
 // product detail
