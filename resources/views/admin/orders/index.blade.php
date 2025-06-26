@@ -144,8 +144,8 @@
                                 </td>
                                 <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                                 <td>
-                                    <a href="{{ route('orders.show', $order->id) }}" class="btn btn-sm btn-primary">Xem</a>
-                                    <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                                    <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-primary">Xem</a>
+                                    <a href="{{ route('admin.orders.edit', $order->id) }}" class="btn btn-sm btn-warning">Sửa</a>
                                 </td>
                             </tr>
                             @endforeach

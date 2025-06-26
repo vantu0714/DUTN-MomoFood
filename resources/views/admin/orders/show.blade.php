@@ -110,7 +110,7 @@
 
         {{-- Quay lại --}}
         <div class="text-end">
-            <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Quay lại
             </a>
         </div>
