@@ -44,12 +44,16 @@
             <div class="col-lg-12">
                 <div class="row g-4">
                     <div class="col-xl-3">
-                        <div class="input-group w-100 mx-auto d-flex">
-                            <input type="search" class="form-control p-3" placeholder="Tìm kiếm"
+                        <form action="{{ route('clients.search') }}" method="GET" class="input-group w-100 mx-auto d-flex">
+                            <input type="search" class="form-control border-secondary" name="keyword" placeholder="Tìm kiếm sản phẩm"
                                 aria-describedby="search-icon-1">
-                            <span id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></span>
-                        </div>
+                            <button type="submit" id="search-icon-1" class="btn btn-outline-primary p-3"
+                                type="button">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </form>
                     </div>
+
                     <div class="col-6"></div>
                     <div class="col-xl-3">
                         <div class="bg-light ps-3 py-3 rounded d-flex justify-content-between mb-4">
