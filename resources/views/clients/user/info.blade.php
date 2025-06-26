@@ -1,11 +1,12 @@
 @extends('clients.layouts.app')
 
 @section('content')
+
     <body style="margin-top: 200px;">
         <div class="container-xl px-4 mt-4" style="margin-top: 200px;">
             <nav class="nav nav-borders">
-                <a class="nav-link active ms-0" href="{{ route('clients.info') }}"target="__blank">Thông tin</a>
-                <a class="nav-link" href="{{ route('clients.changepassword') }}" target="__blank">Đổi
+                <a class="nav-link active ms-0" href="{{ route('clients.info') }}">Thông tin</a>
+                <a class="nav-link" href="{{ route('clients.changepassword') }}">Đổi
                     mật khẩu</a>
                 <a class="nav-link" href="{{ route('clients.orders') }}">Đơn hàng</a>
                 <a href="#" class="nav-link"

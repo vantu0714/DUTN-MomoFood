@@ -5,8 +5,8 @@
     <body style="margin-top: 200px;">
         <div class="container-xl px-4 mt-4" style="margin-top: 200px;">
             <nav class="nav nav-borders">
-                <a class="nav-link active ms-0" href="{{ route('clients.info') }}"target="__blank">Thông tin</a>
-                <a class="nav-link" href="{{ route('clients.changepassword') }}" target="__blank">Đổi
+                <a class="nav-link active ms-0" href="{{ route('clients.info') }}">Thông tin</a>
+                <a class="nav-link" href="{{ route('clients.changepassword') }}">Đổi
                     mật khẩu</a>
                 <a class="nav-link" href="{{ route('clients.orders') }}">Đơn hàng</a>
                 <a href="#" class="nav-link"
@@ -32,6 +32,7 @@
                                     <th>Ngày đặt</th>
                                     <th>Trạng thái đơn hàng</th>
                                     <th>Trạng thái thanh toán</th>
+                                    <th>Phí vận chuyển</th>
                                     <th>Tổng tiền</th>
                                     <th>Chi tiết</th>
                                 </tr>
@@ -43,6 +44,7 @@
                                         <td>{{ $order->created_at->format('d-m-Y') }}</td>
                                         <td>{{ $order->status }}</td>
                                         <td>{{ $order->payment_status }}</td>
+                                        <td>{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</td>
                                         <td>{{ number_format($order->total_price, 0, ',', '.') }}₫</td>
                                         <td>
                                             <a href="{{ route('clients.orderdetail', $order->id) }}"
