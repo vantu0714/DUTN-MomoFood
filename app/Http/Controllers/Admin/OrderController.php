@@ -127,7 +127,7 @@ class OrderController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('orders.index')->with('success', 'Tạo đơn hàng thành công!');
+            return redirect()->route('admin.orders.index')->with('success', 'Tạo đơn hàng thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
@@ -174,7 +174,7 @@ class OrderController extends Controller
             'cancellation_reason' => $request->status == 6 ? $request->cancellation_reason : null,
         ]);
     
-        return redirect()->route('orders.index')->with('success', 'Cập nhật thành công');
+        return redirect()->route('admin.orders.index')->with('success', 'Cập nhật thành công');
        
     }
 
@@ -191,7 +191,7 @@ class OrderController extends Controller
             $order->delete();
 
             DB::commit();
-            return redirect()->route('orders.index')->with('success', 'Xóa đơn hàng thành công!');
+            return redirect()->route('admin.orders.index')->with('success', 'Xóa đơn hàng thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Xóa đơn hàng thất bại: ' . $e->getMessage());

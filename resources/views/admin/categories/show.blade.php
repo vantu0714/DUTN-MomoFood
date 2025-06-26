@@ -31,7 +31,7 @@
         </div>
 
         <div class="card-footer text-end">
-            <a href="{{ route('categories.index') }}" class="btn btn-outline-primary">
+            <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-primary">
                 <i class="bi bi-arrow-left"></i> Quay lại danh sách
             </a>
         </div>

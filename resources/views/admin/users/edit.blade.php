@@ -250,7 +250,7 @@
                     </div>
 
                     <div class="card-body p-4">
-                        <form action="{{ route('users.update', $user->id) }}" method="POST" enctype="multipart/form-data"
+                        <form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data"
                             class="row g-4">
                             @csrf
                             @method('PUT')
@@ -286,7 +286,7 @@
                                 </p>
 
                                 <div class="d-flex flex-column gap-3 w-100 mt-3">
-                                    <a href="{{ route('users.show', $user->id) }}" class="btn btn-light w-100">
+                                    <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-light w-100">
                                         <i class="ri-eye-line me-1"></i> Xem thông tin
                                     </a>
                                 </div>
@@ -411,7 +411,7 @@
 
                                     <div class="col-12">
                                         <div class="hstack gap-2 justify-content-end mt-3">
-                                            <a class="btn btn-light" href="{{ route('users.index') }}">
+                                            <a class="btn btn-light" href="{{ route('admin.users.index') }}">
                                                 <i class="ri-arrow-left-line align-bottom me-1"></i> Quay lại
                                             </a>
                                             <button type="submit" class="btn btn-primary">

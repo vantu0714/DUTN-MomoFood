@@ -1,6 +1,8 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-@vite('resources/css/shop.css')
+{{-- @vite('resources/css/shop.css') --}}
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
+
 
 <!-- Single Page Header start -->
 <div class="container-fluid page-header py-5">
@@ -101,11 +103,12 @@
                                                 <small
                                                     class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
                                             </div>
-                                           <div class="d-flex pe-5">
-                                    @for ($i = 1; $i <= 5; $i++)
-                                        <i class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
-                                    @endfor
-                                </div>
+                                            <div class="d-flex pe-5">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    <i
+                                                        class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
+                                                @endfor
+                                            </div>
                                             <!-- Nội dung -->
                                             <p class="mb-0 text-dark">{{ $comment->content }}</p>
                                         </div>

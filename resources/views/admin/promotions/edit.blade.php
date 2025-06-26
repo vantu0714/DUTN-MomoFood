@@ -14,7 +14,7 @@
             </div>
         @endif
 
-        <form action="{{ route('promotions.update', $promotion->id) }}" method="POST">
+        <form action="{{ route('admin.promotions.update', $promotion->id) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -82,7 +82,7 @@
             </div>
 
             <div class="d-flex justify-content-between">
-                <a href="{{ route('promotions.index') }}" class="btn btn-secondary">Quay lại</a>
+                <a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary">Quay lại</a>
                 <button type="submit" class="btn btn-primary">Cập nhật</button>
             </div>
         </form>

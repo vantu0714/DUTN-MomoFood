@@ -8,7 +8,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <a href="{{ route('categories.create') }}" class="btn btn-primary mb-3">
+    <a href="{{ route('admin.categories.create') }}" class="btn btn-primary mb-3">
         <i class="fas fa-plus"></i> Thêm danh mục
     </a>
 
@@ -38,9 +38,9 @@
                     <td>{{ $cat->created_at->format('d/m/Y') }}</td>
                     <td>{{ $cat->updated_at->format('d/m/Y') }}</td>
                     <td>
-                        <a href="{{ route('categories.show', $cat->id) }}" class="btn btn-sm btn-info">Xem</a>
-                        <a href="{{ route('categories.edit', $cat->id) }}" class="btn btn-sm btn-warning">Sửa</a>
-                        <form action="{{ route('categories.destroy', $cat->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa danh mục này?')">
+                        <a href="{{ route('admin.categories.show', $cat->id) }}" class="btn btn-sm btn-info">Xem</a>
+                        <a href="{{ route('admin.categories.edit', $cat->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                        <form action="{{ route('admin.categories.destroy', $cat->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa danh mục này?')">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger">Xóa</button>

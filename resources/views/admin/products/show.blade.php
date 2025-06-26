@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid px-4 py-4">
     <div class="mb-4">
-        <a href="{{ route('products.index') }}" class="btn btn-sm btn-secondary">
+        <a href="{{ route('admin.products.index') }}" class="btn btn-sm btn-secondary">
             <i class="fas fa-arrow-left me-1"></i> Quay lại
         </a>
     </div>
