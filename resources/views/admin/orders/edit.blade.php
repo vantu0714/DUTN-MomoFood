@@ -20,7 +20,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('orders.update', $order->id) }}" method="POST">
+                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -152,7 +152,7 @@
 
                     {{-- Nút hành động --}}
                     <div class="d-flex justify-content-end mt-4">
-                        <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary me-2">
+                        <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary me-2">
                             <i class="fas fa-arrow-left me-1"></i> Quay lại
                         </a>
                         <button type="submit" class="btn btn-primary">

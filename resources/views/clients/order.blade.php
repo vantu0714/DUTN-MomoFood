@@ -62,6 +62,7 @@
                             @php
                                 $cartItems = $cart->items ?? [];
                                 $total = 0;
+                                $shippingFee = 30000; // Phí vận chuyển mặc định 30,000đ
 
                                 foreach ($cartItems as $item) {
                                     $price = $item->discounted_price ?? $item->original_price ?? 0;
@@ -123,8 +124,11 @@
                             </table>
 
                             {{-- TỔNG KẾT --}}
-                            <div class="mb-2">Tạm tính: <strong>{{ number_format($total) }}đ</strong></div>
-                            <div class="mb-2">Phí vận chuyển: <strong>{{ number_format($shipping) }}đ</strong></div>
+                            <div class="mb-2">Tạm tính: <strong>{{ number_format($total) }}đ</strong>
+                            </div>
+                            <div class="mb-2"> Phí vận chuyển:<strong>{{ number_format($shippingFee) }}đ</strong>
+                                <input type="hidden" name="shipping_fee" value="{{ $shippingFee }}">
+                            </div>
 
                             @if ($discount > 0)
                                 <div class="mb-2 text-success">
