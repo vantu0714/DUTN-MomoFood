@@ -22,7 +22,7 @@ class OrderController extends Controller
         $cart = Cart::with('items.product', 'items.productVariant')
             ->where('user_id', $userId)
             ->first();
-            
+
         $recipient = session()->get('recipient', [
             'recipient_name' => '',
             'recipient_phone' => '',

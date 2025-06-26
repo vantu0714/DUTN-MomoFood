@@ -4,7 +4,7 @@
     <div class="container mt-4">
         <h2>Chỉnh sửa danh mục</h2>
 
-        <form action="{{ route('categories.update', $category->id) }}" method="POST">
+        <form action="{{ route('admin.categories.update', $category->id) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -38,7 +38,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary">Cập nhật</button>
-            <a href="{{ route('categories.index') }}" class="btn btn-secondary">Huỷ</a>
+            <a href="{{ route('admin.categories.index') }}" class="btn btn-secondary">Huỷ</a>
         </form>
     </div>
 @endsection

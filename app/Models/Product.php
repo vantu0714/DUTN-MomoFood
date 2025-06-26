@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // Import BelongsTo nếu chưa có
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Product extends Model
 {
@@ -19,14 +19,14 @@ class Product extends Model
         'expiration_date',
         'original_price',
         'discounted_price',
-        'status', // Cột này sẽ dùng để kiểm tra trạng thái "Còn hàng" / "Hết hàng"
+        'status',
         'view',
         'is_show_home',
         'category_id',
         'quantity',
         'product_type',
     ];
-    public function category(): BelongsTo // Khuyến nghị thêm kiểu trả về để code rõ ràng hơn
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
     }
@@ -40,7 +40,6 @@ class Product extends Model
      */
     public function getIsAvailableAttribute(): bool
     {
-        // Giả sử cột 'status' của bạn lưu chuỗi 'Còn hàng' hoặc 'Hết hàng'
         return $this->status === 'Còn hàng';
     }
 
@@ -65,17 +64,19 @@ class Product extends Model
 
         return view('admin.products.index', compact('products', 'totalProducts'));
     }
-    public function orderItems()
-    {
-        return $this->hasMany(OrderDetail::class,'combo_id');
-    }
+
     public function orderDetails()
     {
-        return $this->hasMany(OrderDetail::class,'combo_id');
+        return $this->hasMany(OrderDetail::class, 'product_id');
     }
+
     public function comboItems()
     {
         return $this->hasMany(comboItem::class, 'combo_id');
+    }
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
     }
     protected static function booted()
     {
@@ -93,7 +94,7 @@ class Product extends Model
         });
     }
     public function comments()
-{
-    return $this->hasMany(Comment::class);
-}
+    {
+        return $this->hasMany(Comment::class);
+    }
 }

@@ -30,6 +30,7 @@
                                 <p><strong>Trạng thái:</strong> {{ $order->status }}</p>
                                 <p><strong>Tổng tiền:</strong> {{ number_format($order->total_price, 0, ',', '.') }}₫</p>
                                 <p><strong>Thanh toán:</strong> {{ $order->payment_method ?? 'Chưa có' }}</p>
+                                <p><strong>Mã giảm giá:</strong> {{ $order->promotion ?? 'Không có' }}</p>
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Người nhận:</strong> {{ $order->recipient_name ?? Auth::user()->name }}</p>
