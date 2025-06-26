@@ -147,9 +147,9 @@ class VNPayController extends Controller
             return view('clients.vnpay_fail');
         }
 
-        $grandTotal = filter_var(trim($orderParts[6], '"'), FILTER_VALIDATE_FLOAT);
+        $grandTotal = trim($orderParts[6], '"');
         $recipient_name = $orderParts[1];
-        $recipient_phone = filter_var(trim($orderParts[2], '"'), FILTER_VALIDATE_INT);
+        $recipient_phone = trim($orderParts[2], '"');
         $recipient_address = $orderParts[3];
         $note = $orderParts[4] == 0 ? '' : $orderParts[4];
         $shipping_fee = $orderParts[5] ?? 0;

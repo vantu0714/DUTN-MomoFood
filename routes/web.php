@@ -2,9 +2,9 @@
 
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\InfoController;
-use App\Http\Controllers\clients\AuthController;
+use App\Http\Controllers\Clients\AuthController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\clients\HomeController;
+use App\Http\Controllers\Clients\HomeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ComboItemController;
@@ -20,7 +20,7 @@ use App\Http\Controllers\Clients\ContactsController;
 use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\VNPayController;
-use App\Http\Controllers\clients\CommentController as ClientCommentController;
+use App\Http\Controllers\Clients\CommentController as ClientCommentController;
 
 
 // ==================== PUBLIC ROUTES ====================
