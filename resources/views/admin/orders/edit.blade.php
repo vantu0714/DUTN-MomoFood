@@ -6,7 +6,8 @@
     <div class="container-fluid py-4">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Chỉnh sửa đơn hàng</h4>
+                <h4 class="mb-0">Chỉnh sửa đơn hàng #{{ $order->id }}</h4>
+                <h5 class="mb-0">Mã đơn hàng #{{ $order->order_code}}</h5>
             </div>
 
             <div class="card-body">
