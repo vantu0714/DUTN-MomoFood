@@ -23,6 +23,16 @@
                 @endif
 
                 {{-- BẢNG GIỎ HÀNG --}}
+                @if (count($carts) > 0)
+                    <form action="{{ route('carts.clear') }}" method="POST"
+                        onsubmit="return confirm('Bạn có chắc muốn xóa tất cả sản phẩm trong giỏ hàng?')">
+                        @csrf
+                        <button type="submit" class="btn btn-danger mb-3">
+                            🗑️ Xóa tất cả
+                        </button>
+                    </form>
+                @endif
+
                 <div class="table-responsive">
                     <table class="table" id="cart-table">
                         <thead>
@@ -63,7 +73,7 @@
                                         @if ($variantName)
                                             <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
                                         @endif
-                                        <br><small class="text-danger">Tồn kho: {{ $stock }}</small>
+                                        
                                     </td>
                                     <td class="price" data-price="{{ $price }}">
                                         {{ number_format($price, 0, ',', '.') }} đ

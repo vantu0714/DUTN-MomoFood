@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Models\CartItem;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -39,5 +42,9 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('cartCount', $cartCount);
         });
+         Relation::morphMap([
+        'product' => Product::class,
+        'variant' => ProductVariant::class,
+    ]);
     }
 }

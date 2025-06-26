@@ -14,7 +14,7 @@
             </div>
         @endif
 
-        <form action="{{ route('promotions.store') }}" method="POST">
+        <form action="{{ route('admin.promotions.store') }}" method="POST">
             @csrf
 
             <div class="mb-3">
@@ -70,7 +70,7 @@
             </div>
 
             <div class="d-flex justify-content-between">
-                <a href="{{ route('promotions.index') }}" class="btn btn-secondary">Quay lại</a>
+                <a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary">Quay lại</a>
                 <button type="submit" class="btn btn-success">Lưu mã giảm giá</button>
             </div>
         </form>

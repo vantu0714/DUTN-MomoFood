@@ -16,7 +16,7 @@
                     <i class="fas fa-download me-1"></i>
                     Xuất Excel
                 </button>
-                <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm shadow">
+                <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm shadow">
                     <i class="fas fa-plus me-1"></i>
                     Thêm sản phẩm
                 </a>
@@ -108,7 +108,7 @@
         <!-- Filter & Search Section -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
-                <form method="GET" action="{{ route('products.index') }}">
+                <form method="GET" action="{{ route('admin.products.index') }}">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Tìm kiếm sản phẩm</label>
@@ -288,19 +288,19 @@
                                     <td>
                                         <div class="d-flex justify-content-center gap-1">
                                             <!-- Nút xem -->
-                                            <a href="{{ route('products.show', $item->id) }}"
+                                            <a href="{{ route('admin.products.show', $item->id) }}"
                                                 class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip"
                                                 title="Xem chi tiết">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <!-- Nút sửa -->
-                                            <a href="{{ route('products.edit', $item->id) }}"
+                                            <a href="{{ route('admin.products.edit', $item->id) }}"
                                                 class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip"
                                                 title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <!-- Form xóa đơn giản -->
-                                            <form action="{{ route('products.destroy', $item->id) }}" method="POST"
+                                            <form action="{{ route('admin.products.destroy', $item->id) }}" method="POST"
                                                 class="d-inline"
                                                 onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm \'{{ $item->product_name }}\'?\n\nHành động này không thể hoàn tác!')">
                                                 @csrf

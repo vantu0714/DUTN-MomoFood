@@ -1,85 +1,88 @@
-@php $disableMapScript = true; @endphp
 @extends('admin.layouts.app')
 
 @section('content')
     <div class="container">
-        <h2>Danh sách thành phần Combo</h2>
-        <a href="{{ route('admin.combo_items.create') }}" class="btn btn-success mb-3">Thêm Combo</a>
-
-        @php
-            // Nhóm các thành phần theo combo_id
-            $grouped = $comboItems->groupBy('combo_id');
-        @endphp
-
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr class="table-secondary">
-                    <th>Combo</th>
-                    <th>Thành phần</th>
-                    <th>Loại</th>
-                    <th>Số lượng</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($grouped as $comboId => $items)
-                    {{-- Dòng tiêu đề của Combo --}}
-                    <tr class="table-primary">
-                        <td colspan="4">
-                            <strong>Combo:</strong> {{ $items->first()->combo->product_name ?? 'Không rõ' }}
-                        </td>
-                        <td>
-                            <form action="{{ route('admin.combo_items.delete_combo', $comboId) }}" method="POST"
-                                onsubmit="return confirm('Bạn có chắc chắn muốn xoá toàn bộ combo này?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">Xoá Combo</button>
-                            </form>
-                        </td>
-                    </tr>
-
-
-                    {{-- Các thành phần bên trong Combo --}}
-                    @foreach ($items as $item)
-                        <tr>
-                            <td></td> {{-- Cột Combo để trống vì đã hiển thị phía trên --}}
-                            <td>
-                                @if ($item->itemable_type === \App\Models\Product::class)
-                                    {{ $item->itemable->product_name ?? 'Không rõ' }}
-                                @elseif ($item->itemable_type === \App\Models\ProductVariant::class)
-                                    {{ $item->itemable->product->product_name ?? 'Không rõ' }} -
-                                    @foreach ($item->itemable->attributeValues as $val)
-                                        {{ $val->value }}{{ !$loop->last ? ', ' : '' }}
-                                    @endforeach
-                                @else
-                                    Không rõ
-                                @endif
-                            </td>
-                            <td>
-                                {{ class_basename($item->itemable_type) === 'Product' ? 'Sản phẩm' : 'Biến thể' }}
-                            </td>
-                            <td>{{ $item->quantity }}</td>
-                            <td>
-                                <form action="{{ route('admin.combo_items.destroy', $item->id) }}" method="POST"
-                                    style="display:inline-block;" onsubmit="return confirm('Bạn chắc chắn muốn xoá?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Xoá</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                @empty
-                    <tr>
-                        <td colspan="5">Không có thành phần combo nào.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-
-        {{-- Hiển thị phân trang nếu có --}}
-        <div class="mt-3">
-            {{ $comboItems->links() }}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Danh sách thành phần Combo</h2>
+            <a href="{{ route('admin.combo_items.create') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Thêm Combo
+            </a>
         </div>
+
+        @forelse ($grouped as $comboId => $items)
+            @php
+                $combo = $items->first()->combo;
+            @endphp
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Combo:</strong> {{ $combo->product_name ?? 'Không rõ' }}
+                    </div>
+                    <div>
+                        <a href="{{ route('admin.combo_items.create', ['combo_id' => $comboId]) }}"
+                            class="btn btn-warning btn-sm me-2">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <form action="{{ route('admin.combo_items.delete_combo', $comboId) }}" method="POST"
+                            class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xoá combo này?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i> Xoá
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <p class="mb-2 text-muted">
+                        <strong>Giá gốc:</strong>
+                        <span class="text-decoration-line-through">
+                            {{ number_format($combo->original_price ?? 0) }} đ
+                        </span>
+                        &nbsp;&nbsp;
+                        <strong>Giá bán:</strong>
+                        <span class="text-success fw-bold">
+                            {{ number_format($combo->discounted_price ?? 0) }} đ
+                        </span>
+                    </p>
+
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>STT</th>
+                                <th>Thành phần</th>
+                                <th>Loại</th>
+                                <th>Số lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            @foreach ($items as $index => $item)
+                                @php
+                                    $typeLabel =
+                                        class_basename($item->itemable_type) === 'Product'
+                                            ? 'Sản phẩm đơn'
+                                            : 'Biến thể';
+                                    $name = $item->itemable->product_name ?? ($item->itemable->name ?? 'Không rõ');
+                                @endphp
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $name }}</td>
+                                    <td>{{ $typeLabel }}</td>
+                                    <td>{{ $item->quantity }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @empty
+            <div class="alert alert-info">
+                Hiện chưa có thành phần nào trong combo.
+            </div>
+        @endforelse
     </div>
 @endsection

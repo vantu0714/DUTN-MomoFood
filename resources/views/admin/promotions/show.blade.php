@@ -90,8 +90,8 @@
             </div>
 
             <div class="card-footer text-end">
-                <a href="{{ route('promotions.index') }}" class="btn btn-secondary">Quay về danh sách</a>
-                <a href="{{ route('promotions.edit', $promotion->id) }}" class="btn btn-warning">Sửa</a>
+                <a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary">Quay về danh sách</a>
+                <a href="{{ route('admin.promotions.edit', $promotion->id) }}" class="btn btn-warning">Sửa</a>
             </div>
         </div>
     </div>

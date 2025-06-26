@@ -703,103 +703,51 @@
 </div>
 <!-- Fact Start -->
 
-
-<!-- Tastimonial Start -->
+<!-- Testimonial Start -->
 <div class="container-fluid testimonial py-5">
     <div class="container py-5">
-        <div class="testimonial-header text-center">
-            <h4 class="text-primary">Our Testimonial</h4>
-            <h1 class="display-5 mb-5 text-dark">Our Client Saying!</h1>
+        <div class="testimonial-header text-center mb-5">
+            <h4 class="text-primary">Đánh giá từ khách hàng</h4>
+            <h1 class="display-5 text-dark">Khách hàng nói gì về chúng tôi</h1>
         </div>
         <div class="owl-carousel testimonial-carousel">
-            <div class="testimonial-item img-border-radius bg-light rounded p-4">
-                <div class="position-relative">
-                    <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
-                        style="bottom: 30px; right: 0;"></i>
-                    <div class="mb-4 pb-4 border-bottom border-secondary">
-                        <p class="mb-0">Lorem Ipsum is simply dummy text of the printing Ipsum has been the
-                            industry's standard dummy text ever since the 1500s,
-                        </p>
-                    </div>
-                    <div class="d-flex align-items-center flex-nowrap">
-                        <div class="bg-secondary rounded">
 
-                            <img src="{{ asset('clients/img/testimonial-1.jpg') }}" class="img-fluid rounded"
-                                style="width: 100px; height: 100px;" alt="">
+            @foreach ($product->comments as $comment)
+                <div class="testimonial-item img-border-radius bg-light rounded p-4">
+                    <div class="position-relative">
+                        <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
+                           style="bottom: 30px; right: 0;"></i>
+
+                        <div class="mb-4 pb-4 border-bottom border-secondary">
+                            <p class="mb-0 text-dark">{{ $comment->content }}</p>
                         </div>
-                        <div class="ms-4 d-block">
-                            <h4 class="text-dark">Client Name</h4>
-                            <p class="m-0 pb-3">Profession</p>
-                            <div class="d-flex pe-5">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
+
+                        <div class="d-flex align-items-center flex-nowrap">
+                            <div class="bg-secondary rounded">
+                                <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                                     class="img-fluid rounded"
+                                     style="width: 100px; height: 100px;" alt="Avatar">
+                            </div>
+
+                            <div class="ms-4 d-block">
+                                <h5 class="text-dark mb-1">{{ $comment->user->name ?? 'Ẩn danh' }}</h5>
+                                <p class="text-muted mb-2">{{ $comment->user->profession ?? 'Khách hàng' }}</p>
+
+                                <div class="d-flex pe-5">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
+                                    @endfor
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="testimonial-item img-border-radius bg-light rounded p-4">
-                <div class="position-relative">
-                    <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
-                        style="bottom: 30px; right: 0;"></i>
-                    <div class="mb-4 pb-4 border-bottom border-secondary">
-                        <p class="mb-0">Lorem Ipsum is simply dummy text of the printing Ipsum has been the
-                            industry's standard dummy text ever since the 1500s,
-                        </p>
-                    </div>
-                    <div class="d-flex align-items-center flex-nowrap">
-                        <div class="bg-secondary rounded">
-                            <img src="{{ asset('clients/img/testimonial-1.jpg') }}" class="img-fluid rounded"
-                                style="width: 100px; height: 100px;" alt="">
-                        </div>
-                        <div class="ms-4 d-block">
-                            <h4 class="text-dark">Client Name</h4>
-                            <p class="m-0 pb-3">Profession</p>
-                            <div class="d-flex pe-5">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="testimonial-item img-border-radius bg-light rounded p-4">
-                <div class="position-relative">
-                    <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
-                        style="bottom: 30px; right: 0;"></i>
-                    <div class="mb-4 pb-4 border-bottom border-secondary">
-                        <p class="mb-0">Lorem Ipsum is simply dummy text of the printing Ipsum has been the
-                            industry's standard dummy text ever since the 1500s,
-                        </p>
-                    </div>
-                    <div class="d-flex align-items-center flex-nowrap">
-                        <div class="bg-secondary rounded">
-                            <img src="img/testimonial-1.jpg" class="img-fluid rounded"
-                                style="width: 100px; height: 100px;" alt="">
-                        </div>
-                        <div class="ms-4 d-block">
-                            <h4 class="text-dark">Client Name</h4>
-                            <p class="m-0 pb-3">Profession</p>
-                            <div class="d-flex pe-5">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @endforeach
+
         </div>
     </div>
 </div>
-<!-- Tastimonial End -->
+<!-- Testimonial End -->
+
 
 @include('clients.layouts.footer')

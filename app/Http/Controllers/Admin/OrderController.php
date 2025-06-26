@@ -162,9 +162,20 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Order $order)
+    public function update(Request $request, $id)
     {
         //
+        $order = Order::findOrFail($id);
+
+        $order->update([
+            'status' => $request->status,
+            'payment_status' => $request->payment_status,
+            'note' => $request->note,
+            'cancellation_reason' => $request->status == 6 ? $request->cancellation_reason : null,
+        ]);
+    
+        return redirect()->route('orders.index')->with('success', 'Cập nhật thành công');
+       
     }
 
     /**
@@ -173,5 +184,17 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         //
+        try {
+            DB::beginTransaction();
+
+            $order->orderDetails()->delete();
+            $order->delete();
+
+            DB::commit();
+            return redirect()->route('orders.index')->with('success', 'Xóa đơn hàng thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Xóa đơn hàng thất bại: ' . $e->getMessage());
+        }
     }
 }
