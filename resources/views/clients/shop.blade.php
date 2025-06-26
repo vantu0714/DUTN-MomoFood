@@ -1,6 +1,8 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-@vite('resources/css/shop.css')
+{{-- @vite('resources/css/shop.css') --}}
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
+
 
 
 <!-- Modal Search Start -->
@@ -70,31 +72,87 @@
                             <div class="col-lg-12">
                                 <div class="mb-3">
                                     <h4>Danh mục sản phẩm</h4>
-                                    <ul class="list-unstyled fruite-categorie">
-                                        @foreach ($categories as $category)
+                                    <ul class="list-unstyled fruite-categorie">                        
+                                        @foreach ($categories as $categoryItem)
                                             <li>
                                                 <div class="d-flex justify-content-between fruite-name">
-                                                    <a href="{{ route('shop.category', $category->id) }}">
+                                                    <a
+                                                        href="{{ route('shop.category', ['id' => $categoryItem->id]) }}
+                                                        {{ request()->has('min_price') || request()->has('max_price') ? '?min_price=' . request('min_price') . '&max_price=' . request('max_price') : '' }}">
                                                         <i
-                                                            class="fas fa-apple-alt me-2"></i>{{ $category->category_name }}
+                                                            class="fas fa-apple-alt me-2"></i>{{ $categoryItem->category_name }}
                                                     </a>
-                                                    <span>({{ $category->products_count ?? 0 }})</span>
+                                                    <span>({{ $categoryItem->products_count ?? 0 }})</span>
                                                 </div>
                                             </li>
                                         @endforeach
+
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-lg-12">
-                                <div class="mb-3">
-                                    <h4 class="mb-2">Giá</h4>
-                                    <input type="range" class="form-range w-100" id="rangeInput" name="rangeInput"
-                                        min="0" max="500" value="0"
-                                        oninput="amount.value=rangeInput.value">
-                                    <output id="amount" name="amount" min-velue="0" max-value="500"
-                                        for="rangeInput">0</output>
-                                </div>
+                                <form
+                                    action="{{ isset($category) ? route('shop.category', ['id' => $category->id]) : route('shop.index') }}"
+                                    method="GET" class="p-3 bg-light rounded shadow-sm">
+                                    @if (isset($category))
+                                        <input type="hidden" name="category_id" value="{{ $category->id }}">
+                                    @endif
+
+                                    <h5 class="mb-3 fw-bold">Lọc theo giá</h5>
+
+                                    {{-- Radio lọc nhanh --}}
+                                    <div class="mb-3">
+                                        @php
+                                            $ranges = [
+                                                '0-50000' => 'Dưới 50k',
+                                                '50000-200000' => '50k - 200k',
+                                                '200000-500000' => '200k - 500k',
+                                                '500000-1000000' => '500k - 1 triệu',
+                                            ];
+                                        @endphp
+
+                                        @foreach ($ranges as $value => $label)
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="price_range"
+                                                    value="{{ $value }}" id="range{{ $loop->index }}"
+                                                    {{ request('price_range') == $value ? 'checked' : '' }}>
+                                                <label class="form-check-label"
+                                                    for="range{{ $loop->index }}">{{ $label }}</label>
+                                            </div>
+                                        @endforeach
+
+                                        {{-- Lựa chọn tùy chỉnh --}}
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="radio" name="price_range"
+                                                value="custom" id="rangeCustom"
+                                                {{ request('price_range') == 'custom' ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="rangeCustom">Tùy chọn</label>
+                                        </div>
+                                    </div>
+
+                                    {{-- Nếu chọn tùy chỉnh thì cho nhập min-max --}}
+                                    <div class="row g-2 mb-3" id="customPriceInputs"
+                                        style="{{ request('price_range') == 'custom' ? '' : 'display:none;' }}">
+                                        <div class="col-6">
+                                            <input type="number" name="min_price" class="form-control form-control-sm"
+                                                placeholder="Giá từ" value="{{ request('min_price') }}">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" name="max_price"
+                                                class="form-control form-control-sm" placeholder="Giá đến"
+                                                value="{{ request('max_price') }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-success btn-sm rounded-pill">
+                                            <i class="fas fa-filter me-1"></i> Lọc
+                                        </button>
+                                    </div>
+                                </form>
+
                             </div>
+
                             <div class="col-lg-12">
                                 <div class="mb-3">
                                     <h4>Thêm vào</h4>
@@ -268,5 +326,42 @@
         </div>
     </div>
     <!-- Fruits Shop End-->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rangeInput = document.getElementById('rangeInput');
+            const output = document.getElementById('amount');
+
+            function formatCurrency(value) {
+                return parseInt(value).toLocaleString('vi-VN') + ' đ';
+            }
+
+            rangeInput.addEventListener('input', function() {
+                output.textContent = formatCurrency(this.value);
+            });
+
+            // Gọi lần đầu khi tải trang
+            output.textContent = formatCurrency(rangeInput.value);
+
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const radios = document.querySelectorAll('input[name="price_range"]');
+                const customInputs = document.getElementById('customPriceInputs');
+
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'custom') {
+                            customInputs.style.display = '';
+                        } else {
+                            customInputs.style.display = 'none';
+                            // Clear giá trị nếu không chọn tùy chỉnh
+                            document.querySelector('input[name="min_price"]').value = '';
+                            document.querySelector('input[name="max_price"]').value = '';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 
     @include('clients.layouts.footer')

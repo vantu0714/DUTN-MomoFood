@@ -251,3 +251,17 @@
     font-size: 1.5rem;
     line-height: 1;
 }
+
+/* lọc giá */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    appearance: textfield;
+    padding: 6px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+}
