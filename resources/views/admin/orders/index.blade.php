@@ -108,7 +108,7 @@
                             @foreach($orders as $order)
                             <tr>
                                 <td>{{ $order->id }}</td>
-                                <td>ORD{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ $order->order_code }}</td>
                                 <td>
                                     {{ $order->user->name ?? 'Khách vãng lai' }}<br>
                                     {{ $order->user->email ?? '' }}<br>

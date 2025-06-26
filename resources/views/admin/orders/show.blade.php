@@ -2,7 +2,8 @@
 
 @section('content')
     <div class="container-fluid my-4">
-        <h3 class="mb-4 text-center text-primary">Chi tiết đơn hàng #{{ $order->id }}</h3>
+        <h3 class="text-center text-primary">Chi tiết đơn hàng #{{ $order->id }}</h3>
+        <h5 class="text-center">{{ $order->order_code}}</h5>
 
         {{-- Người nhận --}}
         <div class="card mb-4 shadow-sm rounded">
