@@ -2,7 +2,8 @@
 
 @section('content')
     <div class="container-fluid my-4">
-        <h3 class="mb-4 text-center text-primary">Chi tiết đơn hàng #{{ $order->id }}</h3>
+        <h3 class="text-center text-primary">Chi tiết đơn hàng #{{ $order->id }}</h3>
+        <h5 class="text-center">{{ $order->order_code}}</h5>
 
         {{-- Người nhận --}}
         <div class="card mb-4 shadow-sm rounded">
@@ -110,7 +111,7 @@
 
         {{-- Quay lại --}}
         <div class="text-end">
-            <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Quay lại
             </a>
         </div>

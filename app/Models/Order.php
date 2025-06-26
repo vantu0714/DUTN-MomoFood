@@ -10,6 +10,7 @@ class Order extends Model
     use HasFactory;
     // app/Models/Order.php
     protected $fillable = [
+        'order_code',
         'user_id',
         'recipient_name',
         'recipient_phone',
@@ -25,14 +26,34 @@ class Order extends Model
     ];
 
     public function user()
-{
-    return $this->belongsTo(User::class);
-}
+    {
+        return $this->belongsTo(User::class);
+    }
 
-public function orderDetails()
-{
-    return $this->hasMany(OrderDetail::class);
-}
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
+    protected static function boot()
+    {
+        parent::boot();
 
+        static::creating(function ($order) {
+            $order->order_code = self::generateOrderCode();
+        });
+    }
 
+    public static function generateOrderCode()
+    {
+        $prefix = 'MOMO'; // Tiền tố cho mã đơn hàng
+        $datePart = now()->format('Ymd'); // Ngày tháng năm (ví dụ: 20230626)
+        $randomPart = strtoupper(substr(uniqid(), -5)); // 5 ký tự ngẫu nhiên
+
+        do {
+            $code = $prefix . $datePart . $randomPart;
+            $randomPart = strtoupper(substr(uniqid(), -5));
+        } while (self::where('order_code', $code)->exists());
+
+        return $code;
+    }
 }

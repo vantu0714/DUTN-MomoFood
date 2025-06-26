@@ -6,7 +6,8 @@
     <div class="container-fluid py-4">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Chỉnh sửa đơn hàng</h4>
+                <h4 class="mb-0">Chỉnh sửa đơn hàng #{{ $order->id }}</h4>
+                <h5 class="mb-0">Mã đơn hàng #{{ $order->order_code}}</h5>
             </div>
 
             <div class="card-body">
@@ -20,7 +21,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('orders.update', $order->id) }}" method="POST">
+                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -152,7 +153,7 @@
 
                     {{-- Nút hành động --}}
                     <div class="d-flex justify-content-end mt-4">
-                        <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary me-2">
+                        <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary me-2">
                             <i class="fas fa-arrow-left me-1"></i> Quay lại
                         </a>
                         <button type="submit" class="btn btn-primary">
