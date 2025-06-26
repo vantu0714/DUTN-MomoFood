@@ -16,7 +16,7 @@
             </div>
         @endif
 
-        <form action="{{ route('orders.store') }}" method="POST">
+        <form action="{{ route('admin.orders.store') }}" method="POST">
             @csrf
 
             {{-- Chọn khách hàng --}}
@@ -123,7 +123,7 @@
             {{-- Submit --}}
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">Tạo đơn hàng</button>
-                <a href="{{ route('orders.index') }}" class="btn btn-secondary">Quay lại</a>
+                <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Quay lại</a>
             </div>
         </form>
     </div>

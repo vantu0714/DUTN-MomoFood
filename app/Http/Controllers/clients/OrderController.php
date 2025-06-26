@@ -110,7 +110,7 @@ class OrderController extends Controller
                 'total_price' => $grandTotal,
                 'payment_method' => $request->payment_method,
                 'payment_status' => 'unpaid',
-                'status' => 'pending',
+                'status' => 1,
             ]);
 
             foreach ($cartItems as $item) {
