@@ -3,7 +3,7 @@
 @section('content')
     <div class="container-fluid my-4">
         <h3 class="text-center text-primary">Chi tiết đơn hàng #{{ $order->id }}</h3>
-        <h5 class="text-center">{{ $order->order_code}}</h5>
+        <h5 class="text-center">{{ $order->order_code }}</h5>
 
         {{-- Người nhận --}}
         <div class="card mb-4 shadow-sm rounded">
@@ -80,6 +80,16 @@
                         6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
                     ];
                     $status = $statusLabels[$order->status] ?? ['label' => 'Không rõ', 'class' => 'light'];
+
+                    $paymentMethodMap = [
+                        'cod' => ['label' => 'Thanh toán khi nhận hàng (COD)', 'class' => 'secondary'],
+                        'vnpay' => ['label' => 'Thanh toán qua VNPAY', 'class' => 'info'],
+                        // thêm các phương thức khác nếu có
+                    ];
+                    $payment_method = $paymentMethodMap[$order->payment_method] ?? [
+                        'label' => 'Không rõ',
+                        'class' => 'light',
+                    ];
                 @endphp
 
                 <div class="row gy-3">
@@ -91,7 +101,7 @@
                     <div class="col-md-6"><strong>Tổng tiền:</strong> <span
                             class="text-danger fw-bold">{{ number_format($order->total_price) }}đ</span></div>
                     <div class="col-md-6">
-                        <strong>Thanh toán:</strong>
+                        <strong>Trạng thái thanh toán:</strong>
                         @if ($order->payment_status === 'paid')
                             <span class="badge bg-success">Đã thanh toán</span>
                         @else
@@ -101,6 +111,10 @@
                     <div class="col-md-6">
                         <strong>Trạng thái đơn hàng:</strong>
                         <span class="badge bg-{{ $status['class'] }}">{{ $status['label'] }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Phương thức thanh toán:</strong>
+                        <span class="badge bg-{{ $payment_method['class'] }}">{{ $payment_method['label'] }}</span>
                     </div>
                     @if ($order->status == 6 && $order->cancellation_reason)
                         <div class="col-12"><strong>Lý do hủy:</strong> {{ $order->cancellation_reason }}</div>
