@@ -59,8 +59,8 @@ Route::controller(AuthController::class)->group(function() {
 // Comments
 Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
 
-// VNPay Payment
-Route::get('/vnpay-payment', [VNPayController::class, 'createPayment']);
+//vn-pay
+Route::get('/vnpay/payment/{order_id}', [VNPayController::class, 'create'])->name('vnpay.payment');
 Route::get('/vnpay-return', [VNPayController::class, 'return']);
 
 // ==================== CLIENT AUTHENTICATED ROUTES ====================
@@ -165,9 +165,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Comment Management
     Route::resource('comments', CommentController::class)->only(['index', 'destroy']);
-
+    
     // Combo Management
     Route::resource('combo_items', ComboItemController::class)->except(['show', 'edit', 'update']);
     Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])
         ->name('combo_items.delete_combo');
 });
+
+
+
