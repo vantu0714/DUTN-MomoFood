@@ -23,7 +23,7 @@ class Product extends Model
         'view',
         'is_show_home',
         'category_id',
-        'quantity',
+       'quantity_in_stock',
         'product_type',
     ];
     public function category(): BelongsTo
@@ -64,6 +64,7 @@ class Product extends Model
 
         return view('admin.products.index', compact('products', 'totalProducts'));
     }
+    
 
     public function orderDetails()
     {

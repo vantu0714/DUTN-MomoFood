@@ -1,0 +1,180 @@
+  /* CSS cho form xóa */
+  .d-inline {
+      display: inline-block !important;
+  }
+
+  .btn-group-sm>.btn,
+  .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+      border-radius: 0.375rem;
+  }
+
+  .btn-outline-danger:hover {
+      background-color: #dc3545;
+      border-color: #dc3545;
+      color: #fff;
+  }
+
+  .gap-1 {
+      gap: 0.25rem !important;
+  }
+
+  /* Tooltip styling */
+  .tooltip {
+      font-size: 0.875rem;
+  }
+
+  .tooltip-inner {
+      background-color: #000;
+      color: #fff;
+      border-radius: 0.375rem;
+      padding: 0.25rem 0.5rem;
+  }
+
+  .card {
+      transition: all 0.3s ease;
+  }
+
+  .card:hover {
+      transform: translateY(-2px);
+  }
+
+  .table tbody tr:hover {
+      background-color: rgba(123, 180, 241, 0.05);
+  }
+
+  .btn {
+      transition: all 0.2s ease;
+  }
+
+  .btn:hover {
+      transform: translateY(-1px);
+  }
+
+  .badge {
+      font-weight: 500;
+  }
+
+  /* Cải thiện hiển thị danh mục */
+  .category-badge {
+      font-size: 0.875rem;
+      font-weight: 700 !important;
+      color: #0d6efd !important;
+      background-color: rgba(13, 110, 253, 0.1);
+      border: 1.5px solid #0d6efd !important;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      display: inline-block;
+      min-width: 80px;
+      text-align: center;
+  }
+
+  /* Cải thiện hiển thị số lượng */
+  .quantity-badge {
+      font-size: 0.875rem;
+      font-weight: 700 !important;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      display: inline-block;
+      min-width: 70px;
+      text-align: center;
+      border-width: 1.5px !important;
+      background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .quantity-badge.text-danger {
+      background-color: rgba(220, 53, 69, 0.1);
+  }
+
+  .quantity-badge.text-warning {
+      background-color: rgba(255, 193, 7, 0.1);
+  }
+
+  .quantity-badge.text-success {
+      background-color: rgba(25, 135, 84, 0.1);
+  }
+
+  /* Cải thiện hiển thị trạng thái */
+  .status-badge {
+      font-size: 0.875rem;
+      font-weight: 700 !important;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      display: inline-block;
+      min-width: 90px;
+      text-align: center;
+      border-width: 1.5px !important;
+  }
+
+  .status-available {
+      color: #198754 !important;
+      background-color: rgba(25, 135, 84, 0.1);
+      border-color: #198754 !important;
+  }
+
+  .status-out-of-stock {
+      color: #dc3545 !important;
+      background-color: rgba(220, 53, 69, 0.1);
+      border-color: #dc3545 !important;
+  }
+
+  /* Hover effects cho badges */
+  .category-badge:hover,
+  .quantity-badge:hover {
+      transform: scale(1.02);
+      transition: all 0.2s ease;
+  }
+
+  .category-badge:hover {
+      background-color: rgba(13, 110, 253, 0.2);
+  }
+
+  .quantity-badge.text-danger:hover {
+      background-color: rgba(220, 53, 69, 0.2);
+  }
+
+  .quantity-badge.text-warning:hover {
+      background-color: rgba(255, 193, 7, 0.2);
+  }
+
+  .quantity-badge.text-success:hover {
+      background-color: rgba(25, 135, 84, 0.2);
+  }
+
+  .status-badge:hover {
+      transform: scale(1.02);
+      transition: all 0.2s ease;
+  }
+
+  .status-available:hover {
+      background-color: rgba(25, 135, 84, 0.2);
+  }
+
+  .status-out-of-stock:hover {
+      background-color: rgba(220, 53, 69, 0.2);
+  }
+
+  @media (max-width: 768px) {
+      .container-fluid {
+          padding: 1rem;
+      }
+
+      .card-body {
+          padding: 1rem;
+      }
+
+      .table-responsive {
+          font-size: 0.875rem;
+      }
+
+      .category-badge,
+      .quantity-badge,
+      .status-badge {
+          font-size: 0.75rem;
+          min-width: 60px;
+          padding: 0.25rem 0.5rem;
+      }
+  }
