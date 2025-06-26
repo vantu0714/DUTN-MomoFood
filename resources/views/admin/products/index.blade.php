@@ -234,11 +234,11 @@
                                         <div class="d-flex align-items-center justify-content-center">
                                             <span
                                                 class="quantity-badge fw-bold 
-                                                @if ($item->quantity <= 10) text-danger border-danger
-                                                @elseif($item->quantity <= 50) text-warning border-warning
+                                                @if ($item->quantity_in_stock <= 10) text-danger border-danger
+                                                @elseif($item->quantity_in_stock <= 50) text-warning border-warning
                                                 @else text-success border-success @endif border rounded px-3 py-1">
                                                 <i class="fas fa-cubes me-1"></i>
-                                                {{ number_format($item->quantity) }}
+                                                {{ number_format($item->quantity_in_stock) }}
                                             </span>
                                         </div>
                                     </td>
@@ -257,7 +257,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if ($item->quantity > 0)
+                                        @if ($item->quantity_in_stock > 0)
                                             <span
                                                 class="status-badge status-available fw-bold text-success border border-success rounded px-3 py-1">
                                                 <i class="fas fa-check me-1"></i>Còn hàng

@@ -4,7 +4,12 @@
 @section('content')
     <div class="container">
         <h2>Tạo Combo Mới</h2>
-
+        @if (session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>⚠️ Lưu ý:</strong> {{ session('warning') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+            </div>
+        @endif
         <form action="{{ route('admin.combo_items.store') }}" method="POST">
             @csrf
 
@@ -52,9 +57,9 @@
                                 @endforeach
                             </select>
                         </div>
-
-                        <div class="col-md-4 variant-select"
-                            style="display: {{ ($oldItem['itemable_type'] ?? '') === 'variant' ? 'block' : 'none' }};">
+                        <div class="col-md-4 variant-select" 
+                        
+                            style="display: {{ ($oldItem['itemable_type'] ?? '') === 'variant' ? 'block' : 'none' }};"> 
                             <label class="form-label">Biến thể</label>
                             <select name="items[{{ $index }}][variant_id]" class="form-control variant-id-select">
                                 <option value="">-- Chọn biến thể --</option>
@@ -68,6 +73,7 @@
                                     </option>
                                 @endforeach
                             </select>
+                            
                         </div>
 
                         <div class="col-md-1">
@@ -123,6 +129,7 @@
                 <button type="submit" class="btn btn-success">Tạo Combo</button>
                 <a href="{{ route('admin.combo_items.index') }}" class="btn btn-secondary">Huỷ</a>
             </div>
+        
         </form>
     </div>
 
@@ -283,7 +290,15 @@
             calculateMaxComboQuantity();
         });
 
-        document.querySelectorAll('.combo-item-row').forEach(bindEvents);
+        document.querySelectorAll('.combo-item-row').forEach(row => {
+            bindEvents(row); // Gán sự kiện
+
+            // 🚀 Kích hoạt thủ công sự kiện "change" để cập nhật lại hiển thị select
+            const typeSelect = row.querySelector('.itemable-type');
+            if (typeSelect?.value) {
+                typeSelect.dispatchEvent(new Event('change'));
+            }
+        });
         updateSuggestedPrice();
 
         document.querySelector('form').addEventListener('submit', function(e) {
