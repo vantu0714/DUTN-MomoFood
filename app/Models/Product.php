@@ -64,6 +64,7 @@ class Product extends Model
 
         return view('admin.products.index', compact('products', 'totalProducts'));
     }
+    
 
     public function orderDetails()
     {
