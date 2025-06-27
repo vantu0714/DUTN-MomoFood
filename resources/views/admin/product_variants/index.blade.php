@@ -296,31 +296,47 @@
     </style>
     <div class="product-variants-container">
         <div class="main-content fade-in">
-            <div class="page-header">
-                <h1 class="page-title">
-                    <i class="fas fa-cubes"></i>
-                    Quản lý sản phẩm biến thể
-                </h1>
-                <p class="page-subtitle">Danh sách tất cả các biến thể sản phẩm trong hệ thống</p>
+
+            {{-- header + tìm kiếm + nút --}}
+            <div class="page-header d-flex justify-content-between align-items-center flex-wrap mb-4">
+                <div>
+                    <h1 class="page-title">
+                        <i class="fas fa-cubes"></i>
+                        Quản lý sản phẩm biến thể
+                    </h1>
+                    <p class="page-subtitle">Danh sách tất cả các biến thể sản phẩm trong hệ thống</p>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <form action="{{ route('admin.product_variants.index') }}" method="GET" class="d-flex">
+                        <input type="text" name="search" class="form-control"
+                            placeholder="Tìm theo tên, mã sản phẩm hoặc SKU..." value="{{ request('search') }}">
+                        <button class="btn btn-primary ms-2" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        @if (request('search'))
+                            <a href="{{ route('admin.product_variants.index') }}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        @endif
+                    </form>
+                    <a href="{{ route('admin.product_variants.create') }}" class="btn btn-success btn-modern">
+                        <i class="fas fa-plus-circle"></i> Thêm biến thể
+                    </a>
+                </div>
             </div>
 
+            {{-- danh sách grouped --}}
             @if ($groupedVariants && $groupedVariants->count() > 0)
                 @foreach ($groupedVariants as $productId => $variants)
-                    @php
-                        $product = $variants->first()->product;
-                    @endphp
+                    @php $product = $variants->first()->product; @endphp
 
                     <div class="product-card fade-in">
                         <div class="product-header">
                             <div class="d-flex justify-content-between align-items-center flex-wrap">
-                                <h3 class="product-name">
-                                    <i class="fas fa-box"></i>
-                                    {{ $product->product_name }}
-                                </h3>
-                                <span class="product-code">
-                                    <i class="fas fa-barcode"></i>
-                                    {{ $product->product_code }}
-                                </span>
+                                <h3 class="product-name"><i class="fas fa-box"></i> {{ $product->product_name }}</h3>
+                                <span class="product-code"><i class="fas fa-barcode"></i>
+                                    {{ $product->product_code }}</span>
                             </div>
                         </div>
 
@@ -328,12 +344,12 @@
                             <table class="table variants-table">
                                 <thead>
                                     <tr>
-                                        <th><i class="fas fa-tags"></i> Biến thể</th>
-                                        <th><i class="fas fa-qrcode"></i> SKU</th>
-                                        <th><i class="fas fa-dollar-sign"></i> Giá</th>
-                                        <th><i class="fas fa-warehouse"></i> Kho</th>
-                                        <th><i class="fas fa-image"></i> Ảnh</th>
-                                        <th><i class="fas fa-cogs"></i> Hành động</th>
+                                        <th>Biến thể</th>
+                                        <th>SKU</th>
+                                        <th>Giá</th>
+                                        <th>Kho</th>
+                                        <th>Ảnh</th>
+                                        <th>Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -342,71 +358,50 @@
                                             <td>
                                                 @if ($variant->attributeValues->count())
                                                     @foreach ($variant->attributeValues as $val)
-                                                        <span class="variant-badge">
-                                                            {{ $val->attribute->name }}: {{ $val->value }}
-                                                        </span>
+                                                        <span class="variant-badge">{{ $val->attribute->name }}:
+                                                            {{ $val->value }}</span>
                                                     @endforeach
                                                 @else
-                                                    <em class="text-muted">
-                                                        <i class="fas fa-minus-circle"></i>
-                                                        Không có biến thể
-                                                    </em>
+                                                    <em class="text-muted">Không có biến thể</em>
                                                 @endif
                                             </td>
-                                            <td>
-                                                <code class="bg-light p-2 rounded text-dark">
-                                                    {{ $variant->sku ?? 'N/A' }}
-                                                </code>
-                                            </td>
-                                            <td>
-                                                <span class="price-display">
-                                                    {{ number_format($variant->price, 0, ',', '.') }}₫
-                                                </span>
+                                            <td><code class="bg-light p-2 rounded">{{ $variant->sku }}</code></td>
+                                            <td><span
+                                                    class="price-display">{{ number_format($variant->price, 0, ',', '.') }}₫</span>
                                             </td>
                                             <td>
                                                 @php
-                                                    $stockClass = 'stock-high';
-                                                    if ($variant->quantity_in_stock <= 5) {
-                                                        $stockClass = 'stock-low';
-                                                    } elseif ($variant->quantity_in_stock <= 20) {
-                                                        $stockClass = 'stock-medium';
-                                                    }
+                                                    $qty = $variant->quantity_in_stock;
+                                                    $cls =
+                                                        $qty <= 5
+                                                            ? 'stock-low'
+                                                            : ($qty <= 20
+                                                                ? 'stock-medium'
+                                                                : 'stock-high');
                                                 @endphp
-                                                <span class="stock-badge {{ $stockClass }}">
-                                                    {{ $variant->quantity_in_stock }}
-                                                    <i class="fas fa-boxes"></i>
-                                                </span>
+                                                <span class="stock-badge {{ $cls }}">{{ $qty }}</span>
                                             </td>
                                             <td>
                                                 @if ($variant->image)
-                                                    <img src="{{ asset('storage/' . $variant->image) }}" alt="Ảnh sản phẩm"
-                                                        class="product-image" width="60" height="60"
-                                                        style="object-fit: cover;">
+                                                    <img src="{{ asset('storage/' . $variant->image) }}" alt=""
+                                                        width="60" height="60" class="product-image">
                                                 @else
-                                                    <div class="text-center text-muted">
-                                                        <i class="fas fa-image fa-2x opacity-50"></i>
-                                                        <br>
-                                                        <small>Chưa có ảnh</small>
-                                                    </div>
+                                                    <div class="text-center text-muted"><i
+                                                            class="fas fa-image fa-2x opacity-50"></i><br><small>Chưa có
+                                                            ảnh</small></div>
                                                 @endif
                                             </td>
                                             <td>
                                                 <div class="action-buttons">
                                                     <a href="{{ route('admin.product_variants.edit', $variant->id) }}"
-                                                        class="btn-modern btn-edit" title="Chỉnh sửa">
-                                                        <i class="fas fa-edit"></i>
-                                                        Sửa
-                                                    </a>
+                                                        class="btn-modern btn-edit"><i class="fas fa-edit"></i> Sửa</a>
                                                     <form
                                                         action="{{ route('admin.product_variants.destroy', $variant->id) }}"
                                                         method="POST" class="d-inline"
-                                                        onsubmit="return confirm('⚠️ Bạn có chắc chắn muốn xóa biến thể này không?\n\nHành động này không thể hoàn tác!')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn-modern btn-delete" title="Xóa">
-                                                            <i class="fas fa-trash"></i>
-                                                            Xóa
-                                                        </button>
+                                                        onsubmit="return confirm('Bạn có chắc muốn xóa?')">
+                                                        @csrf @method('DELETE')
+                                                        <button class="btn-modern btn-delete"><i class="fas fa-trash"></i>
+                                                            Xóa</button>
                                                     </form>
                                                 </div>
                                             </td>
@@ -421,71 +416,27 @@
                 <div class="no-data">
                     <i class="fas fa-box-open"></i>
                     <h4>Chưa có sản phẩm biến thể nào</h4>
-                    <p>Hãy thêm sản phẩm biến thể đầu tiên để bắt đầu!</p>
+                    <p>Hãy tạo biến thể đầu tiên ngay!</p>
                 </div>
             @endif
 
-            @if (isset($variantsPaginated) && $variantsPaginated->hasPages())
+            {{-- phân trang --}}
+            @if ($variantsPaginated->hasPages())
                 <div class="pagination-wrapper">
-                    <div class="d-flex justify-content-center">
-                        {{ $variantsPaginated->links() }}
-                    </div>
+                    <div class="d-flex justify-content-center">{{ $variantsPaginated->links() }}</div>
                 </div>
             @endif
+
         </div>
     </div>
 
+    {{-- thêm script Confirm delete đẹp --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Add loading animation for images
-            const images = document.querySelectorAll('.product-image');
-            images.forEach(img => {
-                img.addEventListener('load', function() {
-                    this.style.opacity = '1';
-                });
-                img.style.opacity = '0';
-                img.style.transition = 'opacity 0.3s ease';
-            });
-
-            // Add hover effects for table rows
-            const tableRows = document.querySelectorAll('.variants-table tbody tr');
-            tableRows.forEach(row => {
-                row.addEventListener('mouseenter', function() {
-                    this.style.backgroundColor = '#f8f9fa';
-                });
-                row.addEventListener('mouseleave', function() {
-                    this.style.backgroundColor = '';
-                });
-            });
-
-            // Enhance delete confirmation
-            const deleteForms = document.querySelectorAll('form[onsubmit*="confirm"]');
-            deleteForms.forEach(form => {
+            document.querySelectorAll('form[onsubmit]').forEach(form => {
                 form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    // Create custom modal or use SweetAlert if available
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            title: 'Xác nhận xóa',
-                            text: 'Bạn có chắc chắn muốn xóa biến thể này không?',
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#dc3545',
-                            cancelButtonColor: '#6c757d',
-                            confirmButtonText: 'Xóa',
-                            cancelButtonText: 'Hủy'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                form.submit();
-                            }
-                        });
-                    } else {
-                        if (confirm(
-                                '⚠️ Bạn có chắc chắn muốn xóa biến thể này không?\n\nHành động này không thể hoàn tác!'
-                                )) {
-                            form.submit();
-                        }
+                    if (!confirm('⚠️ Bạn có chắc chắn muốn xóa biến thể này không?')) {
+                        e.preventDefault();
                     }
                 });
             });

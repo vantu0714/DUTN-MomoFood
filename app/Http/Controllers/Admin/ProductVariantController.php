@@ -16,19 +16,26 @@ use Illuminate\Support\Str;
 
 class ProductVariantController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Lấy tất cả biến thể với sản phẩm và attribute values
-        $variantsPaginated = ProductVariant::with(['product', 'attributeValues.attribute'])
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        $query = ProductVariant::with(['product', 'attributeValues.attribute'])->orderByDesc('created_at');
 
-        // Gom nhóm theo product_id
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+
+            $query->whereHas('product', function ($q) use ($search) {
+                $q->where('product_name', 'LIKE', "%{$search}%")
+                    ->orWhere('product_code', 'LIKE', "%{$search}%");
+            })->orWhere('sku', 'LIKE', "%{$search}%");
+        }
+
+        $variantsPaginated = $query->paginate(10)->withQueryString();
         $groupedVariants = $variantsPaginated->getCollection()->groupBy('product_id');
 
         return view('admin.product_variants.index', [
-            'variantsPaginated' => $variantsPaginated, // Để dùng phân trang
-            'groupedVariants' => $groupedVariants,     // Dữ liệu gộp theo sản phẩm
+            'variantsPaginated' => $variantsPaginated,
+            'groupedVariants' => $groupedVariants,
+            'search' => $request->input('search'),
         ]);
     }
 
@@ -73,39 +80,60 @@ class ProductVariantController extends Controller
                     $mainAttributeValue = null;
                 }
 
-                foreach ($subAttrs as $subAttr) {
-                    if ($subAttr['price'] < $originalPrice) {
-                        return back()->withInput()->with('error', 'Giá biến thể không được thấp hơn giá gốc của sản phẩm (' . number_format($originalPrice) . '₫)');
-                    }
+                foreach ($request->variants as $variantData) {
+                    $mainAttr = $variantData['main_attribute'] ?? null;
+                    $subAttrs = $variantData['sub_attributes'] ?? [];
 
-                    // Generate SKU (Chỉ dùng product_code + vị)
-                    $sku = $productCode;
-                    if ($mainAttributeValue) {
-                        $sku .= '-' . strtoupper(Str::slug($mainAttributeValue->value));
-                    }
-
-                    $variant = ProductVariant::create([
-                        'product_id' => $request->product_id,
-                        'price' => $subAttr['price'],
-                        'quantity_in_stock' => $subAttr['quantity_in_stock'],
-                        'sku' => $sku,
-                        'image' => $imagePath,
-                    ]);
-
-                    if ($mainAttributeValue) {
-                        ProductVariantValue::create([
-                            'product_variant_id' => $variant->id,
-                            'attribute_value_id' => $mainAttributeValue->id,
-                            'price_adjustment' => 0,
+                    if ($mainAttr && !empty($mainAttr['value'])) {
+                        $attribute = Attribute::firstOrCreate(['name' => $mainAttr['name']]);
+                        $mainAttributeValue = AttributeValue::firstOrCreate([
+                            'attribute_id' => $attribute->id,
+                            'value' => $mainAttr['value'],
                         ]);
+                    } else {
+                        $mainAttributeValue = null;
                     }
 
-                    if (!empty($subAttr['attribute_value_id'])) {
-                        ProductVariantValue::create([
-                            'product_variant_id' => $variant->id,
-                            'attribute_value_id' => $subAttr['attribute_value_id'],
-                            'price_adjustment' => 0,
+                    foreach ($subAttrs as $subAttr) {
+                        if ($subAttr['price'] < $originalPrice) {
+                            return back()->withInput()->with('error', 'Giá biến thể không được thấp hơn giá gốc của sản phẩm (' . number_format($originalPrice) . '₫)');
+                        }
+
+                        // Tạo SKU cho mỗi lựa chọn
+                        $sku = $productCode;
+                        if ($mainAttributeValue) {
+                            $sku .= '-' . strtoupper(Str::slug($mainAttributeValue->value));
+                        }
+
+                        // Xử lý ảnh riêng cho từng lựa chọn
+                        $imagePath = null;
+                        if (isset($subAttr['image']) && $subAttr['image'] instanceof \Illuminate\Http\UploadedFile) {
+                            $imagePath = $subAttr['image']->store('variants', 'public');
+                        }
+
+                        $variant = ProductVariant::create([
+                            'product_id' => $request->product_id,
+                            'price' => $subAttr['price'],
+                            'quantity_in_stock' => $subAttr['quantity_in_stock'],
+                            'sku' => $sku,
+                            'image' => $imagePath,
                         ]);
+
+                        if ($mainAttributeValue) {
+                            ProductVariantValue::create([
+                                'product_variant_id' => $variant->id,
+                                'attribute_value_id' => $mainAttributeValue->id,
+                                'price_adjustment' => 0,
+                            ]);
+                        }
+
+                        if (!empty($subAttr['attribute_value_id'])) {
+                            ProductVariantValue::create([
+                                'product_variant_id' => $variant->id,
+                                'attribute_value_id' => $subAttr['attribute_value_id'],
+                                'price_adjustment' => 0,
+                            ]);
+                        }
                     }
                 }
             }
@@ -137,13 +165,15 @@ class ProductVariantController extends Controller
 
         try {
             $variant = ProductVariant::findOrFail($id);
-
             $product = Product::findOrFail($request->product_id);
+
             if ($request->price < $product->original_price) {
                 return back()->withInput()->with('error', 'Giá biến thể không được thấp hơn giá gốc (' . number_format($product->original_price) . '₫)');
             }
 
             $imagePath = $variant->image;
+
+            // Xử lý ảnh nếu có
             if ($request->hasFile('image')) {
                 if ($variant->image && Storage::disk('public')->exists($variant->image)) {
                     Storage::disk('public')->delete($variant->image);
@@ -161,10 +191,9 @@ class ProductVariantController extends Controller
                 'status' => $request->status ?? 1,
             ]);
 
-            // Xoá hết attribute cũ
+            // Cập nhật lại attribute values
             ProductVariantValue::where('product_variant_id', $variant->id)->delete();
 
-            // Gắn thuộc tính chính (Vị)
             if ($request->main_attribute_id) {
                 ProductVariantValue::create([
                     'product_variant_id' => $variant->id,
@@ -173,7 +202,6 @@ class ProductVariantController extends Controller
                 ]);
             }
 
-            // Gắn thuộc tính phụ (Size)
             if ($request->sub_attribute_id) {
                 ProductVariantValue::create([
                     'product_variant_id' => $variant->id,
@@ -191,8 +219,6 @@ class ProductVariantController extends Controller
             return back()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
-
-
 
     public function destroy($id)
     {

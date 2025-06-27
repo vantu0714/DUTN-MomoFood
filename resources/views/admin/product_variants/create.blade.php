@@ -21,36 +21,32 @@
                 </div>
 
                 <div class="sub-attributes-group mb-3">
-                    <label>Các lựa chọn (Size, Giá, Số lượng)</label>
+                    <label>Các lựa chọn (Size, Giá, Số lượng, Ảnh, SKU)</label>
                     <div class="row sub-attribute-row mb-2">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <select name="variants[0][sub_attributes][0][attribute_value_id]" class="form-select">
                                 @foreach ($sizeValues as $size)
                                     <option value="{{ $size->id }}">{{ $size->value }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <input type="number" name="variants[0][sub_attributes][0][price]" class="form-control" placeholder="Giá">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <input type="number" name="variants[0][sub_attributes][0][quantity_in_stock]" class="form-control" placeholder="Số lượng">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <input type="file" name="variants[0][sub_attributes][0][image]" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" name="variants[0][sub_attributes][0][sku]" class="form-control sku-input" readonly>
+                        </div>
+                        <div class="col-md-2">
                             <button type="button" class="btn btn-danger remove-sub-attribute">Xoá</button>
                         </div>
                     </div>
                     <button type="button" class="btn btn-sm btn-secondary add-sub-attribute">+ Thêm lựa chọn</button>
-                </div>
-
-                <div class="mb-3">
-                    <label>Ảnh biến thể</label>
-                    <input type="file" name="variants[0][image]" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label>SKU</label>
-                    <input type="text" name="variants[0][sku]" class="form-control sku-input" readonly>
                 </div>
 
                 <button type="button" class="btn btn-danger remove-variant">Xoá biến thể</button>
@@ -69,30 +65,59 @@
 <script>
     let variantIndex = 1;
 
-    function generateSKU(variantItem) {
-        const productCode = document.getElementById('product_code').value;
-        const mainAttr = variantItem.querySelector('input[name*="[main_attribute][value]"]').value.trim();
-        const skuInput = variantItem.querySelector('input[name*="[sku]"]');
+    function updateSKUs(variantItem) {
+        const productCode = document.getElementById('product_code').value.trim();
+        const mainAttr = variantItem.querySelector('input[name*="[main_attribute][value]"]').value.trim().toUpperCase().replace(/\s+/g, '-');
 
-        let sku = productCode;
-        if (mainAttr) {
-            sku += '-' + mainAttr.toUpperCase().replace(/\s+/g, '-');
-        }
+        const subRows = variantItem.querySelectorAll('.sub-attribute-row');
+        subRows.forEach(row => {
+            const sizeSelect = row.querySelector('select[name*="[attribute_value_id]"]');
+            const skuInput = row.querySelector('.sku-input');
 
-        skuInput.value = sku;
+            const selectedSizeText = sizeSelect?.selectedOptions[0]?.text?.trim().toUpperCase().replace(/\s+/g, '-') || '';
+            let sku = productCode;
+            if (mainAttr) sku += `-${mainAttr}`;
+            if (selectedSizeText) sku += `-${selectedSizeText}`;
+
+            if (skuInput) skuInput.value = sku;
+        });
     }
 
     function attachSKUEvents(variantItem) {
         const mainInput = variantItem.querySelector('input[name*="[main_attribute][value]"]');
-        mainInput?.addEventListener('input', () => generateSKU(variantItem));
+        mainInput?.addEventListener('input', () => updateSKUs(variantItem));
+    }
+
+    function attachSizeChangeEvents(variantItem) {
+        const selects = variantItem.querySelectorAll('select[name*="[attribute_value_id]"]');
+        selects.forEach(select => {
+            select.addEventListener('change', () => {
+                updateDisabledSizes(variantItem);
+                updateSKUs(variantItem);
+            });
+        });
+    }
+
+    function updateDisabledSizes(variantItem) {
+        const selects = variantItem.querySelectorAll('select[name*="[attribute_value_id]"]');
+        const selectedValues = Array.from(selects).map(s => s.value);
+
+        selects.forEach(select => {
+            const currentValue = select.value;
+            Array.from(select.options).forEach(option => {
+                option.disabled = selectedValues.includes(option.value) && option.value !== currentValue;
+            });
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
         const variantsContainer = document.getElementById('variants-container');
-
         const firstVariant = document.querySelector('.variant-item');
+
         attachSKUEvents(firstVariant);
-        generateSKU(firstVariant);
+        attachSizeChangeEvents(firstVariant);
+        updateDisabledSizes(firstVariant);
+        updateSKUs(firstVariant);
 
         document.getElementById('add-variant').addEventListener('click', function () {
             const template = document.querySelector('.variant-item');
@@ -115,7 +140,9 @@
 
             variantsContainer.appendChild(clone);
             attachSKUEvents(clone);
-            generateSKU(clone);
+            attachSizeChangeEvents(clone);
+            updateDisabledSizes(clone);
+            updateSKUs(clone);
             variantIndex++;
         });
 
@@ -134,20 +161,43 @@
 
                 const variantIdx = variantItem.querySelector('input[name^="variants["]').name.match(/variants\[(\d+)]/)[1];
                 const subIdx = rows.length;
-                const fields = ['attribute_value_id', 'price', 'quantity_in_stock'];
 
-                newRow.querySelectorAll('input, select').forEach((el, i) => {
-                    el.value = '';
-                    el.name = `variants[${variantIdx}][sub_attributes][${subIdx}][${fields[i]}]`;
-                });
+                const selects = newRow.querySelectorAll('select');
+                const inputs = newRow.querySelectorAll('input');
+
+                if (selects.length) {
+                    selects[0].name = `variants[${variantIdx}][sub_attributes][${subIdx}][attribute_value_id]`;
+                    selects[0].selectedIndex = 0;
+                }
+
+                if (inputs.length) {
+                    inputs[0].name = `variants[${variantIdx}][sub_attributes][${subIdx}][price]`;
+                    inputs[0].value = '';
+
+                    inputs[1].name = `variants[${variantIdx}][sub_attributes][${subIdx}][quantity_in_stock]`;
+                    inputs[1].value = '';
+
+                    inputs[2].name = `variants[${variantIdx}][sub_attributes][${subIdx}][image]`;
+                    inputs[2].value = '';
+
+                    inputs[3].name = `variants[${variantIdx}][sub_attributes][${subIdx}][sku]`;
+                    inputs[3].value = '';
+                }
 
                 group.insertBefore(newRow, e.target);
+                attachSizeChangeEvents(variantItem);
+                updateDisabledSizes(variantItem);
+                updateSKUs(variantItem);
             }
 
             if (e.target.classList.contains('remove-sub-attribute')) {
                 const group = e.target.closest('.sub-attributes-group');
                 const rows = group.querySelectorAll('.sub-attribute-row');
-                if (rows.length > 1) e.target.closest('.sub-attribute-row').remove();
+                if (rows.length > 1) {
+                    e.target.closest('.sub-attribute-row').remove();
+                    updateDisabledSizes(e.target.closest('.variant-item'));
+                    updateSKUs(e.target.closest('.variant-item'));
+                }
             }
         });
 
