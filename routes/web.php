@@ -2,9 +2,9 @@
 
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\InfoController;
-use App\Http\Controllers\clients\AuthController;
+use App\Http\Controllers\Clients\AuthController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\clients\HomeController;
+use App\Http\Controllers\Clients\HomeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ComboItemController;
@@ -20,7 +20,7 @@ use App\Http\Controllers\Clients\ContactsController;
 use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\VNPayController;
-use App\Http\Controllers\clients\CommentController as ClientCommentController;
+use App\Http\Controllers\Clients\CommentController as ClientCommentController;
 
 
 // ==================== PUBLIC ROUTES ====================
@@ -60,8 +60,8 @@ Route::controller(AuthController::class)->group(function () {
 Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
 
 //vn-pay
-Route::get('/vnpay/payment/{order_id}', [VNPayController::class, 'create'])->name('vnpay.payment');
-Route::get('/vnpay-return', [VNPayController::class, 'return']);
+Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.payment');
+Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.return');
 
 // ==================== CLIENT AUTHENTICATED ROUTES ====================
 Route::middleware(['auth', 'client'])->group(function () {
@@ -75,6 +75,7 @@ Route::middleware(['auth', 'client'])->group(function () {
 
         // Orders
         Route::get('/orders', [ClientsOrderController::class, 'orderList'])->name('orders');
+        Route::post('/create-payment', [ClientsOrderController::class, 'createPayment'])->name('create-payment');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
     });
