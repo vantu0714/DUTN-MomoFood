@@ -135,14 +135,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 
     // Product Variants
-    Route::prefix('product-variants')->name('product_variants.')->group(function () {
-        Route::get('/', [ProductVariantController::class, 'index'])->name('index');
-        Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
-        Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
-        Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
-        Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
-        Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
-    });
+   Route::prefix('product-variants')->name('product_variants.')->group(function () {
+    Route::get('/', [ProductVariantController::class, 'index'])->name('index');
+    Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
+    Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
+    Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
+    Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
+    Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
+    //Route thêm biến thể cho nhiều sản phẩm
+    Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
+    Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
+});
+
 
     // Order Management
     Route::prefix('orders')->name('orders.')->group(function () {

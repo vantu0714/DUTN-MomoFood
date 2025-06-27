@@ -315,14 +315,16 @@
                             <i class="fas fa-search"></i>
                         </button>
                         @if (request('search'))
-                            <a href="{{ route('admin.product_variants.index') }}" class="btn btn-outline-secondary ms-2">
+                            <a href="{{ route('admin.product_variants.createMultiple') }}"
+                                class="btn btn-outline-secondary ms-2">
                                 <i class="fas fa-times"></i>
                             </a>
                         @endif
                     </form>
-                    <a href="{{ route('admin.product_variants.create') }}" class="btn btn-success btn-modern">
-                        <i class="fas fa-plus-circle"></i> Thêm biến thể
+                    <a href="{{ route('admin.product_variants.createMultiple') }}" class="btn btn-success btn-modern">
+                        <i class="fas fa-layer-group"></i> Thêm biến thể hàng loạt
                     </a>
+
                 </div>
             </div>
 
