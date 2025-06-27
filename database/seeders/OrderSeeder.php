@@ -55,7 +55,7 @@ class OrderSeeder extends Seeder
         ]);
 
         $variant2 = DB::table('product_variants')->insertGetId([
-            'product_id' => 1, 
+            'product_id' => 1,
             'price' => 60000,
             'quantity_in_stock' => 30,
             'sku' => 'SP001-B',
@@ -76,7 +76,7 @@ class OrderSeeder extends Seeder
             'total_price' => 320000,
             'payment_method' => 'COD',
             'payment_status' => 'unpaid',
-            'status' => 'pending',
+            'status' => 1,
             'note' => 'Giao giờ hành chính',
             'cancellation_reason' => null,
             'created_at' => $now,

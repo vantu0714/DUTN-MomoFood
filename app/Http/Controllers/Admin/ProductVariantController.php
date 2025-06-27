@@ -87,7 +87,7 @@ class ProductVariantController extends Controller
                     $variant = ProductVariant::create([
                         'product_id' => $request->product_id,
                         'price' => $subAttr['price'],
-                        'quantity_in_stock' => $subAttr['quantity'],
+                        'quantity_in_stock' => $subAttr['quantity_in_stock'],
                         'sku' => $sku,
                         'image' => $imagePath,
                     ]);

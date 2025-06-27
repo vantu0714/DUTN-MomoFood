@@ -34,7 +34,7 @@
                             <input type="number" name="variants[0][sub_attributes][0][price]" class="form-control" placeholder="Giá">
                         </div>
                         <div class="col-md-3">
-                            <input type="number" name="variants[0][sub_attributes][0][quantity]" class="form-control" placeholder="Số lượng">
+                            <input type="number" name="variants[0][sub_attributes][0][quantity_in_stock]" class="form-control" placeholder="Số lượng">
                         </div>
                         <div class="col-md-3">
                             <button type="button" class="btn btn-danger remove-sub-attribute">Xoá</button>
@@ -134,7 +134,7 @@
 
                 const variantIdx = variantItem.querySelector('input[name^="variants["]').name.match(/variants\[(\d+)]/)[1];
                 const subIdx = rows.length;
-                const fields = ['attribute_value_id', 'price', 'quantity'];
+                const fields = ['attribute_value_id', 'price', 'quantity_in_stock'];
 
                 newRow.querySelectorAll('input, select').forEach((el, i) => {
                     el.value = '';

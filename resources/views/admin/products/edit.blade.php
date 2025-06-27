@@ -60,10 +60,8 @@
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-2">
-                                <img src="{{ asset('storage/' . $product->image) }}" 
-                                     class="img-fluid rounded shadow-sm" 
-                                     style="width: 100px; height: 100px; object-fit: cover;"
-                                     alt="Product Image">
+                                <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid rounded shadow-sm"
+                                    style="width: 100px; height: 100px; object-fit: cover;" alt="Product Image">
                             </div>
                             <div class="col-md-10">
                                 <h5 class="mb-1">{{ $product->product_name }}</h5>
@@ -86,7 +84,7 @@
         <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
-            
+
             <div class="row">
                 <!-- Left Column -->
                 <div class="col-lg-8">
@@ -101,11 +99,12 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-12 mb-3">
-                                    <label for="product_name" class="form-label fw-semibold">Tên sản phẩm <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('product_name') is-invalid @enderror" 
-                                           id="product_name" name="product_name" 
-                                           value="{{ old('product_name', $product->product_name) }}" 
-                                           placeholder="Nhập tên sản phẩm">
+                                    <label for="product_name" class="form-label fw-semibold">Tên sản phẩm <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('product_name') is-invalid @enderror"
+                                        id="product_name" name="product_name"
+                                        value="{{ old('product_name', $product->product_name) }}"
+                                        placeholder="Nhập tên sản phẩm">
                                     @error('product_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -113,23 +112,24 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label for="product_code" class="form-label fw-semibold">Mã sản phẩm</label>
-                                    <input type="text" class="form-control @error('product_code') is-invalid @enderror" 
-                                           id="product_code" name="product_code" 
-                                           value="{{ old('product_code', $product->product_code) }}" 
-                                           placeholder="Nhập mã sản phẩm">
+                                    <input type="text" class="form-control @error('product_code') is-invalid @enderror"
+                                        id="product_code" name="product_code"
+                                        value="{{ old('product_code', $product->product_code) }}"
+                                        placeholder="Nhập mã sản phẩm">
                                     @error('product_code')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                
+
                                 <div class="col-md-6 mb-3">
-                                    <label for="category_id" class="form-label fw-semibold">Danh mục <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('category_id') is-invalid @enderror" 
-                                            id="category_id" name="category_id">
+                                    <label for="category_id" class="form-label fw-semibold">Danh mục <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select @error('category_id') is-invalid @enderror" id="category_id"
+                                        name="category_id">
                                         <option value="">Chọn danh mục</option>
                                         @foreach ($categories as $category)
-                                            <option value="{{ $category->id }}" 
-                                                    {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                            <option value="{{ $category->id }}"
+                                                {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
                                                 {{ $category->category_name }}
                                             </option>
                                         @endforeach
@@ -140,22 +140,23 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="quantity" class="form-label fw-semibold">Số lượng <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control @error('quantity') is-invalid @enderror" 
-                                           id="quantity" name="quantity" 
-                                           value="{{ old('quantity', $product->quantity) }}" 
-                                           placeholder="Nhập số lượng" min="0">
-                                    @error('quantity')
+                                    <label for="quantity_in_stock" class="form-label fw-semibold">Số lượng <span
+                                            class="text-danger">*</span></label>
+                                    <input type="number"
+                                        class="form-control @error('quantity_in_stock') is-invalid @enderror"
+                                        id="quantity_in_stock" name="quantity_in_stock"
+                                        value="{{ old('quantity_in_stock', $product->quantity_in_stock) }}"
+                                        placeholder="Nhập số lượng" min="0">
+                                    @error('quantity_in_stock')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-
                                 <div class="col-md-6 mb-3">
                                     <label for="ingredients" class="form-label fw-semibold">Thành phần</label>
-                                    <input type="text" class="form-control @error('ingredients') is-invalid @enderror" 
-                                           id="ingredients" name="ingredients" 
-                                           value="{{ old('ingredients', $product->ingredients) }}" 
-                                           placeholder="Nhập thành phần sản phẩm">
+                                    <input type="text" class="form-control @error('ingredients') is-invalid @enderror"
+                                        id="ingredients" name="ingredients"
+                                        value="{{ old('ingredients', $product->ingredients) }}"
+                                        placeholder="Nhập thành phần sản phẩm">
                                     @error('ingredients')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -163,9 +164,8 @@
 
                                 <div class="col-md-12 mb-3">
                                     <label for="description" class="form-label fw-semibold">Mô tả sản phẩm</label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror" 
-                                              id="description" name="description" rows="4" 
-                                              placeholder="Nhập mô tả sản phẩm">{{ old('description', $product->description) }}</textarea>
+                                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
+                                        rows="4" placeholder="Nhập mô tả sản phẩm">{{ old('description', $product->description) }}</textarea>
                                     @error('description')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -185,12 +185,14 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="original_price" class="form-label fw-semibold">Giá gốc <span class="text-danger">*</span></label>
+                                    <label for="original_price" class="form-label fw-semibold">Giá gốc <span
+                                            class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control @error('original_price') is-invalid @enderror" 
-                                               id="original_price" name="original_price" 
-                                               value="{{ old('original_price', $product->original_price) }}" 
-                                               placeholder="Nhập giá gốc" min="0">
+                                        <input type="number"
+                                            class="form-control @error('original_price') is-invalid @enderror"
+                                            id="original_price" name="original_price"
+                                            value="{{ old('original_price', $product->original_price) }}"
+                                            placeholder="Nhập giá gốc" min="0">
                                         <span class="input-group-text">đ</span>
                                         @error('original_price')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -199,12 +201,14 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                   <label for="discounted_price" class="form-label fw-semibold">Phần trăm giảm giá</label>
+                                    <label for="discounted_price" class="form-label fw-semibold">Phần trăm giảm
+                                        giá</label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control @error('discounted_price') is-invalid @enderror" 
-                                               id="discounted_price" name="discounted_price" 
-                                               value="{{ old('discounted_price', $product->discounted_price) }}" 
-                                               placeholder="Nhập giá khuyến mãi" min="0">
+                                        <input type="number"
+                                            class="form-control @error('discounted_price') is-invalid @enderror"
+                                            id="discounted_price" name="discounted_price"
+                                            value="{{ old('discounted_price', $product->discounted_price) }}"
+                                            placeholder="Nhập giá khuyến mãi" min="0">
                                         <span class="input-group-text">%</span>
                                         @error('discounted_price')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -228,9 +232,10 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="expiration_date" class="form-label fw-semibold">Ngày hết hạn</label>
-                                    <input type="date" class="form-control @error('expiration_date') is-invalid @enderror" 
-                                           id="expiration_date" name="expiration_date" 
-                                           value="{{ old('expiration_date', $product->expiration_date ? \Carbon\Carbon::parse($product->expiration_date)->format('Y-m-d') : '') }}">
+                                    <input type="date"
+                                        class="form-control @error('expiration_date') is-invalid @enderror"
+                                        id="expiration_date" name="expiration_date"
+                                        value="{{ old('expiration_date', $product->expiration_date ? \Carbon\Carbon::parse($product->expiration_date)->format('Y-m-d') : '') }}">
                                     @error('expiration_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -238,10 +243,9 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label for="view" class="form-label fw-semibold">Lượt xem</label>
-                                    <input type="number" class="form-control @error('view') is-invalid @enderror" 
-                                           id="view" name="view" 
-                                           value="{{ old('view', $product->view) }}" 
-                                           placeholder="Số lượt xem" min="0" readonly>
+                                    <input type="number" class="form-control @error('view') is-invalid @enderror"
+                                        id="view" name="view" value="{{ old('view', $product->view) }}"
+                                        placeholder="Số lượt xem" min="0" readonly>
                                     @error('view')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -264,16 +268,14 @@
                         </div>
                         <div class="card-body text-center">
                             <div class="mb-3">
-                                <img src="{{ asset('storage/' . $product->image) }}" 
-                                     class="img-fluid rounded shadow-sm" 
-                                     id="imagePreview"
-                                     style="max-width: 200px; max-height: 200px; object-fit: cover;"
-                                     alt="Product Image">
+                                <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid rounded shadow-sm"
+                                    id="imagePreview" style="max-width: 200px; max-height: 200px; object-fit: cover;"
+                                    alt="Product Image">
                             </div>
                             <div class="mb-3">
                                 <label for="image" class="form-label fw-semibold">Thay đổi hình ảnh</label>
-                                <input type="file" class="form-control @error('image') is-invalid @enderror" 
-                                       id="image" name="image" accept="image/*" onchange="previewImage(this)">
+                                <input type="file" class="form-control @error('image') is-invalid @enderror"
+                                    id="image" name="image" accept="image/*" onchange="previewImage(this)">
                                 @error('image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -342,11 +344,13 @@
                                 Biến thể sản phẩm
                             </h6>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#addVariantModal">
+                                <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#addVariantModal">
                                     <i class="fas fa-plus me-1"></i>
                                     Thêm biến thể
                                 </button>
-                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleVariantSection()">
+                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                    onclick="toggleVariantSection()">
                                     <i class="fas fa-eye me-1"></i>
                                     <span id="toggleVariantText">Ẩn/Hiện</span>
                                 </button>
@@ -354,11 +358,12 @@
                         </div>
                     </div>
                     <div class="card-body p-0" id="variantSection">
-                        @if($product->variants->isEmpty())
+                        @if ($product->variants->isEmpty())
                             <div class="p-4 text-center text-muted">
                                 <i class="fas fa-box-open fa-3x mb-3 text-muted"></i>
                                 <p class="mb-2">Sản phẩm này chưa có biến thể nào.</p>
-                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVariantModal">
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#addVariantModal">
                                     <i class="fas fa-plus me-1"></i>
                                     Thêm biến thể đầu tiên
                                 </button>
@@ -383,22 +388,21 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($product->variants as $variant)
+                                        @foreach ($product->variants as $variant)
                                             <tr class="align-middle">
                                                 <td>
-                                                    <input type="checkbox" class="form-check-input variant-checkbox" value="{{ $variant->id }}">
+                                                    <input type="checkbox" class="form-check-input variant-checkbox"
+                                                        value="{{ $variant->id }}">
                                                 </td>
                                                 <td>
                                                     <div class="text-center">
-                                                        @if($variant->image)
-                                                            <img src="{{ asset('storage/' . $variant->image) }}" 
-                                                                 class="rounded shadow-sm" 
-                                                                 width="50" height="50" 
-                                                                 style="object-fit: cover;" 
-                                                                 alt="Variant Image">
+                                                        @if ($variant->image)
+                                                            <img src="{{ asset('storage/' . $variant->image) }}"
+                                                                class="rounded shadow-sm" width="50" height="50"
+                                                                style="object-fit: cover;" alt="Variant Image">
                                                         @else
-                                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
-                                                                 style="width: 50px; height: 50px;">
+                                                            <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                                style="width: 50px; height: 50px;">
                                                                 <i class="fas fa-image text-muted"></i>
                                                             </div>
                                                         @endif
@@ -408,13 +412,16 @@
                                                     <span class="fw-semibold">{{ $variant->sku }}</span>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-light text-dark">{{ $product->product_code ?? 'N/A' }}</span>
+                                                    <span
+                                                        class="badge bg-light text-dark">{{ $product->product_code ?? 'N/A' }}</span>
                                                 </td>
                                                 <td>
-                                                    <span class="fw-semibold text-success">{{ number_format($variant->price) }}đ</span>
+                                                    <span
+                                                        class="fw-semibold text-success">{{ number_format($variant->price) }}đ</span>
                                                 </td>
                                                 <td>
-                                                    <span class="quantity-badge fw-bold 
+                                                    <span
+                                                        class="quantity-badge fw-bold 
                                                         @if ($variant->quantity_in_stock <= 5) text-danger border-danger
                                                         @elseif($variant->quantity_in_stock <= 20) text-warning border-warning
                                                         @else text-success border-success @endif border rounded px-2 py-1">
@@ -423,50 +430,53 @@
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    @if($variant->quantity_in_stock > 0)
-                                                        <span class="status-badge status-available fw-bold text-success border border-success rounded px-2 py-1">
+                                                    @if ($variant->quantity_in_stock > 0)
+                                                        <span
+                                                            class="status-badge status-available fw-bold text-success border border-success rounded px-2 py-1">
                                                             <i class="fas fa-check me-1"></i>Còn hàng
                                                         </span>
                                                     @else
-                                                        <span class="status-badge status-out-of-stock fw-bold text-danger border border-danger rounded px-2 py-1">
+                                                        <span
+                                                            class="status-badge status-out-of-stock fw-bold text-danger border border-danger rounded px-2 py-1">
                                                             <i class="fas fa-times me-1"></i>Hết hàng
                                                         </span>
                                                     @endif
                                                 </td>
                                                 <td>
                                                     <div class="d-flex flex-wrap gap-1">
-                                                        @foreach($variant->attributeValues as $attrValue)
+                                                        @foreach ($variant->attributeValues as $attrValue)
                                                             <span class="badge bg-primary text-white rounded px-2 py-1">
                                                                 {{ $attrValue->attribute->name }}: {{ $attrValue->value }}
                                                             </span>
                                                         @endforeach
-                                                        @if($variant->attributeValues->isEmpty())
+                                                        @if ($variant->attributeValues->isEmpty())
                                                             <span class="text-muted small">Không có thuộc tính</span>
                                                         @endif
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    @if($variant->ingredients)
-                                                        <span class="text-muted small">{{ Str::limit($variant->ingredients, 30) }}</span>
+                                                    @if ($variant->ingredients)
+                                                        <span
+                                                            class="text-muted small">{{ Str::limit($variant->ingredients, 30) }}</span>
                                                     @else
                                                         <span class="text-muted small">-</span>
                                                     @endif
                                                 </td>
                                                 <td>
                                                     <div class="d-flex justify-content-center gap-1">
-                                                        <button type="button" class="btn btn-sm btn-outline-info" 
-                                                                data-bs-toggle="tooltip" title="Xem chi tiết"
-                                                                onclick="viewVariant({{ $variant->id }})">
+                                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                                            data-bs-toggle="tooltip" title="Xem chi tiết"
+                                                            onclick="viewVariant({{ $variant->id }})">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-warning" 
-                                                                data-bs-toggle="tooltip" title="Chỉnh sửa"
-                                                                onclick="editVariant({{ $variant->id }})">
+                                                        <button type="button" class="btn btn-sm btn-outline-warning"
+                                                            data-bs-toggle="tooltip" title="Chỉnh sửa"
+                                                            onclick="editVariant({{ $variant->id }})">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                                data-bs-toggle="tooltip" title="Xóa biến thể"
-                                                                onclick="deleteVariant({{ $variant->id }}, '{{ $variant->sku }}')">
+                                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            data-bs-toggle="tooltip" title="Xóa biến thể"
+                                                            onclick="deleteVariant({{ $variant->id }}, '{{ $variant->sku }}')">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     </div>
@@ -478,7 +488,7 @@
                             </div>
                         @endif
                     </div>
-                    {{-- @if(!$product->variants->isEmpty())
+                    {{-- @if (!$product->variants->isEmpty())
                         <div class="card-footer bg-white border-top-0">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="text-muted small">
@@ -557,7 +567,7 @@
                 }
                 reader.readAsDataURL(input.files[0]);
             }
-        }     
+        }
     </script>
     <style>
         .card {

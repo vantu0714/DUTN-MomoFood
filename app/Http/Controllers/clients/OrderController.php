@@ -34,6 +34,8 @@ class OrderController extends Controller
     }
     public function store(Request $request)
     {
+
+
         $request->validate([
             'recipient_name' => 'required|string|max:255',
             'recipient_phone' => 'required|string|max:15',
@@ -126,21 +128,39 @@ class OrderController extends Controller
             session()->forget('promotion');
             session()->forget('discount');
 
+            //vnpay
+            $recipient = [
+                'recipient_name' => $request->recipient_name,
+                'recipient_phone' => $request->recipient_phone,
+                'recipient_address' => $request->recipient_address,
+                'note' => $request->note,
+                'shipping_fee' => $request->shipping_fee,
+                'promotion' => $request->promotion ?? null,
+                'payment_method' => $request->payment_method
+            ];
+            session(['order_temp' => $recipient]);
+
+            // Nếu chọn VNPAY thì redirect đến trang thanh toán
             if ($request->payment_method === 'vnpay') {
                 return redirect()->route('vnpay.payment', ['order_id' => $order->id]);
             }
 
+            // Kết thúc vnpay
 
             return redirect()->route('carts.index')->with('success', 'Đặt hàng thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
+
+
     }
 
     public function orderList()
     {
-        $orders = Order::where('user_id', auth()->id())->latest()->get();
+        $orders = Order::where('user_id', auth()->id())
+            ->latest()
+            ->paginate(5);
         return view('clients.user.orders', compact('orders'));
     }
 
@@ -157,5 +177,24 @@ class OrderController extends Controller
             ->get();
 
         return view('clients.user.show-order', compact('order', 'items'));
+    }
+
+    public function cancel(Request $request, $id)
+    {
+        $request->validate([
+            'cancellation_reason' => 'required|string|max:1000',
+        ]);
+
+        $order = Order::findOrFail($id);
+
+        if ($order->status != 1) {
+            return back()->with('error', 'Đơn hàng không thể hủy.');
+        }
+
+        $order->status = 6; // hủy đơn
+        $order->cancellation_reason = $request->cancellation_reason;
+        $order->save();
+
+        return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy.');
     }
 }
