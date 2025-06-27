@@ -5,8 +5,11 @@ namespace App\Providers;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use Doctrine\DBAL\Types\BooleanType;
+use Doctrine\DBAL\Types\Type;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Pagination\Paginator;
@@ -42,9 +45,26 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('cartCount', $cartCount);
         });
-         Relation::morphMap([
-        'product' => Product::class,
-        'variant' => ProductVariant::class,
-    ]);
+        Relation::morphMap([
+            'product' => Product::class,
+            'variant' => ProductVariant::class,
+        ]);
+
+        if (DB::getDriverName() === 'mysql') {
+
+            // Nếu tinyinteger chưa tồn tại, mới addType (tránh lỗi trùng key)
+            if (!Type::hasType('tinyinteger')) {
+                Type::addType('tinyinteger', BooleanType::class);
+            }
+
+            $platform = DB::getDoctrineSchemaManager()->getDatabasePlatform();
+
+            // Ánh xạ tinyint và tinyinteger
+            $platform->registerDoctrineTypeMapping('tinyint', 'boolean');
+            $platform->registerDoctrineTypeMapping('tinyinteger', 'tinyinteger');
+
+            // Enum nếu có
+            $platform->registerDoctrineTypeMapping('enum', 'string');
+        }
     }
 }

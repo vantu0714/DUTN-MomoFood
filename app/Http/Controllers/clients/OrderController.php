@@ -158,7 +158,9 @@ class OrderController extends Controller
 
     public function orderList()
     {
-        $orders = Order::where('user_id', auth()->id())->latest()->get();
+        $orders = Order::where('user_id', auth()->id())
+            ->latest()
+            ->paginate(5);
         return view('clients.user.orders', compact('orders'));
     }
 
@@ -175,5 +177,24 @@ class OrderController extends Controller
             ->get();
 
         return view('clients.user.show-order', compact('order', 'items'));
+    }
+
+    public function cancel(Request $request, $id)
+    {
+        $request->validate([
+            'cancellation_reason' => 'required|string|max:1000',
+        ]);
+
+        $order = Order::findOrFail($id);
+
+        if ($order->status != 1) {
+            return back()->with('error', 'Đơn hàng không thể hủy.');
+        }
+
+        $order->status = 6; // hủy đơn
+        $order->cancellation_reason = $request->cancellation_reason;
+        $order->save();
+
+        return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy.');
     }
 }
