@@ -20,13 +20,28 @@ class ProductVariantController extends Controller
     {
         $query = ProductVariant::with(['product', 'attributeValues.attribute'])->orderByDesc('created_at');
 
+        // Tìm kiếm
         if ($request->filled('search')) {
             $search = $request->input('search');
 
-            $query->whereHas('product', function ($q) use ($search) {
-                $q->where('product_name', 'LIKE', "%{$search}%")
-                    ->orWhere('product_code', 'LIKE', "%{$search}%");
-            })->orWhere('sku', 'LIKE', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('product', function ($q2) use ($search) {
+                    $q2->where('product_name', 'LIKE', "%{$search}%")
+                        ->orWhere('product_code', 'LIKE', "%{$search}%");
+                })->orWhere('sku', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Lọc tồn kho
+        if ($request->filled('stock_filter')) {
+            $stockFilter = $request->input('stock_filter');
+            if ($stockFilter === 'low') {
+                $query->where('quantity_in_stock', '<=', 5);
+            } elseif ($stockFilter === 'medium') {
+                $query->whereBetween('quantity_in_stock', [6, 20]);
+            } elseif ($stockFilter === 'high') {
+                $query->where('quantity_in_stock', '>', 20);
+            }
         }
 
         $variantsPaginated = $query->paginate(10)->withQueryString();
@@ -36,8 +51,10 @@ class ProductVariantController extends Controller
             'variantsPaginated' => $variantsPaginated,
             'groupedVariants' => $groupedVariants,
             'search' => $request->input('search'),
+            'stockFilter' => $request->input('stock_filter'),
         ]);
     }
+
 
 
     public function create(Request $request)
@@ -61,7 +78,7 @@ class ProductVariantController extends Controller
             $variantsData = $request->input('variants', []);
             $product = Product::findOrFail($productId);
 
-            foreach ($variantsData as $variant) {
+            foreach ($variantsData as $variantIndex => $variant) {
                 // Xử lý thuộc tính chính (ví dụ: Vị)
                 $mainAttrName = trim($variant['main_attribute']['name']);
                 $mainAttrValue = trim($variant['main_attribute']['value']);
@@ -73,31 +90,34 @@ class ProductVariantController extends Controller
                     'value' => $mainAttrValue
                 ]);
 
-                // Duyệt qua các sub-attributes (ví dụ: Size)
-                foreach ($variant['sub_attributes'] as $subAttr) {
+                foreach ($variant['sub_attributes'] as $subIndex => $subAttr) {
                     $variantModel = new ProductVariant();
                     $variantModel->product_id = $productId;
                     $variantModel->price = $subAttr['price'];
                     $variantModel->quantity_in_stock = $subAttr['quantity_in_stock'] ?? 0;
                     $variantModel->sku = $subAttr['sku'] ?? null;
 
-                    // Xử lý ảnh nếu có
-                    if (isset($subAttr['image'])) {
-                        $image = $subAttr['image'];
-                        $imagePath = $image->store('product_variants', 'public');
+
+                    $imageInputName = "variants.$variantIndex.sub_attributes.$subIndex.image";
+                    $uploadedFile = $request->file($imageInputName);
+
+                    if ($uploadedFile instanceof \Illuminate\Http\UploadedFile) {
+                        $imagePath = $uploadedFile->store('product_variants', 'public');
                         $variantModel->image = $imagePath;
                     }
 
                     $variantModel->save();
 
-                    // Gắn "Vị" vào variant
+                    // Gắn "Vị"
                     $variantModel->attributeValues()->attach($mainAttrVal->id);
 
-                    // Gắn Size (attribute_value_id đã được chọn từ form)
+                    // Gắn Size
                     $sizeAttrValId = $subAttr['attribute_value_id'];
                     $variantModel->attributeValues()->attach($sizeAttrValId);
                 }
             }
+
+            $this->updateProductStatus($productId);
 
             DB::commit();
             return redirect()->route('admin.product_variants.index')->with('success', 'Thêm biến thể thành công.');
