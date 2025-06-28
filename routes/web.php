@@ -35,16 +35,16 @@ Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 
 // Authentication
-Route::controller(AuthController::class)->group(function() {
+Route::controller(AuthController::class)->group(function () {
     // Login/Logout
     Route::get('/login', 'index')->name('login');
     Route::post('/login', 'login');
     Route::post('/logout', 'logout')->name('logout');
-    
+
     // Registration
     Route::get('/register', 'showRegister')->name('register');
     Route::post('/register', 'register');
-    
+
     // Password Reset
     Route::get('/forgot-password', 'showForgotPassword')->name('password.request');
     Route::post('/forgot-password', 'sendResetRedirect')->name('password.email');
@@ -72,7 +72,7 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/edit', [AuthController::class, 'editProfile'])->name('update');
         Route::get('/changepassword', [AuthController::class, 'showChangePassword'])->name('changepassword');
         Route::post('/changepassword', [AuthController::class, 'updatePassword'])->name('updatepassword');
-        
+
         // Orders
         Route::get('/orders', [ClientsOrderController::class, 'orderList'])->name('orders');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
@@ -88,6 +88,8 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
         Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
         Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
+
+        Route::post('/remove-selected', [CartClientController::class, 'removeSelected'])->name('carts.removeSelected');
     });
 
     // Checkout
@@ -165,12 +167,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Comment Management
     Route::resource('comments', CommentController::class)->only(['index', 'destroy']);
-    
+
     // Combo Management
     Route::resource('combo_items', ComboItemController::class)->except(['show', 'edit', 'update']);
     Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])
         ->name('combo_items.delete_combo');
 });
-
-
-

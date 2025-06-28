@@ -259,4 +259,26 @@ class CartClientController extends Controller
 
         return redirect()->back()->with('success', 'Đã xóa toàn bộ sản phẩm trong giỏ hàng.');
     }
+
+    public function removeSelected(Request $request)
+    {
+        $userId = Auth::id();
+        $cart = Cart::where('user_id', $userId)->first();
+
+        if (!$cart) {
+            return back()->with('error', 'Không tìm thấy giỏ hàng.');
+        }
+
+        $selectedItems = $request->input('selected_items', []);
+
+        if (empty($selectedItems)) {
+            return back()->with('error', 'Vui lòng chọn sản phẩm cần xóa.');
+        }
+
+        CartItem::where('cart_id', $cart->id)
+            ->whereIn('id', $selectedItems)
+            ->delete();
+
+        return back()->with('success', 'Đã xóa các sản phẩm đã chọn.');
+    }
 }

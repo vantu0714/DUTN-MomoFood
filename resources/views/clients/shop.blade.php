@@ -46,9 +46,10 @@
             <div class="col-lg-12">
                 <div class="row g-4">
                     <div class="col-xl-3">
-                        <form action="{{ route('clients.search') }}" method="GET" class="input-group w-100 mx-auto d-flex">
-                            <input type="search" class="form-control border-secondary" name="keyword" placeholder="Tìm kiếm sản phẩm"
-                                aria-describedby="search-icon-1">
+                        <form action="{{ route('clients.search') }}" method="GET"
+                            class="input-group w-100 mx-auto d-flex">
+                            <input type="search" class="form-control border-secondary" name="keyword"
+                                placeholder="Tìm kiếm sản phẩm" aria-describedby="search-icon-1">
                             <button type="submit" id="search-icon-1" class="btn btn-outline-primary p-3"
                                 type="button">
                                 <i class="fa fa-search"></i>
@@ -76,7 +77,7 @@
                             <div class="col-lg-12">
                                 <div class="mb-3">
                                     <h4>Danh mục sản phẩm</h4>
-                                    <ul class="list-unstyled fruite-categorie">                        
+                                    <ul class="list-unstyled fruite-categorie">
                                         @foreach ($categories as $categoryItem)
                                             <li>
                                                 <div class="d-flex justify-content-between fruite-name">
@@ -138,8 +139,9 @@
                                     <div class="row g-2 mb-3" id="customPriceInputs"
                                         style="{{ request('price_range') == 'custom' ? '' : 'display:none;' }}">
                                         <div class="col-6">
-                                            <input type="number" name="min_price" class="form-control form-control-sm"
-                                                placeholder="Giá từ" value="{{ request('min_price') }}">
+                                            <input type="number" name="min_price"
+                                                class="form-control form-control-sm" placeholder="Giá từ"
+                                                value="{{ request('min_price') }}">
                                         </div>
                                         <div class="col-6">
                                             <input type="number" name="max_price"
@@ -285,24 +287,25 @@
                                                 </p>
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                @if ($product->discounted_price && $product->discounted_price < $product->original_price)
-                                                    <div>
-                                                        <h5 class="fw-bold mb-0 text-dark">
+                                                <div class="product-price-wrapper">
+                                                    @if ($product->discounted_price && $product->discounted_price < $product->original_price)
+                                                        <div class="product-price-sale">
                                                             {{ number_format($product->discounted_price, 0, ',', '.') }}
-                                                            VND
-                                                        </h5>
-                                                        <h6 class="text-danger text-decoration-line-through mb-0">
+                                                            <span class="currency">VND</span>
+                                                        </div>
+                                                        <div class="product-price-original">
                                                             {{ number_format($product->original_price, 0, ',', '.') }}
                                                             VND
-                                                        </h6>
-                                                    </div>
-                                                @elseif ($product->original_price)
-                                                    <h5 class="fw-bold mb-0 text-dark">
-                                                        {{ number_format($product->original_price, 0, ',', '.') }} VND
-                                                    </h5>
-                                                @else
-                                                    <h6 class="text-muted mb-0">Liên hệ để biết giá</h6>
-                                                @endif
+                                                        </div>
+                                                    @elseif ($product->original_price)
+                                                        <div class="product-price-sale">
+                                                            {{ number_format($product->original_price, 0, ',', '.') }}
+                                                            <span class="currency">VND</span>
+                                                        </div>
+                                                    @else
+                                                        <div class="text-muted">Liên hệ để biết giá</div>
+                                                    @endif
+                                                </div>
 
                                                 <form action="{{ route('carts.add') }}" method="POST">
                                                     @csrf
@@ -315,6 +318,7 @@
                                                     </button>
                                                 </form>
                                             </div>
+
 
                                         </div>
                                     </div>
