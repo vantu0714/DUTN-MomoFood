@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Promotion;
+use App\Models\PromotionUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -80,9 +81,39 @@ class OrderController extends Controller
             if ($promotion) {
                 $promotionCode = $promotion->promotion_name;
 
+                if ($promotion->vip_only) {
+                    $totalSpent = Order::where('user_id', $userId)
+                        ->where('status', '!=', 6)
+                        ->sum('total_price');
+
+                    if ($totalSpent < 1000000) {
+                        return redirect()->back()->with('error', 'Mã giảm giá này chỉ dành cho khách hàng VIP.');
+                    }
+                }
+
+                if ($promotion->min_total_spent !== null && $total < $promotion->min_total_spent) {
+                    return redirect()->back()->with('error', 'Bạn cần mua tối thiểu ' . number_format($promotion->min_total_spent, 0, ',', '.') . 'đ để dùng mã này.');
+                }
+
+                // Kiểm tra số lượt dùng của người dùng
+                $userUsed = PromotionUser::where('promotion_id', $promotion->id)
+                    ->where('user_id', $userId)
+                    ->first();
+
+                // Kiểm tra giới hạn tổng
+                if ($promotion->usage_limit !== null && $promotion->used_count >= $promotion->usage_limit) {
+                    return redirect()->back()->with('error', 'Mã giảm giá đã hết lượt sử dụng.');
+                }
+
+                // Kiểm tra nếu user đã dùng
+                if ($userUsed && $userUsed->used_count >= 1) {
+                    return redirect()->back()->with('error', 'Bạn đã sử dụng mã giảm giá này.');
+                }
+
+                // Tính giảm giá
                 if ($promotion->discount_type === 'percent') {
                     $discount = ($promotion->discount_value / 100) * $total;
-                } elseif ($promotion->discount_type === 'fixed') {
+                } else {
                     $discount = $promotion->discount_value;
                 }
 
@@ -122,6 +153,15 @@ class OrderController extends Controller
                     'price' => $item->discounted_price,
                 ]);
             }
+            // Tăng số lượt sử dụng mã giảm giá
+            if (isset($promotion)) {
+                $promotion->increment('used_count');
+
+                PromotionUser::updateOrCreate(
+                    ['promotion_id' => $promotion->id, 'user_id' => $userId],
+                    ['used_count' => DB::raw('used_count + 1')]
+                );
+            }
 
             DB::commit();
             $cart->items()->delete(); // Xóa cart items
@@ -152,8 +192,6 @@ class OrderController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
-
-
     }
 
     public function orderList()
