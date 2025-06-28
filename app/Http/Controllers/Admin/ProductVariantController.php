@@ -252,7 +252,7 @@ class ProductVariantController extends Controller
 
             foreach ($productsData as $productId => $productData) {
                 $product = Product::findOrFail($productId);
-                $originalPrice = $product->original_price;
+                $originalPrice = (float) $product->original_price;
                 $productCode = $product->product_code;
 
                 foreach ($productData['variants'] ?? [] as $variantData) {
@@ -270,10 +270,13 @@ class ProductVariantController extends Controller
                     }
 
                     foreach ($subAttrs as $subAttr) {
-                        // Validate giá
-                        if ($subAttr['price'] < $originalPrice) {
+                        // Làm sạch giá (remove ".", ",", "₫" nếu có)
+                        $rawPrice = $subAttr['price'] ?? '0';
+                        $cleanPrice = (float) str_replace(['.', ',', '₫', ' '], '', $rawPrice);
+
+                        if ($cleanPrice < $originalPrice) {
                             DB::rollBack();
-                            return back()->withInput()->with('error', 'Giá biến thể không được thấp hơn giá gốc sản phẩm (' . number_format($originalPrice) . '₫)');
+                            return back()->withInput()->with('error', 'Giá biến thể không được thấp hơn giá gốc sản phẩm (' . number_format($originalPrice, 0, ',', '.') . '₫)');
                         }
 
                         // Check trùng biến thể (Vị + Size)
@@ -306,7 +309,6 @@ class ProductVariantController extends Controller
                         if ($mainAttributeValue) {
                             $sku .= '-' . strtoupper(Str::slug($mainAttributeValue->value));
                         }
-
                         if (!empty($subAttr['attribute_value_id'])) {
                             $sizeValue = AttributeValue::find($subAttr['attribute_value_id']);
                             $sku .= '-' . strtoupper(Str::slug($sizeValue->value ?? ''));
@@ -315,13 +317,13 @@ class ProductVariantController extends Controller
                         // Tạo biến thể
                         $variant = ProductVariant::create([
                             'product_id' => $productId,
-                            'price' => $subAttr['price'],
+                            'price' => $cleanPrice,
                             'quantity_in_stock' => $subAttr['quantity_in_stock'],
                             'sku' => $sku,
                             'image' => $imagePath,
                         ]);
 
-                        // Gắn thuộc tính chính (main)
+                        // Gắn thuộc tính chính
                         if ($mainAttributeValue) {
                             ProductVariantValue::create([
                                 'product_variant_id' => $variant->id,
@@ -330,7 +332,7 @@ class ProductVariantController extends Controller
                             ]);
                         }
 
-                        // Gắn thuộc tính phụ (sub)
+                        // Gắn thuộc tính phụ (size)
                         if (!empty($subAttr['attribute_value_id'])) {
                             ProductVariantValue::create([
                                 'product_variant_id' => $variant->id,
@@ -343,7 +345,6 @@ class ProductVariantController extends Controller
 
                 $this->updateProductStatus($productId);
             }
-
             DB::commit();
             return redirect()->route('admin.product_variants.index')->with('success', 'Đã thêm biến thể cho nhiều sản phẩm!');
         } catch (\Exception $e) {
