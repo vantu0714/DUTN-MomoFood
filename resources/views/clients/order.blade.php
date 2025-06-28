@@ -22,7 +22,7 @@
         @endif
 
         {{-- FORM --}}
-        <form action="{{ route('order.store') }}" method="POST">
+        <form action="{{ route('clients.create-payment') }}" method="POST">
             @csrf
             <div class="row g-4">
                 {{-- THÔNG TIN NGƯỜI NHẬN --}}
@@ -153,6 +153,7 @@
 
                             <hr>
                             <h5 class="text-end">Tổng cộng: <strong>{{ number_format($grandTotal) }}đ</strong></h5>
+                            <input type="hidden" name="grand_total" value="{{ $grandTotal }}">
 
                             <button type="submit" class="btn btn-success w-100 mt-3">Xác nhận đặt hàng</button>
                             <a href="{{ route('carts.index') }}" class="d-block mt-2 text-center">Quay lại giỏ hàng</a>
