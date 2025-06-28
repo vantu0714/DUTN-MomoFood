@@ -68,8 +68,17 @@
                                         </td>
                                         <td>{{ number_format($price, 0, ',', '.') }} đ</td>
                                         <td>
-                                            {{-- tăng giảm số lượng --}}
+                                            <div class="input-group quantity-control" style="max-width: 130px;">
+                                                <button type="button"
+                                                    class="btn btn-outline-secondary quantity-decrease">-</button>
+                                                <input type="number" class="form-control quantity-input text-center"
+                                                    value="{{ $item->quantity }}" min="1"
+                                                    data-old-value="{{ $item->quantity }}">
+                                                <button type="button"
+                                                    class="btn btn-outline-secondary quantity-increase">+</button>
+                                            </div>
                                         </td>
+
                                         <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
                                         <td>
                                             <a href="{{ route('carts.remove', $item->id) }}"
