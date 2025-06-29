@@ -89,7 +89,7 @@
                                                 style="max-width: 130px;">
                                                 <button type="button"
                                                     class="btn btn-outline-secondary quantity-decrease">−</button>
-                                                <input type="number" class="form-control text-center quantity-input"
+                                                <input type="number" class="form-control text-center quantity-input no-spinner"
                                                     value="{{ $item->quantity }}" min="1"
                                                     data-old-value="{{ $item->quantity }}">
                                                 <button type="button"
