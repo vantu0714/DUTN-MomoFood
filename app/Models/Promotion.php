@@ -20,6 +20,8 @@ class Promotion extends Model
         'status',
         'usage_limit',
         'used_count',
+        'min_total_spent',
+        'vip_only',
     ];
 
     protected $casts = [

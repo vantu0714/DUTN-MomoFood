@@ -73,7 +73,7 @@
                                         @if ($variantName)
                                             <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
                                         @endif
-                                        
+
                                     </td>
                                     <td class="price" data-price="{{ $price }}">
                                         {{ number_format($price, 0, ',', '.') }} đ
@@ -152,32 +152,37 @@
                                     <span>Tạm tính:</span>
                                     <span id="total-price">{{ number_format($total, 0, ',', '.') }} đ</span>
                                 </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Phí vận chuyển:</span>
-                                    <span id="shipping-fee">{{ number_format($shipping, 0, ',', '.') }} đ</span>
-                                </div>
 
-                                @if ($discount > 0 && $promotionName)
-                                    <div class="d-flex justify-content-between mb-2 text-success fw-bold">
-                                        <span>Giảm giá ({{ $promotionName }}):</span>
-                                        <span>-{{ number_format($discount, 0, ',', '.') }} đ</span>
+                                @if ($total > 0)
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Phí vận chuyển:</span>
+                                        <span id="shipping-fee">{{ number_format($shipping, 0, ',', '.') }} đ</span>
+                                    </div>
+
+                                    @if ($discount > 0 && $promotionName)
+                                        <div class="d-flex justify-content-between mb-2 text-success fw-bold">
+                                            <span>Giảm giá ({{ $promotionName }}):</span>
+                                            <span>-{{ number_format($discount, 0, ',', '.') }} đ</span>
+                                        </div>
+                                    @endif
+
+                                    <hr>
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Tổng cộng:</span>
+                                        <span id="grand-total">{{ number_format($grandTotal, 0, ',', '.') }} đ</span>
                                     </div>
                                 @endif
-
-                                <hr>
-                                <div class="d-flex justify-content-between fw-bold">
-                                    <span>Tổng cộng:</span>
-                                    <span id="grand-total">{{ number_format($grandTotal, 0, ',', '.') }} đ</span>
-                                </div>
                             </div>
-                            <a href="{{ route('clients.order') }}"
-                                class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">
-                                Thanh Toán
-                            </a>
+
+                            @if ($total > 0)
+                                <a href="{{ route('clients.order') }}"
+                                    class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">
+                                    Thanh Toán
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
