@@ -13,30 +13,21 @@
         </div>
 
         <div class="container-fluid py-5">
-            <div class="container py-5">
+            @php $total = 0; @endphp
+            <form action="{{ route('carts.removeSelected') }}" method="POST" id="delete-selected-form"
+                onsubmit="return checkSelectedItems()">
 
-                @if (session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-                @if (session('error'))
-                    <div class="alert alert-danger">{{ session('error') }}</div>
-                @endif
+                @csrf
 
-                {{-- BẢNG GIỎ HÀNG --}}
-                @if (count($carts) > 0)
-                    <form action="{{ route('carts.clear') }}" method="POST"
-                        onsubmit="return confirm('Bạn có chắc muốn xóa tất cả sản phẩm trong giỏ hàng?')">
-                        @csrf
-                        <button type="submit" class="btn btn-danger mb-3">
-                            🗑️ Xóa tất cả
-                        </button>
-                    </form>
-                @endif
+                <button type="submit" class="btn btn-danger mb-3" {{ count($carts) == 0 ? 'disabled' : '' }}>
+                    🗑️ Xóa các sản phẩm đã chọn
+                </button>
 
                 <div class="table-responsive">
                     <table class="table" id="cart-table">
                         <thead>
                             <tr>
+                                <th><input type="checkbox" id="select-all"></th>
                                 <th>Sản phẩm</th>
                                 <th>Tên</th>
                                 <th>Giá</th>
@@ -45,104 +36,96 @@
                                 <th>Xử lý</th>
                             </tr>
                         </thead>
-                        @php $total = 0; @endphp
-
-                        {{-- VÙNG THÔNG BÁO LỖI AJAX --}}
-                        <div id="cart-error-alert" class="alert alert-danger text-center d-none"></div>
-
                         <tbody>
-                            @forelse($carts as $item)
-                                @php
-                                    $product = $item->product;
-                                    $variant = $item->productVariant;
-                                    $image = $product->image ?? 'clients/img/default.png';
-                                    $productName = $product->product_name ?? 'Không có tên';
-                                    $variantName = $variant->name ?? null;
-                                    $stock = $variant->quantity ?? ($product->quantity ?? 0);
-                                    $price = $item->discounted_price ?? 0;
-                                    $subTotal = $price * $item->quantity;
-                                    $total += $subTotal;
-                                @endphp
-                                <tr class="cart-item" data-id="{{ $item->id }}" data-stock="{{ $stock }}">
-                                    <td>
-                                        <img src="{{ asset('storage/' . $image) }}" class="img-fluid rounded-circle"
-                                            style="width: 80px; height: 80px;" />
-                                    </td>
-                                    <td>
-                                        {{ $productName }}
-                                        @if ($variantName)
-                                            <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
-                                        @endif
 
-                                    </td>
-                                    <td class="price" data-price="{{ $price }}">
-                                        {{ number_format($price, 0, ',', '.') }} đ
-                                    </td>
-                                    <td>
-                                        <div class="input-group justify-content-center" style="width: 120px;">
-                                            <button type="button"
-                                                class="btn btn-outline-secondary btn-sm quantity-decrease">-</button>
-                                            <input type="number" name="quantities[{{ $item->id }}]"
-                                                class="form-control text-center quantity-input mx-1" min="1"
-                                                value="{{ $item->quantity }}">
-                                            <button type="button"
-                                                class="btn btn-outline-secondary btn-sm quantity-increase">+</button>
-                                        </div>
-                                    </td>
-                                    <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
-                                    <td>
-                                        <a href="{{ route('carts.remove', $item->id) }}" class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                                            <i class="fa fa-times"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            @empty
+                            @if (count($carts) > 0)
+                                @foreach ($carts as $item)
+                                    @php
+                                        $product = $item->product;
+                                        $variant = $item->productVariant;
+                                        $image = $product->image ?? 'clients/img/default.png';
+                                        $productName = $product->product_name ?? 'Không có tên';
+                                        $variantName = $variant->name ?? null;
+                                        $stock = $variant->quantity ?? ($product->quantity ?? 0);
+                                        $price = $item->discounted_price ?? 0;
+                                        $subTotal = $price * $item->quantity;
+                                        $total += $subTotal;
+                                    @endphp
+                                    <tr class="cart-item" data-id="{{ $item->id }}"
+                                        data-stock="{{ $stock }}">
+                                        <td>
+                                            <input type="checkbox" name="selected_items[]" value="{{ $item->id }}"
+                                                class="select-item">
+                                        </td>
+                                        <td>
+                                            <img src="{{ asset('storage/' . $image) }}" class="img-fluid rounded-circle"
+                                                style="width: 80px; height: 80px;" />
+                                        </td>
+                                        <td>
+                                            {{ $productName }}
+                                            @if ($variantName)
+                                                <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
+                                            @endif
+                                        </td>
+                                        <td>{{ number_format($price, 0, ',', '.') }} đ</td>
+                                        <td>
+                                            <div class="input-group quantity-control" style="max-width: 130px;">
+                                                <button type="button"
+                                                    class="btn btn-outline-secondary quantity-decrease">-</button>
+                                                <input type="number" class="form-control quantity-input text-center"
+                                                    value="{{ $item->quantity }}" min="1"
+                                                    data-old-value="{{ $item->quantity }}">
+                                                <button type="button"
+                                                    class="btn btn-outline-secondary quantity-increase">+</button>
+                                            </div>
+                                        </td>
+
+                                        <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
+                                        <td>
+                                            <a href="{{ route('carts.remove', $item->id) }}"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                                <i class="fa fa-times"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                            
                                 <tr>
-                                    <td colspan="6" class="text-center">Giỏ hàng trống</td>
+                                    <td colspan="7" class="text-center">Giỏ hàng trống</td>
                                 </tr>
-                            @endforelse
+                            @endif
                         </tbody>
-
-
                     </table>
                 </div>
+            </form>
 
-                {{-- MÃ GIẢM GIÁ --}}
-                <div class="mt-5">
-                    <form action="{{ route('carts.applyCoupon') }}" method="POST" class="d-flex">
-                        @csrf
-                        <input type="text" name="promotion"
-                            class="form-control border-0 border-bottom rounded me-3 py-3" placeholder="Nhập mã giảm giá"
-                            style="text-transform: uppercase;" oninput="this.value = this.value.replace(/\s/g, '')">
-                        <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="submit">
-                            Áp dụng mã
-                        </button>
-                    </form>
-                </div>
+        </div>
 
-                {{-- TÍNH TỔNG --}}
-                @php
-                    $shipping = 30000;
-                    $discount = 0;
-                    $promotionName = '';
+        {{-- MÃ GIẢM GIÁ --}}
+        <div class="mt-5">
+            <form action="{{ route('carts.applyCoupon') }}" method="POST" class="d-flex">
+                @csrf
+                <input type="text" name="promotion" class="form-control border-0 border-bottom rounded me-3 py-3"
+                    placeholder="Nhập mã giảm giá" style="text-transform: uppercase;"
+                    oninput="this.value = this.value.replace(/\s/g, '')">
+                <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="submit">
+                    Áp dụng mã
+                </button>
+            </form>
+        </div>
 
-                    if (session()->has('promotion')) {
-                        $promotion = session('promotion');
-                        $promotionName = $promotion['name'] ?? '';
+        {{-- TÍNH TỔNG --}}
+        @php
+            $shipping = 30000;
+            $discount = 0;
+            $promotionName = '';
 
-                        if ($promotion['type'] === 'fixed') {
-                            $discount = $promotion['value'];
-                        } elseif ($promotion['type'] === 'percent') {
-                            $discount = $total * ($promotion['value'] / 100);
-                            if (!empty($promotion['max']) && $discount > $promotion['max']) {
-                                $discount = $promotion['max'];
-                            }
-                        }
-                    }
-                    $grandTotal = max(0, $total + $shipping - $discount);
-                @endphp
-
+            if (session()->has('promotion')) {
+                $promotion = session('promotion');
+                $promotionName = $promotion['name'] ?? '';
+                
                 <div class="row g-4 justify-content-end mt-5">
                     <div class="col-sm-8 col-md-7 col-lg-6 col-xl-4">
                         <div class="bg-light rounded">
@@ -182,11 +165,18 @@
                             @endif
                         </div>
                     </div>
+                    <a href="{{ route('clients.order') }}"
+                        class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">
+                        Thanh Toán
+                    </a>
                 </div>
             </div>
         </div>
 
     </div>
+</div>
+
+</div>
 </div>
 @include('clients.layouts.footer')
 {{-- AJAX cập nhật số lượng --}}
@@ -244,12 +234,14 @@
             const id = row.dataset.id;
             const stock = parseInt(row.dataset.stock) || 1;
 
+            if (!input) return; // Không có input thì bỏ qua
+
             input.dataset.oldValue = input.value;
 
-            btnIncrease.addEventListener('click', () => {
+            btnIncrease?.addEventListener('click', () => {
                 let quantity = parseInt(input.value) || 1;
                 if (quantity >= stock) {
-                    showError('Không thể vượt quá số lượng tồn tồn kho: ' + stock);
+                    showError('Không thể vượt quá tồn kho: ' + stock);
                     return;
                 }
                 input.dataset.oldValue = quantity;
@@ -258,7 +250,7 @@
                 updateQuantityAjax(id, quantity, row, input);
             });
 
-            btnDecrease.addEventListener('click', () => {
+            btnDecrease?.addEventListener('click', () => {
                 let quantity = parseInt(input.value) || 1;
                 input.dataset.oldValue = quantity;
                 if (quantity > 1) {
@@ -281,5 +273,35 @@
                 updateQuantityAjax(id, quantity, row, input);
             });
         });
+
+        // XỬ LÝ CHỌN TẤT CẢ CHECKBOX
+        const selectAll = document.getElementById('select-all');
+        const itemCheckboxes = document.querySelectorAll('.select-item');
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                itemCheckboxes.forEach(cb => cb.checked = this.checked);
+            });
+
+            itemCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    if (!this.checked) {
+                        selectAll.checked = false;
+                    } else {
+                        const allChecked = Array.from(itemCheckboxes).every(i => i.checked);
+                        selectAll.checked = allChecked;
+                    }
+                });
+            });
+        }
     });
+
+    function checkSelectedItems() {
+        const selected = document.querySelectorAll('.select-item:checked');
+        if (selected.length === 0) {
+            alert('Vui lòng chọn ít nhất 1 sản phẩm để xóa!');
+            return false;
+        }
+        return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');
+    }
 </script>

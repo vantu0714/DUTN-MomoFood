@@ -90,6 +90,8 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
         Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
         Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
+
+        Route::post('/remove-selected', [CartClientController::class, 'removeSelected'])->name('carts.removeSelected');
     });
 
     // Checkout
@@ -177,6 +179,3 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])
         ->name('combo_items.delete_combo');
 });
-
-
-

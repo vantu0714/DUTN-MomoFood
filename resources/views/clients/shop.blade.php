@@ -303,22 +303,25 @@
                                                 </p>
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                @if ($price && $originalPrice && $price < $originalPrice)
-                                                    <div>
-                                                        <h5 class="fw-bold mb-0 text-dark">
-                                                            {{ number_format($price, 0, ',', '.') }} VND
-                                                        </h5>
-                                                        <h6 class="text-danger text-decoration-line-through mb-0">
-                                                            {{ number_format($originalPrice, 0, ',', '.') }} VND
-                                                        </h6>
-                                                    </div>
-                                                @elseif ($price)
-                                                    <h5 class="fw-bold mb-0 text-dark">
-                                                        {{ number_format($price, 0, ',', '.') }} VND
-                                                    </h5>
-                                                @else
-                                                    <h6 class="text-muted mb-0">Liên hệ để biết giá</h6>
-                                                @endif
+                                                <div class="product-price-wrapper">
+                                                    @if ($product->discounted_price && $product->discounted_price < $product->original_price)
+                                                        <div class="product-price-sale">
+                                                            {{ number_format($product->discounted_price, 0, ',', '.') }}
+                                                            <span class="currency">VND</span>
+                                                        </div>
+                                                        <div class="product-price-original">
+                                                            {{ number_format($product->original_price, 0, ',', '.') }}
+                                                            VND
+                                                        </div>
+                                                    @elseif ($product->original_price)
+                                                        <div class="product-price-sale">
+                                                            {{ number_format($product->original_price, 0, ',', '.') }}
+                                                            <span class="currency">VND</span>
+                                                        </div>
+                                                    @else
+                                                        <div class="text-muted">Liên hệ để biết giá</div>
+                                                    @endif
+                                                </div>
 
                                                 <form action="{{ route('carts.add') }}" method="POST">
                                                     @csrf
