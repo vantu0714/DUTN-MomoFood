@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
-    
+
     /**
      * The attributes that are mass assignable.
      *
@@ -19,6 +19,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'google_id',
         'password',
         'role_id',
         'phone',
@@ -47,15 +48,49 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    // public function 
-      public function role()
-{
-    return $this->belongsTo(Role::class);
-}
-public function comments()
-{
-    return $this->hasMany(Comment::class);
-}
+
+    /**
+     * Accessor để lấy avatar URL
+     */
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            // Nếu là URL từ Google
+            if (str_contains($this->avatar, 'googleusercontent.com')) {
+                return $this->avatar;
+            }
+
+            // Nếu là file local
+            if (str_starts_with($this->avatar, '/storage/')) {
+                return asset($this->avatar);
+            }
+
+            // Nếu là path trong storage
+            return asset('storage/' . $this->avatar);
+        }
+
+        // Avatar mặc định
+        return $this->getDefaultAvatar();
+    }
+
+    /**
+     * Tạo avatar mặc định từ tên
+     */
+    public function getDefaultAvatar()
+    {
+        $name = urlencode($this->name);
+        return "https://ui-avatars.com/api/?name={$name}&color=7F9CF5&background=EBF4FF";
+    }
+
+    // public function
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
 
 }
 

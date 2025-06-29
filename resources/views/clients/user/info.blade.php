@@ -23,7 +23,7 @@
                         <div class="card-header">Ảnh đại diện</div>
                         <div class="card-body text-center">
                             <img class="img-account-profile rounded-circle mb-2"
-                                src="{{ Storage::url(Auth::user()->avatar) }}" alt="Ảnh đại diện"
+                                src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}"
                                 style="width: 150px; height: 150px; object-fit: cover;">
                             <div class="mt-3">
                                 <h5 class="mb-1">{{ Auth::user()->name }}</h5>

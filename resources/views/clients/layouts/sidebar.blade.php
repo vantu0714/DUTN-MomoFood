@@ -76,8 +76,9 @@
                         <div class="position-relative d-flex">
                             <a href="{{ route('clients.info') }}" class="d-flex align-items-center" id="userDropdown"
                                 role="button">
-                                <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('admins/assets/img/client_img.png') }}"
-                                    alt="avatar" width="40" height="40" style="border-radius: 50%;">
+                                <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}"
+                                    width="40" height="40" style="border-radius: 50%;"
+                                    onerror="this.src='{{ auth()->user()->getDefaultAvatar() }}'">
                             </a>
                         </div>
                     @endauth
