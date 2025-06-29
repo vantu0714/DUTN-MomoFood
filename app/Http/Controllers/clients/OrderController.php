@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Promotion;
 use App\Models\PromotionUser;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -82,11 +83,12 @@ class OrderController extends Controller
                 $promotionCode = $promotion->promotion_name;
 
                 if ($promotion->vip_only) {
+                    $user = Auth::user();
                     $totalSpent = Order::where('user_id', $userId)
-                        ->where('status', '!=', 6)
+                        ->whereIn('status', [2, 3, 4]) // chỉ tính các đơn đã xử lý hoặc hoàn thành
                         ->sum('total_price');
 
-                    if ($totalSpent < 1000000) {
+                    if ($totalSpent < 5000000) {
                         return redirect()->back()->with('error', 'Mã giảm giá này chỉ dành cho khách hàng VIP.');
                     }
                 }
@@ -162,6 +164,17 @@ class OrderController extends Controller
                     ['used_count' => DB::raw('used_count + 1')]
                 );
             }
+            // Cập nhật trạng thái VIP nếu tổng chi tiêu vượt ngưỡng
+            $totalSpent = Order::where('user_id', $userId)
+                ->whereIn('status', [2, 3, 4])
+                ->sum('total_price');
+
+                if ($totalSpent >= 5000000) {
+                    $user = User::find($userId);
+                    $user->is_vip = true;
+                    $user->save();
+                }
+
 
             DB::commit();
             $cart->items()->delete(); // Xóa cart items
