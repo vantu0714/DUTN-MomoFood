@@ -25,7 +25,14 @@ class CartClientController extends Controller
 
         $carts = $cart ? $cart->items : collect();
 
-        return view('clients.carts.index', compact('carts'));
+        $total = $carts->sum(fn($item) => $item->total_price);
+
+        $vouchers = Promotion::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->get();
+
+        return view('clients.carts.index', compact('carts', 'total', 'vouchers'));
     }
 
     public function addToCart(Request $request)
@@ -88,11 +95,8 @@ class CartClientController extends Controller
                 'total_price' => $discountedPrice * $quantity,
             ]);
         }
-
         return redirect()->route('carts.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
     }
-
-
 
     public function updateQuantity(Request $request, $id)
     {
@@ -119,7 +123,6 @@ class CartClientController extends Controller
                 'total'    => number_format($total + 30000, 0, ',', '.') // phí ship
             ]);
         }
-
         return response()->json(['success' => false], 404);
     }
 
@@ -132,10 +135,14 @@ class CartClientController extends Controller
             $item = CartItem::where('cart_id', $cart->id)->where('id', $id)->first();
             if ($item) {
                 $item->delete();
+
+                // Nếu không còn sản phẩm trong giỏ, xoá mã giảm giá
+                if ($cart->items()->count() === 0) {
+                    session()->forget(['promotion', 'discount', 'promotion_name']);
+                }
                 return redirect()->back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
             }
         }
-
         return redirect()->back()->with('error', 'Không tìm thấy sản phẩm trong giỏ hàng.');
     }
 
@@ -143,11 +150,12 @@ class CartClientController extends Controller
     {
         $userId = Auth::id();
         $cart = Cart::where('user_id', $userId)->first();
-
         if ($cart) {
             $cart->items()->delete();
         }
-
+        if ($cart->items()->count() === 0) {
+            session()->forget(['promotion', 'discount', 'promotion_name']);
+        }
         return redirect()->back()->with('success', 'Đã xóa toàn bộ giỏ hàng.');
     }
 
