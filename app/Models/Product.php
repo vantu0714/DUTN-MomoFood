@@ -23,7 +23,7 @@ class Product extends Model
         'view',
         'is_show_home',
         'category_id',
-       'quantity_in_stock',
+        'quantity_in_stock',
         'product_type',
     ];
     public function category(): BelongsTo
@@ -40,8 +40,9 @@ class Product extends Model
      */
     public function getIsAvailableAttribute(): bool
     {
-        return $this->status === 'Còn hàng';
+        return $this->status === 1;
     }
+
 
     /**
      * Accessor: Lấy trạng thái của sản phẩm dưới dạng text (nếu bạn muốn chuẩn hóa cách hiển thị).
@@ -64,7 +65,7 @@ class Product extends Model
 
         return view('admin.products.index', compact('products', 'totalProducts'));
     }
-    
+
 
     public function orderDetails()
     {
