@@ -110,7 +110,7 @@ class OrderController extends Controller
                 'total_price' => $finalTotal,
                 'payment_method' => $request->payment_method ?? 'cod',
                 'payment_status' => $request->payment_status ?? 'unpaid',
-                'status' => $request->status ?? 'pending',
+                'status' => $request->status ?? 1,
                 'note' => $request->note,
                 'cancellation_reason' => $request->cancellation_reason,
             ]);
@@ -166,16 +166,25 @@ class OrderController extends Controller
     {
         //
         $order = Order::findOrFail($id);
+        $status = $request->status;
+        $paymentStatus = $request->payment_status;
+
+        // Nếu đơn hàng đã giao thành công, thì auto đánh dấu đã thanh toán
+        if ($status == 4) {
+            $paymentStatus = 'paid';
+        }
+
+        // Nếu bị hủy thì mới cần lý do hủy, ngược lại set null
+        $cancellationReason = $status == 6 ? $request->cancellation_reason : null;
 
         $order->update([
-            'status' => $request->status,
-            'payment_status' => $request->payment_status,
+            'status' => $status,
+            'payment_status' => $paymentStatus,
             'note' => $request->note,
-            'cancellation_reason' => $request->status == 6 ? $request->cancellation_reason : null,
+            'cancellation_reason' => $cancellationReason,
         ]);
-    
+
         return redirect()->route('admin.orders.index')->with('success', 'Cập nhật thành công');
-       
     }
 
     /**
@@ -184,17 +193,5 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         //
-        try {
-            DB::beginTransaction();
-
-            $order->orderDetails()->delete();
-            $order->delete();
-
-            DB::commit();
-            return redirect()->route('admin.orders.index')->with('success', 'Xóa đơn hàng thành công!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Xóa đơn hàng thất bại: ' . $e->getMessage());
-        }
     }
 }

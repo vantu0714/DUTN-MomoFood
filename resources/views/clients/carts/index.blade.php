@@ -37,6 +37,7 @@
                             </tr>
                         </thead>
                         <tbody>
+
                             @if (count($carts) > 0)
                                 @foreach ($carts as $item)
                                     @php
@@ -90,6 +91,7 @@
                                     </tr>
                                 @endforeach
                             @else
+                            
                                 <tr>
                                     <td colspan="7" class="text-center">Giỏ hàng trống</td>
                                 </tr>
@@ -123,44 +125,44 @@
             if (session()->has('promotion')) {
                 $promotion = session('promotion');
                 $promotionName = $promotion['name'] ?? '';
+                
+                <div class="row g-4 justify-content-end mt-5">
+                    <div class="col-sm-8 col-md-7 col-lg-6 col-xl-4">
+                        <div class="bg-light rounded">
+                            <div class="p-4">
+                                <h4 class="mb-4">Tóm tắt đơn hàng</h4>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tạm tính:</span>
+                                    <span id="total-price">{{ number_format($total, 0, ',', '.') }} đ</span>
+                                </div>
 
-                if ($promotion['type'] === 'fixed') {
-                    $discount = $promotion['value'];
-                } elseif ($promotion['type'] === 'percent') {
-                    $discount = $total * ($promotion['value'] / 100);
-                    if (!empty($promotion['max']) && $discount > $promotion['max']) {
-                        $discount = $promotion['max'];
-                    }
-                }
-            }
-            $grandTotal = max(0, $total + $shipping - $discount);
-        @endphp
+                                @if ($total > 0)
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Phí vận chuyển:</span>
+                                        <span id="shipping-fee">{{ number_format($shipping, 0, ',', '.') }} đ</span>
+                                    </div>
 
-        <div class="row g-4 justify-content-end mt-5">
-            <div class="col-sm-8 col-md-7 col-lg-6 col-xl-4">
-                <div class="bg-light rounded">
-                    <div class="p-4">
-                        <h4 class="mb-4">Tóm tắt đơn hàng</h4>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Tạm tính:</span>
-                            <span id="total-price">{{ number_format($total, 0, ',', '.') }} đ</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Phí vận chuyển:</span>
-                            <span id="shipping-fee">{{ number_format($shipping, 0, ',', '.') }} đ</span>
-                        </div>
+                                    @if ($discount > 0 && $promotionName)
+                                        <div class="d-flex justify-content-between mb-2 text-success fw-bold">
+                                            <span>Giảm giá ({{ $promotionName }}):</span>
+                                            <span>-{{ number_format($discount, 0, ',', '.') }} đ</span>
+                                        </div>
+                                    @endif
 
-                        @if ($discount > 0 && $promotionName)
-                            <div class="d-flex justify-content-between mb-2 text-success fw-bold">
-                                <span>Giảm giá ({{ $promotionName }}):</span>
-                                <span>-{{ number_format($discount, 0, ',', '.') }} đ</span>
+                                    <hr>
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Tổng cộng:</span>
+                                        <span id="grand-total">{{ number_format($grandTotal, 0, ',', '.') }} đ</span>
+                                    </div>
+                                @endif
                             </div>
-                        @endif
 
-                        <hr>
-                        <div class="d-flex justify-content-between fw-bold">
-                            <span>Tổng cộng:</span>
-                            <span id="grand-total">{{ number_format($grandTotal, 0, ',', '.') }} đ</span>
+                            @if ($total > 0)
+                                <a href="{{ route('clients.order') }}"
+                                    class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">
+                                    Thanh Toán
+                                </a>
+                            @endif
                         </div>
                     </div>
                     <a href="{{ route('clients.order') }}"
@@ -272,7 +274,7 @@
             });
         });
 
-        // ✅ XỬ LÝ CHỌN TẤT CẢ CHECKBOX
+        // XỬ LÝ CHỌN TẤT CẢ CHECKBOX
         const selectAll = document.getElementById('select-all');
         const itemCheckboxes = document.querySelectorAll('.select-item');
 
