@@ -42,6 +42,10 @@
 
     <link rel="stylesheet" href="{{ asset('admins/assets/css/style1.css') }}" />
     <link rel="stylesheet" href="{{ asset('admins/assets/css/colors/default.css') }}" id="colorSkinCSS">
+    <link rel="stylesheet" href="{{ asset('admins/assets/css/products.css') }}">
+   <link rel="stylesheet" href="{{ asset('admins/assets/css/variants.css') }}">
+
+
 </head>
 
 <body class="crm_body_bg">

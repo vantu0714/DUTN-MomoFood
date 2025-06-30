@@ -1,5 +1,4 @@
 @extends('admin.layouts.app')
-
 @section('content')
     <div class="container-fluid px-4 py-4">
         <!-- Header Section -->
@@ -22,7 +21,6 @@
                 </a>
             </div>
         </div>
-
         <!-- Alert Success -->
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
@@ -31,7 +29,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
-
         <!-- Stats Cards -->
         <div class="row mb-4">
             <div class="col-xl-3 col-md-6 mb-3">
@@ -104,7 +101,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Filter & Search Section -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
@@ -159,7 +155,6 @@
                 </form>
             </div>
         </div>
-
         <!-- Products Table -->
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom-0 py-3">
@@ -239,11 +234,11 @@
                                         <div class="d-flex align-items-center justify-content-center">
                                             <span
                                                 class="quantity-badge fw-bold 
-                                                @if ($item->quantity <= 10) text-danger border-danger
-                                                @elseif($item->quantity <= 50) text-warning border-warning
+                                                @if ($item->quantity_in_stock <= 10) text-danger border-danger
+                                                @elseif($item->quantity_in_stock <= 50) text-warning border-warning
                                                 @else text-success border-success @endif border rounded px-3 py-1">
                                                 <i class="fas fa-cubes me-1"></i>
-                                                {{ number_format($item->quantity) }}
+                                                {{ number_format($item->quantity_in_stock) }}
                                             </span>
                                         </div>
                                     </td>
@@ -262,7 +257,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if ($item->quantity > 0)
+                                        @if ($item->quantity_in_stock > 0)
                                             <span
                                                 class="status-badge status-available fw-bold text-success border border-success rounded px-3 py-1">
                                                 <i class="fas fa-check me-1"></i>Còn hàng
@@ -299,103 +294,85 @@
                                                 title="Chỉnh sửa">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <!-- Form xóa đơn giản -->
-                                            <form action="{{ route('admin.products.destroy', $item->id) }}" method="POST"
-                                                class="d-inline"
-                                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm \'{{ $item->product_name }}\'?\n\nHành động này không thể hoàn tác!')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    data-bs-toggle="tooltip" title="Xóa sản phẩm">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <!-- Nút mở modal -->
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal" data-bs-target="#deleteProductModal"
+                                                data-product-id="{{ $item->id }}"
+                                                data-product-name="{{ $item->product_name }}"
+                                                data-has-variants="{{ $item->variants->count() > 0 ? 'true' : 'false' }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </div>
                                     </td>
-                                    <!-- Script đơn giản -->
-                                    <script>
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            // Khởi tạo tooltip
-                                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                                            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                                                return new bootstrap.Tooltip(tooltipTriggerEl);
-                                            });
-                                            // Log để debug
-                                            console.log('Page loaded, tooltips initialized');
-                                            // Kiểm tra CSRF token
-                                            const csrfToken = document.querySelector('meta[name="csrf-token"]');
-                                            if (csrfToken) {
-                                                console.log('CSRF Token found:', csrfToken.getAttribute('content'));
-                                            } else {
-                                                console.error('CSRF Token not found!');
-                                            }
-                                        });
-                                        // Function để test AJAX delete (nếu cần)
-                                        function testAjaxDelete(productId) {
-                                            if (!confirm('Test AJAX delete?')) return;
-
-                                            fetch(`/admin/products/${productId}`, {
-                                                    method: 'DELETE',
-                                                    headers: {
-                                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                                        'Accept': 'application/json',
-                                                        'Content-Type': 'application/json'
-                                                    }
-                                                })
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    console.log('Response:', data);
-                                                    if (data.success) {
-                                                        alert('Xóa thành công!');
-                                                        location.reload();
-                                                    } else {
-                                                        alert('Lỗi: ' + data.message);
-                                                    }
-                                                })
-                                                .catch(error => {
-                                                    console.error('Error:', error);
-                                                    alert('Có lỗi xảy ra!');
-                                                });
-                                        }
-                                    </script>
-
-                                    <style>
-                                        /* CSS cho form xóa */
-                                        .d-inline {
-                                            display: inline-block !important;
-                                        }
-
-                                        .btn-group-sm>.btn,
-                                        .btn-sm {
-                                            padding: 0.25rem 0.5rem;
-                                            font-size: 0.875rem;
-                                            border-radius: 0.375rem;
-                                        }
-
-                                        .btn-outline-danger:hover {
-                                            background-color: #dc3545;
-                                            border-color: #dc3545;
-                                            color: #fff;
-                                        }
-
-                                        .gap-1 {
-                                            gap: 0.25rem !important;
-                                        }
-
-                                        /* Tooltip styling */
-                                        .tooltip {
-                                            font-size: 0.875rem;
-                                        }
-
-                                        .tooltip-inner {
-                                            background-color: #000;
-                                            color: #fff;
-                                            border-radius: 0.375rem;
-                                            padding: 0.25rem 0.5rem;
-                                        }
-                                    </style>
                                 </tr>
                             @endforeach
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    // Khởi tạo tooltip
+                                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+                                        return new bootstrap.Tooltip(tooltipTriggerEl);
+                                    });
+
+                                    console.log('Page loaded, tooltips initialized');
+
+                                    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                                    if (csrfToken) {
+                                        console.log('CSRF Token found:', csrfToken.getAttribute('content'));
+                                    } else {
+                                        console.error('CSRF Token not found!');
+                                    }
+                                });
+                                const deleteProductModal = document.getElementById('deleteProductModal');
+                                deleteProductModal.addEventListener('show.bs.modal', function(event) {
+                                    const button = event.relatedTarget;
+                                    const productId = button.getAttribute('data-product-id');
+                                    const productName = button.getAttribute('data-product-name');
+                                    const hasVariants = button.getAttribute('data-has-variants') === 'true';
+
+                                    // Cập nhật form action
+                                    const form = document.getElementById('deleteProductForm');
+                                    form.action = `/admin/products/${productId}`;
+
+                                    // Cập nhật nội dung cảnh báo
+                                    const message = hasVariants ?
+                                        `Sản phẩm <strong>${productName}</strong> có biến thể. Bạn muốn xóa toàn bộ hay chỉ xóa các biến thể?` :
+                                        `Bạn có chắc chắn muốn xóa sản phẩm <strong>${productName}</strong>?`;
+
+                                    document.getElementById('deleteProductMessage').innerHTML = message;
+
+                                    // Ẩn nút "Chỉ xóa biến thể" nếu sản phẩm không có biến thể
+                                    document.getElementById('variantOptions').querySelector('button.btn-warning').style.display =
+                                        hasVariants ? 'inline-block' : 'none';
+                                });
+                                // Optional: test ajax delete
+                                function testAjaxDelete(productId) {
+                                    if (!confirm('Test AJAX delete?')) return;
+
+                                    fetch(`/admin/products/${productId}`, {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                                'Accept': 'application/json',
+                                                'Content-Type': 'application/json'
+                                            }
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            console.log('Response:', data);
+                                            if (data.success) {
+                                                alert('Xóa thành công!');
+                                                location.reload();
+                                            } else {
+                                                alert('Lỗi: ' + data.message);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                            alert('Có lỗi xảy ra!');
+                                        });
+                                }
+                            </script>
                         </tbody>
                     </table>
                     <div class="d-flex justify-content-center mt-4">
@@ -408,161 +385,10 @@
                     <div class="text-muted small">
                         Hiển thị {{ $products->count() }} sản phẩm
                     </div>
-                    <nav>
-                        {{-- {{ $products->links() }} --}}
-                    </nav>
                 </div>
             </div>
         </div>
     </div>
-    <style>
-        .card {
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-        }
-
-        .table tbody tr:hover {
-            background-color: rgba(123, 180, 241, 0.05);
-        }
-
-        .btn {
-            transition: all 0.2s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .badge {
-            font-weight: 500;
-        }
-
-        /* Cải thiện hiển thị danh mục */
-        .category-badge {
-            font-size: 0.875rem;
-            font-weight: 700 !important;
-            color: #0d6efd !important;
-            background-color: rgba(13, 110, 253, 0.1);
-            border: 1.5px solid #0d6efd !important;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-            white-space: nowrap;
-            display: inline-block;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        /* Cải thiện hiển thị số lượng */
-        .quantity-badge {
-            font-size: 0.875rem;
-            font-weight: 700 !important;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-            display: inline-block;
-            min-width: 70px;
-            text-align: center;
-            border-width: 1.5px !important;
-            background-color: rgba(255, 255, 255, 0.8);
-        }
-
-        .quantity-badge.text-danger {
-            background-color: rgba(220, 53, 69, 0.1);
-        }
-
-        .quantity-badge.text-warning {
-            background-color: rgba(255, 193, 7, 0.1);
-        }
-
-        .quantity-badge.text-success {
-            background-color: rgba(25, 135, 84, 0.1);
-        }
-
-        /* Cải thiện hiển thị trạng thái */
-        .status-badge {
-            font-size: 0.875rem;
-            font-weight: 700 !important;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-            white-space: nowrap;
-            display: inline-block;
-            min-width: 90px;
-            text-align: center;
-            border-width: 1.5px !important;
-        }
-
-        .status-available {
-            color: #198754 !important;
-            background-color: rgba(25, 135, 84, 0.1);
-            border-color: #198754 !important;
-        }
-
-        .status-out-of-stock {
-            color: #dc3545 !important;
-            background-color: rgba(220, 53, 69, 0.1);
-            border-color: #dc3545 !important;
-        }
-
-        /* Hover effects cho badges */
-        .category-badge:hover,
-        .quantity-badge:hover {
-            transform: scale(1.02);
-            transition: all 0.2s ease;
-        }
-
-        .category-badge:hover {
-            background-color: rgba(13, 110, 253, 0.2);
-        }
-
-        .quantity-badge.text-danger:hover {
-            background-color: rgba(220, 53, 69, 0.2);
-        }
-
-        .quantity-badge.text-warning:hover {
-            background-color: rgba(255, 193, 7, 0.2);
-        }
-
-        .quantity-badge.text-success:hover {
-            background-color: rgba(25, 135, 84, 0.2);
-        }
-
-        .status-badge:hover {
-            transform: scale(1.02);
-            transition: all 0.2s ease;
-        }
-
-        .status-available:hover {
-            background-color: rgba(25, 135, 84, 0.2);
-        }
-
-        .status-out-of-stock:hover {
-            background-color: rgba(220, 53, 69, 0.2);
-        }
-
-        @media (max-width: 768px) {
-            .container-fluid {
-                padding: 1rem;
-            }
-
-            .card-body {
-                padding: 1rem;
-            }
-
-            .table-responsive {
-                font-size: 0.875rem;
-            }
-
-            .category-badge,
-            .quantity-badge,
-            .status-badge {
-                font-size: 0.75rem;
-                min-width: 60px;
-                padding: 0.25rem 0.5rem;
-            }
-        }
-    </style>
 @endsection
 @if (session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -577,3 +403,33 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" id="deleteProductForm">
+            @csrf
+            @method('DELETE')
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác nhận xóa sản phẩm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteProductMessage"></p>
+                    <input type="hidden" name="action_type" id="deleteActionType" value="full">
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <div id="variantOptions" class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning"
+                            onclick="document.getElementById('deleteActionType').value='variants'">Chỉ xóa biến
+                            thể</button>
+                        <button type="submit" class="btn btn-danger"
+                            onclick="document.getElementById('deleteActionType').value='full'">Xóa toàn bộ</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

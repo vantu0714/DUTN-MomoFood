@@ -46,6 +46,20 @@
             </div>
 
             <div class="mb-3">
+                <label for="min_total_spent" class="form-label">Tổng đơn hàng tối thiểu để áp dụng (VNĐ)</label>
+                <input type="number" name="min_total_spent" class="form-control"
+                    value="{{ old('min_total_spent') }}" placeholder="VD: 1000000">
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="vip_only" id="vip_only"
+                    value="1" {{ old('vip_only') ? 'checked' : '' }}>
+                <label class="form-check-label" for="vip_only">
+                    Chỉ áp dụng cho khách hàng VIP
+                </label>
+            </div>
+
+            <div class="mb-3">
                 <label for="usage_limit" class="form-label">Giới hạn lượt sử dụng</label>
                 <input type="number" name="usage_limit" class="form-control"
                     value="{{ old('usage_limit') }}" placeholder="VD: 100 (để trống nếu không giới hạn)">

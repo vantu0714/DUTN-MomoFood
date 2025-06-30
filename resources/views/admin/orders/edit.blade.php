@@ -6,7 +6,8 @@
     <div class="container-fluid py-4">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Chỉnh sửa đơn hàng</h4>
+                <h4 class="mb-0">Chỉnh sửa đơn hàng #{{ $order->id }}</h4>
+                <h5 class="mb-0">Mã đơn hàng #{{ $order->order_code }}</h5>
             </div>
 
             <div class="card-body">
@@ -91,15 +92,22 @@
                                     <p class="form-control-plaintext">Thanh toán khi nhận hàng (COD)</p>
                                 </div>
                             </div>
+                            
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Trạng thái thanh toán</label>
-                                    <select name="payment_status" class="form-select">
-                                        <option value="pending" selected>Chưa thanh toán</option>
-                                        <option value="paid">Đã thanh toán</option>
+                                    <select name="payment_status" class="form-select" {{ $order->payment_status === 'paid' ? 'onchange=return false;' : '' }}>
+                                        <option value="pending"
+                                            {{ $order->payment_status === 'pending' ? 'selected' : ($order->payment_status === 'paid' ? 'disabled' : '') }}>
+                                            Chưa thanh toán
+                                        </option>
+                                        <option value="paid" {{ $order->payment_status === 'paid' ? 'selected' : '' }}>
+                                            Đã thanh toán
+                                        </option>
                                     </select>
                                 </div>
                             </div>
+                            
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Mã giảm giá</label>
@@ -115,19 +123,24 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Trạng thái đơn hàng</label>
-                                    <select name="status" class="form-select">
-                                        <option value="1" {{ $order->status == 1 ? 'selected' : '' }}>Chưa xác nhận
-                                        </option>
-                                        <option value="2" {{ $order->status == 2 ? 'selected' : '' }}>Đã xác nhận
-                                        </option>
-                                        <option value="3" {{ $order->status == 3 ? 'selected' : '' }}>Đang giao
-                                        </option>
-                                        <option value="4" {{ $order->status == 4 ? 'selected' : '' }}> Giao thành công
-                                        </option>
-                                        <option value="5" {{ $order->status == 5 ? 'selected' : '' }}>Hoàn hàng
-                                        </option>
-                                        <option value="6" {{ $order->status == 6 ? 'selected' : '' }}>Hủy đơn
-                                        </option>
+                                    <select name="status" class="form-select" id="order-status">
+                                        @php
+                                            $statuses = [
+                                                1 => 'Chưa xác nhận',
+                                                2 => 'Đã xác nhận',
+                                                3 => 'Đang giao',
+                                                4 => 'Giao thành công',
+                                                5 => 'Hoàn hàng',
+                                                6 => 'Hủy đơn',
+                                            ];
+                                        @endphp
+                                        @foreach ($statuses as $key => $label)
+                                            <option value="{{ $key }}"
+                                                {{ $order->status == $key ? 'selected' : '' }}
+                                                {{ $key < $order->status ? 'disabled' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -141,12 +154,11 @@
                     </div>
 
                     {{-- Lý do hủy --}}
-                    <div class="mb-4 p-3 border rounded" id="cancel-reason-container" style="display: {{ $order->status == 6 ? 'block' : 'none' }}">
+                    <div class="mb-4 p-3 border rounded" id="cancel-reason-container">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Lý do hủy đơn (nếu có)</label>
                             <input type="text" name="cancellation_reason" class="form-control"
-                                value="{{ old('cancellation_reason', $order->cancellation_reason) }}"
-                                {{ $order->status == 6 ? '' : 'readonly' }}>
+                                value="{{ old('cancellation_reason', $order->cancellation_reason) }}">
                         </div>
                     </div>
 
@@ -178,15 +190,32 @@
         }
     </style>
 
-    <script>
-        // Hiển thị trường lý do hủy khi chọn trạng thái "Đã hủy"
-        document.querySelector('select[name="status"]').addEventListener('change', function() {
-            const reasonField = document.querySelector('input[name="cancellation_reason"]');
-            if (this.value === 'cancelled') {
-                reasonField.setAttribute('required', 'required');
-            } else {
-                reasonField.removeAttribute('required');
-            }
-        });
-    </script>
 @endsection
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const statusSelect = document.querySelector('select[name="status"]');
+        const cancelReasonContainer = document.getElementById('cancel-reason-container');
+        const cancelReasonInput = document.querySelector('input[name="cancellation_reason"]');
+
+        function toggleCancelReason() {
+            if (statusSelect.value === '6') {
+                cancelReasonContainer.style.display = 'block';
+                cancelReasonInput.removeAttribute('readonly');
+                cancelReasonInput.setAttribute('required', 'required');
+            } else {
+                cancelReasonContainer.style.display = 'none';
+                cancelReasonInput.value = '';
+                cancelReasonInput.setAttribute('readonly', 'readonly');
+                cancelReasonInput.removeAttribute('required');
+            }
+        }
+
+        // Gọi ngay khi load để xử lý trạng thái ban đầu
+        toggleCancelReason();
+
+        // Lắng nghe khi thay đổi trạng thái
+        statusSelect.addEventListener('change', toggleCancelReason);
+    });
+</script>
+

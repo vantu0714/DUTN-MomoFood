@@ -2,9 +2,10 @@
 
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\InfoController;
-use App\Http\Controllers\clients\AuthController;
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Clients\AuthController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\clients\HomeController;
+use App\Http\Controllers\Clients\HomeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ComboItemController;
@@ -41,6 +42,10 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/login', 'login');
     Route::post('/logout', 'logout')->name('logout');
 
+    // Socialite
+    Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle']);
+    Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+
     // Registration
     Route::get('/register', 'showRegister')->name('register');
     Route::post('/register', 'register');
@@ -60,8 +65,8 @@ Route::controller(AuthController::class)->group(function () {
 Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
 
 //vn-pay
-Route::get('/vnpay/payment/{order_id}', [VNPayController::class, 'create'])->name('vnpay.payment');
-Route::get('/vnpay-return', [VNPayController::class, 'return']);
+Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.payment');
+Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.return');
 
 // ==================== CLIENT AUTHENTICATED ROUTES ====================
 Route::middleware(['auth', 'client'])->group(function () {
@@ -75,7 +80,9 @@ Route::middleware(['auth', 'client'])->group(function () {
 
         // Orders
         Route::get('/orders', [ClientsOrderController::class, 'orderList'])->name('orders');
+        Route::post('/create-payment', [ClientsOrderController::class, 'createPayment'])->name('create-payment');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
+        Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
     });
 
     // Cart Management
@@ -88,6 +95,8 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
         Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
         Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
+
+        Route::post('/remove-selected', [CartClientController::class, 'removeSelected'])->name('carts.removeSelected');
     });
 
     // Checkout
@@ -140,7 +149,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
         Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
+        //Route thêm biến thể cho nhiều sản phẩm
+        Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
+        Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
     });
+
 
     // Order Management
     Route::prefix('orders')->name('orders.')->group(function () {
@@ -165,12 +178,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Comment Management
     Route::resource('comments', ClientCommentController::class)->only(['index', 'destroy']);
+
     // thống kê
-    Route::get('thongke', [ThongKeController::class, 'index'])->name('thongke'); // ✅ Không có .index
-
-
-
-
+    Route::get('thongke', [ThongKeController::class, 'index'])->name('thongke');
 
     // Combo Management
     Route::resource('combo_items', ComboItemController::class)->except(['show', 'edit', 'update']);

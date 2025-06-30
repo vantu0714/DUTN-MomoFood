@@ -48,6 +48,7 @@ class ComboItemController extends Controller
     {
         $validated = $request->validate([
             'new_combo_name' => 'required|string|max:255',
+            'combo_quantity' => 'required|integer|min:1',
             'items' => 'required|array|min:1',
             'items.*.itemable_type' => 'required|in:product,variant',
             'items.*.product_id' => 'nullable|exists:products,id',
@@ -58,6 +59,7 @@ class ComboItemController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             // Kiểm tra combo name đã tồn tại chưa
             $existingCombo = Product::where('product_name', $validated['new_combo_name'])->first();
@@ -65,13 +67,13 @@ class ComboItemController extends Controller
                 return back()->withErrors(['new_combo_name' => 'Combo với tên này đã tồn tại.'])->withInput();
             }
 
-            // Tạo combo mới
+            // Tạo sản phẩm combo
             $combo = Product::create([
                 'product_name' => $validated['new_combo_name'],
                 'product_code' => 'COMBO-' . strtoupper(uniqid()),
                 'original_price' => $validated['original_price'],
                 'discounted_price' => $validated['discounted_price'],
-                'quantity_in_stock' => 0,
+                'quantity_in_stock' => 0, // sẽ cập nhật sau
                 'status' => true,
                 'is_combo' => true,
                 'category_id' => 1,
@@ -86,6 +88,7 @@ class ComboItemController extends Controller
 
                 if (!$itemableId) continue;
 
+                // Ghi combo item
                 ComboItem::create([
                     'combo_id' => $combo->id,
                     'itemable_type' => $itemableType,
@@ -93,7 +96,7 @@ class ComboItemController extends Controller
                     'quantity' => $item['quantity'],
                 ]);
 
-                // Tính tồn kho thấp nhất dựa trên từng thành phần
+                // Tính tồn kho thành phần nhỏ nhất
                 $model = $itemableType::find($itemableId);
                 if ($model) {
                     $stock = $model->quantity_in_stock ?? 0;
@@ -104,11 +107,16 @@ class ComboItemController extends Controller
 
             $minQuantity = ($minQuantity === PHP_INT_MAX) ? 0 : $minQuantity;
 
+            // Lấy số lượng combo người dùng nhập, giới hạn lại nếu cần
+            $requestedQuantity = (int) $validated['combo_quantity'];
+            $finalQuantity = min($requestedQuantity, $minQuantity);
+
             $combo->update([
-                'quantity_in_stock' => $minQuantity,
-                'original_price' => $validated['original_price'],
-                'discounted_price' => $validated['discounted_price'],
+                'quantity_in_stock' => $finalQuantity,
             ]);
+            if ($finalQuantity < $requestedQuantity) {
+                session()->flash('warning', "Số lượng combo bạn yêu cầu vượt quá tồn kho thành phần. Đã tự động điều chỉnh xuống còn $finalQuantity combo.");
+            }
 
             DB::commit();
             return redirect()->route('admin.combo_items.index')->with('success', 'Đã tạo combo mới thành công.');
@@ -118,10 +126,6 @@ class ComboItemController extends Controller
             return back()->with('error', 'Đã xảy ra lỗi khi tạo combo.')->withInput();
         }
     }
-
-
-
-
     public function destroyCombo($comboId)
     {
         $combo = Product::with(['comboItems'])->findOrFail($comboId);

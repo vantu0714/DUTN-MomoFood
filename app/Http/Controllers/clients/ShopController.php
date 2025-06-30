@@ -6,62 +6,92 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category')
+        $products = Product::with(['category', 'variants'])
             ->where('status', 1)
-            ->where('quantity', '>', 0);
+            ->get();
 
-        if ($request->filled('price_range') && $request->price_range !== 'custom') {
-            if (strpos($request->price_range, '-') !== false) {
-                [$min, $max] = explode('-', $request->price_range);
-                $query->whereBetween('discounted_price', [(int)$min, (int)$max]);
-            }
-        } else {
-            if ($request->filled('min_price') && is_numeric($request->min_price)) {
-                $query->where('discounted_price', '>=', $request->min_price);
+        $filtered = $products->filter(function ($product) {
+            // Nếu là sản phẩm có biến thể
+            if ($product->product_type === 'variant') {
+                return $product->variants->contains(function ($variant) {
+                    return $variant->quantity_in_stock > 0;
+                });
             }
 
-            if ($request->filled('max_price') && is_numeric($request->max_price)) {
-                $query->where('discounted_price', '<=', $request->max_price);
+            // Nếu là sản phẩm đơn giản, kiểm tra quantity_in_stock trực tiếp
+            if ($product->product_type === 'simple') {
+                return $product->quantity_in_stock > 0;
             }
-        }
 
-        $products = $query->paginate(9)->appends($request->all());
+            return false;
+        });
+
+
+        $page = $request->get('page', 1);
+        $perPage = 9;
+        $paginated = new LengthAwarePaginator(
+            $filtered->forPage($page, $perPage),
+            $filtered->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         $categories = Category::withCount('products')->get();
 
-        return view('clients.shop', compact('products', 'categories'));
+        return view('clients.shop', [
+            'products' => $paginated,
+            'categories' => $categories,
+        ]);
     }
-
     public function category(Request $request, $id)
     {
         $category = Category::findOrFail($id);
 
-        $query = Product::where('category_id', $category->id)
+        // Lấy sản phẩm của danh mục, kèm biến thể
+        $products = Product::with(['category', 'variants'])
             ->where('status', 1)
-            ->where('quantity', '>', 0);
+            ->where('category_id', $category->id)
+            ->get();
 
-        if ($request->filled('price_range') && $request->price_range !== 'custom') {
-            if (strpos($request->price_range, '-') !== false) {
-                [$min, $max] = explode('-', $request->price_range);
-                $query->whereBetween('discounted_price', [(int)$min, (int)$max]);
-            }
-        } else {
-            if ($request->filled('min_price') && is_numeric($request->min_price)) {
-                $query->where('discounted_price', '>=', $request->min_price);
+        // Lọc tồn kho & lọc giá theo từng biến thể
+        $filtered = $products->filter(function ($product) {
+            if ($product->product_type === 'variant') {
+                return $product->variants->contains(function ($variant) {
+                    return $variant->quantity_in_stock > 0;
+                });
             }
 
-            if ($request->filled('max_price') && is_numeric($request->max_price)) {
-                $query->where('discounted_price', '<=', $request->max_price);
+            if ($product->product_type === 'simple') {
+                $variant = $product->variants->first();
+                return $variant && $variant->quantity_in_stock > 0;
             }
-        }
 
-        $products = $query->paginate(9)->appends($request->all());
+            return false;
+        });
+        // Phân trang
+        $page = $request->get('page', 1);
+        $perPage = 9;
+        $paginated = new LengthAwarePaginator(
+            $filtered->forPage($page, $perPage),
+            $filtered->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         $categories = Category::withCount('products')->get();
 
-        return view('clients.shop', compact('products', 'categories', 'category'));
+        return view('clients.shop', [
+            'products' => $paginated,
+            'categories' => $categories,
+            'category' => $category
+        ]);
     }
 }

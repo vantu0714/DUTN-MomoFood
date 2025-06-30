@@ -18,5 +18,8 @@ class ProductVariantValue extends Model
     {
         return $this->belongsTo(AttributeValue::class);
     }
-    
+    public function attribute()
+    {
+        return $this->attributeValue->attribute ?? null;
+    }
 }

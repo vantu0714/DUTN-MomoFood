@@ -76,8 +76,9 @@
 
             <div class="mb-3">
                 <label class="form-label">Số lượng</label>
-                <input type="number" name="quantity" class="form-control" value="{{ old('quantity', 0) }}" min="0">
-                @error('quantity')
+                <input type="number" name="quantity_in_stock" class="form-control"
+                    value="{{ old('quantity_in_stock', 0) }}" min="0">
+                @error('quantity_in_stock')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
@@ -93,7 +94,8 @@
                 <label class="form-label">Loại sản phẩm</label>
                 <select name="product_type" class="form-control" required>
                     <option value="">-- Chọn loại sản phẩm --</option>
-                    <option value="simple" {{ old('product_type') == 'simple' ? 'selected' : '' }}>Không có biến thể</option>
+                    <option value="simple" {{ old('product_type') == 'simple' ? 'selected' : '' }}>Không có biến thể
+                    </option>
                     <option value="variant" {{ old('product_type') == 'variant' ? 'selected' : '' }}>Có biến thể</option>
                 </select>
                 @error('product_type')

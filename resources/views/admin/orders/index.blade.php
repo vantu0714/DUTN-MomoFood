@@ -98,8 +98,8 @@
                                 <th>TT Người Đặt</th>
                                 <th>TT Người Nhận</th>
                                 <th>Tổng tiền</th>
-                                <th>Thanh toán</th>
-                                <th>Trạng thái</th>
+                                <th>Phương thức thanh toán</th>
+                                <th>Trạng thái đơn hàng</th>
                                 <th>Ngày tạo</th>
                                 <th>Hành động</th>
                             </tr>
@@ -108,7 +108,7 @@
                             @foreach($orders as $order)
                             <tr>
                                 <td>{{ $order->id }}</td>
-                                <td>ORD{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ $order->order_code }}</td>
                                 <td>
                                     {{ $order->user->name ?? 'Khách vãng lai' }}<br>
                                     {{ $order->user->email ?? '' }}<br>
@@ -122,7 +122,7 @@
                                 <td>{{ number_format($order->total_price, 0, ',', '.') }}đ</td>
                                 <td>
                                     <span class="badge bg-info">
-                                        {{ $order->payment_method == 'cod' ? 'Giao hàng nhận tiền' : 'Đã thanh toán' }}
+                                        {{ $order->payment_method == 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VnPay' }}
                                     </span>
                                 </td>
                                 <td>

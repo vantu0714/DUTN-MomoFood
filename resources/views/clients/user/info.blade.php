@@ -4,8 +4,8 @@
     <body style="margin-top: 200px;">
         <div class="container-xl px-4 mt-4" style="margin-top: 200px;">
             <nav class="nav nav-borders">
-                <a class="nav-link active ms-0" href="{{ route('clients.info') }}"target="__blank">Thông tin</a>
-                <a class="nav-link" href="{{ route('clients.changepassword') }}" target="__blank">Đổi
+                <a class="nav-link active ms-0" href="{{ route('clients.info') }}">Thông tin</a>
+                <a class="nav-link" href="{{ route('clients.changepassword') }}">Đổi
                     mật khẩu</a>
                 <a class="nav-link" href="{{ route('clients.orders') }}">Đơn hàng</a>
                 <a href="#" class="nav-link"
@@ -23,7 +23,7 @@
                         <div class="card-header">Ảnh đại diện</div>
                         <div class="card-body text-center">
                             <img class="img-account-profile rounded-circle mb-2"
-                                src="{{ Storage::url(Auth::user()->avatar) }}" alt="Ảnh đại diện"
+                                src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}"
                                 style="width: 150px; height: 150px; object-fit: cover;">
                             <div class="mt-3">
                                 <h5 class="mb-1">{{ Auth::user()->name }}</h5>

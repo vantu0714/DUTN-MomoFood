@@ -11,7 +11,8 @@
 </div>
 
 
-@stack('scripts')
+
 @include('admin.layouts.footer')
+@stack('scripts')
 @stack('page-js')
 

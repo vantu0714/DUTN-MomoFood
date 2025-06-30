@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Promotion;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CartClientController extends Controller
 {
@@ -24,7 +25,14 @@ class CartClientController extends Controller
 
         $carts = $cart ? $cart->items : collect();
 
-        return view('clients.carts.index', compact('carts'));
+        $total = $carts->sum(fn($item) => $item->total_price);
+
+        $vouchers = Promotion::where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->get();
+
+        return view('clients.carts.index', compact('carts', 'total', 'vouchers'));
     }
 
     public function addToCart(Request $request)
@@ -87,11 +95,8 @@ class CartClientController extends Controller
                 'total_price' => $discountedPrice * $quantity,
             ]);
         }
-
         return redirect()->route('carts.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
     }
-
-
 
     public function updateQuantity(Request $request, $id)
     {
@@ -118,7 +123,6 @@ class CartClientController extends Controller
                 'total'    => number_format($total + 30000, 0, ',', '.') // phí ship
             ]);
         }
-
         return response()->json(['success' => false], 404);
     }
 
@@ -131,10 +135,14 @@ class CartClientController extends Controller
             $item = CartItem::where('cart_id', $cart->id)->where('id', $id)->first();
             if ($item) {
                 $item->delete();
+
+                // Nếu không còn sản phẩm trong giỏ, xoá mã giảm giá
+                if ($cart->items()->count() === 0) {
+                    session()->forget(['promotion', 'discount', 'promotion_name']);
+                }
                 return redirect()->back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
             }
         }
-
         return redirect()->back()->with('error', 'Không tìm thấy sản phẩm trong giỏ hàng.');
     }
 
@@ -142,11 +150,12 @@ class CartClientController extends Controller
     {
         $userId = Auth::id();
         $cart = Cart::where('user_id', $userId)->first();
-
         if ($cart) {
             $cart->items()->delete();
         }
-
+        if ($cart->items()->count() === 0) {
+            session()->forget(['promotion', 'discount', 'promotion_name']);
+        }
         return redirect()->back()->with('success', 'Đã xóa toàn bộ giỏ hàng.');
     }
 
@@ -198,6 +207,7 @@ class CartClientController extends Controller
     {
         $code = $request->input('promotion');
         $now = Carbon::now();
+        $userId = Auth::id();
 
         $promotion = Promotion::where('promotion_name', $code)
             ->where('status', 1)
@@ -209,15 +219,36 @@ class CartClientController extends Controller
             return back()->with('error', 'Mã giảm giá không hợp lệ!');
         }
 
+        // Kiểm tra lượt dùng tổng
         if ($promotion->usage_limit !== null && $promotion->used_count >= $promotion->usage_limit) {
             return back()->with('error', 'Mã giảm giá đã hết lượt sử dụng!');
         }
 
-        $userId = Auth::id();
+        // Kiểm tra lượt dùng của user
+        $userUsage = DB::table('promotion_user')
+            ->where('promotion_id', $promotion->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($userUsage && $userUsage->used_count >= 1) {
+            return back()->with('error', 'Bạn đã sử dụng mã này rồi!');
+        }
+
+        // Tính giảm giá
         $cart = Cart::with('items')->where('user_id', $userId)->first();
         $subtotal = $cart ? $cart->items->sum('total_price') : 0;
-
         $discount = 0;
+
+        //Kiểm tra min_total_spent
+        if ($promotion->min_total_spent && $subtotal < $promotion->min_total_spent) {
+            return back()->with('error', 'Đơn hàng chưa đạt tối thiểu ' . number_format($promotion->min_total_spent) . 'đ để áp dụng mã.');
+        }
+
+        //Kiểm tra nếu là mã chỉ dành cho khách VIP
+        // if ($promotion->vip_only && (!$user->is_vip ?? false)) {
+        //     return back()->with('error', 'Mã này chỉ dành cho khách hàng VIP.');
+        // }
+
         if ($promotion->discount_type === 'percent') {
             $discount = round($subtotal * ($promotion->discount_value / 100));
             if ($promotion->max_discount_value && $discount > $promotion->max_discount_value) {
@@ -227,10 +258,11 @@ class CartClientController extends Controller
             $discount = $promotion->discount_value;
         }
 
+        // Lưu vào session
         session()->put('promotion', [
-            'id'    => $promotion->id,
-            'name'  => $promotion->promotion_name,
-            'type'  => $promotion->discount_type,
+            'id' => $promotion->id,
+            'name' => $promotion->promotion_name,
+            'type' => $promotion->discount_type,
             'value' => $promotion->discount_value,
             'max' => $promotion->max_discount_value,
             'discount' => $discount
@@ -240,6 +272,7 @@ class CartClientController extends Controller
 
         return back()->with('success', 'Áp dụng mã giảm giá thành công!');
     }
+
 
     public function removeCoupon()
     {
@@ -258,5 +291,27 @@ class CartClientController extends Controller
         \App\Models\Cart::where('user_id', $userId)->delete();
 
         return redirect()->back()->with('success', 'Đã xóa toàn bộ sản phẩm trong giỏ hàng.');
+    }
+
+    public function removeSelected(Request $request)
+    {
+        $userId = Auth::id();
+        $cart = Cart::where('user_id', $userId)->first();
+
+        if (!$cart) {
+            return back()->with('error', 'Không tìm thấy giỏ hàng.');
+        }
+
+        $selectedItems = $request->input('selected_items', []);
+
+        if (empty($selectedItems)) {
+            return back()->with('error', 'Vui lòng chọn sản phẩm cần xóa.');
+        }
+
+        CartItem::where('cart_id', $cart->id)
+            ->whereIn('id', $selectedItems)
+            ->delete();
+
+        return back()->with('success', 'Đã xóa các sản phẩm đã chọn.');
     }
 }
