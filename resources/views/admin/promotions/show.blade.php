@@ -55,6 +55,22 @@
                         </tr>
 
                         <tr>
+                            <th>Chi tiêu tối thiểu:</th>
+                            <td>
+                                @if ($promotion->min_total_spent)
+                                    {{ number_format($promotion->min_total_spent, 0, ',', '.') }}₫
+                                @else
+                                    Không yêu cầu
+                                @endif
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th>Chỉ dành cho khách VIP:</th>
+                            <td>{{ $promotion->vip_only ? 'Có' : 'Không' }}</td>
+                        </tr>
+
+                        <tr>
                             <th>Giới hạn lượt sử dụng:</th>
                             <td>
                                 {{ $promotion->usage_limit ?? 'Không giới hạn' }}

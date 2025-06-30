@@ -13,6 +13,8 @@
                         <th>Tên</th>
                         <th>Loại giảm</th>
                         <th>Giá trị</th>
+                        <th>Ngày bắt đầu</th>
+                        <th>Ngày kết thúc</th>
                         <th>Trạng thái</th>
                         <th>Hành động</th>
                     </tr>
@@ -21,8 +23,18 @@
                     @forelse ($promotions as $promotion)
                         <tr>
                             <td>{{ $promotion->promotion_name }}</td>
-                            <td>{{ ucfirst($promotion->discount_type) }}</td>
+                            <td>
+                                @if ($promotion->discount_type === 'fixed')
+                                    Giảm theo số tiền
+                                @elseif ($promotion->discount_type === 'percent')
+                                    Giảm theo %
+                                @else
+                                    Không xác định
+                                @endif
+                            </td>
                             <td>{{ $promotion->discount_value }}</td>
+                            <td>{{ $promotion->start_date }}</td>
+                            <td>{{ $promotion->end_date }}</td>
                             <td>
                                 @php
                                     $now = \Carbon\Carbon::now();
