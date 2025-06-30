@@ -117,18 +117,14 @@
             </a>
         </li>
         <li class>
-            <a class="has-arrow" href="#" aria-expanded="false">
+             <a href="{{ route('admin.thongke') }}" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/8.svg') }}" alt>
                 </div>
                 <span>Thống kê</span>
             </a>
-            <ul>
-                <li><a href="Products.html">Products</a></li>
-                <li><a href="Product_Details.html">Product Details</a></li>
-                <li><a href="Cart.html">Cart</a></li>
-                <li><a href="Checkout.html">Checkout</a></li>
-            </ul>
+        </li>
+            
         </li>
 
         <li class>
