@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CommentController;
 use App\Http\Controllers\Admin\InfoController;
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Clients\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Clients\HomeController;
@@ -40,6 +41,10 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/login', 'index')->name('login');
     Route::post('/login', 'login');
     Route::post('/logout', 'logout')->name('logout');
+
+    // Socialite
+    Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle']);
+    Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
     // Registration
     Route::get('/register', 'showRegister')->name('register');
@@ -137,17 +142,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 
     // Product Variants
-   Route::prefix('product-variants')->name('product_variants.')->group(function () {
-    Route::get('/', [ProductVariantController::class, 'index'])->name('index');
-    Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
-    Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
-    Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
-    Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
-    Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
-    //Route thêm biến thể cho nhiều sản phẩm
-    Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
-    Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
-});
+    Route::prefix('product-variants')->name('product_variants.')->group(function () {
+        Route::get('/', [ProductVariantController::class, 'index'])->name('index');
+        Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
+        Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
+        Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
+        Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
+        Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
+        //Route thêm biến thể cho nhiều sản phẩm
+        Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
+        Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
+    });
 
 
     // Order Management

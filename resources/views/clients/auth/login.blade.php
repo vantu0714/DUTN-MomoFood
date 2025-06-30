@@ -73,6 +73,14 @@
                                     <a href="{{ route('password.request') }}" class="text-success">Quên mật khẩu</a>
                                 </div>
                             </form>
+
+                            <hr class="my-4">
+                            <div class="text-center">
+                                <p class="mb-2">Hoặc đăng nhập bằng</p>
+                                <a href="{{ url('/auth/google') }}" class="btn btn-danger">
+                                    <i class="fab fa-google"></i> Google
+                                </a>
+                            </div>
                         </div>
 
                         <div class="col-md-5 login-right">
