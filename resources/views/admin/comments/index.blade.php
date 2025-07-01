@@ -34,7 +34,7 @@
                     </td>
                     <td>{{ $comment->created_at->format('d/m/Y H:i') }}</td>
                     <td>
-                        <form action="{{ route('comments.destroy', $comment->id) }}" method="POST"
+                        <form action="{{ route('admin.comments.destroy', $comment->id) }}" method="POST"
                               onsubmit="return confirm('Bạn có chắc chắn muốn xóa bình luận này?')">
                             @csrf
                             @method('DELETE')
