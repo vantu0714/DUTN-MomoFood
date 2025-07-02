@@ -1,6 +1,5 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-{{-- @vite('resources/css/shop.css') --}}
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 
@@ -430,3 +429,4 @@
     </script>
 
     @include('clients.layouts.footer')
+<!-- Fruits Shop Start-->

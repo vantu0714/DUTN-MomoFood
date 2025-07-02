@@ -1,6 +1,5 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-{{-- @vite('resources/css/shop.css') --}}
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 
@@ -62,28 +61,21 @@
             </div>
             <div class="col-md-12 col-lg-5">
                 <div id="carouselId" class="carousel slide position-relative" data-bs-ride="carousel">
-                    <div class="carousel-inner" role="listbox">
+                    <div class="carousel-inner" role="listbox" style="height: 300px;">
                         <div class="carousel-item active rounded">
-                            <img src="{{ asset('clients/img/hero-img-1.png') }}"
-                                class="img-fluid w-100 h-100 bg-secondary rounded" alt="First slide">
-                            <a href="#" class="btn px-4 py-2 text-white rounded">Fruites</a>
+                            <div class="carousel-img-wrapper">
+                                <img src="https://nemnuonghungviet.com/nemhungviet/uploads/2023/08/met-an-vat-co-gi-5.jpg"
+                                    class="img-fluid rounded carousel-img" alt="First slide">
+                                {{-- <a href="#" class="btn px-4 py-2 text-white rounded">Fruits</a> --}}
+                            </div>
                         </div>
                         <div class="carousel-item rounded">
-                            <img src="{{ asset('clients/img/hero-img-2.jpg') }}" class="img-fluid w-100 h-100 rounded"
-                                alt="Second slide">
-                            <a href="#" class="btn px-4 py-2 text-white rounded">Vesitables</a>
+                            <div class="carousel-img-wrapper">
+                                <img src="https://saigonchutla.vn/wp-content/uploads/2023/09/an-vat-kon-tum-3-800x445-1.jpg"
+                                    class="img-fluid rounded carousel-img" alt="Second slide">
+                            </div>
                         </div>
                     </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselId"
-                        data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselId"
-                        data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -103,7 +95,7 @@
                     </div>
                     <div class="featurs-content text-center">
                         <h5>Miễn phí vận chuyển</h5>
-                        <p class="mb-0">Miễn phí cho đơn hàng trên $300</p>
+                        <p class="mb-0">Miễn phí cho đơn hàng trên 300.000vnđ</p>
                     </div>
                 </div>
             </div>
@@ -170,28 +162,24 @@
                     <h1>MÓN ĂN NỔI BẬT</h1>
                 </div>
                 <div class="col-lg-8 text-end">
-                    <ul class="nav nav-pills d-inline-flex text-center mb-5">
-
-                        {{-- Tất cả sản phẩm --}}
+                    <ul class="nav nav-pills d-inline-flex text-center mb-5" id="category-tabs">
                         <li class="nav-item">
-                            <a class="d-flex m-2 py-2 bg-warning rounded-pill {{ request('category') == null ? 'active' : '' }}"
-                                href="{{ route('home') }}">
+                            <a class="d-flex m-2 py-2 bg-warning rounded-pill category-tab active" data-category=""
+                                href="javascript:void(0);">
                                 <span class="text-white" style="width: 130px;">Tất cả</span>
                             </a>
                         </li>
-
-                        {{-- Danh sách danh mục --}}
                         @foreach ($categories as $category)
                             <li class="nav-item">
-                                <a class="d-flex m-2 py-2 bg-light rounded-pill {{ request('category') == $category->id ? 'active' : '' }}"
-                                    href="{{ route('home', ['category' => $category->id]) }}">
+                                <a class="d-flex m-2 py-2 bg-light rounded-pill category-tab"
+                                    data-category="{{ $category->id }}" href="javascript:void(0);">
                                     <span class="text-dark"
                                         style="width: 130px;">{{ $category->category_name }}</span>
                                 </a>
                             </li>
                         @endforeach
-
                     </ul>
+
                 </div>
 
             </div>
@@ -398,15 +386,6 @@
                     <img src="https://saigonchutla.vn/wp-content/uploads/2023/09/an-vat-kon-tum-3-800x445-1.jpg"
                         class="img-fluid w-100 rounded" alt="Thế giới đồ ăn vặt MoMoFood">
 
-
-                    {{-- <div class="d-flex align-items-center justify-content-center bg-white rounded-circle position-absolute"
-                        style="width: 140px; height: 140px; top: 0; left: 0;">
-                        <h1 style="font-size: 100px;">1</h1>
-                        <div class="d-flex flex-column">
-                            <span class="h2 mb-0">50k</span>
-                            <span class="h4 text-muted mb-0">Túi</span>
-                        </div>
-                    </div> --}}
                 </div>
             </div>
         </div>
@@ -746,44 +725,81 @@
     </div>
 </div>
 <!-- Testimonial End -->
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script>
-    $(document).ready(function() {
-        $('.add-to-cart-form').on('submit', function(e) {
-            e.preventDefault();
+    <script>
+        $(document).ready(function() {
+            // Gán sự kiện click cho danh mục
+            $(document).on('click', '.category-tab', function(e) {
+                e.preventDefault();
 
-            let form = $(this);
-            let token = form.find('input[name="_token"]').val();
-            let productId = form.find('input[name="product_id"]').val();
-            let variantId = form.find('input[name="product_variant_id"]').val();
-            let quantity = form.find('input[name="quantity"]').val() || 1;
+                // Xử lý đổi màu các tab
+                $('.category-tab').removeClass('active bg-warning').addClass('bg-light');
+                $('.category-tab span').removeClass('text-white').addClass('text-dark');
 
-            $.ajax({
-                url: '{{ route('carts.add') }}',
-                type: 'POST',
-                data: {
-                    _token: token,
-                    product_id: productId,
-                    product_variant_id: variantId,
-                    quantity: quantity
-                },
-                success: function(res) {
-                    alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
-                    // Nếu có hiển thị số lượng giỏ hàng ở header
-                    if (res.cart_count !== undefined) {
-                        $('#cart-count').text(res.cart_count);
+                $(this).addClass('active bg-warning').removeClass('bg-light');
+                $(this).find('span').addClass('text-white').removeClass('text-dark');
+
+                const categoryId = $(this).data('category');
+                const url = `/filter-category?category=${categoryId}`;
+
+                // Gửi AJAX lọc danh mục
+                $.get(url, function(data) {
+                    $('#tab-1').html(data);
+                    $('html, body').animate({
+                        scrollTop: $('#tab-1').offset().top - 100
+                    }, 300);
+                }).fail(function() {
+                    alert('Không thể tải sản phẩm. Vui lòng thử lại.');
+                });
+            });
+
+            // Gán sự kiện submit form Thêm vào giỏ bằng class
+            $(document).on('submit', '.add-to-cart-form', function(e) {
+                e.preventDefault();
+
+                let form = $(this);
+                let token = form.find('input[name="_token"]').val();
+                let productId = form.find('input[name="product_id"]').val();
+                let variantId = form.find('input[name="product_variant_id"]').val();
+                let quantity = form.find('input[name="quantity"]').val() || 1;
+
+                $.ajax({
+                    url: '{{ route('carts.add') }}',
+                    type: 'POST',
+                    data: {
+                        _token: token,
+                        product_id: productId,
+                        product_variant_id: variantId,
+                        quantity: quantity
+                    },
+                    success: function(res) {
+                        alert(res.message || 'Đã thêm vào giỏ hàng!');
+                        if (res.cart_count !== undefined) {
+                            $('#cart-count').text(res.cart_count);
+                        }
+                    },
+                    error: function(xhr) {
+                        let res = xhr.responseJSON;
+                        alert(res?.message || 'Lỗi thêm giỏ hàng.');
                     }
-                },
-                error: function(xhr) {
-                    let res = xhr.responseJSON;
-                    alert(res?.message || ' Có lỗi xảy ra!');
-                }
+                });
+            });
+
+            // Gán sự kiện click cho phân trang AJAX
+            $(document).on('click', '.pagination a', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
+
+                $.get(url, function(data) {
+                    $('#tab-1').html(data);
+                    $('html, body').animate({
+                        scrollTop: $('#tab-1').offset().top - 100
+                    }, 300);
+                }).fail(function() {
+                    alert('Không thể chuyển trang.');
+                });
             });
         });
-    });
-</script>
-
-
+    </script>
 @include('clients.layouts.footer')
