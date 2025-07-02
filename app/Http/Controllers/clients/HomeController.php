@@ -69,20 +69,7 @@ class HomeController extends Controller
         return view('clients.search', compact('products', 'keyword'));
     }
 
-    // public function filterByCategory(Request $request)
-    // {
-    //     $categoryId = $request->get('category');
 
-    //     $products = Product::with('category', 'variants');
-
-    //     if ($categoryId) {
-    //         $products->where('category_id', $categoryId);
-    //     }
-
-    //     $products = $products->latest()->get();
-
-    //     return view('clients.components.filtered-products', compact('products'))->render();
-    // }
     public function filterByCategory(Request $request)
 {
     $categoryId = $request->get('category');
