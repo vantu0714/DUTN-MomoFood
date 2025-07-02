@@ -31,11 +31,22 @@
                         </p>
 
                         <h3 class="product-price mb-4 d-flex align-items-baseline">
-                            <span class="price-amount fw-bold" style="font-size: 2.2rem;">
-                                {{ number_format($product->discounted_price, 0, ',', '.') }}
-                            </span>
+                            @if ($product->discounted_price && $product->discounted_price < $product->original_price)
+                                <span class="price-amount fw-bold text-danger me-3" style="font-size: 2.2rem;">
+                                    {{ number_format($product->discounted_price, 0, ',', '.') }}
+                                </span>
+                                <span class="original-price text-muted text-decoration-line-through"
+                                    style="font-size: 1.5rem;">
+                                    {{ number_format($product->original_price, 0, ',', '.') }}
+                                </span>
+                            @else
+                                <span class="price-amount fw-bold" style="font-size: 2.2rem;">
+                                    {{ number_format($product->original_price, 0, ',', '.') }}
+                                </span>
+                            @endif
                             <span class="currency ms-2 text-muted">VND</span>
                         </h3>
+
 
                         <div class="rating-stars mb-4">
                             @for ($i = 1; $i <= 5; $i++)
@@ -48,7 +59,8 @@
                         <p class="text-muted mb-4" style="line-height: 1.8; font-size: 15px;">
                             {{ $product->description ?? 'Không có mô tả.' }}</p>
 
-                        <form action="{{ route('carts.add') }}" method="POST" class="d-flex flex-column gap-4">
+                        <form id="addToCartForm" action="{{ route('carts.add') }}" method="POST"
+                            class="d-flex flex-column gap-4">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
                             <!-- Updated Variant Section in your Blade template -->
@@ -352,7 +364,7 @@
         }
 
         // Xử lý submit form
-        const form = document.querySelector('form[action="{{ route('carts.add') }}"]');
+        const form = document.getElementById('addToCartForm');
         if (form) {
             form.addEventListener('submit', function(e) {
                 // Kiểm tra xem đã chọn biến thể chưa (nếu có)
