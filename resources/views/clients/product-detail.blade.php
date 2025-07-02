@@ -1,307 +1,11 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
 {{-- @vite('resources/css/shop.css') --}}
-<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
-
-<style>
-    .product-image-container {
-        position: relative;
-        overflow: hidden;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        background: linear-gradient(145deg, #f8f9fa, #ffffff);
-        padding: 20px;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .product-image {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 15px;
-        width: 100%;
-        height: 500px;
-        object-fit: cover;
-        filter: brightness(1.02) contrast(1.05);
-    }
-
-    .product-image:hover {
-        transform: scale(1.03) rotateY(2deg);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-    }
-
-    .image-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg,
-                rgba(40, 167, 69, 0.1) 0%,
-                rgba(32, 201, 151, 0.1) 100%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        border-radius: 20px;
-        pointer-events: none;
-    }
-
-    .product-image-container:hover .image-overlay {
-        opacity: 1;
-    }
-
-    .zoom-icon {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0);
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        border: 2px solid rgba(40, 167, 69, 0.3);
-    }
-
-    .product-image-container:hover .zoom-icon {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    .variant-option {
-        border: 2px solid #e9ecef;
-        border-radius: 15px;
-        padding: 16px 20px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: white;
-        text-align: center;
-        min-height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        font-weight: 500;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .variant-option::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(40, 167, 69, 0.1), transparent);
-        transition: left 0.5s ease;
-    }
-
-    .variant-option:hover::before {
-        left: 100%;
-    }
-
-    .variant-option:hover {
-        border-color: #28a745;
-        background-color: #f8fff9;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.2);
-    }
-
-    .variant-option.selected {
-        border-color: #28a745;
-        background: linear-gradient(145deg, #28a745, #20c997);
-        color: white;
-        box-shadow: 0 8px 30px rgba(40, 167, 69, 0.4);
-        transform: translateY(-2px);
-    }
-
-    .variant-option.selected:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 35px rgba(40, 167, 69, 0.5);
-    }
-
-    .variant-image {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        object-fit: cover;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .variant-option.selected .variant-image {
-        border-color: rgba(255, 255, 255, 0.8);
-        transform: scale(1.05);
-    }
-
-    .size-option {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 16px;
-    }
-
-    .color-option {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        position: relative;
-    }
-
-    .color-option::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .color-option.selected::after {
-        opacity: 1;
-        background: white;
-        box-shadow: 0 0 0 2px #28a745;
-    }
-
-    .quantity-control {
-        border: 2px solid #e9ecef;
-        border-radius: 50px;
-        overflow: hidden;
-        background: white;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .quantity-btn {
-        width: 45px;
-        height: 45px;
-        border: none;
-        background: #f8f9fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        font-size: 14px;
-    }
-
-    .quantity-btn:hover {
-        background: #28a745;
-        color: white;
-        transform: scale(1.1);
-    }
-
-    .quantity-input {
-        width: 70px;
-        border: none;
-        text-align: center;
-        font-weight: bold;
-        font-size: 16px;
-        background: transparent;
-    }
-
-    .add-to-cart-btn {
-        background: linear-gradient(135deg, #28a745, #20c997);
-        border: none;
-        padding: 15px 35px;
-        border-radius: 50px;
-        color: white;
-        font-weight: bold;
-        font-size: 16px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .add-to-cart-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s ease;
-    }
-
-    .add-to-cart-btn:hover::before {
-        left: 100%;
-    }
-
-    .add-to-cart-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
-    }
-
-    .add-to-cart-btn:active {
-        transform: translateY(-1px);
-    }
-
-    .section-title {
-        position: relative;
-        display: inline-block;
-        margin-bottom: 30px;
-        font-size: 1.8rem;
-    }
-
-    .section-title::after {
-        content: '';
-        position: absolute;
-        bottom: -10px;
-        left: 0;
-        width: 80px;
-        height: 4px;
-        background: linear-gradient(135deg, #28a745, #20c997);
-        border-radius: 2px;
-    }
-
-    .product-info {
-        padding: 20px;
-    }
-
-    .product-price {
-        background: linear-gradient(135deg, #28a745, #20c997);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        filter: drop-shadow(0 2px 4px rgba(40, 167, 69, 0.2));
-    }
-
-    .rating-stars {
-        background: rgba(255, 193, 7, 0.1);
-        padding: 10px 15px;
-        border-radius: 25px;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .variant-content {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        width: 100%;
-    }
-
-    .variant-name {
-        font-weight: 600;
-        font-size: 15px;
-    }
-</style>
-
+<link rel="stylesheet" href="{{ asset('clients/css/shop-detail.css') }}">
 <!-- Single Page Header start -->
 <div class="container-fluid page-header py-5">
     <h1 class="text-center text-white display-6">Chi Tiết Sản Phẩm</h1>
 </div>
-<!-- Single Page Header End -->
-
 <!-- Single Product Start -->
 <div class="container-fluid py-5 mt-5">
     <div class="container py-3">
@@ -318,7 +22,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-lg-6 product-info">
                         <h2 class="fw-bold text-dark mb-3 section-title">{{ $product->product_name }}</h2>
 
@@ -348,12 +51,11 @@
                         <form action="{{ route('carts.add') }}" method="POST" class="d-flex flex-column gap-4">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
-
-                            {{-- CHỌN BIẾN THỂ - ĐÃ XÓA GIÁ --}}
+                            <!-- Updated Variant Section in your Blade template -->
                             @if ($product->variants && $product->variants->count())
                                 <div class="variant-section">
                                     <label class="form-label fw-bold mb-3" style="font-size: 16px;">
-                                        <i class="fas fa-tshirt me-2 text-success"></i>Chọn biến thể:
+                                        <i class="fas fa-layer-group me-2 text-success"></i>Chọn loại:
                                     </label>
                                     <div class="row g-3" id="variantOptions">
                                         @foreach ($product->variants as $variant)
@@ -369,9 +71,19 @@
                                                                 alt="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}">
                                                         @endif
                                                         <div class="flex-grow-1">
+                                                            <!-- Option 1: Single line with all info -->
                                                             <div class="variant-name">
                                                                 {{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}
                                                             </div>
+
+                                                            <!-- Option 2: Separate Vị and Size on same line (uncomment to use) -->
+                                                            <!--
+                                <div class="variant-name-inline">
+                                    <span class="variant-flavor">Vị: {{ $variant->flavor ?? 'Cay' }}</span>
+                                  
+                                    <span class="variant-size">Size: {{ $variant->size ?? 'M' }}</span>
+                                </div>
+                                -->
                                                         </div>
                                                     </div>
                                                 </div>
@@ -382,7 +94,6 @@
                                         value="">
                                 </div>
                             @endif
-
                             {{-- CHỌN SỐ LƯỢNG --}}
                             <div class="d-flex align-items-center gap-4">
                                 <label class="form-label fw-bold mb-0" style="font-size: 16px;">
@@ -406,7 +117,6 @@
                             </button>
                         </form>
                     </div>
-
                     {{-- PHẦN MÔ TẢ VÀ ĐÁNH GIÁ --}}
                     <div class="col-lg-12">
                         <nav>
@@ -423,7 +133,6 @@
                                 </button>
                             </div>
                         </nav>
-
                         <div class="tab-content mb-5">
                             <div class="tab-pane active" id="nav-about" role="tabpanel"
                                 aria-labelledby="nav-about-tab">
@@ -431,12 +140,10 @@
                                     <p style="line-height: 1.8;">{!! nl2br(e($product->description ?? 'Không có mô tả.')) !!}</p>
                                 </div>
                             </div>
-
                             <div class="tab-pane fade" id="nav-mission" role="tabpanel"
                                 aria-labelledby="nav-mission-tab">
                                 <h4 class="mb-4 fw-bold text-uppercase text-primary section-title">Đánh giá của người
                                     dùng</h4>
-
                                 @forelse($product->comments as $comment)
                                     <div class="d-flex mb-4 border rounded shadow-sm p-4 bg-white">
                                         <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
@@ -509,7 +216,6 @@
                 </div>
             </div>
         </div>
-
         {{-- SẢN PHẨM LIÊN QUAN --}}
         <h2 class="fw-bold mb-4 section-title">SẢN PHẨM LIÊN QUAN</h2>
         <div class="vesitable">
@@ -544,11 +250,9 @@
     </div>
 </div>
 <!-- Single Product End -->
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         let selectedVariant = null;
-
         // Xử lý chọn biến thể
         const variantOptions = document.querySelectorAll('[data-variant-id]');
         variantOptions.forEach(option => {
@@ -558,16 +262,13 @@
 
                 // Chọn variant mới
                 this.classList.add('selected');
-
                 selectedVariant = {
                     id: this.dataset.variantId,
                     name: this.dataset.variantName,
                     price: this.dataset.variantPrice,
                     image: this.dataset.variantImage
                 };
-
                 document.getElementById('selectedVariantId').value = selectedVariant.id;
-
                 // Cập nhật ảnh chính với hiệu ứng smooth
                 if (selectedVariant.image) {
                     const mainImage = document.getElementById('mainProductImage');
@@ -593,7 +294,6 @@
                 }
             });
         });
-
         // Xử lý rating (chọn sao)
         const stars = document.querySelectorAll('.star');
         const ratingInput = document.getElementById('rating-value');
@@ -629,7 +329,6 @@
                 }
             });
         }
-
         // Xử lý tăng giảm số lượng
         const minusBtn = document.querySelector('.btn-minus');
         const plusBtn = document.querySelector('.btn-plus');
@@ -644,7 +343,6 @@
                 }
             });
         }
-
         if (plusBtn) {
             plusBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -662,13 +360,12 @@
 
                 if (hasVariants && !selectedVariant) {
                     e.preventDefault();
-                    alert('Vui lòng chọn biến thể sản phẩm!');
+                    alert('Vui lòng chọn loại sản phẩm!');
                     return;
                 }
             });
         }
     });
 </script>
-
 <!-- Footer Start -->
 @include('clients.layouts.footer')
