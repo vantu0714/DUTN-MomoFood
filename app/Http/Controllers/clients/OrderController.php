@@ -196,19 +196,18 @@ class OrderController extends Controller
                 ->whereIn('status', [2, 3, 4])
                 ->sum('total_price');
 
-                if ($totalSpent >= 5000000) {
-                    $user = User::find($userId);
-                    $user->is_vip = true;
-                    $user->save();
-                }
+            if ($totalSpent >= 5000000) {
+                $user = User::find($userId);
+                $user->is_vip = true;
+                $user->save();
+            }
 
 
             // ✅ Xóa đúng sản phẩm đã chọn
-            if (!empty($selectedIds)) {
-                $cart->items()->whereIn('id', $selectedIds)->delete();
-            } else {
-                $cart->items()->delete();
+            if ($cartItems->isNotEmpty()) {
+                $cart->items()->whereIn('id', $cartItems->pluck('id'))->delete();
             }
+
 
             DB::commit();
 
@@ -219,128 +218,6 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
     }
-
-    //     public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'recipient_name' => 'required|string|max:255',
-    //         'recipient_phone' => 'required|string|max:15',
-    //         'recipient_address' => 'required|string|max:500',
-    //         'shipping_fee' => 'required|numeric|min:0',
-    //         'payment_method' => 'required|in:cod,vnpay',
-    //     ]);
-
-    //     $userId = Auth::id();
-    //     $cart = Cart::with('items')->where('user_id', $userId)->first();
-
-    //     if (!$cart || $cart->items->isEmpty()) {
-    //         return redirect()->back()->with('error', 'Giỏ hàng đang trống.');
-    //     }
-
-    //     // 🔽 Lấy danh sách item đã chọn (nếu có)
-    //     $selectedIds = [];
-    //     if ($request->filled('selected_items')) {
-    //         $selectedIds = explode(',', $request->selected_items);
-    //     }
-
-    //     $cartItems = $cart->items;
-    //     if (!empty($selectedIds)) {
-    //         $cartItems = $cartItems->whereIn('id', $selectedIds);
-    //     }
-
-    //     if ($cartItems->isEmpty()) {
-    //         return back()->with('error', 'Không có sản phẩm nào được chọn.');
-    //     }
-
-    //     // Lưu thông tin người nhận vào session
-    //     session()->put('recipient', $request->only([
-    //         'recipient_name',
-    //         'recipient_phone',
-    //         'recipient_address',
-    //         'note'
-    //     ]));
-
-    //     // Tính tổng tiền hàng
-    //     $total = 0;
-    //     foreach ($cartItems as $item) {
-    //         $total += $item->discounted_price * $item->quantity;
-    //     }
-
-    //     $discount = 0;
-    //     $promotionCode = null;
-
-    //     if ($request->filled('promotion')) {
-    //         $promotionName = trim($request->promotion);
-    //         $promotion = Promotion::where('promotion_name', $promotionName)
-    //             ->where('status', 1)
-    //             ->where('start_date', '<=', now())
-    //             ->where('end_date', '>=', now())
-    //             ->first();
-
-    //         if ($promotion) {
-    //             $promotionCode = $promotion->promotion_name;
-
-    //             if ($promotion->discount_type === 'percent') {
-    //                 $discount = ($promotion->discount_value / 100) * $total;
-    //             } elseif ($promotion->discount_type === 'fixed') {
-    //                 $discount = $promotion->discount_value;
-    //             }
-
-    //             if ($promotion->max_discount_value !== null) {
-    //                 $discount = min($discount, $promotion->max_discount_value);
-    //             }
-    //         } else {
-    //             return redirect()->back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết hạn.');
-    //         }
-    //     }
-
-    //     $grandTotal = $total + $request->shipping_fee - $discount;
-
-    //     try {
-    //         DB::beginTransaction();
-
-    //         $order = Order::create([
-    //             'user_id' => $userId,
-    //             'recipient_name' => $request->recipient_name,
-    //             'recipient_phone' => $request->recipient_phone,
-    //             'recipient_address' => $request->recipient_address,
-    //             'note' => $request->note,
-    //             'promotion' => $promotionCode,
-    //             'shipping_fee' => $request->shipping_fee,
-    //             'total_price' => $grandTotal,
-    //             'payment_method' => $request->payment_method,
-    //             'payment_status' => 'unpaid',
-    //             'status' => 1,
-    //         ]);
-
-    //         foreach ($cartItems as $item) {
-    //             OrderDetail::create([
-    //                 'order_id' => $order->id,
-    //                 'product_id' => $item->product_id,
-    //                 'product_variant_id' => $item->product_variant_id,
-    //                 'quantity' => $item->quantity,
-    //                 'price' => $item->discounted_price,
-    //             ]);
-    //         }
-
-    //         // Xóa các item đã đặt khỏi giỏ hàng
-    //         if (!empty($selectedIds)) {
-    //             $cart->items()->whereIn('id', $selectedIds)->delete();
-    //         } else {
-    //             $cart->items()->delete();
-    //         }
-
-    //         DB::commit();
-
-    //         session()->forget(['promotion', 'discount']);
-    //         return redirect()->route('carts.index')->with('success', 'Đặt hàng thành công!');
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         return redirect()->back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
-    //     }
-    // }
-
 
     public function orderList()
     {

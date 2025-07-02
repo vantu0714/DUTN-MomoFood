@@ -184,3 +184,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])
         ->name('combo_items.delete_combo');
 });
+
+Route::get('/filter-category', [HomeController::class, 'filterByCategory'])->name('home.filter.category');

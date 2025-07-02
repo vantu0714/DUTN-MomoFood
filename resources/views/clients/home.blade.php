@@ -1,6 +1,5 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-{{-- @vite('resources/css/shop.css') --}}
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 
@@ -62,28 +61,21 @@
             </div>
             <div class="col-md-12 col-lg-5">
                 <div id="carouselId" class="carousel slide position-relative" data-bs-ride="carousel">
-                    <div class="carousel-inner" role="listbox">
+                    <div class="carousel-inner" role="listbox" style="height: 300px;">
                         <div class="carousel-item active rounded">
-                            <img src="{{ asset('clients/img/hero-img-1.png') }}"
-                                class="img-fluid w-100 h-100 bg-secondary rounded" alt="First slide">
-                            <a href="#" class="btn px-4 py-2 text-white rounded">Fruites</a>
+                            <div class="carousel-img-wrapper">
+                                <img src="https://nemnuonghungviet.com/nemhungviet/uploads/2023/08/met-an-vat-co-gi-5.jpg"
+                                    class="img-fluid rounded carousel-img" alt="First slide">
+                                {{-- <a href="#" class="btn px-4 py-2 text-white rounded">Fruits</a> --}}
+                            </div>
                         </div>
                         <div class="carousel-item rounded">
-                            <img src="{{ asset('clients/img/hero-img-2.jpg') }}" class="img-fluid w-100 h-100 rounded"
-                                alt="Second slide">
-                            <a href="#" class="btn px-4 py-2 text-white rounded">Vesitables</a>
+                            <div class="carousel-img-wrapper">
+                                <img src="https://saigonchutla.vn/wp-content/uploads/2023/09/an-vat-kon-tum-3-800x445-1.jpg"
+                                    class="img-fluid rounded carousel-img" alt="Second slide">
+                            </div>
                         </div>
                     </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselId"
-                        data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselId"
-                        data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -170,28 +162,24 @@
                     <h1>MÓN ĂN NỔI BẬT</h1>
                 </div>
                 <div class="col-lg-8 text-end">
-                    <ul class="nav nav-pills d-inline-flex text-center mb-5">
-
-                        {{-- Tất cả sản phẩm --}}
+                    <ul class="nav nav-pills d-inline-flex text-center mb-5" id="category-tabs">
                         <li class="nav-item">
-                            <a class="d-flex m-2 py-2 bg-warning rounded-pill {{ request('category') == null ? 'active' : '' }}"
-                                href="{{ route('home') }}">
+                            <a class="d-flex m-2 py-2 bg-warning rounded-pill category-tab active" data-category=""
+                                href="javascript:void(0);">
                                 <span class="text-white" style="width: 130px;">Tất cả</span>
                             </a>
                         </li>
-
-                        {{-- Danh sách danh mục --}}
                         @foreach ($categories as $category)
                             <li class="nav-item">
-                                <a class="d-flex m-2 py-2 bg-light rounded-pill {{ request('category') == $category->id ? 'active' : '' }}"
-                                    href="{{ route('home', ['category' => $category->id]) }}">
+                                <a class="d-flex m-2 py-2 bg-light rounded-pill category-tab"
+                                    data-category="{{ $category->id }}" href="javascript:void(0);">
                                     <span class="text-dark"
                                         style="width: 130px;">{{ $category->category_name }}</span>
                                 </a>
                             </li>
                         @endforeach
-
                     </ul>
+
                 </div>
 
             </div>
@@ -396,16 +384,6 @@
 
                     <img src="https://saigonchutla.vn/wp-content/uploads/2023/09/an-vat-kon-tum-3-800x445-1.jpg"
                         class="img-fluid w-100 rounded" alt="Thế giới đồ ăn vặt MoMoFood">
-
-
-                    {{-- <div class="d-flex align-items-center justify-content-center bg-white rounded-circle position-absolute"
-                        style="width: 140px; height: 140px; top: 0; left: 0;">
-                        <h1 style="font-size: 100px;">1</h1>
-                        <div class="d-flex flex-column">
-                            <span class="h2 mb-0">50k</span>
-                            <span class="h4 text-muted mb-0">Túi</span>
-                        </div>
-                    </div> --}}
                 </div>
             </div>
         </div>
@@ -713,7 +691,7 @@
                 <div class="testimonial-item img-border-radius bg-light rounded p-4">
                     <div class="position-relative">
                         <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
-                           style="bottom: 30px; right: 0;"></i>
+                            style="bottom: 30px; right: 0;"></i>
 
                         <div class="mb-4 pb-4 border-bottom border-secondary">
                             <p class="mb-0 text-dark">{{ $comment->content }}</p>
@@ -722,8 +700,7 @@
                         <div class="d-flex align-items-center flex-nowrap">
                             <div class="bg-secondary rounded">
                                 <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-                                     class="img-fluid rounded"
-                                     style="width: 100px; height: 100px;" alt="Avatar">
+                                    class="img-fluid rounded" style="width: 100px; height: 100px;" alt="Avatar">
                             </div>
 
                             <div class="ms-4 d-block">
@@ -732,7 +709,8 @@
 
                                 <div class="d-flex pe-5">
                                     @for ($i = 1; $i <= 5; $i++)
-                                        <i class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
+                                        <i
+                                            class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
                                     @endfor
                                 </div>
                             </div>
@@ -745,6 +723,48 @@
     </div>
 </div>
 <!-- Testimonial End -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryTabs = document.querySelectorAll('.category-tab');
+        const productContainer = document.querySelector('.tab-content #tab-1');
 
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Xoá trạng thái active và đổi màu của tất cả tab
+                categoryTabs.forEach(t => {
+                    t.classList.remove('active', 'bg-warning');
+                    t.classList.add('bg-light');
 
+                    const span = t.querySelector('span');
+                    if (span) {
+                        span.classList.remove('text-white');
+                        span.classList.add('text-dark');
+                    }
+                });
+
+                // Đánh dấu tab hiện tại là active và đổi màu
+                this.classList.remove('bg-light');
+                this.classList.add('active', 'bg-warning');
+
+                const currentSpan = this.querySelector('span');
+                if (currentSpan) {
+                    currentSpan.classList.remove('text-dark');
+                    currentSpan.classList.add('text-white');
+                }
+
+                // Gửi yêu cầu lọc sản phẩm
+                const categoryId = this.getAttribute('data-category');
+
+                fetch(`/filter-category?category=${categoryId}`)
+                    .then(res => res.text())
+                    .then(data => {
+                        productContainer.innerHTML = data;
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi lọc sản phẩm:', error);
+                    });
+            });
+        });
+    });
+</script>
 @include('clients.layouts.footer')
