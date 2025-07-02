@@ -95,7 +95,7 @@
                     </div>
                     <div class="featurs-content text-center">
                         <h5>Miễn phí vận chuyển</h5>
-                        <p class="mb-0">Miễn phí cho đơn hàng trên $300</p>
+                        <p class="mb-0">Miễn phí cho đơn hàng trên 300.000vnđ</p>
                     </div>
                 </div>
             </div>
@@ -725,84 +725,81 @@
     </div>
 </div>
 <!-- Testimonial End -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const categoryTabs = document.querySelectorAll('.category-tab');
-        const productContainer = document.querySelector('.tab-content #tab-1');
-
-        categoryTabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                // Xoá trạng thái active và đổi màu của tất cả tab
-                categoryTabs.forEach(t => {
-                    t.classList.remove('active', 'bg-warning');
-                    t.classList.add('bg-light');
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script>
-    $(document).ready(function() {
-        $('.add-to-cart-form').on('submit', function(e) {
-            e.preventDefault();
+    <script>
+        $(document).ready(function() {
+            // Gán sự kiện click cho danh mục
+            $(document).on('click', '.category-tab', function(e) {
+                e.preventDefault();
 
-            let form = $(this);
-            let token = form.find('input[name="_token"]').val();
-            let productId = form.find('input[name="product_id"]').val();
-            let variantId = form.find('input[name="product_variant_id"]').val();
-            let quantity = form.find('input[name="quantity"]').val() || 1;
+                // Xử lý đổi màu các tab
+                $('.category-tab').removeClass('active bg-warning').addClass('bg-light');
+                $('.category-tab span').removeClass('text-white').addClass('text-dark');
 
-            $.ajax({
-                url: '{{ route('carts.add') }}',
-                type: 'POST',
-                data: {
-                    _token: token,
-                    product_id: productId,
-                    product_variant_id: variantId,
-                    quantity: quantity
-                },
-                success: function(res) {
-                    alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
-                    // Nếu có hiển thị số lượng giỏ hàng ở header
-                    if (res.cart_count !== undefined) {
-                        $('#cart-count').text(res.cart_count);
-                    }
-                },
-                error: function(xhr) {
-                    let res = xhr.responseJSON;
-                    alert(res?.message || ' Có lỗi xảy ra!');
-                }
+                $(this).addClass('active bg-warning').removeClass('bg-light');
+                $(this).find('span').addClass('text-white').removeClass('text-dark');
+
+                const categoryId = $(this).data('category');
+                const url = `/filter-category?category=${categoryId}`;
+
+                // Gửi AJAX lọc danh mục
+                $.get(url, function(data) {
+                    $('#tab-1').html(data);
+                    $('html, body').animate({
+                        scrollTop: $('#tab-1').offset().top - 100
+                    }, 300);
+                }).fail(function() {
+                    alert('Không thể tải sản phẩm. Vui lòng thử lại.');
+                });
             });
-        });
-    });
-</script>
-                    const span = t.querySelector('span');
-                    if (span) {
-                        span.classList.remove('text-white');
-                        span.classList.add('text-dark');
+
+            // Gán sự kiện submit form Thêm vào giỏ bằng class
+            $(document).on('submit', '.add-to-cart-form', function(e) {
+                e.preventDefault();
+
+                let form = $(this);
+                let token = form.find('input[name="_token"]').val();
+                let productId = form.find('input[name="product_id"]').val();
+                let variantId = form.find('input[name="product_variant_id"]').val();
+                let quantity = form.find('input[name="quantity"]').val() || 1;
+
+                $.ajax({
+                    url: '{{ route('carts.add') }}',
+                    type: 'POST',
+                    data: {
+                        _token: token,
+                        product_id: productId,
+                        product_variant_id: variantId,
+                        quantity: quantity
+                    },
+                    success: function(res) {
+                        alert(res.message || 'Đã thêm vào giỏ hàng!');
+                        if (res.cart_count !== undefined) {
+                            $('#cart-count').text(res.cart_count);
+                        }
+                    },
+                    error: function(xhr) {
+                        let res = xhr.responseJSON;
+                        alert(res?.message || 'Lỗi thêm giỏ hàng.');
                     }
                 });
+            });
 
-                // Đánh dấu tab hiện tại là active và đổi màu
-                this.classList.remove('bg-light');
-                this.classList.add('active', 'bg-warning');
+            // Gán sự kiện click cho phân trang AJAX
+            $(document).on('click', '.pagination a', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
 
-                const currentSpan = this.querySelector('span');
-                if (currentSpan) {
-                    currentSpan.classList.remove('text-dark');
-                    currentSpan.classList.add('text-white');
-                }
-
-                // Gửi yêu cầu lọc sản phẩm
-                const categoryId = this.getAttribute('data-category');
-
-                fetch(`/filter-category?category=${categoryId}`)
-                    .then(res => res.text())
-                    .then(data => {
-                        productContainer.innerHTML = data;
-                    })
-                    .catch(error => {
-                        console.error('Lỗi khi lọc sản phẩm:', error);
-                    });
+                $.get(url, function(data) {
+                    $('#tab-1').html(data);
+                    $('html, body').animate({
+                        scrollTop: $('#tab-1').offset().top - 100
+                    }, 300);
+                }).fail(function() {
+                    alert('Không thể chuyển trang.');
+                });
             });
         });
-    });
-</script>
+    </script>
 @include('clients.layouts.footer')

@@ -62,9 +62,9 @@
         </div>
     @endforeach
 
-    {{-- <div class="pagination-wrapper d-flex justify-content-center mt-4">
+    <div class="pagination-wrapper d-flex justify-content-center mt-4">
         {{ $products->links() }}
-    </div> --}}
+    </div>
 
     @if ($products->isEmpty())
         <div class="col-12 text-center">
