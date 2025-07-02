@@ -249,16 +249,17 @@
                                                     </p>
 
                                                     @if (!$isOutOfStock)
-                                                        <form action="{{ route('carts.add') }}" method="POST">
+                                                        <form class="add-to-cart-form">
                                                             @csrf
                                                             <input type="hidden" name="product_id"
                                                                 value="{{ $product->id }}">
-                                                            <button type="submit"
-                                                                class="btn border border-secondary rounded-pill px-3 text-primary">
-                                                                <i
-                                                                    class="fa fa-shopping-bag me-2 text-primary"></i>Thêm
-                                                                vào giỏ hàng
-                                                            </button>
+                                                            @if ($product->product_type === 'variant' && $product->variants->first())
+                                                                <input type="hidden" name="product_variant_id"
+                                                                    value="{{ $product->variants->first()->id }}">
+                                                            @endif
+                                                            <input type="hidden" name="quantity" value="1">
+                                                            <button type="submit" class="btn btn-primary">Thêm vào
+                                                                giỏ hàng</button>
                                                         </form>
                                                     @else
                                                         <span class="badge bg-danger text-white">Hết hàng</span>
@@ -713,7 +714,7 @@
                 <div class="testimonial-item img-border-radius bg-light rounded p-4">
                     <div class="position-relative">
                         <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
-                           style="bottom: 30px; right: 0;"></i>
+                            style="bottom: 30px; right: 0;"></i>
 
                         <div class="mb-4 pb-4 border-bottom border-secondary">
                             <p class="mb-0 text-dark">{{ $comment->content }}</p>
@@ -722,8 +723,7 @@
                         <div class="d-flex align-items-center flex-nowrap">
                             <div class="bg-secondary rounded">
                                 <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-                                     class="img-fluid rounded"
-                                     style="width: 100px; height: 100px;" alt="Avatar">
+                                    class="img-fluid rounded" style="width: 100px; height: 100px;" alt="Avatar">
                             </div>
 
                             <div class="ms-4 d-block">
@@ -732,7 +732,8 @@
 
                                 <div class="d-flex pe-5">
                                     @for ($i = 1; $i <= 5; $i++)
-                                        <i class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
+                                        <i
+                                            class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
                                     @endfor
                                 </div>
                             </div>
@@ -745,6 +746,44 @@
     </div>
 </div>
 <!-- Testimonial End -->
- 
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('.add-to-cart-form').on('submit', function(e) {
+            e.preventDefault();
+
+            let form = $(this);
+            let token = form.find('input[name="_token"]').val();
+            let productId = form.find('input[name="product_id"]').val();
+            let variantId = form.find('input[name="product_variant_id"]').val();
+            let quantity = form.find('input[name="quantity"]').val() || 1;
+
+            $.ajax({
+                url: '{{ route('carts.add') }}',
+                type: 'POST',
+                data: {
+                    _token: token,
+                    product_id: productId,
+                    product_variant_id: variantId,
+                    quantity: quantity
+                },
+                success: function(res) {
+                    alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
+                    // Nếu có hiển thị số lượng giỏ hàng ở header
+                    if (res.cart_count !== undefined) {
+                        $('#cart-count').text(res.cart_count);
+                    }
+                },
+                error: function(xhr) {
+                    let res = xhr.responseJSON;
+                    alert(res?.message || ' Có lỗi xảy ra!');
+                }
+            });
+        });
+    });
+</script>
+
 
 @include('clients.layouts.footer')
