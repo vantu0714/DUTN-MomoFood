@@ -12,6 +12,7 @@ class ProductDetailController extends Controller
         // Lấy sản phẩm cùng category, cùng comments và user
         $product = Product::with([
             'category',
+             'variants.attributeValues.attribute',
             'comments' => function ($query) {
                 $query->latest(); // sắp xếp bình luận mới nhất trước
             },
