@@ -21,8 +21,8 @@ use App\Http\Controllers\Clients\ContactsController;
 use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\VNPayController;
-use App\Http\Controllers\Clients\CommentController as ClientCommentController;
-
+use App\Http\Controllers\clients\CommentController as ClientCommentController;
+use App\Http\Controllers\ThongKeController;
 
 // ==================== PUBLIC ROUTES ====================
 
@@ -177,10 +177,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // Comment Management
-    Route::resource('comments', CommentController::class)->only(['index', 'destroy']);
+    Route::resource('comments', ClientCommentController::class)->only(['index', 'destroy']);
+
+    // thống kê
+    Route::get('thongke', [ThongKeController::class, 'index'])->name('thongke');
 
     // Combo Management
     Route::resource('combo_items', ComboItemController::class)->except(['show', 'edit', 'update']);
     Route::delete('/combo-items/delete-combo/{comboId}', [ComboItemController::class, 'destroyCombo'])
         ->name('combo_items.delete_combo');
 });
+
+Route::get('/filter-category', [HomeController::class, 'filterByCategory'])->name('home.filter.category');

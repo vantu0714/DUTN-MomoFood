@@ -60,12 +60,11 @@
                             <h5 class="card-title mb-4">Giỏ hàng</h5>
 
                             @php
-                                $cartItems = $cart->items ?? [];
                                 $total = 0;
                                 $shippingFee = 30000; // Phí vận chuyển mặc định 30,000đ
 
                                 foreach ($cartItems as $item) {
-                                    $price = $item->discounted_price ?? $item->original_price ?? 0;
+                                    $price = $item->discounted_price ?? ($item->original_price ?? 0);
                                     $total += $price * $item->quantity;
                                 }
 
@@ -88,7 +87,9 @@
                                 }
 
                                 $grandTotal = $total + $shipping - $discount;
-                                if ($grandTotal < 0) $grandTotal = 0;
+                                if ($grandTotal < 0) {
+                                    $grandTotal = 0;
+                                }
                             @endphp
 
                             {{-- DANH SÁCH SẢN PHẨM --}}
@@ -104,8 +105,9 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($cartItems as $item)
+                                        <input type="hidden" name="selected_items[]" value="{{ $item->id }}">
                                         @php
-                                            $price = $item->discounted_price ?? $item->original_price ?? 0;
+                                            $price = $item->discounted_price ?? ($item->original_price ?? 0);
                                             $itemTotal = $price * $item->quantity;
                                         @endphp
                                         <tr>
@@ -132,7 +134,8 @@
 
                             @if ($discount > 0)
                                 <div class="mb-2 text-success">
-                                    Giảm giá (<strong>{{ $promotionName }}</strong>): <strong>-{{ number_format($discount) }}đ</strong>
+                                    Giảm giá (<strong>{{ $promotionName }}</strong>):
+                                    <strong>-{{ number_format($discount) }}đ</strong>
                                 </div>
                             @else
                                 <div class="mb-2 text-muted">Không có mã giảm giá</div>
@@ -146,8 +149,10 @@
                                 <label class="form-label">Phương thức thanh toán</label>
                                 <select name="payment_method" class="form-select" required>
                                     <option value="">-- Chọn phương thức --</option>
-                                    <option value="cod" {{ old('payment_method') == 'cod' ? 'selected' : '' }}>Thanh toán khi nhận hàng (COD)</option>
-                                    <option value="vnpay" {{ old('payment_method') == 'vnpay' ? 'selected' : '' }}>Thanh toán qua VNPAY</option>
+                                    <option value="cod" {{ old('payment_method') == 'cod' ? 'selected' : '' }}>Thanh
+                                        toán khi nhận hàng (COD)</option>
+                                    <option value="vnpay" {{ old('payment_method') == 'vnpay' ? 'selected' : '' }}>Thanh
+                                        toán qua VNPAY</option>
                                 </select>
                             </div>
 

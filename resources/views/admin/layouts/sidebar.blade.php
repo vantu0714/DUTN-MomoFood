@@ -1,7 +1,7 @@
 <nav class="sidebar vertical-scroll  ps-container ps-theme-default ps-active-y">
-    <div class="logo d-flex justify-content-between">
+    <div class="logo d-flex justify-content-between align-items-center">
         <a href="{{ route('admin.dashboard')}}">
-            <img src="{{ asset('admins/assets/img/z6650436893085_9f5f646a3773a5affeadcaa2e3157bb6.jpg') }}"alt="Logo" style="width: 150px; height: auto"></a>
+            <img src="{{ asset('admins/assets/img/image copy.png') }}"alt="Logo" style="max-width: 210px;"></a>
         <div class="sidebar_close_icon d-lg-none">
             <i class="ti-close"></i>
         </div>
@@ -16,7 +16,7 @@
             </a>
         </li>
         <li class>
-            <a class="has-arrow" href="{{ route('admin.users.index')}}" aria-expanded="false">
+            <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/2.svg') }}" alt>
                 </div>
@@ -28,7 +28,7 @@
             </ul>
         </li>
         <li class>
-            <a class="has-arrow" href="{{ route('admin.categories.index')}}" aria-expanded="false">
+            <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/3.svg') }}" alt>
                 </div>
@@ -41,7 +41,7 @@
         </li>
 
         <li class>
-            <a class="has-arrow" href="{{ route('admin.products.index')}}" aria-expanded="false">
+            <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/4.svg') }}" alt>
                 </div>
@@ -53,7 +53,7 @@
             </ul>
         </li>
         <li class>
-            <a class="has-arrow" href="{{ route('admin.product_variants.index')}}" aria-expanded="false">
+            <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/4.svg') }}" alt>
                 </div>
@@ -65,7 +65,7 @@
             </ul>
         </li>
         <li class>
-            <a class="has-arrow" href="{{ route('admin.combo_items.index')}}" aria-expanded="false">
+            <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/4.svg') }}" alt>
                 </div>
@@ -77,7 +77,7 @@
             </ul>
         </li>
         <li class>
-            <a href="{{ route('admin.promotions.index')}}" class="has-arrow" aria-expanded="false">
+            <a href="#" class="has-arrow" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/5.svg') }}" alt>
                 </div>
@@ -89,7 +89,7 @@
             </ul>
         </li>
         <li class>
-            <a href="{{ route('admin.orders.index')}}" class="has-arrow" aria-expanded="false">
+            <a href="#" class="has-arrow" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/6.svg') }}" alt>
                 </div>
@@ -117,18 +117,14 @@
             </a>
         </li>
         <li class>
-            <a class="has-arrow" href="#" aria-expanded="false">
+             <a href="{{ route('admin.thongke') }}" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/8.svg') }}" alt>
                 </div>
                 <span>Thống kê</span>
             </a>
-            <ul>
-                <li><a href="Products.html">Products</a></li>
-                <li><a href="Product_Details.html">Product Details</a></li>
-                <li><a href="Cart.html">Cart</a></li>
-                <li><a href="Checkout.html">Checkout</a></li>
-            </ul>
+        </li>
+            
         </li>
 
         <li class>
@@ -149,3 +145,8 @@
         </li>
     </ul>
 </nav>
+
+
+<style>
+ 
+</style>

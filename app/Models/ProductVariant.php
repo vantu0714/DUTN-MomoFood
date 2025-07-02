@@ -61,4 +61,18 @@ class ProductVariant extends Model
     {
         return $this->morphMany(ComboItem::class, 'itemable');
     }
+    public function getFullNameAttribute()
+    {
+        $attrs = $this->attributeValues->map(function ($val) {
+            return $val->attribute->name . ': ' . $val->value;
+        })->implode(', ');
+
+        return $this->name . ($attrs ? " ($attrs)" : '');
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? asset('storage/' . $this->image) : asset('images/no-image.png');
+    }
+    
 }

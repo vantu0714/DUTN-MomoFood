@@ -1,6 +1,5 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-{{-- @vite('resources/css/shop.css') --}}
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 
@@ -323,16 +322,19 @@
                                                     @endif
                                                 </div>
 
-                                                <form action="{{ route('carts.add') }}" method="POST">
+                                                <form class="add-to-cart-form">
                                                     @csrf
                                                     <input type="hidden" name="product_id"
                                                         value="{{ $product->id }}">
-                                                    <button type="submit"
-                                                        class="btn border border-secondary rounded-pill px-3 text-primary">
-                                                        <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào
-                                                        giỏ hàng
-                                                    </button>
+                                                    @if ($product->product_type === 'variant' && $product->variants->first())
+                                                        <input type="hidden" name="product_variant_id"
+                                                            value="{{ $product->variants->first()->id }}">
+                                                    @endif
+                                                    <input type="hidden" name="quantity" value="1">
+                                                    <button type="submit" class="btn btn-primary">Thêm vào giỏ
+                                                        hàng</button>
                                                 </form>
+
                                             </div>
                                         </div>
                                     </div>
@@ -387,4 +389,44 @@
         });
     </script>
 
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('.add-to-cart-form').on('submit', function(e) {
+                e.preventDefault();
+
+                let form = $(this);
+                let token = form.find('input[name="_token"]').val();
+                let productId = form.find('input[name="product_id"]').val();
+                let variantId = form.find('input[name="product_variant_id"]').val();
+                let quantity = form.find('input[name="quantity"]').val() || 1;
+
+                $.ajax({
+                    url: '{{ route('carts.add') }}',
+                    type: 'POST',
+                    data: {
+                        _token: token,
+                        product_id: productId,
+                        product_variant_id: variantId,
+                        quantity: quantity
+                    },
+                    success: function(res) {
+                        alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
+                        // Nếu có hiển thị số lượng giỏ hàng ở header
+                        if (res.cart_count !== undefined) {
+                            $('#cart-count').text(res.cart_count);
+                        }
+                    },
+                    error: function(xhr) {
+                        let res = xhr.responseJSON;
+                        alert(res?.message || ' Có lỗi xảy ra!');
+                    }
+                });
+            });
+        });
+    </script>
+
     @include('clients.layouts.footer')
+<!-- Fruits Shop Start-->

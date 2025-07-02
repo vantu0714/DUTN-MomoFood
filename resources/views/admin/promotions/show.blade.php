@@ -1,20 +1,34 @@
 @extends('admin.layouts.app')
 
 @section('content')
-    <div class="container mt-4">
-        <h2 class="mb-4">Chi tiết mã giảm giá</h2>
+    <div class="container py-4">
+        <h2 class="mb-4">
+            <i class="fas fa-ticket-alt text-primary me-2"></i>
+            Chi tiết mã giảm giá
+        </h2>
 
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                {{ $promotion->promotion_name }}
+        <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-tags me-2"></i> {{ $promotion->promotion_name }}</span>
+                @php
+                    $now = now();
+                    $isValidTime = $now->between($promotion->start_date, $promotion->end_date);
+                    $isActive = $promotion->status == 1;
+                    $limitOK = is_null($promotion->usage_limit) || $promotion->used_count < $promotion->usage_limit;
+                @endphp
+                <span class="badge {{ $isActive && $isValidTime && $limitOK ? 'bg-success' : 'bg-secondary' }}">
+                    {{ $isActive && $isValidTime && $limitOK ? 'Đang hoạt động' : 'Không hoạt động' }}
+                </span>
             </div>
 
             <div class="card-body">
-                <table class="table table-borderless">
+                <table class="table table-borderless mb-0">
                     <tbody>
                         <tr>
-                            <th>Loại giảm:</th>
-                            <td>{{ $promotion->discount_type === 'percent' ? 'Giảm phần trăm' : 'Giảm số tiền' }}</td>
+                            <th class="text-nowrap w-25">Loại giảm:</th>
+                            <td>
+                                {{ $promotion->discount_type === 'percent' ? 'Giảm phần trăm' : 'Giảm số tiền' }}
+                            </td>
                         </tr>
 
                         <tr>
@@ -56,9 +70,7 @@
 
                         <tr>
                             <th>Giới hạn lượt sử dụng:</th>
-                            <td>
-                                {{ $promotion->usage_limit ?? 'Không giới hạn' }}
-                            </td>
+                            <td>{{ $promotion->usage_limit ?? 'Không giới hạn' }}</td>
                         </tr>
 
                         <tr>
@@ -67,21 +79,12 @@
                         </tr>
 
                         <tr>
-                            <th>Trạng thái:</th>
+                            <th>Trạng thái (gốc):</th>
                             <td>
-                                @php
-                                    $now = now();
-                                    $isValidTime = $now->between($promotion->start_date, $promotion->end_date);
-                                    $isActive = $promotion->status == 1;
-                                    $limitOK =
-                                        is_null($promotion->usage_limit) ||
-                                        $promotion->used_count < $promotion->usage_limit;
-                                @endphp
-
-                                @if ($isActive && $isValidTime && $limitOK)
-                                    <span class="badge bg-success">Đang hoạt động</span>
+                                @if ($promotion->status)
+                                    <span class="badge bg-success">Đang bật</span>
                                 @else
-                                    <span class="badge bg-secondary">Không hoạt động</span>
+                                    <span class="badge bg-secondary">Đang tắt</span>
                                 @endif
                             </td>
                         </tr>
@@ -89,9 +92,13 @@
                 </table>
             </div>
 
-            <div class="card-footer text-end">
-                <a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary">Quay về danh sách</a>
-                <a href="{{ route('admin.promotions.edit', $promotion->id) }}" class="btn btn-warning">Sửa</a>
+            <div class="card-footer bg-light d-flex justify-content-end gap-2">
+                <a href="{{ route('admin.promotions.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Quay về danh sách
+                </a>
+                <a href="{{ route('admin.promotions.edit', $promotion->id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit me-1"></i> Sửa
+                </a>
             </div>
         </div>
     </div>

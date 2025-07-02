@@ -38,6 +38,9 @@ class CartClientController extends Controller
     public function addToCart(Request $request)
     {
         if (!Auth::check()) {
+            if ($request->ajax()) {
+                return response()->json(['message' => 'Bạn cần đăng nhập.'], 401);
+            }
             return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.');
         }
 
@@ -50,8 +53,15 @@ class CartClientController extends Controller
         $variant = $variantId ? ProductVariant::find($variantId) : null;
 
         $stock = $variant ? $variant->quantity : $product->quantity;
+
+        //  Hết hàng
+        if ($stock <= 0) {
+            return response()->json(['message' => 'Sản phẩm đã hết hàng!'], 400);
+        }
+
+        // Quá số lượng tồn
         if ($quantity > $stock) {
-            return back()->with('error', 'Số lượng vượt quá tồn kho.');
+            return response()->json(['message' => 'Số lượng vượt quá tồn kho!'], 400);
         }
 
         $cart = Cart::firstOrCreate(
@@ -62,24 +72,13 @@ class CartClientController extends Controller
         $originalPrice = $variant ? ($variant->original_price ?? $variant->price) : ($product->original_price ?? $product->price);
         $discountedPrice = $variant ? ($variant->discounted_price ?? $originalPrice) : ($product->discounted_price ?? $originalPrice);
 
-        if (is_null($originalPrice)) {
-            return back()->with('error', 'Sản phẩm chưa có giá.');
-        }
-
-        $query = CartItem::where('cart_id', $cart->id)
-            ->where('product_id', $productId);
-
-        if ($variant) {
-            $query->where('product_variant_id', $variant->id);
-        } else {
-            $query->whereNull('product_variant_id');
-        }
-
+        $query = CartItem::where('cart_id', $cart->id)->where('product_id', $productId);
+        $variant ? $query->where('product_variant_id', $variant->id) : $query->whereNull('product_variant_id');
         $existingItem = $query->first();
 
         if ($existingItem) {
             if ($existingItem->quantity + $quantity > $stock) {
-                return back()->with('error', 'Không thể thêm quá số lượng tồn kho.');
+                return response()->json(['message' => 'Sản phẩm đã hết hàng!'], 400);
             }
             $existingItem->quantity += $quantity;
             $existingItem->total_price = $existingItem->discounted_price * $existingItem->quantity;
@@ -95,8 +94,13 @@ class CartClientController extends Controller
                 'total_price' => $discountedPrice * $quantity,
             ]);
         }
-        return redirect()->route('carts.index')->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
+
+        return response()->json([
+            'message' => 'Đã thêm sản phẩm vào giỏ hàng!',
+            'cart_count' => $cart->items()->sum('quantity'),
+        ]);
     }
+
 
     public function updateQuantity(Request $request, $id)
     {
