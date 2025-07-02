@@ -15,7 +15,7 @@ class PromotionController extends Controller
     public function index()
     {
         //
-        $promotions = Promotion::orderBy('id', 'desc')->paginate(10); // ✅ đúng
+        $promotions = Promotion::orderBy('id', 'desc')->paginate(10);
 
         return view('admin.promotions.index', compact('promotions'));
     }
@@ -59,6 +59,8 @@ class PromotionController extends Controller
             'end_date'            => 'required|date|after:start_date',
             'description'         => 'nullable|string',
             'status'              => 'nullable|boolean',
+            'min_total_spent'     => 'nullable|numeric|min:0',
+            'vip_only'            => 'nullable|boolean',
         ]);
 
         if (empty($validated['usage_limit'])) {
@@ -68,10 +70,13 @@ class PromotionController extends Controller
         if ($validated['discount_type'] === 'fixed') {
             $validated['max_discount_value'] = null;
         }
+        
+        $validated['min_total_spent'] = $request->min_total_spent ?? null;
+        $validated['vip_only'] = $request->has('vip_only') ? 1 : 0;
 
         Promotion::create($validated);
 
-        return redirect()->route('promotions.index')->with('success', 'Thêm mã giảm giá thành công!');
+        return redirect()->route('admin.promotions.index')->with('success', 'Thêm mã giảm giá thành công!');
     }
 
     public function show(string $id)
@@ -136,7 +141,7 @@ class PromotionController extends Controller
             'usage_limit'        => $request->usage_limit,
         ]);
 
-        return redirect()->route('promotions.index')->with('success', 'Cập nhật mã giảm giá thành công!');
+        return redirect()->route('admin.promotions.index')->with('success', 'Cập nhật mã giảm giá thành công!');
     }
 
     /**
@@ -148,6 +153,6 @@ class PromotionController extends Controller
         $promotion = Promotion::findOrFail($id);
         $promotion->delete();
 
-        return redirect()->route('promotions.index')->with('success', 'Xoá mã giảm giá thành công!');
+        return redirect()->route('admin.promotions.index')->with('success', 'Xoá mã giảm giá thành công!');
     }
 }

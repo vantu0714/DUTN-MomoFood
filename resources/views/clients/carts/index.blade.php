@@ -54,6 +54,7 @@
                             </tr>
                         </thead>
                         <tbody>
+
                             @if (count($carts) > 0)
                                 @foreach ($carts as $item)
                                     @php
@@ -108,6 +109,7 @@
                                     </tr>
                                 @endforeach
                             @else
+                            
                                 <tr>
                                     <td colspan="7" class="text-center text-muted">Giỏ hàng của bạn đang trống</td>
                                 </tr>

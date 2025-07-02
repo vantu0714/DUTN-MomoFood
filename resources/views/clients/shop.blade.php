@@ -262,6 +262,22 @@
                     <div class="col-lg-9">
                         <div class="row g-4">
                             @foreach ($products as $product)
+                                @php
+                                    $isVariant = $product->product_type === 'variant';
+                                    $variant = null;
+
+                                    if ($isVariant) {
+                                        // Lấy biến thể đầu tiên còn hàng
+                                        $variant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                                    }
+
+                                    $price = $isVariant
+                                        ? $variant->discounted_price ?? ($variant->price ?? null)
+                                        : $product->discounted_price ?? $product->original_price;
+
+                                    $originalPrice = $isVariant ? $variant->price ?? null : $product->original_price;
+                                @endphp
+
                                 <div class="col-md-6 col-lg-4 d-flex">
                                     <div class="product-card w-100 d-flex flex-column position-relative">
                                         <div class="product-image">
@@ -318,13 +334,12 @@
                                                     </button>
                                                 </form>
                                             </div>
-
-
                                         </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
+
                         <div class="pagination-wrapper d-flex justify-content-center mt-4">
                             {{ $products->links() }}
                         </div>

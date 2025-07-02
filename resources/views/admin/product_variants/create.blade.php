@@ -1,168 +1,243 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container">
-    <h2>Thêm biến thể cho sản phẩm: <strong>{{ $product->product_name }}</strong></h2>
-
-    <form method="POST" action="{{ route('admin.product_variants.store') }}" enctype="multipart/form-data">
-        @csrf
-        <input type="hidden" name="product_id" value="{{ $product->id }}">
-        <input type="hidden" id="original_price" value="{{ $product->original_price }}">
-        <input type="hidden" id="product_code" value="{{ $product->product_code }}">
-
-        <div id="variants-container">
-            <div class="variant-item border p-3 mb-4">
-                <h5>Biến thể #1</h5>
-
-                <div class="mb-3">
-                    <label>Thuộc tính chính (Vị)</label>
-                    <input type="text" name="variants[0][main_attribute][name]" value="Vị" class="form-control" readonly>
-                    <input type="text" name="variants[0][main_attribute][value]" class="form-control mt-2" placeholder="Nhập ví dụ: Cay">
-                </div>
-
-                <div class="sub-attributes-group mb-3">
-                    <label>Các lựa chọn (Size, Giá, Số lượng)</label>
-                    <div class="row sub-attribute-row mb-2">
-                        <div class="col-md-3">
-                            <select name="variants[0][sub_attributes][0][attribute_value_id]" class="form-select">
-                                @foreach ($sizeValues as $size)
-                                    <option value="{{ $size->id }}">{{ $size->value }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" name="variants[0][sub_attributes][0][price]" class="form-control" placeholder="Giá">
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" name="variants[0][sub_attributes][0][quantity_in_stock]" class="form-control" placeholder="Số lượng">
-                        </div>
-                        <div class="col-md-3">
-                            <button type="button" class="btn btn-danger remove-sub-attribute">Xoá</button>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-secondary add-sub-attribute">+ Thêm lựa chọn</button>
-                </div>
-
-                <div class="mb-3">
-                    <label>Ảnh biến thể</label>
-                    <input type="file" name="variants[0][image]" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label>SKU</label>
-                    <input type="text" name="variants[0][sku]" class="form-control sku-input" readonly>
-                </div>
-
-                <button type="button" class="btn btn-danger remove-variant">Xoá biến thể</button>
+    <div class="container-fluid px-4">
+        <!-- Header Section -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="h4 mb-0 text-gray-800">
+                    <i class="fas fa-boxes text-primary me-2"></i>
+                    Thêm biến thể sản phẩm
+                </h1>
+                <p class="text-muted mb-0 small">Sản phẩm: <strong class="text-primary">{{ $product->product_name }}</strong>
+                </p>
+            </div>
+            <div>
+                <a href="{{ route('admin.product_variants.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
             </div>
         </div>
 
-        <button type="button" class="btn btn-info mb-3" id="add-variant">+ Thêm biến thể</button>
-        <br>
-        <button type="submit" class="btn btn-primary">Lưu</button>
-        <a href="{{ route('admin.product_variants.index') }}" class="btn btn-secondary">Huỷ</a>
-    </form>
-</div>
+        <div class="row">
+            <!-- Form Section -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-header bg-gradient-primary text-white py-2">
+                        <h6 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            Thông tin biến thể
+                        </h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <form method="POST" action="{{ route('admin.product_variants.store') }}"
+                            enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <input type="hidden" id="original_price" value="{{ $product->original_price }}">
+                            <input type="hidden" id="product_code" value="{{ $product->product_code }}">
+
+                            <div id="variants-container">
+                                <div class="variant-item mb-3">
+                                    <div class="card border-left-primary">
+                                        <div
+                                            class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                            <h6 class="mb-0 text-primary small">
+                                                <i class="fas fa-cube me-1"></i>
+                                                Biến thể #1
+                                            </h6>
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-variant">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <!-- Main Attribute -->
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold text-dark mb-2 small">
+                                                    <i class="fas fa-palette me-1"></i>
+                                                    Thuộc tính chính (Vị)
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-primary text-white">
+                                                        <i class="fas fa-seedling"></i>
+                                                    </span>
+                                                    <input type="text" name="variants[0][main_attribute][name]"
+                                                        value="Vị" class="form-control form-control-sm" readonly>
+                                                    <input type="text" name="variants[0][main_attribute][value]"
+                                                        class="form-control form-control-sm"
+                                                        placeholder="Ví dụ: Cay, Ngọt, Mặn...">
+                                                </div>
+                                            </div>
+
+                                            <!-- Sub Attributes -->
+                                            <div class="sub-attributes-group">
+                                                <label class="form-label fw-bold text-dark mb-2 small">
+                                                    <i class="fas fa-list-ul me-1"></i>
+                                                    Các lựa chọn chi tiết
+                                                </label>
+
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover">
+                                                        <thead class="table-primary">
+                                                            <tr>
+                                                                <th class="text-center py-2 small">
+                                                                    <i class="fas fa-expand-arrows-alt me-1"></i>Size
+                                                                </th>
+                                                                <th class="text-center py-2 small">
+                                                                    <i class="fas fa-money-bill-wave me-1"></i>Giá (VND)
+                                                                </th>
+                                                                <th class="text-center py-2 small">
+                                                                    <i class="fas fa-boxes me-1"></i>SL
+                                                                </th>
+                                                                <th class="text-center py-2 small">
+                                                                    <i class="fas fa-camera me-1"></i>Ảnh
+                                                                </th>
+                                                                <th class="text-center py-2 small">
+                                                                    <i class="fas fa-barcode me-1"></i>SKU
+                                                                </th>
+                                                                <th class="text-center py-2 small">
+                                                                    <i class="fas fa-tools me-1"></i>
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="sub-attributes-table">
+                                                            <tr class="sub-attribute-row">
+                                                                <td class="py-2">
+                                                                    <select
+                                                                        name="variants[0][sub_attributes][0][attribute_value_id]"
+                                                                        class="form-select form-select-sm size-select">
+                                                                        @foreach ($sizeValues as $size)
+                                                                            <option value="{{ $size->id }}">
+                                                                                {{ $size->value }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </td>
+                                                                <td class="py-2">
+                                                                    <div class="input-group input-group-sm">
+                                                                        <input type="number"
+                                                                            name="variants[0][sub_attributes][0][price]"
+                                                                            class="form-control text-end price-input"
+                                                                            placeholder="0" min="0" step="1000">
+                                                                        <span class="input-group-text">VND</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="py-2">
+                                                                    <input type="number"
+                                                                        name="variants[0][sub_attributes][0][quantity_in_stock]"
+                                                                        class="form-control form-control-sm text-center"
+                                                                        placeholder="0" min="0">
+                                                                </td>
+                                                                <td class="py-2">
+                                                                    <input type="file"
+                                                                        name="variants[0][sub_attributes][0][image]"
+                                                                        class="form-control form-control-sm"
+                                                                        accept="image/*">
+                                                                </td>
+                                                                <td class="py-2">
+                                                                    <input type="text"
+                                                                        name="variants[0][sub_attributes][0][sku]"
+                                                                        class="form-control form-control-sm sku-input"
+                                                                        readonly>
+                                                                </td>
+                                                                <td class="text-center py-2">
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-outline-danger remove-sub-attribute">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-success add-sub-attribute">
+                                                    <i class="fas fa-plus me-1"></i> Thêm lựa chọn
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-2 mb-3">
+                                <button type="button" class="btn btn-sm btn-outline-info" id="add-variant">
+                                    <i class="fas fa-plus-circle me-1"></i> Thêm biến thể mới
+                                </button>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ route('admin.product_variants.index') }}" class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-times me-1"></i> Huỷ bỏ
+                                </a>
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-check me-1"></i> Lưu biến thể
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-gradient-success text-white py-2">
+                        <h6 class="mb-0">
+                            <i class="fas fa-table me-2"></i>
+                            Xem trước biến thể
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-sm mb-0" id="preview-variants-table">
+                                <thead class="table-success sticky-top">
+                                    <tr>
+                                        <th class="py-2 small">
+                                            <i class="fas fa-tag me-1"></i>SP
+                                        </th>
+                                        <th class="py-2 small">
+                                            <i class="fas fa-seedling me-1"></i>Vị
+                                        </th>
+                                        <th class="py-2 small">
+                                            <i class="fas fa-expand-arrows-alt me-1"></i>Size
+                                        </th>
+                                        <th class="py-2 small">
+                                            <i class="fas fa-image me-1"></i>Ảnh
+                                        </th>
+                                        <th class="py-2 small">
+                                            <i class="fas fa-money-bill-wave me-1"></i>Giá
+                                        </th>
+                                        <th class="py-2 small">
+                                            <i class="fas fa-cubes me-1"></i>SL
+                                        </th>
+                                        <th class="py-2 small">
+                                            <i class="fas fa-qrcode me-1"></i>SKU
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 bg-light border-top text-center text-muted small" id="preview-empty">
+                            <i class="fas fa-clipboard-list me-1"></i>
+                            Nhập thông tin để xem trước biến thể
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
-<script>
-    let variantIndex = 1;
-
-    function generateSKU(variantItem) {
-        const productCode = document.getElementById('product_code').value;
-        const mainAttr = variantItem.querySelector('input[name*="[main_attribute][value]"]').value.trim();
-        const skuInput = variantItem.querySelector('input[name*="[sku]"]');
-
-        let sku = productCode;
-        if (mainAttr) {
-            sku += '-' + mainAttr.toUpperCase().replace(/\s+/g, '-');
-        }
-
-        skuInput.value = sku;
-    }
-
-    function attachSKUEvents(variantItem) {
-        const mainInput = variantItem.querySelector('input[name*="[main_attribute][value]"]');
-        mainInput?.addEventListener('input', () => generateSKU(variantItem));
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const variantsContainer = document.getElementById('variants-container');
-
-        const firstVariant = document.querySelector('.variant-item');
-        attachSKUEvents(firstVariant);
-        generateSKU(firstVariant);
-
-        document.getElementById('add-variant').addEventListener('click', function () {
-            const template = document.querySelector('.variant-item');
-            const clone = template.cloneNode(true);
-
-            clone.querySelector('h5').textContent = `Biến thể #${variantIndex + 1}`;
-
-            clone.querySelectorAll('input, select').forEach(el => {
-                if (el.type !== 'file') el.value = '';
-                let name = el.getAttribute('name');
-                if (name) {
-                    name = name.replace(/variants\[\d+]/, `variants[${variantIndex}]`);
-                    name = name.replace(/sub_attributes\[\d+]/g, 'sub_attributes[0]');
-                    el.setAttribute('name', name);
-                }
-            });
-
-            const subRows = clone.querySelectorAll('.sub-attribute-row');
-            for (let i = 1; i < subRows.length; i++) subRows[i].remove();
-
-            variantsContainer.appendChild(clone);
-            attachSKUEvents(clone);
-            generateSKU(clone);
-            variantIndex++;
-        });
-
-        document.addEventListener('click', function (e) {
-            if (e.target.classList.contains('remove-variant')) {
-                const items = document.querySelectorAll('.variant-item');
-                if (items.length > 1) e.target.closest('.variant-item').remove();
-            }
-
-            if (e.target.classList.contains('add-sub-attribute')) {
-                const variantItem = e.target.closest('.variant-item');
-                const group = variantItem.querySelector('.sub-attributes-group');
-                const rows = group.querySelectorAll('.sub-attribute-row');
-                const lastRow = rows[rows.length - 1];
-                const newRow = lastRow.cloneNode(true);
-
-                const variantIdx = variantItem.querySelector('input[name^="variants["]').name.match(/variants\[(\d+)]/)[1];
-                const subIdx = rows.length;
-                const fields = ['attribute_value_id', 'price', 'quantity_in_stock'];
-
-                newRow.querySelectorAll('input, select').forEach((el, i) => {
-                    el.value = '';
-                    el.name = `variants[${variantIdx}][sub_attributes][${subIdx}][${fields[i]}]`;
-                });
-
-                group.insertBefore(newRow, e.target);
-            }
-
-            if (e.target.classList.contains('remove-sub-attribute')) {
-                const group = e.target.closest('.sub-attributes-group');
-                const rows = group.querySelectorAll('.sub-attribute-row');
-                if (rows.length > 1) e.target.closest('.sub-attribute-row').remove();
-            }
-        });
-
-        document.querySelector('form').addEventListener('submit', function (e) {
-            const originalPrice = parseFloat(document.getElementById('original_price').value);
-            let valid = true;
-            document.querySelectorAll('input[name*="[price]"]').forEach(input => {
-                const price = parseFloat(input.value);
-                if (!isNaN(price) && price < originalPrice) {
-                    valid = false;
-                    alert('Giá biến thể không được thấp hơn giá gốc: ' + originalPrice + '₫');
-                }
-            });
-            if (!valid) e.preventDefault();
-        });
-    });
-</script>
+    <script>
+        window.productName = @json($product->product_name);
+    </script>
+    <script src="{{ asset('admins/assets/js/variants.js') }}"></script>
 @endpush
+
+
