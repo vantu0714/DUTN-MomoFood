@@ -71,16 +71,29 @@ class HomeController extends Controller
 
 
     public function filterByCategory(Request $request)
-{
-    $categoryId = $request->get('category');
-    $products = Product::with('category', 'variants')
-        ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
-        ->where('status', 1)
-        ->latest()
-        ->paginate(12);
+    {
+        $categoryId = $request->get('category');
 
-    return view('clients.components.filtered-products', compact('products'))->render();
+        $products = Product::with(['category', 'variants'])
+            ->where('status', 1)
+            ->where(function ($q) {
+                // Sản phẩm đơn còn hàng
+                $q->where(function ($q1) {
+                    $q1->where('product_type', 'simple')
+                        ->where('quantity', '>', 0);
+                })
+                    // hoặc sản phẩm có biến thể còn hàng
+                    ->orWhere(function ($q2) {
+                        $q2->where('product_type', 'variant')
+                            ->whereHas('variants', function ($q3) {
+                                $q3->where('quantity_in_stock', '>', 0);
+                            });
+                    });
+            })
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->latest()
+            ->paginate(12);
+
+        return view('clients.components.filtered-products', compact('products'))->render();
+    }
 }
-
-}
-

@@ -80,17 +80,21 @@
                                         @foreach ($categories as $categoryItem)
                                             <li>
                                                 <div class="d-flex justify-content-between fruite-name">
+                                                    @php
+                                                        $query = http_build_query([
+                                                            'min_price' => request('min_price'),
+                                                            'max_price' => request('max_price'),
+                                                        ]);
+                                                    @endphp
                                                     <a
-                                                        href="{{ route('shop.category', ['id' => $categoryItem->id]) }}
-                                                        {{ request()->has('min_price') || request()->has('max_price') ? '?min_price=' . request('min_price') . '&max_price=' . request('max_price') : '' }}">
+                                                        href="{{ route('shop.category', ['id' => $categoryItem->id]) }}{{ $query ? '?' . $query : '' }}">
                                                         <i
                                                             class="fas fa-apple-alt me-2"></i>{{ $categoryItem->category_name }}
                                                     </a>
-                                                    <span>({{ $categoryItem->products_count ?? 0 }})</span>
+                                                    <span>({{ $categoryItem->available_products_count ?? 0 }})</span>
                                                 </div>
                                             </li>
                                         @endforeach
-
                                     </ul>
                                 </div>
                             </div>
@@ -429,4 +433,4 @@
     </script>
 
     @include('clients.layouts.footer')
-<!-- Fruits Shop Start-->
+    <!-- Fruits Shop Start-->
