@@ -177,7 +177,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // Comment Management
-    Route::resource('comments', ClientCommentController::class)->only(['index', 'destroy']);
+    Route::resource('comments', CommentController::class)->only(['index', 'destroy']);
 
     // thống kê
     Route::get('thongke', [ThongKeController::class, 'index'])->name('thongke');
