@@ -92,11 +92,12 @@
                                     <p class="form-control-plaintext">Thanh toán khi nhận hàng (COD)</p>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Trạng thái thanh toán</label>
-                                    <select name="payment_status" class="form-select" {{ $order->payment_status === 'paid' ? 'onchange=return false;' : '' }}>
+                                    <select name="payment_status" class="form-select"
+                                        {{ $order->payment_status === 'paid' ? 'onchange=return false;' : '' }}>
                                         <option value="pending"
                                             {{ $order->payment_status === 'pending' ? 'selected' : ($order->payment_status === 'paid' ? 'disabled' : '') }}>
                                             Chưa thanh toán
@@ -107,7 +108,7 @@
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Mã giảm giá</label>
@@ -135,12 +136,17 @@
                                             ];
                                         @endphp
                                         @foreach ($statuses as $key => $label)
+                                            @php
+                                                // Chỉ cho chọn trạng thái hiện tại hoặc kế tiếp 1 bước
+                                                $canSelect = $key == $order->status || $key == $order->status + 1;
+                                            @endphp
                                             <option value="{{ $key }}"
                                                 {{ $order->status == $key ? 'selected' : '' }}
-                                                {{ $key < $order->status ? 'disabled' : '' }}>
+                                                {{ $canSelect ? '' : 'disabled' }}>
                                                 {{ $label }}
                                             </option>
                                         @endforeach
+
                                     </select>
                                 </div>
                             </div>
@@ -193,7 +199,7 @@
 @endsection
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const statusSelect = document.querySelector('select[name="status"]');
         const cancelReasonContainer = document.getElementById('cancel-reason-container');
         const cancelReasonInput = document.querySelector('input[name="cancellation_reason"]');
@@ -218,4 +224,3 @@
         statusSelect.addEventListener('change', toggleCancelReason);
     });
 </script>
-

@@ -182,7 +182,7 @@ class VNPayController extends Controller
                 'product_id' => $item->product_id,
                 'product_variant_id' => $item->product_variant_id,
                 'quantity' => $item->quantity,
-                'price' => $item->original_price,
+                'price' => $item->discounted_price,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
