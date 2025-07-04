@@ -47,21 +47,19 @@ class CartClientController extends Controller
         $userId = Auth::id();
         $productId = $request->input('product_id');
         $variantId = $request->input('product_variant_id');
-        $quantity = $request->input('quantity', 1);
+        $quantity = max(1, (int) $request->input('quantity', 1)); // đảm bảo quantity >= 1
 
         $product = Product::findOrFail($productId);
         $variant = $variantId ? ProductVariant::find($variantId) : null;
 
         $stock = $variant ? $variant->quantity : $product->quantity;
 
-        //  Hết hàng
-        if ($stock <= 0) {
-            return response()->json(['message' => 'Sản phẩm đã hết hàng!'], 400);
-        }
-
-        // Quá số lượng tồn
-        if ($quantity > $stock) {
-            return response()->json(['message' => 'Số lượng vượt quá tồn kho!'], 400);
+        // Chặn thêm nếu vượt quá kho hoặc hết hàng - KHÔNG hiển thị thông báo rõ ràng
+        if ($stock <= 0 || $quantity > $stock) {
+            return response()->json([
+                'message' => 'Không thể thêm sản phẩm vào giỏ hàng.',
+                'cart_count' => Cart::where('user_id', $userId)->first()?->items()->sum('quantity') ?? 0
+            ], 400);
         }
 
         $cart = Cart::firstOrCreate(
@@ -72,16 +70,25 @@ class CartClientController extends Controller
         $originalPrice = $variant ? ($variant->original_price ?? $variant->price) : ($product->original_price ?? $product->price);
         $discountedPrice = $variant ? ($variant->discounted_price ?? $originalPrice) : ($product->discounted_price ?? $originalPrice);
 
-        $query = CartItem::where('cart_id', $cart->id)->where('product_id', $productId);
+        $query = CartItem::where('cart_id', $cart->id)
+            ->where('product_id', $productId);
+
         $variant ? $query->where('product_variant_id', $variant->id) : $query->whereNull('product_variant_id');
+
         $existingItem = $query->first();
 
         if ($existingItem) {
-            if ($existingItem->quantity + $quantity > $stock) {
-                return response()->json(['message' => 'Sản phẩm đã hết hàng!'], 400);
+            $newQuantity = $existingItem->quantity + $quantity;
+
+            if ($newQuantity > $stock) {
+                return response()->json([
+                    'message' => 'Không thể thêm sản phẩm vào giỏ hàng.',
+                    'cart_count' => $cart->items()->sum('quantity')
+                ], 400);
             }
-            $existingItem->quantity += $quantity;
-            $existingItem->total_price = $existingItem->discounted_price * $existingItem->quantity;
+
+            $existingItem->quantity = $newQuantity;
+            $existingItem->total_price = $discountedPrice * $newQuantity;
             $existingItem->save();
         } else {
             CartItem::create([
