@@ -194,4 +194,33 @@ class OrderController extends Controller
     {
         //
     }
+    public function updateStatus(Request $request, Order $order)
+    {
+        $request->validate([
+            'status' => 'required|integer|min:1|max:6',
+        ]);
+
+        $order->status = $request->status;
+        $order->save();
+
+        return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật.');
+    }
+    public function cancel(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $request->validate([
+            'cancellation_reason' => 'required|string|max:1000',
+        ]);
+
+        if ($order->status >= 4) {
+            return back()->with('error', 'Đơn hàng đã xử lý xong, không thể hủy.');
+        }
+
+        $order->status = 6; // hủy đơn
+        $order->cancellation_reason = $request->cancellation_reason;
+        $order->save();
+
+        return redirect()->route('admin.orders.index')->with('success', 'Đã hủy đơn hàng.');
+    }
 }
