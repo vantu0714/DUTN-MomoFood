@@ -40,7 +40,7 @@
                         <a href="{{ route('news.index') }}" class="nav-link">Tin tức</a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('news.index') }}" class="nav-link">Ưu đãi</a>
+                        <a href="{{ route('gioithieu.index') }}" class="nav-link">Giới thiệu</a>
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('contacts.index') }}" class="nav-link">Liên hệ</a>
