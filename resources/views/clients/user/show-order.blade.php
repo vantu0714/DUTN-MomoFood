@@ -56,7 +56,8 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom-0">
-                <h4 class="mb-0">Chi tiết đơn hàng #{{ $order->order_code }}</h4>
+                <h4 class="mb-0" style="font-family: 'Open Sans', sans-serif">Chi tiết đơn hàng #{{ $order->order_code }}
+                </h4>
                 <small class="text-muted">Ngày đặt: {{ $order->created_at->format('d/m/Y') }}</small>
             </div>
 
