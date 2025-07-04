@@ -56,7 +56,7 @@ class HomeController extends Controller
 
         return view('clients.home', compact('products', 'categories', 'bestSellingProducts'));
     }
-      public function search(Request $request)
+    public function search(Request $request)
     {
         $keyword = $request->input('keyword');
 
@@ -68,4 +68,19 @@ class HomeController extends Controller
 
         return view('clients.search', compact('products', 'keyword'));
     }
+
+
+    public function filterByCategory(Request $request)
+{
+    $categoryId = $request->get('category');
+    $products = Product::with('category', 'variants')
+        ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+        ->where('status', 1)
+        ->latest()
+        ->paginate(12);
+
+    return view('clients.components.filtered-products', compact('products'))->render();
 }
+
+}
+
