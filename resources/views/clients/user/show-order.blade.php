@@ -150,49 +150,48 @@
                         <h6 class="mb-0">Sản phẩm trong đơn hàng</h6>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover mb-0" style="table-layout: fixed;">
                             <thead class="bg-light">
                                 <tr>
-                                    <th width="5%">#</th>
-                                    <th width="15%">Ảnh</th>
-                                    <th width="30%">Sản phẩm</th>
-                                    <th width="15%">Biến thể</th>
-                                    <th width="10%">SL</th>
-                                    <th width="12%" class="text-end">Đơn giá</th>
-                                    <th width="13%" class="text-end">Thành tiền</th>
+                                    <th width="5%" class="ps-2 pe-2">#</th>
+                                    <th width="12%" class="ps-2 pe-2">Ảnh</th>
+                                    <th width="18%" class="ps-2 pe-2">Sản phẩm</th>
+                                    <th width="8%" class="ps-2 pe-2 text-center">SL</th>
+                                    <th width="17%" class="ps-2 pe-2 text-end">Đơn giá</th>
+                                    <th width="20%" class="ps-2 pe-2 text-end">Thành tiền</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($order->orderDetails as $index => $item)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>
+                                        <td class="ps-2 pe-2">{{ $index + 1 }}</td>
+                                        <td class="ps-2 pe-2">
                                             @if ($item->product && $item->product->image)
                                                 <img src="{{ asset('storage/' . $item->product->image) }}"
                                                     alt="{{ $item->product->product_name }}" class="img-thumbnail"
-                                                    style="width: 60px; height: 60px; object-fit: cover;">
+                                                    style="width: 50px; height: 50px; object-fit: cover;">
                                             @else
                                                 <div class="bg-light d-flex align-items-center justify-content-center"
-                                                    style="width: 60px; height: 60px;">
+                                                    style="width: 50px; height: 50px;">
                                                     <i class="fas fa-image text-muted"></i>
                                                 </div>
                                             @endif
                                         </td>
-                                        <td>{{ $item->product->product_name ?? '[Đã xoá]' }}</td>
-                                        <td>
-                                            @if ($item->productVariant && $item->productVariant->sku)
-                                                <span
-                                                    class="badge bg-light text-dark">{{ $item->productVariant->sku }}</span>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
+                                        <td class="ps-2 pe-2">
+                                            <div class="d-flex flex-column">
+                                                <span>{{ $item->product->product_name ?? '[Đã xoá]' }}</span>
+                                                @if ($item->productVariant && $item->productVariant->sku)
+                                                    <small class="text-muted">Loại: {{ $item->productVariant->sku }}</small>
+                                                @endif
+                                            </div>
                                         </td>
-                                        <td>
+                                        <td class="ps-2 pe-2 text-center">
                                             <span class="badge bg-primary">{{ $item->quantity }}</span>
                                         </td>
-                                        <td class="text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
-                                        <td class="text-end fw-bold">
-                                            {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫</td>
+                                        <td class="ps-2 pe-2 text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
+                                        <td class="ps-2 pe-2 text-end fw-bold">
+                                            {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>

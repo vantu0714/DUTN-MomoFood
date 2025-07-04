@@ -1,6 +1,55 @@
 @extends('clients.layouts.app')
 
 @section('content')
+    @push('styles')
+        <style>
+            .pagination {
+                display: flex;
+                justify-content: center;
+                padding-left: 0;
+                list-style: none;
+            }
+
+            .page-item {
+                margin: 0 4px;
+            }
+
+            .page-link {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                padding: 0;
+                font-size: 1rem;
+                color: #fd7e14;
+                /* cam nhạt */
+                border: 2px solid #fd7e14;
+                border-radius: 8px;
+                background-color: #fff;
+                transition: all 0.2s ease;
+            }
+
+            .page-link:hover {
+                background-color: #fff7f0;
+                color: #e96a00;
+                text-decoration: none;
+            }
+
+            .page-item.active .page-link {
+                background-color: #28a745;
+                border-color: #28a745;
+                color: #fff;
+                font-weight: bold;
+            }
+
+            .page-item.disabled .page-link {
+                color: #ccc;
+                border-color: #ddd;
+                background-color: #fff;
+            }
+        </style>
+    @endpush
     @php
         $statusLabels = [
             1 => 'Chưa xác nhận',
@@ -166,7 +215,9 @@
                 @endif
 
                 <div class="d-flex justify-content-center mt-4">
-                    {{ $orders->appends(request()->query())->links() }}
+                    <nav>
+                        {{ $orders->appends(request()->query())->links('pagination::bootstrap-4') }}
+                    </nav>
                 </div>
             </div>
         </div>
