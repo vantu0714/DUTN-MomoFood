@@ -219,11 +219,19 @@ class OrderController extends Controller
         }
     }
 
-    public function orderList()
+    public function orderList(Request $request)
     {
-        $orders = Order::where('user_id', auth()->id())
-            ->latest()
-            ->paginate(5);
+        $status = $request->get('status', 'all');
+
+        $query = Order::where('user_id', auth()->id())
+            ->latest();
+
+        if ($status !== 'all' && is_numeric($status)) {
+            $query->where('status', $status);
+        }
+
+        $orders = $query->paginate(5);
+
         return view('clients.user.orders', compact('orders'));
     }
 
@@ -243,6 +251,7 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại!');
         }
     }
+
     public function orderDetail($id)
     {
         $order = Order::where('id', $id)
