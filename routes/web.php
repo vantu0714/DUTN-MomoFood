@@ -163,6 +163,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{id}/show', [OrderController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [OrderController::class, 'edit'])->name('edit');
         Route::put('/{id}', [OrderController::class, 'update'])->name('update');
+        Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
+        Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+
+
     });
 
     // Promotion Management
