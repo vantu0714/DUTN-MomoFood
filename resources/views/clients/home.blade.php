@@ -41,7 +41,8 @@
 <!-- Hero Start -->
 <!-- Hero Banner Fullscreen Start -->
 <div class="hero-banner-full">
-    <img src="https://easy-ecom.sgp1.digitaloceanspaces.com/chuchu.sgp1.digitaloceanspaces.com/m9rt4cj9fkj46mnw5hge8sully9k?response-content-disposition=inline%3B%20filename%3D%22chuchu_banner1.jpeg%22%3B%20filename%2A%3DUTF-8%27%27chuchu_banner1.jpeg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00MXMNET2HF6NTEB6A%2F20250705%2Funused%2Fs3%2Faws4_request&X-Amz-Date=20250705T141101Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=52b55900dd99fc542309612aa7dbb5e23c9ff6ef17d6260017895d12ec38546b" alt="Banner MomoFood">
+    <img src="https://easy-ecom.sgp1.digitaloceanspaces.com/chuchu.sgp1.digitaloceanspaces.com/m9rt4cj9fkj46mnw5hge8sully9k?response-content-disposition=inline%3B%20filename%3D%22chuchu_banner1.jpeg%22%3B%20filename%2A%3DUTF-8%27%27chuchu_banner1.jpeg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00MXMNET2HF6NTEB6A%2F20250705%2Funused%2Fs3%2Faws4_request&X-Amz-Date=20250705T141101Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=52b55900dd99fc542309612aa7dbb5e23c9ff6ef17d6260017895d12ec38546b"
+        alt="Banner MomoFood">
 </div>
 <!-- Hero Banner Fullscreen End -->
 
@@ -137,8 +138,7 @@
                             <li class="nav-item">
                                 <a class="d-flex m-2 py-2 bg-light rounded-pill category-tab"
                                     data-category="{{ $category->id }}" href="javascript:void(0);">
-                                    <span class="text-dark"
-                                        style="width: 130px;">{{ $category->category_name }}</span>
+                                    <span class="text-dark" style="width: 130px;">{{ $category->category_name }}</span>
                                 </a>
                             </li>
                         @endforeach
@@ -191,22 +191,17 @@
                                                     <p class="text-dark fs-5 fw-bold mb-0">
                                                         {{ $price ? number_format($price, 0, ',', '.') . ' VNĐ' : 'Liên hệ' }}
                                                     </p>
-
-                                                    @if (!$isOutOfStock)
-                                                        <form class="add-to-cart-form">
-                                                            @csrf
-                                                            <input type="hidden" name="product_id"
-                                                                value="{{ $product->id }}">
-                                                            @if ($product->product_type === 'variant' && $product->variants->first())
-                                                                <input type="hidden" name="product_variant_id"
-                                                                    value="{{ $product->variants->first()->id }}">
-                                                            @endif
-                                                            <input type="hidden" name="quantity" value="1">
-                                                            <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
-                                                        </form>
-                                                    @else
-                                                        <span class="badge bg-danger text-white">Hết hàng</span>
-                                                    @endif
+                                                    <form class="add-to-cart-form">
+                                                        @csrf
+                                                        <input type="hidden" name="product_id"
+                                                            value="{{ $product->id }}">
+                                                        @if ($product->product_type === 'variant' && $product->variants->first())
+                                                            <input type="hidden" name="product_variant_id"
+                                                                value="{{ $product->variants->first()->id }}">
+                                                        @endif
+                                                        <input type="hidden" name="quantity" value="1">
+                                                        <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -288,12 +283,14 @@
 
                 <div class="product-card d-flex flex-column h-100">
                     <div class="position-relative">
+                        <a href="{{ route('product-detail.show', $product->id) }}">
                         <div class="product-img-wrapper">
                             <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                 alt="{{ $product->product_name }}"
                                 onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
                                 class="img-fluid w-100">
                         </div>
+                        </a>
                         <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
                             style="top: 10px; right: 10px;">
                             {{ $product->category->category_name ?? 'Không có danh mục' }}
@@ -308,7 +305,8 @@
 
                         <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
                             <span class="price fw-bold text-dark fs-5 m-0">
-                                {{ $price ? number_format($price, 0, ',', '.') : 'Liên hệ' }} <span class="currency">đ</span>
+                                {{ $price ? number_format($price, 0, ',', '.') : 'Liên hệ' }} <span
+                                    class="currency">đ</span>
                             </span>
 
                             @if ($price)
@@ -316,12 +314,11 @@
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                                     @if ($product->product_type === 'variant' && $firstVariant)
-                                        <input type="hidden" name="product_variant_id" value="{{ $firstVariant->id }}">
+                                        <input type="hidden" name="product_variant_id"
+                                            value="{{ $firstVariant->id }}">
                                     @endif
                                     <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn btn-primary rounded-pill px-3">
-                                        <i class="fa fa-shopping-cart me-1"></i> Thêm vào giỏ
-                                    </button>
+                                    <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
                                 </form>
                             @else
                                 <span class="text-danger">Hết hàng</span>
@@ -703,98 +700,97 @@
 <!-- Testimonial End -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            // Gán sự kiện click cho danh mục
-            $(document).on('click', '.category-tab', function(e) {
-                e.preventDefault();
+<script>
+    $(document).ready(function() {
+        // Gán sự kiện click cho danh mục
+        $(document).on('click', '.category-tab', function(e) {
+            e.preventDefault();
 
-                // Xử lý đổi màu các tab
-                $('.category-tab').removeClass('active bg-warning').addClass('bg-light');
-                $('.category-tab span').removeClass('text-white').addClass('text-dark');
+            // Xử lý đổi màu các tab
+            $('.category-tab').removeClass('active bg-warning').addClass('bg-light');
+            $('.category-tab span').removeClass('text-white').addClass('text-dark');
 
-                $(this).addClass('active bg-warning').removeClass('bg-light');
-                $(this).find('span').addClass('text-white').removeClass('text-dark');
+            $(this).addClass('active bg-warning').removeClass('bg-light');
+            $(this).find('span').addClass('text-white').removeClass('text-dark');
 
-                const categoryId = $(this).data('category');
-                const url = `/filter-category?category=${categoryId}`;
+            const categoryId = $(this).data('category');
+            const url = `/filter-category?category=${categoryId}`;
 
-                // Gửi AJAX lọc danh mục
-                $.get(url, function(data) {
-                    $('#tab-1').html(data);
-                    $('html, body').animate({
-                        scrollTop: $('#tab-1').offset().top - 100
-                    }, 300);
-                }).fail(function() {
-                    alert('Không thể tải sản phẩm. Vui lòng thử lại.');
-                });
-            });
-
-            // Gán sự kiện submit form Thêm vào giỏ bằng class
-            $(document).on('submit', '.add-to-cart-form', function(e) {
-                e.preventDefault();
-
-                let form = $(this);
-                let token = form.find('input[name="_token"]').val();
-                let productId = form.find('input[name="product_id"]').val();
-                let variantId = form.find('input[name="product_variant_id"]').val();
-                let quantity = form.find('input[name="quantity"]').val() || 1;
-
-                $.ajax({
-                    url: '{{ route('carts.add') }}',
-                    type: 'POST',
-                    data: {
-                        _token: token,
-                        product_id: productId,
-                        product_variant_id: variantId,
-                        quantity: quantity
-                    },
-                    success: function(res) {
-                        alert(res.message || 'Đã thêm vào giỏ hàng!');
-                        if (res.cart_count !== undefined) {
-                            $('#cart-count').text(res.cart_count);
-                        }
-                    },
-                    error: function(xhr) {
-                        let res = xhr.responseJSON;
-                        alert(res?.message || 'Lỗi thêm giỏ hàng.');
-                    }
-                });
-            });
-
-            // Gán sự kiện click cho phân trang AJAX
-            $(document).on('click', '.pagination a', function(e) {
-                e.preventDefault();
-                const url = $(this).attr('href');
-
-                $.get(url, function(data) {
-                    $('#tab-1').html(data);
-                    $('html, body').animate({
-                        scrollTop: $('#tab-1').offset().top - 100
-                    }, 300);
-                }).fail(function() {
-                    alert('Không thể chuyển trang.');
-                });
+            // Gửi AJAX lọc danh mục
+            $.get(url, function(data) {
+                $('#tab-1').html(data);
+                $('html, body').animate({
+                    scrollTop: $('#tab-1').offset().top - 100
+                }, 300);
+            }).fail(function() {
+                alert('Không thể tải sản phẩm. Vui lòng thử lại.');
             });
         });
-    </script>
+
+        // Gán sự kiện submit form Thêm vào giỏ bằng class
+        $(document).on('submit', '.add-to-cart-form', function(e) {
+            e.preventDefault();
+
+            let form = $(this);
+            let token = form.find('input[name="_token"]').val();
+            let productId = form.find('input[name="product_id"]').val();
+            let variantId = form.find('input[name="product_variant_id"]').val();
+            let quantity = form.find('input[name="quantity"]').val() || 1;
+
+            $.ajax({
+                url: '{{ route('carts.add') }}',
+                type: 'POST',
+                data: {
+                    _token: token,
+                    product_id: productId,
+                    product_variant_id: variantId,
+                    quantity: quantity
+                },
+                success: function(res) {
+                    alert(res.message || 'Đã thêm vào giỏ hàng!');
+                    if (res.cart_count !== undefined) {
+                        $('#cart-count').text(res.cart_count);
+                    }
+                },
+                error: function(xhr) {
+                    let res = xhr.responseJSON;
+                    alert(res?.message || 'Lỗi thêm giỏ hàng.');
+                }
+            });
+        });
+
+        // Gán sự kiện click cho phân trang AJAX
+        $(document).on('click', '.pagination a', function(e) {
+            e.preventDefault();
+            const url = $(this).attr('href');
+
+            $.get(url, function(data) {
+                $('#tab-1').html(data);
+                $('html, body').animate({
+                    scrollTop: $('#tab-1').offset().top - 100
+                }, 300);
+            }).fail(function() {
+                alert('Không thể chuyển trang.');
+            });
+        });
+    });
+</script>
 @include('clients.layouts.footer')
 
 
 <style>
     .hero-banner-full {
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    position: relative;
-    margin-bottom: 3rem;
-}
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 3rem;
+    }
 
-.hero-banner-full img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
+    .hero-banner-full img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
 </style>

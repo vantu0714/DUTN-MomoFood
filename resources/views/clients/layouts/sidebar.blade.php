@@ -1,6 +1,5 @@
-<!-- Navbar Start -->
-<div class="container-fluid fixed-top p-0">
-
+<!-- Navbar với active state động -->
+<div class="container-fluid fixed-top">
     <!-- Topbar -->
     <div class="bg-momo-gradient py-2 border-bottom border-white border-opacity-25">
         <div class="container d-flex justify-content-between align-items-center">
@@ -78,7 +77,7 @@
 
                     <!-- Cart -->
                     <a href="{{ route('carts.index') }}" class="position-relative me-4 my-auto">
-                        <i class="fa fa-shopping-bag fa-2x"></i>
+                        <i class="bi bi-cart3 fa-2x text-danger"></i>
                         <span id="cart-count"
                             class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
                             style="top: -5px; left: 15px; height: 20px; min-width: 20px;">
@@ -110,7 +109,7 @@
     </div>
 </div>
 <!-- Navbar End -->
-    
+
 <script>
     // JavaScript solution để xử lý active state
     document.addEventListener('DOMContentLoaded', function() {
@@ -154,37 +153,46 @@
 </script>
 
 <style>
-    /* CSS để đảm bảo active state hoạt động đúng */
-    .navbar .navbar-nav .nav-link {
-        position: relative;
-        transition: all 0.3s ease;
-    }
-
-    .navbar .navbar-nav .nav-link.active {
-        color: var(--bs-primary) !important;
-        background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
-    }
-
-    /* Đảm bảo active state không bị override bởi hover */
-    .navbar .navbar-nav .nav-link.active:hover {
-        color: var(--bs-primary) !important;
-        background-color: rgba(var(--bs-primary-rgb), 0.15) !important;
-    }
+    /* Màu nền cam nhạt */
     .bg-momo-gradient {
-        background: linear-gradient(to right, #db735b, #d56a58);
+         background: linear-gradient(to right, #db735b, #d56a58);
     }
 
+    /* NAVIGATION LINKS */
     .navbar-nav .nav-link {
-        transition: all 0.2s ease-in-out;
+        font-weight: 500;
+        color: #333 !important;
+        transition: all 0.3s ease-in-out;
+        padding: 10px 15px;
+        position: relative;
     }
 
-    .navbar-nav .nav-link:hover,
+    /* Hover effect */
+    .navbar-nav .nav-link:hover {
+        color: #b54d00 !important;
+    }
+
+    /* Active state */
     .navbar-nav .nav-link.active {
-        color: #dc3545 !important;
+        color: #b54d00 !important;
+        border-bottom: 2px solid #b54d00;
+        background-color: transparent;
     }
 
+    /* Tách topbar và navbar bằng border */
+    .topbar {
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* Placeholder input */
     .input-group input[type="search"]::placeholder {
         font-size: 0.9rem;
-        color: #888;
+        color: #666;
+    }
+
+    /* Optional: căn giữa vertically nếu cần */
+    .navbar-brand img {
+        max-height: 55px;
     }
 </style>
+
