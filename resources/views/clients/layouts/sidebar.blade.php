@@ -47,10 +47,6 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('news.index') }}"
-                            class="nav-link {{ request()->url() == route('news.index') && request()->has('promotion') ? 'active' : '' }}">
-                            Ưu đãi
-                        </a>
                         <a href="{{ route('gioithieu.index') }}" class="nav-link">Giới thiệu</a>
                     </li>
                     <li class="nav-item">
