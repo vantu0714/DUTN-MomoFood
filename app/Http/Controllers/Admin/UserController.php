@@ -63,7 +63,7 @@ class UserController extends Controller
             'status' => $request->status ?? 1,
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Đã thêm người dùng thành công');
+        return redirect()->route('admin.users.index')->with('success', 'Đã thêm người dùng thành công');
     }
 
     /**
