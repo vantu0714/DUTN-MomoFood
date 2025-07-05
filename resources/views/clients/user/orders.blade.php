@@ -6,37 +6,47 @@
             .pagination {
                 display: flex;
                 justify-content: center;
-                gap: 0.25rem;
-                margin-top: 1rem;
-                flex-wrap: wrap;
+                padding-left: 0;
+                list-style: none;
             }
 
-            .page-item .page-link {
-                padding: 0.375rem 0.75rem;
-                border: 1px solid #28a745;
-                color: #28a745;
+            .page-item {
+                margin: 0 4px;
+            }
+
+            .page-link {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                padding: 0;
+                font-size: 1rem;
+                color: #fd7e14;
+                /* cam nhạt */
+                border: 2px solid #fd7e14;
+                border-radius: 8px;
                 background-color: #fff;
-                border-radius: 0.25rem;
                 transition: all 0.2s ease;
             }
 
-            .page-item:hover .page-link {
-                background-color: #e9f7ef;
-                color: #1e7e34;
-                border-color: #1e7e34;
+            .page-link:hover {
+                background-color: #fff7f0;
+                color: #e96a00;
+                text-decoration: none;
             }
 
             .page-item.active .page-link {
                 background-color: #28a745;
-                color: #fff;
                 border-color: #28a745;
+                color: #fff;
+                font-weight: bold;
             }
 
             .page-item.disabled .page-link {
-                color: #6c757d;
-                pointer-events: none;
-                background-color: #f8f9fa;
-                border-color: #dee2e6;
+                color: #ccc;
+                border-color: #ddd;
+                background-color: #fff;
             }
         </style>
     @endpush
@@ -54,67 +64,162 @@
             'unpaid' => 'Chưa thanh toán',
             'paid' => 'Đã thanh toán',
         ];
+
+        $currentStatus = request()->get('status', 'all');
     @endphp
 
-    <body style="margin-top: 200px;">
-        <div class="container-xl px-4 mt-4" style="margin-top: 200px;">
-            <nav class="nav nav-borders">
-                <a class="nav-link active ms-0" href="{{ route('clients.info') }}">Thông tin</a>
-                <a class="nav-link" href="{{ route('clients.changepassword') }}">Đổi
-                    mật khẩu</a>
-                <a class="nav-link" href="{{ route('clients.orders') }}">Đơn hàng</a>
-                <a href="#" class="nav-link"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    Đăng xuất
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                    @csrf
-                </form>
-            </nav>
-            <hr class="mt-0 mb-4">
-            <div class="row">
-                <div class="col-xl-12">
-                    <h3 class="mb-4">Đơn hàng của bạn</h3>
-                    @if ($orders->isEmpty())
-                        <p>Bạn chưa có đơn hàng nào.</p>
-                    @else
-                        <table class="table table-bordered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Ngày đặt</th>
-                                    <th>Trạng thái đơn hàng</th>
-                                    <th>Trạng thái thanh toán</th>
-                                    <th>Phí vận chuyển</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Chi tiết</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($orders as $order)
-                                    <tr>
-                                        <td>#{{ $order->order_code }}</td>
-                                        <td>{{ $order->created_at->format('d-m-Y') }}</td>
-                                        <td>{{ $statusLabels[$order->status] ?? 'Không xác định' }}</td>
-                                        <td>{{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}</td>
-                                        <td>{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</td>
-                                        <td>{{ number_format($order->total_price, 0, ',', '.') }}₫</td>
-                                        <td>
-                                            <a href="{{ route('clients.orderdetail', $order->id) }}"
-                                                class="btn btn-sm btn-primary">
-                                                Xem
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
-                    <div class="d-flex justify-content-center mt-3">
-                        {{ $orders->links() }}
+    <div class="container-xl px-4" style="margin-top: 200px">
+        <nav class="nav nav-borders">
+            <a class="nav-link active ms-0" href="{{ route('clients.info') }}">Thông tin</a>
+            <a class="nav-link" href="{{ route('clients.changepassword') }}">Đổi mật khẩu</a>
+            <a class="nav-link" href="{{ route('clients.orders') }}">Đơn hàng</a>
+            <a href="#" class="nav-link"
+                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                Đăng xuất
+            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                @csrf
+            </form>
+        </nav>
+        <hr class="mt-0 mb-4">
+
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="bg-light rounded-3 p-4 mb-4 shadow-sm">
+                    <h3 class="mb-0 text-dark fw-semibold display-6">Đơn hàng của bạn</h3>
+                </div>
+
+                <div class="bg-gradient-light bg-opacity-10 rounded-3 p-4 mb-4 border">
+                    <div class="d-flex flex-column">
+                        <h5 class="mb-3 text-dark fw-semibold">
+                            <i class="fas fa-filter me-2"></i>Lọc theo trạng thái
+                        </h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ route('clients.orders', ['status' => 'all']) }}"
+                                class="btn {{ $currentStatus == 'all' ? 'btn-primary active shadow-sm' : 'btn-outline-primary' }} transition-all">
+                                <i class="fas fa-list me-1"></i>Tất cả
+                            </a>
+                            @foreach ($statusLabels as $statusId => $statusLabel)
+                                <a href="{{ route('clients.orders', ['status' => $statusId]) }}"
+                                    class="btn {{ $currentStatus == $statusId ? 'btn-primary active shadow-sm' : 'btn-outline-primary' }} transition-all">
+                                    {{ $statusLabel }}
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted small">
+                        <i class="fas fa-receipt me-1"></i>
+                        Hiển thị {{ $orders->count() }} đơn hàng
+                        @if ($currentStatus != 'all')
+                            với trạng thái: <strong>{{ $statusLabels[$currentStatus] ?? 'Không xác định' }}</strong>
+                        @endif
+                    </div>
+
+                    @if ($currentStatus != 'all')
+                        <a href="{{ route('clients.orders') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Xóa bộ lọc
+                        </a>
+                    @endif
+                </div>
+
+                @if ($orders->isEmpty())
+                    <div class="text-center py-5 bg-white rounded-3 shadow-sm">
+                        <div class="text-muted mb-3" style="font-size: 48px;">📦</div>
+                        @if ($currentStatus != 'all')
+                            <p class="text-muted">Không có đơn hàng nào với trạng thái
+                                "{{ $statusLabels[$currentStatus] ?? 'Không xác định' }}".</p>
+                            <a href="{{ route('clients.orders') }}" class="btn btn-primary mt-2">
+                                Xem tất cả đơn hàng
+                            </a>
+                        @else
+                            <p class="text-muted">Bạn chưa có đơn hàng nào.</p>
+                        @endif
+                    </div>
+                @else
+                    @foreach ($orders as $order)
+                        <div class="card mb-4 shadow-sm border-0 transition-all hover:translate-y-[-2px]">
+                            <div class="card-header bg-light border-bottom py-3">
+                                <div class="d-flex justify-content-between align-items-center h-100">
+                                    <div class="d-flex align-items-center h-100" style="font-size: 1.05rem">
+                                        <span class="fw-bold text-dark" style="font-family: 'Open Sans', sans-serif">
+                                            Đơn hàng {{ $order->order_code }}
+                                        </span>
+                                        <span class="text-muted mx-3">|</span>
+                                        <span class="text-dark">
+                                            Ngày: {{ $order->created_at->format('d/m/Y') }}
+                                        </span>
+                                        <span class="text-muted mx-3">|</span>
+                                        <span class="text-dark">
+                                            Người nhận: {{ $order->recipient_name }}
+                                        </span>
+                                    </div>
+                                    <div class="ms-4">
+                                        <span
+                                            class="badge rounded-pill px-3 py-2 fs-6
+                                                    @if ($order->status == 1) bg-warning text-dark
+                                                    @elseif($order->status == 2) bg-info text-white
+                                                    @elseif($order->status == 3) bg-success text-white
+                                                    @elseif($order->status == 4) bg-info text-white
+                                                    @elseif(in_array($order->status, [5, 6])) bg-danger text-white @endif">
+                                            {{ $statusLabels[$order->status] ?? 'Không xác định' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-body p-4">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-6 col-lg-3">
+                                        <span class="text-uppercase text-muted small mb-1 d-block">Trạng thái thanh
+                                            toán</span>
+                                        <span
+                                            class="badge rounded-pill px-3 py-2
+                                            {{ $order->payment_status == 'paid' ? 'bg-success' : 'bg-warning' }}">
+                                            {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="col-md-6 col-lg-3">
+                                        <span class="text-uppercase text-muted small mb-1 d-block">Phương thức thanh
+                                            toán</span>
+                                        <span class="fw-semibold text-dark">{{ $order->payment_method }}</span>
+                                    </div>
+
+                                    <div class="col-md-6 col-lg-3">
+                                        <span class="text-uppercase text-muted small mb-1 d-block">Phí vận chuyển</span>
+                                        <span class="fw-semibold text-dark">
+                                            {{ number_format($order->shipping_fee, 0, ',', '.') }}₫
+                                        </span>
+                                    </div>
+
+                                    <div class="col-md-6 col-lg-3">
+                                        <span class="text-uppercase text-muted small mb-1 d-block">Tổng tiền</span>
+                                        <span class="fw-bold text-success">
+                                            {{ number_format($order->total_price, 0, ',', '.') }}₫
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer bg-light border-top text-end p-3">
+                                <a href="{{ route('clients.orderdetail', $order->id) }}"
+                                    class="btn btn-primary px-4 py-2 transition-all hover:translate-y-[-1px]">
+                                    Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+
+                <div class="d-flex justify-content-center mt-4">
+                    <nav>
+                        {{ $orders->appends(request()->query())->links('pagination::bootstrap-4') }}
+                    </nav>
                 </div>
             </div>
         </div>
-    </body>
+    </div>
 @endsection

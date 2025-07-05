@@ -177,15 +177,232 @@
           min-width: 60px;
           padding: 0.25rem 0.5rem;
       }
-      
+
   }
 
-.logo {
-    display: flex;
-    justify-content: center;   
-}
+  .logo {
+      display: flex;
+      justify-content: center;
+  }
 
-.logo img {
-    max-width: 100px;    
-    height: auto;
-}
+  .logo img {
+      max-width: 100px;
+      height: auto;
+  }
+
+  /* edit.blade.php*/
+
+  .card {
+      transition: all 0.3s ease;
+  }
+
+  .card:hover {
+      transform: translateY(-2px);
+  }
+
+  .btn {
+      transition: all 0.2s ease;
+  }
+
+  .btn:hover {
+      transform: translateY(-1px);
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+
+  .is-invalid {
+      border-color: #dc3545;
+  }
+
+  .invalid-feedback {
+      display: block;
+  }
+
+  .badge {
+      font-weight: 500;
+  }
+
+  #imagePreview {
+      border: 2px dashed #dee2e6;
+      transition: all 0.3s ease;
+  }
+
+  #imagePreview:hover {
+      border-color: #0d6efd;
+  }
+
+  @media (max-width: 768px) {
+      .container-fluid {
+          padding: 1rem;
+      }
+
+      .card-body {
+          padding: 1rem;
+      }
+
+      .btn-lg {
+          padding: 0.75rem 1rem;
+          font-size: 1rem;
+      }
+  }
+
+  /* show.blade*/
+  .bg-gradient-primary {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .bg-gradient-light {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  }
+
+  .info-item {
+      margin-bottom: 1rem;
+  }
+
+  .info-item:last-child {
+      margin-bottom: 0;
+  }
+
+  .price-display {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+  }
+
+  .table th {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 1rem 0.75rem;
+      background-color: #f8f9fa !important;
+      color: #495057 !important;
+      font-weight: 600 !important;
+  }
+
+  .table td {
+      padding: 0.75rem;
+      vertical-align: middle;
+  }
+
+  .card {
+      transition: all 0.3s ease;
+  }
+
+  .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .badge {
+      font-weight: 500;
+  }
+
+  .badge.bg-success {
+      background-color: #28a745 !important;
+      color: white !important;
+  }
+
+  .badge.bg-danger {
+      background-color: #dc3545 !important;
+      color: white !important;
+  }
+
+  .badge.bg-warning {
+      background-color: #ffc107 !important;
+      color: #212529 !important;
+  }
+
+  .badge.bg-info {
+      background-color: #17a2b8 !important;
+      color: white !important;
+  }
+
+  .badge.bg-secondary {
+      background-color: #6c757d !important;
+      color: white !important;
+  }
+
+  .badge.bg-primary {
+      background-color: #007bff !important;
+      color: white !important;
+  }
+
+  .text-success {
+      color: #28a745 !important;
+      font-weight: 600 !important;
+  }
+
+  .text-warning {
+      color: #ffc107 !important;
+      font-weight: 600 !important;
+  }
+
+  .text-danger {
+      color: #dc3545 !important;
+      font-weight: 600 !important;
+  }
+
+  .text-primary {
+      color: #007bff !important;
+      font-weight: 600 !important;
+  }
+
+  .text-white {
+      color: #ffffff !important;
+  }
+
+  .text-white-50 {
+      color: rgba(255, 255, 255, 0.75) !important;
+  }
+
+  .shadow-lg {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .breadcrumb-item a {
+      color: #007bff !important;
+      font-weight: 500;
+  }
+
+  .breadcrumb-item.active {
+      color: #6c757d !important;
+      font-weight: 500;
+  }
+
+  .btn-outline-secondary {
+      border-color: #6c757d !important;
+      color: #6c757d !important;
+  }
+
+  .btn-outline-secondary:hover {
+      background-color: #6c757d !important;
+      border-color: #6c757d !important;
+      color: white !important;
+  }
+
+  @media (max-width: 768px) {
+      .price-display {
+          flex-direction: column;
+          align-items: flex-start;
+          margin-bottom: 0.5rem;
+      }
+
+      .status-display {
+          align-self: flex-start;
+          margin-top: 0.5rem;
+      }
+
+      .d-flex.justify-content-between {
+          flex-direction: column;
+      }
+
+      .table-responsive {
+          font-size: 0.875rem;
+      }
+  }

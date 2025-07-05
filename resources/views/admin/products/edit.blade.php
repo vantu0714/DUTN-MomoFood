@@ -1,5 +1,4 @@
 @extends('admin.layouts.app')
-
 @section('content')
     <div class="container-fluid px-4 py-4">
         <!-- Header Section -->
@@ -22,7 +21,6 @@
                 </a>
             </div>
         </div>
-
         <!-- Alert Messages -->
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
@@ -31,7 +29,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
-
         @if (session('error'))
             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                 <i class="fas fa-exclamation-circle me-2"></i>
@@ -39,7 +36,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
-
         @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -52,7 +48,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
-
         <!-- Product Info Card -->
         <div class="row mb-4">
             <div class="col-12">
@@ -69,8 +64,8 @@
                                 <div class="d-flex gap-3">
                                     <span class="badge bg-primary">ID: #{{ $product->id }}</span>
                                     <span class="badge bg-info">{{ $product->category->category_name }}</span>
-                                    <span class="badge {{ $product->quantity > 0 ? 'bg-success' : 'bg-danger' }}">
-                                        {{ $product->quantity > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                                    <span class="badge {{ $product->quantity_in_stock > 0 ? 'bg-success' : 'bg-danger' }}">
+                                        {{ $product->quantity_in_stock > 0 ? 'Còn hàng' : 'Hết hàng' }}
                                     </span>
                                 </div>
                             </div>
@@ -79,7 +74,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Edit Form -->
         <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -173,7 +167,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Pricing Information -->
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white border-bottom py-3">
@@ -184,6 +177,7 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
+                                {{-- Giá gốc --}}
                                 <div class="col-md-6 mb-3">
                                     <label for="original_price" class="form-label fw-semibold">Giá gốc <span
                                             class="text-danger">*</span></label>
@@ -192,14 +186,14 @@
                                             class="form-control @error('original_price') is-invalid @enderror"
                                             id="original_price" name="original_price"
                                             value="{{ old('original_price', $product->original_price) }}"
-                                            placeholder="Nhập giá gốc" min="0">
+                                            placeholder="Nhập giá gốc" min="0" step="1000">
                                         <span class="input-group-text">đ</span>
                                         @error('original_price')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
-
+                                {{-- Phần trăm giảm giá --}}
                                 <div class="col-md-6 mb-3">
                                     <label for="discounted_price" class="form-label fw-semibold">Phần trăm giảm
                                         giá</label>
@@ -207,8 +201,9 @@
                                         <input type="number"
                                             class="form-control @error('discounted_price') is-invalid @enderror"
                                             id="discounted_price" name="discounted_price"
-                                            value="{{ old('discounted_price', $product->discounted_price) }}"
-                                            placeholder="Nhập giá khuyến mãi" min="0">
+                                            value="{{ old('discounted_price', $product->original_price && $product->discounted_price ? 100 - round(($product->discounted_price / $product->original_price) * 100, 2) : '') }}"
+                                            placeholder="Nhập phần trăm giảm" min="0" max="100"
+                                            step="0.1">
                                         <span class="input-group-text">%</span>
                                         @error('discounted_price')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -217,9 +212,21 @@
                                     <small class="text-muted">Để trống nếu không có khuyến mãi</small>
                                 </div>
                             </div>
+                            {{-- Hiển thị giá sau khi giảm (nếu có) --}}
+                            @if ($product->discounted_price)
+                                <div class="row mt-2">
+                                    <div class="col-md-12">
+                                        <div class="alert alert-info p-2">
+                                            <i class="fas fa-tag me-2"></i>
+                                            Giá sau giảm: <strong>{{ number_format($product->discounted_price) }}đ</strong>
+                                            (Tiết kiệm
+                                            {{ round((1 - $product->discounted_price / $product->original_price) * 100, 0) }}%)
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
-
                     <!-- Additional Information -->
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white border-bottom py-3">
@@ -239,17 +246,6 @@
                                     @error('expiration_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="view" class="form-label fw-semibold">Lượt xem</label>
-                                    <input type="number" class="form-control @error('view') is-invalid @enderror"
-                                        id="view" name="view" value="{{ old('view', $product->view) }}"
-                                        placeholder="Số lượt xem" min="0" readonly>
-                                    @error('view')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <small class="text-muted">Chỉ đọc - Cập nhật tự động</small>
                                 </div>
                             </div>
                         </div>
@@ -301,14 +297,11 @@
                                 <span class="text-muted">Cập nhật lần cuối:</span>
                                 <span class="fw-semibold">{{ $product->updated_at->format('d/m/Y H:i') }}</span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="text-muted">Tổng lượt xem:</span>
-                                <span class="fw-semibold text-info">{{ number_format($product->view) }}</span>
-                            </div>
+                    
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-muted">Trạng thái:</span>
-                                <span class="badge {{ $product->quantity > 0 ? 'bg-success' : 'bg-danger' }}">
-                                    {{ $product->quantity > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                                <span class="badge {{ $product->quantity_in_stock > 0 ? 'bg-success' : 'bg-danger' }}">
+                                    {{ $product->quantity_in_stock > 0 ? 'Còn hàng' : 'Hết hàng' }}
                                 </span>
                             </div>
                         </div>
@@ -488,73 +481,9 @@
                             </div>
                         @endif
                     </div>
-                    {{-- @if (!$product->variants->isEmpty())
-                        <div class="card-footer bg-white border-top-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="text-muted small">
-                                    Tổng: {{ $product->variants->count() }} biến thể
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteSelectedVariants()">
-                                        <i class="fas fa-trash me-1"></i>
-                                        Xóa đã chọn
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @endif --}}
                 </div>
             </div>
         </div>
-
-        <!-- Add Variant Modal -->
-        {{-- <div class="modal fade" id="addVariantModal" tabindex="-1" aria-labelledby="addVariantModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addVariantModalLabel">
-                            <i class="fas fa-plus me-2"></i>Thêm biến thể mới
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form id="addVariantForm">
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="variant_sku" class="form-label fw-semibold">SKU <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="variant_sku" name="sku" placeholder="Nhập SKU biến thể">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="variant_price" class="form-label fw-semibold">Giá <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="variant_price" name="price" placeholder="Nhập giá">
-                                        <span class="input-group-text">đ</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="variant_quantity" class="form-label fw-semibold">Số lượng <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="variant_quantity" name="quantity_in_stock" placeholder="Số lượng">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="variant_image" class="form-label fw-semibold">Hình ảnh</label>
-                                    <input type="file" class="form-control" id="variant_image" name="image" accept="image/*">
-                                </div>
-                                <div class="col-md-12 mb-3">
-                                    <label for="variant_ingredients" class="form-label fw-semibold">Thành phần</label>
-                                    <textarea class="form-control" id="variant_ingredients" name="ingredients" rows="3" placeholder="Nhập thành phần biến thể"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-plus me-1"></i>Thêm biến thể
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div> --}}
     </div>
     <!-- Scripts -->
     <script>
@@ -569,63 +498,4 @@
             }
         }
     </script>
-    <style>
-        .card {
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn {
-            transition: all 0.2s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-
-        .is-invalid {
-            border-color: #dc3545;
-        }
-
-        .invalid-feedback {
-            display: block;
-        }
-
-        .badge {
-            font-weight: 500;
-        }
-
-        #imagePreview {
-            border: 2px dashed #dee2e6;
-            transition: all 0.3s ease;
-        }
-
-        #imagePreview:hover {
-            border-color: #0d6efd;
-        }
-
-        @media (max-width: 768px) {
-            .container-fluid {
-                padding: 1rem;
-            }
-
-            .card-body {
-                padding: 1rem;
-            }
-
-            .btn-lg {
-                padding: 0.75rem 1rem;
-                font-size: 1rem;
-            }
-        }
-    </style>
 @endsection
