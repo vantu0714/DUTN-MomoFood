@@ -30,7 +30,7 @@ class CategoryController extends Controller
 
         Category::create($request->all());
 
-        return redirect()->route('categories.index')->with('success', 'Thêm danh mục thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Thêm danh mục thành công!');
     }
 
     public function show(string $id)
@@ -59,18 +59,18 @@ class CategoryController extends Controller
 
         $category->update($request->all());
 
-        return redirect()->route('categories.index')->with('success', 'Cập nhật danh mục thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Cập nhật danh mục thành công!');
     }
 
     public function destroy(Category $category)
     {
         if ($category->products()->count() > 0) {
-            return redirect()->route('categories.index')->with('error', 'Không thể xóa danh mục vì đang có sản phẩm liên kết.');
+            return redirect()->route('admin.categories.index')->with('error', 'Không thể xóa danh mục vì đang có sản phẩm liên kết.');
         }
 
         $category->delete();
 
-        return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Xóa danh mục thành công!');
     }
 
     public function toggleStatus(Category $category)
@@ -78,6 +78,6 @@ class CategoryController extends Controller
         $category->status = !$category->status;
         $category->save();
 
-        return redirect()->route('categories.index')->with('success', 'Cập nhật trạng thái danh mục thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Cập nhật trạng thái danh mục thành công!');
     }
 }

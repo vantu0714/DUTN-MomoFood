@@ -35,52 +35,16 @@
         </div>
     </div>
 </div>
-
 <!-- Modal Search End -->
 
 
 <!-- Hero Start -->
-<div class="container-fluid py-5 mb-5 hero-header">
-    <div class="container py-5">
-        <div class="row g-5 align-items-center">
-            <div class="col-md-12 col-lg-7">
-                <h4 class="mb-3 text-secondary">100% MomoFood</h4>
-                <h1 class="mb-5 display-3 text-primary">Shop bán đồ ăn vặt MomoFood</h1>
-                <form action="{{ route('clients.search') }}" method="GET">
-                    <div class="position-relative mx-auto">
-                        <input class="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" type="text"
-                            name="keyword" placeholder="Tìm kiếm sản phẩm..." value="{{ request('keyword') }}">
-                        <button type="submit"
-                            class="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
-                            style="top: 0; right: 25%;">
-                            Tìm kiếm
-                        </button>
-                    </div>
-                </form>
-
-            </div>
-            <div class="col-md-12 col-lg-5">
-                <div id="carouselId" class="carousel slide position-relative" data-bs-ride="carousel">
-                    <div class="carousel-inner" role="listbox" style="height: 300px;">
-                        <div class="carousel-item active rounded">
-                            <div class="carousel-img-wrapper">
-                                <img src="https://nemnuonghungviet.com/nemhungviet/uploads/2023/08/met-an-vat-co-gi-5.jpg"
-                                    class="img-fluid rounded carousel-img" alt="First slide">
-                                {{-- <a href="#" class="btn px-4 py-2 text-white rounded">Fruits</a> --}}
-                            </div>
-                        </div>
-                        <div class="carousel-item rounded">
-                            <div class="carousel-img-wrapper">
-                                <img src="https://saigonchutla.vn/wp-content/uploads/2023/09/an-vat-kon-tum-3-800x445-1.jpg"
-                                    class="img-fluid rounded carousel-img" alt="Second slide">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- Hero Banner Fullscreen Start -->
+<div class="hero-banner-full">
+    <img src="https://easy-ecom.sgp1.digitaloceanspaces.com/chuchu.sgp1.digitaloceanspaces.com/m9rt4cj9fkj46mnw5hge8sully9k?response-content-disposition=inline%3B%20filename%3D%22chuchu_banner1.jpeg%22%3B%20filename%2A%3DUTF-8%27%27chuchu_banner1.jpeg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00MXMNET2HF6NTEB6A%2F20250705%2Funused%2Fs3%2Faws4_request&X-Amz-Date=20250705T141101Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=52b55900dd99fc542309612aa7dbb5e23c9ff6ef17d6260017895d12ec38546b" alt="Banner MomoFood">
 </div>
+<!-- Hero Banner Fullscreen End -->
+
 <!-- Hero End -->
 
 
@@ -95,7 +59,7 @@
                     </div>
                     <div class="featurs-content text-center">
                         <h5>Miễn phí vận chuyển</h5>
-                        <p class="mb-0">Miễn phí cho đơn hàng trên 300.000vnđ</p>
+                        <p class="mb-0">Miễn phí cho đơn hàng từ 300</p>
                     </div>
                 </div>
             </div>
@@ -128,7 +92,7 @@
                         <i class="fas fa-exchange-alt fa-3x text-white"></i>
                     </div>
                     <div class="featurs-content text-center">
-                        <h5>Hỗ trợ trả hàng trong vòng 30 ngày</h5>
+                        <h5>Hỗ trợ trả hàng trong vòng 1 tuần</h5>
                         {{-- <p class="mb-0">Hoàn tiền trong vòng 30 ngày</p> --}}
 
                     </div>
@@ -246,8 +210,7 @@
                                                                     value="{{ $product->variants->first()->id }}">
                                                             @endif
                                                             <input type="hidden" name="quantity" value="1">
-                                                            <button type="submit" class="btn btn-primary">Thêm vào
-                                                                giỏ hàng</button>
+                                                            <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
                                                         </form>
                                                     @else
                                                         <span class="badge bg-danger text-white">Hết hàng</span>
@@ -803,3 +766,22 @@
         });
     </script>
 @include('clients.layouts.footer')
+
+
+<style>
+    .hero-banner-full {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 3rem;
+}
+
+.hero-banner-full img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+</style>
