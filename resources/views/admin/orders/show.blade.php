@@ -110,8 +110,37 @@
                     </div>
                     <div class="col-md-6">
                         <strong>Trạng thái đơn hàng:</strong>
-                        <span class="badge bg-{{ $status['class'] }}">{{ $status['label'] }}</span>
+
+                        <form action="{{ route('admin.orders.update-status', $order->id) }}" method="POST"
+                            class="d-inline-block">
+                            @csrf
+                            @method('PATCH')
+
+                            @php
+                                $statusOptions = [
+                                    1 => ['label' => 'Chưa xác nhận', 'class' => 'secondary'],
+                                    2 => ['label' => 'Đã xác nhận', 'class' => 'info'],
+                                    3 => ['label' => 'Đang giao', 'class' => 'primary'],
+                                    4 => ['label' => 'Hoàn thành', 'class' => 'success'],
+                                    5 => ['label' => 'Hoàn hàng', 'class' => 'dark'],
+                                    6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
+                                ];
+                            @endphp
+
+                            <select name="status" class="form-select form-select-sm mt-2" onchange="this.form.submit()">
+                                @foreach ($statusOptions as $key => $info)
+                                    @php
+                                        $canSelect = $key == $order->status || $key == $order->status + 1;
+                                    @endphp
+                                    <option value="{{ $key }}" {{ $order->status == $key ? 'selected' : '' }}
+                                        {{ $canSelect ? '' : 'disabled' }}>
+                                        {{ $info['label'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
                     </div>
+
                     <div class="col-md-6">
                         <strong>Phương thức thanh toán:</strong>
                         <span class="badge bg-{{ $payment_method['class'] }}">{{ $payment_method['label'] }}</span>
@@ -119,6 +148,26 @@
                     @if ($order->status == 6 && $order->cancellation_reason)
                         <div class="col-12"><strong>Lý do hủy:</strong> {{ $order->cancellation_reason }}</div>
                     @endif
+                    @if ($order->status == 1)
+                        <div class="mt-3">
+                            <button class="btn btn-danger"
+                                onclick="document.getElementById('cancel-form').classList.toggle('d-none')">
+                                Hủy đơn
+                            </button>
+
+                            <form action="{{ route('admin.orders.cancel', $order->id) }}" method="POST"
+                                class="mt-3 d-none" id="cancel-form">
+                                @csrf
+                                @method('PUT')
+                                <div class="mb-3">
+                                    <label for="cancellation_reason" class="form-label">Lý do hủy đơn</label>
+                                    <textarea name="cancellation_reason" class="form-control" rows="3" required placeholder="Nhập lý do..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                            </form>
+                        </div>
+                    @endif
+
                 </div>
             </div>
         </div>
@@ -131,3 +180,4 @@
         </div>
     </div>
 @endsection
+

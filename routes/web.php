@@ -22,6 +22,7 @@ use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\VNPayController;
 use App\Http\Controllers\clients\CommentController as ClientCommentController;
+use App\Http\Controllers\Clients\GioithieuController;
 use App\Http\Controllers\ThongKeController;
 
 // ==================== PUBLIC ROUTES ====================
@@ -34,6 +35,7 @@ Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('sh
 Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
 Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
+Route::get('/gioi-thieu', [GioithieuController::class, 'index'])->name('gioithieu.index');
 
 // Authentication
 Route::controller(AuthController::class)->group(function () {
@@ -163,6 +165,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{id}/show', [OrderController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [OrderController::class, 'edit'])->name('edit');
         Route::put('/{id}', [OrderController::class, 'update'])->name('update');
+        Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
+        Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+
+
     });
 
     // Promotion Management
@@ -177,7 +183,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // Comment Management
-    Route::resource('comments', ClientCommentController::class)->only(['index', 'destroy']);
+    Route::resource('comments', CommentController::class)->only(['index', 'destroy']);
 
     // thống kê
     Route::get('thongke', [ThongKeController::class, 'index'])->name('thongke');

@@ -158,24 +158,15 @@
                                         $price = null;
 
                                         if ($product->product_type === 'variant') {
-                                            $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                                            $firstVariant = $product->variants->first();
                                             $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
                                         } elseif ($product->product_type === 'simple') {
                                             $price = $product->discounted_price ?? $product->original_price;
-                                        }
-
-                                        $isOutOfStock = false;
-
-                                        if ($product->product_type === 'simple') {
-                                            $isOutOfStock = $product->quantity <= 0;
-                                        } elseif ($product->product_type === 'variant') {
-                                            $isOutOfStock = $product->variants->sum('quantity_in_stock') <= 0;
                                         }
                                     @endphp
 
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
-                                            {{-- <a href="{{ route('product-detail.index', $product->id) }}"> --}}
                                             <a href="{{ route('product-detail.show', $product->id) }}">
                                                 <div class="product-img-wrapper">
                                                     <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
@@ -191,7 +182,8 @@
                                             <div
                                                 class="product-content p-4 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
                                                 <h4 class="text-truncate" title="{{ $product->product_name }}">
-                                                    {{ $product->product_name }}</h4>
+                                                    {{ $product->product_name }}
+                                                </h4>
                                                 <p class="text-muted text-truncate">Mã sản phẩm:
                                                     {{ $product->product_code }}</p>
 
@@ -220,6 +212,7 @@
                                         </div>
                                     </div>
                                 @endforeach
+
                             </div>
                         </div>
                     </div>
@@ -281,10 +274,24 @@
         <h1 class="mb-0">SẢN PHẨM BÁN CHẠY</h1>
         <div class="owl-carousel vegetable-carousel justify-content-center">
             @foreach ($bestSellingProducts as $product)
+                @php
+                    $firstVariant = null;
+                    $price = null;
+
+                    if ($product->product_type === 'variant') {
+                        $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
+                        $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
+                    } else {
+                        $price = $product->discounted_price ?? $product->original_price;
+                    }
+                @endphp
+
                 <div class="product-card d-flex flex-column h-100">
                     <div class="position-relative">
                         <div class="product-img-wrapper">
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->product_name }}"
+                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                alt="{{ $product->product_name }}"
+                                onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
                                 class="img-fluid w-100">
                         </div>
                         <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
@@ -295,26 +302,30 @@
 
                     <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
                         <div>
-                            <h5 class="fw-bold">{{ $product->product_name }}</h5>
-                            <p class="description mb-3">{{ Str::limit($product->description, 80) }}</p>
+                            <h5 class="fw-bold text-truncate">{{ $product->product_name }}</h5>
+                            <p class="description mb-3 text-muted">{{ Str::limit($product->description, 80) }}</p>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
                             <span class="price fw-bold text-dark fs-5 m-0">
-                                {{ number_format($product->discounted_price, 0, ',', '.') }} <span
-                                    class="currency">đ</span>
+                                {{ $price ? number_format($price, 0, ',', '.') : 'Liên hệ' }} <span class="currency">đ</span>
                             </span>
 
-                            <form action="{{ route('carts.add') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <button type="submit"
-                                    class="btn border border-secondary rounded-pill px-3 text-primary">
-                                    <i class="fa fa-shopping-bag me-2 text-primary"></i>Thêm vào giỏ
-                                    hàng
-                                </button>
-                            </form>
-
+                            @if ($price)
+                                <form class="add-to-cart-form">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                    @if ($product->product_type === 'variant' && $firstVariant)
+                                        <input type="hidden" name="product_variant_id" value="{{ $firstVariant->id }}">
+                                    @endif
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-primary rounded-pill px-3">
+                                        <i class="fa fa-shopping-cart me-1"></i> Thêm vào giỏ
+                                    </button>
+                                </form>
+                            @else
+                                <span class="text-danger">Hết hàng</span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -322,6 +333,8 @@
         </div>
     </div>
 </div>
+
+
 <!-- Vesitable Shop End -->
 
 
