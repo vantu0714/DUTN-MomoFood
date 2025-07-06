@@ -2,6 +2,19 @@
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+@endif
 
 <!-- Spinner Start -->
 <div id="spinner"
@@ -138,7 +151,8 @@
                             <li class="nav-item">
                                 <a class="d-flex m-2 py-2 bg-light rounded-pill category-tab"
                                     data-category="{{ $category->id }}" href="javascript:void(0);">
-                                    <span class="text-dark" style="width: 130px;">{{ $category->category_name }}</span>
+                                    <span class="text-dark"
+                                        style="width: 130px;">{{ $category->category_name }}</span>
                                 </a>
                             </li>
                         @endforeach
@@ -152,6 +166,7 @@
                     <div class="row g-4">
                         <div class="col-lg-12">
                             <div class="row g-4">
+
                                 @foreach ($products as $product)
                                     @php
                                         $firstVariant = null;
@@ -195,13 +210,36 @@
                                                         @csrf
                                                         <input type="hidden" name="product_id"
                                                             value="{{ $product->id }}">
-                                                        @if ($product->product_type === 'variant' && $product->variants->first())
+
+                                                        @php
+                                                            $firstAvailableVariant =
+                                                                $product->product_type === 'variant'
+                                                                    ? $product->variants->firstWhere(
+                                                                        'quantity_in_stock',
+                                                                        '>',
+                                                                        0,
+                                                                    )
+                                                                    : null;
+                                                        @endphp
+
+                                                        @if ($product->product_type === 'variant' && $firstAvailableVariant)
                                                             <input type="hidden" name="product_variant_id"
-                                                                value="{{ $product->variants->first()->id }}">
+                                                                value="{{ $firstAvailableVariant->id }}">
                                                         @endif
+
+
+                                                        @if ($product->product_type === 'variant' && $firstAvailableVariant)
+                                                            <input type="hidden" name="product_variant_id"
+                                                                value="{{ $firstAvailableVariant->id }}">
+                                                        @endif
+
                                                         <input type="hidden" name="quantity" value="1">
-                                                        <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                                        <button type="submit" class="btn btn-white">
+                                                            <i class="bi bi-cart3 fa-2x text-danger"></i>
+                                                        </button>
                                                     </form>
+
+
                                                 </div>
                                             </div>
                                         </div>
@@ -284,12 +322,12 @@
                 <div class="product-card d-flex flex-column h-100">
                     <div class="position-relative">
                         <a href="{{ route('product-detail.show', $product->id) }}">
-                        <div class="product-img-wrapper">
-                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                alt="{{ $product->product_name }}"
-                                onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                class="img-fluid w-100">
-                        </div>
+                            <div class="product-img-wrapper">
+                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    alt="{{ $product->product_name }}"
+                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                    class="img-fluid w-100">
+                            </div>
                         </a>
                         <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
                             style="top: 10px; right: 10px;">
@@ -318,7 +356,8 @@
                                             value="{{ $firstVariant->id }}">
                                     @endif
                                     <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                    <button type="submit" class="btn btn-white"><i
+                                            class="bi bi-cart3 fa-2x text-danger"></i></button>
                                 </form>
                             @else
                                 <span class="text-danger">Hết hàng</span>
