@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
 
 class ProductController extends Controller
 {
@@ -98,25 +99,31 @@ class ProductController extends Controller
             $validated['discounted_price'] = null;
         }
 
-        if ($validated['product_type'] === 'simple') {
-            $validated['status'] = isset($validated['quantity_in_stock']) && $validated['quantity_in_stock'] > 0 ? 1 : 0;
-        } else {
-            $validated['status'] = 0;
+        // Nếu là sản phẩm có biến thể
+        if ($validated['product_type'] === 'variant') {
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('products/temp', 'public');
+                $validated['image'] = $imagePath;
+            }
+
+            // Chỉ lưu vào session
+            Session::put('pending_product', $validated);
+
+            return redirect()->route('admin.product_variants.create')
+                ->with('success', 'Tiếp tục thêm biến thể cho sản phẩm.');
         }
 
+        // Nếu là sản phẩm đơn → xử lý ảnh chính thức
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = $imagePath;
         }
 
-        $product = Product::create($validated);
+        $validated['status'] = isset($validated['quantity_in_stock']) && $validated['quantity_in_stock'] > 0 ? 1 : 0;
 
-        if ($validated['product_type'] === 'variant') {
-            return redirect()->route('admin.product_variants.create', ['product_id' => $product->id])
-                ->with('success', 'Thêm sản phẩm thành công. Bây giờ hãy thêm các biến thể.');
-        }
+        Product::create($validated);
 
-        return redirect()->route('admin.products.index')->with('success', 'Sản phẩm không biến thể đã được thêm thành công.');
+        return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công.');
     }
 
     public function edit($id)

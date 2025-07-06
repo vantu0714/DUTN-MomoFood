@@ -230,8 +230,6 @@
                                             </div>
                                         @enderror
                                     </div>
-
-
                                 </div>
                             </div>
 
@@ -268,79 +266,6 @@
         </div>
     </div>
 @endsection
-
-@push('styles')
-    <style>
-        .bg-gradient-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-
-        .upload-area {
-            border-color: #dee2e6 !important;
-            transition: all 0.3s ease;
-        }
-
-        .upload-area:hover {
-            border-color: #667eea !important;
-            background-color: #f8f9ff;
-        }
-
-        .cursor-pointer {
-            cursor: pointer;
-        }
-
-        .card {
-            transition: all 0.3s ease;
-        }
-
-        .btn {
-            transition: all 0.2s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .price-display {
-            font-size: 0.9rem;
-        }
-
-        .savings-info {
-            transition: all 0.3s ease;
-        }
-
-        .form-label {
-            margin-bottom: 0.75rem;
-            font-size: 0.95rem;
-        }
-
-        .input-group-text {
-            font-weight: 600;
-            min-width: 60px;
-            justify-content: center;
-        }
-
-        @media (max-width: 768px) {
-            .container-fluid {
-                padding: 1rem;
-            }
-
-            .card-body {
-                padding: 2rem 1rem;
-            }
-
-            .btn-lg {
-                padding: 0.75rem 2rem;
-            }
-        }
-    </style>
-@endpush
 
 @push('scripts')
     <script>

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Session;
 
 
 class ProductVariantController extends Controller
@@ -60,30 +61,57 @@ class ProductVariantController extends Controller
     public function create(Request $request)
     {
         $productId = $request->input('product_id');
-        $product = Product::findOrFail($productId);
-        $attributes = Attribute::with('values')->get();
+        $product = null;
 
-        // Lấy danh sách size từ bảng AttributeValue
+        if ($productId) {
+            $product = Product::findOrFail($productId);
+        } elseif (Session::has('pending_product')) {
+            $pendingData = Session::get('pending_product');
+            $product = new Product($pendingData); // tạo instance tạm
+        } else {
+            return redirect()->route('admin.products.create')->with('error', 'Không tìm thấy thông tin sản phẩm.');
+        }
+
+        $attributes = Attribute::with('values')->get();
         $sizeValues = Attribute::where('name', 'Size')->first()?->values ?? collect();
 
-        return view('admin.product_variants.create', compact('product', 'sizeValues'));
+        return view('admin.product_variants.create', compact('product', 'attributes', 'sizeValues'));
     }
+
+
+
+
 
     public function store(Request $request)
     {
         DB::beginTransaction();
 
         try {
-            $productId = $request->input('product_id');
+            // Lấy dữ liệu từ session nếu chưa có product_id
+            $pendingProduct = Session::get('pending_product');
+
+            if (!$request->filled('product_id') && !$pendingProduct) {
+                return redirect()->route('admin.products.create')->with('error', 'Thông tin sản phẩm bị thiếu.');
+            }
+
+            // Tạo product nếu chưa tồn tại
+            if (!$request->filled('product_id')) {
+                $product = Product::create($pendingProduct);
+                $productId = $product->id;
+                Session::forget('pending_product');
+            } else {
+                $productId = $request->input('product_id');
+                $product = Product::findOrFail($productId);
+            }
+
             $variantsData = $request->input('variants', []);
-            $product = Product::findOrFail($productId);
 
             foreach ($variantsData as $variantIndex => $variant) {
                 // Xử lý thuộc tính chính (ví dụ: Vị)
                 $mainAttrName = trim($variant['main_attribute']['name']);
                 $mainAttrValue = trim($variant['main_attribute']['value']);
 
-                // Tạo hoặc tìm Attribute và AttributeValue cho Vị
+                // Tạo hoặc tìm Attribute + AttributeValue cho thuộc tính chính
                 $mainAttribute = Attribute::firstOrCreate(['name' => $mainAttrName]);
                 $mainAttrVal = AttributeValue::firstOrCreate([
                     'attribute_id' => $mainAttribute->id,
@@ -97,7 +125,7 @@ class ProductVariantController extends Controller
                     $variantModel->quantity_in_stock = $subAttr['quantity_in_stock'] ?? 0;
                     $variantModel->sku = $subAttr['sku'] ?? null;
 
-
+                    // Xử lý ảnh upload
                     $imageInputName = "variants.$variantIndex.sub_attributes.$subIndex.image";
                     $uploadedFile = $request->file($imageInputName);
 
@@ -108,19 +136,21 @@ class ProductVariantController extends Controller
 
                     $variantModel->save();
 
-                    // Gắn "Vị"
+                    // Gắn thuộc tính chính (Vị)
                     $variantModel->attributeValues()->attach($mainAttrVal->id);
 
-                    // Gắn Size
+                    // Gắn thuộc tính phụ (Size)
                     $sizeAttrValId = $subAttr['attribute_value_id'];
                     $variantModel->attributeValues()->attach($sizeAttrValId);
                 }
             }
 
+            // Cập nhật trạng thái sản phẩm (có thể là: active)
             $this->updateProductStatus($productId);
 
             DB::commit();
-            return redirect()->route('admin.product_variants.index')->with('success', 'Thêm biến thể thành công.');
+
+            return redirect()->route('admin.products.index')->with('success', 'Sản phẩm và các biến thể đã được thêm thành công.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Đã xảy ra lỗi: ' . $e->getMessage()]);
@@ -351,5 +381,10 @@ class ProductVariantController extends Controller
             DB::rollBack();
             return back()->with('error', 'Lỗi khi thêm biến thể: ' . $e->getMessage());
         }
+    }
+    public function cancel()
+    {
+        Session::forget('pending_product');
+        return redirect()->route('admin.products.index')->with('info', 'Đã hủy tạo sản phẩm.');
     }
 }
