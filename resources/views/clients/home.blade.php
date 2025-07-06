@@ -2,7 +2,6 @@
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
-
 <!-- Spinner Start -->
 <div id="spinner"
     class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50  d-flex align-items-center justify-content-center">
@@ -41,8 +40,7 @@
 <!-- Hero Start -->
 <!-- Hero Banner Fullscreen Start -->
 <div class="hero-banner-full">
-    <img src="https://easy-ecom.sgp1.digitaloceanspaces.com/chuchu.sgp1.digitaloceanspaces.com/m9rt4cj9fkj46mnw5hge8sully9k?response-content-disposition=inline%3B%20filename%3D%22chuchu_banner1.jpeg%22%3B%20filename%2A%3DUTF-8%27%27chuchu_banner1.jpeg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00MXMNET2HF6NTEB6A%2F20250705%2Funused%2Fs3%2Faws4_request&X-Amz-Date=20250705T141101Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=52b55900dd99fc542309612aa7dbb5e23c9ff6ef17d6260017895d12ec38546b"
-        alt="Banner MomoFood">
+    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood">
 </div>
 <!-- Hero Banner Fullscreen End -->
 
@@ -118,39 +116,43 @@
 <!-- Featurs Section End -->
 
 
-<!-- Fruits Shop Start-->
+<!-- Fruits Shop Start -->
 <div class="container-fluid fruite py-5">
     <div class="container py-5">
-        <div class="tab-class text-center">
-            <div class="row g-4">
-                <div class="col-lg-4 text-start">
-                    <h1>MÓN ĂN NỔI BẬT</h1>
-                </div>
-                <div class="col-lg-8 text-end">
-                    <ul class="nav nav-pills d-inline-flex text-center mb-5" id="category-tabs">
-                        <li class="nav-item">
-                            <a class="d-flex m-2 py-2 bg-warning rounded-pill category-tab active" data-category=""
-                                href="javascript:void(0);">
-                                <span class="text-white" style="width: 130px;">Tất cả</span>
-                            </a>
+        <div class="row">
+            <!-- DANH MỤC BÊN TRÁI -->
+            <div class="col-lg-3 mb-4 mb-lg-0">
+                <div class="bg-light p-3 rounded shadow-sm">
+                    <h5 class="mb-3 text-primary"><i class="bi bi-list-ul me-2"></i>Danh mục sản phẩm</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item {{ request()->get('category_id') == '' ? 'active' : '' }}">
+                            <a href="javascript:void(0);"
+                                class="text-decoration-none text-dark category-tab"data-category="">Tất cả</a>
                         </li>
                         @foreach ($categories as $category)
-                            <li class="nav-item">
-                                <a class="d-flex m-2 py-2 bg-light rounded-pill category-tab"
-                                    data-category="{{ $category->id }}" href="javascript:void(0);">
-                                    <span class="text-dark" style="width: 130px;">{{ $category->category_name }}</span>
+                            <li
+                                class="list-group-item {{ request()->get('category_id') == $category->id ? 'active' : '' }}">
+                                <a href="javascript:void(0);" class="text-decoration-none text-dark category-tab"
+                                    data-category="{{ $category->id }}">
+                                    {{ $category->category_name }}
                                 </a>
                             </li>
                         @endforeach
+
                     </ul>
-
                 </div>
-
             </div>
-            <div class="tab-content">
-                <div id="tab-1" class="tab-pane fade show p-0 active">
+
+            <!-- DANH SÁCH SẢN PHẨM BÊN PHẢI -->
+            <div class="col-lg-9">
+                <div class="tab-class text-center">
                     <div class="row g-4">
-                        <div class="col-lg-12">
+                        <div class="col-12 text-start">
+                            <h2 class="text-success">MÓN ĂN NỔI BẬT</h2>
+                        </div>
+                    </div>
+                    <div class="tab-content">
+                        <div id="tab-1" class="tab-pane fade show active p-0">
                             <div class="row g-4">
                                 @foreach ($products as $product)
                                     @php
@@ -165,30 +167,29 @@
                                         }
                                     @endphp
 
-                                    <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                                    <div class="col-md-6 col-lg-3">
                                         <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
                                             <a href="{{ route('product-detail.show', $product->id) }}">
                                                 <div class="product-img-wrapper">
                                                     <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                                         onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                                        alt="Product Image">
+                                                        class="img-fluid" alt="Product Image">
                                                 </div>
                                             </a>
-                                            <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
-                                                style="top: 10px; left: 10px;">
+                                            <div class="text-white bg-secondary px-2 py-1 rounded position-absolute"
+                                                style="top: 10px; left: 10px; font-size: 12px;">
                                                 {{ $product->category?->category_name ?? 'Không có danh mục' }}
                                             </div>
-
                                             <div
-                                                class="product-content p-4 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
-                                                <h4 class="text-truncate" title="{{ $product->product_name }}">
+                                                class="product-content p-3 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
+                                                <h6 class="text-truncate" title="{{ $product->product_name }}">
                                                     {{ $product->product_name }}
-                                                </h4>
-                                                <p class="text-muted text-truncate">Mã sản phẩm:
-                                                    {{ $product->product_code }}</p>
-
+                                                </h6>
+                                                <p class="text-muted mb-1" style="font-size: 13px;">
+                                                    Mã sản phẩm: {{ $product->product_code }}
+                                                </p>
                                                 <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                    <p class="text-dark fs-5 fw-bold mb-0">
+                                                    <p class="text-dark fw-bold mb-0">
                                                         {{ $price ? number_format($price, 0, ',', '.') . ' VNĐ' : 'Liên hệ' }}
                                                     </p>
                                                     <form class="add-to-cart-form">
@@ -200,23 +201,27 @@
                                                                 value="{{ $product->variants->first()->id }}">
                                                         @endif
                                                         <input type="hidden" name="quantity" value="1">
-                                                        <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                                        <button type="submit" class="btn btn-white p-0">
+                                                            <i class="bi bi-cart3 fa-lg text-danger"></i>
+                                                        </button>
                                                     </form>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
-
                             </div>
+
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> <!-- End right column -->
         </div>
     </div>
 </div>
-<!-- Fruits Shop End-->
+<!-- Fruits Shop End -->
+
+
 
 
 <!-- Featurs Start -->
@@ -284,12 +289,12 @@
                 <div class="product-card d-flex flex-column h-100">
                     <div class="position-relative">
                         <a href="{{ route('product-detail.show', $product->id) }}">
-                        <div class="product-img-wrapper">
-                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                alt="{{ $product->product_name }}"
-                                onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                class="img-fluid w-100">
-                        </div>
+                            <div class="product-img-wrapper">
+                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    alt="{{ $product->product_name }}"
+                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                    class="img-fluid w-100">
+                            </div>
                         </a>
                         <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
                             style="top: 10px; right: 10px;">
@@ -318,7 +323,8 @@
                                             value="{{ $firstVariant->id }}">
                                     @endif
                                     <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                    <button type="submit" class="btn btn-white"><i
+                                            class="bi bi-cart3 fa-2x text-danger"></i></button>
                                 </form>
                             @else
                                 <span class="text-danger">Hết hàng</span>
@@ -792,5 +798,12 @@
         height: 100%;
         object-fit: cover;
         display: block;
+    }
+
+    .list-group-item.active {
+        background-color: #fff3cd;
+        font-weight: bold;
+        color: #d35400;
+        border-left: 4px solid #ffc107;
     }
 </style>
