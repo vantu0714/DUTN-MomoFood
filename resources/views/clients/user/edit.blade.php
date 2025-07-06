@@ -21,7 +21,7 @@
             @csrf
             <div class="row g-4">
                 <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100">
+                    <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white py-3">
                             <h5 class="mb-0 fw-bold" style="color: rgb(219, 115, 91)">
                                 <i class="bi bi-person-circle me-2"></i>Ảnh đại diện
@@ -40,7 +40,10 @@
                                 <input type="file" id="avatarInput" name="avatar" accept="image/*" class="d-none"
                                     onchange="previewAvatar(event)">
                             </div>
-                            <small class="text-muted mt-auto">JPG/PNG tối đa 5MB</small>
+                            <div class="d-flex justify-content-center align-items-center text-muted small">
+                                <i class="bi bi-calendar-check me-1"></i>
+                                <span>JPG/PNG tối đa 5MB</span>
+                            </div>
                         </div>
                     </div>
                 </div>
