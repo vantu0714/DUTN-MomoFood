@@ -285,103 +285,103 @@ class ProductVariantController extends Controller
                 $originalPrice = (float) $product->original_price;
                 $productCode = $product->product_code;
 
-                foreach ($productData['variants'] ?? [] as $variantData) {
+                foreach ($productData['variants'] ?? [] as $variantIndex => $variantData) {
                     $mainAttr = $variantData['main_attribute'] ?? null;
                     $subAttrs = $variantData['sub_attributes'] ?? [];
 
-                    // Tạo hoặc lấy giá trị thuộc tính chính
-                    $mainAttributeValue = null;
-                    if ($mainAttr && !empty($mainAttr['value'])) {
-                        $attribute = Attribute::firstOrCreate(['name' => $mainAttr['name']]);
-                        $mainAttributeValue = AttributeValue::firstOrCreate([
-                            'attribute_id' => $attribute->id,
-                            'value' => $mainAttr['value'],
-                        ]);
+                    if (empty($mainAttr['value']) || empty($mainAttr['name'])) {
+                        continue;
                     }
 
-                    foreach ($subAttrs as $subAttr) {
-                        // Làm sạch giá (remove ".", ",", "₫" nếu có)
+                    // Tạo hoặc lấy thuộc tính chính (vị)
+                    $mainAttrModel = Attribute::firstOrCreate(['name' => trim($mainAttr['name'])]);
+                    $mainAttrValue = AttributeValue::firstOrCreate([
+                        'attribute_id' => $mainAttrModel->id,
+                        'value' => trim($mainAttr['value']),
+                    ]);
+
+                    foreach ($subAttrs as $subIndex => $subAttr) {
+                        $sizeAttrValueId = $subAttr['attribute_value_id'] ?? null;
                         $rawPrice = $subAttr['price'] ?? '0';
+                        $quantity = isset($subAttr['quantity_in_stock']) ? (int) $subAttr['quantity_in_stock'] : 0;
+
                         $cleanPrice = (float) str_replace(['.', ',', '₫', ' '], '', $rawPrice);
+
+                        if (!$sizeAttrValueId || $cleanPrice <= 0 || $quantity <= 0) {
+                            continue;
+                        }
 
                         if ($cleanPrice < $originalPrice) {
                             DB::rollBack();
-                            return back()->withInput()->with('error', 'Giá biến thể không được thấp hơn giá gốc sản phẩm (' . number_format($originalPrice, 0, ',', '.') . '₫)');
+                            return back()->withInput()->with('error', "Giá biến thể không được thấp hơn giá gốc (ID SP: {$productId})");
                         }
 
-                        // Check trùng biến thể (Vị + Size)
+                        // Kiểm tra trùng (vị + size)
                         $exists = ProductVariant::where('product_id', $productId)
-                            ->whereHas('attributeValues', function ($q) use ($mainAttributeValue) {
-                                if ($mainAttributeValue) {
-                                    $q->where('attribute_value_id', $mainAttributeValue->id);
-                                }
-                            })
-                            ->whereHas('attributeValues', function ($q) use ($subAttr) {
-                                if (!empty($subAttr['attribute_value_id'])) {
-                                    $q->where('attribute_value_id', $subAttr['attribute_value_id']);
-                                }
-                            })
+                            ->whereHas('attributeValues', fn($q) => $q->where('attribute_value_id', $mainAttrValue->id))
+                            ->whereHas('attributeValues', fn($q) => $q->where('attribute_value_id', $sizeAttrValueId))
+                            ->withCount([
+                                'attributeValues as match_count' => fn($q) =>
+                                $q->whereIn('attribute_value_id', [$mainAttrValue->id, $sizeAttrValueId])
+                            ])
+                            ->having('match_count', 2)
                             ->exists();
 
                         if ($exists) {
                             DB::rollBack();
-                            return back()->withInput()->with('error', 'Biến thể với Vị "' . ($mainAttributeValue->value ?? '') . '" và Size đã tồn tại.');
+                            return back()->withInput()->with('error', "Biến thể với vị '{$mainAttrValue->value}' và size đã tồn tại (ID SP: {$productId})");
                         }
 
-                        // Upload ảnh nếu có
+                        // Lấy file ảnh đúng cách
                         $imagePath = null;
-                        if (isset($subAttr['image']) && $subAttr['image'] instanceof \Illuminate\Http\UploadedFile) {
-                            $imagePath = $subAttr['image']->store('variants', 'public');
+                        $imageInput = "products.{$productId}.variants.{$variantIndex}.sub_attributes.{$subIndex}.image";
+                        $uploadedImage = $request->file($imageInput);
+
+                        if ($uploadedImage instanceof \Illuminate\Http\UploadedFile) {
+                            $imagePath = $uploadedImage->store('variants', 'public');
                         }
 
                         // Tạo SKU
-                        $sku = $productCode;
-                        if ($mainAttributeValue) {
-                            $sku .= '-' . strtoupper(Str::slug($mainAttributeValue->value));
-                        }
-                        if (!empty($subAttr['attribute_value_id'])) {
-                            $sizeValue = AttributeValue::find($subAttr['attribute_value_id']);
-                            $sku .= '-' . strtoupper(Str::slug($sizeValue->value ?? ''));
-                        }
+                        $sizeValue = AttributeValue::find($sizeAttrValueId);
+                        $sku = strtoupper($productCode . '-' . Str::slug($mainAttrValue->value) . '-' . Str::slug($sizeValue?->value ?? ''));
 
                         // Tạo biến thể
                         $variant = ProductVariant::create([
                             'product_id' => $productId,
                             'price' => $cleanPrice,
-                            'quantity_in_stock' => $subAttr['quantity_in_stock'],
+                            'quantity_in_stock' => $quantity,
                             'sku' => $sku,
                             'image' => $imagePath,
+                            'status' => 1,
                         ]);
 
-                        // Gắn thuộc tính chính
-                        if ($mainAttributeValue) {
-                            ProductVariantValue::create([
-                                'product_variant_id' => $variant->id,
-                                'attribute_value_id' => $mainAttributeValue->id,
-                                'price_adjustment' => 0,
-                            ]);
-                        }
+                        // Gắn thuộc tính vị
+                        ProductVariantValue::create([
+                            'product_variant_id' => $variant->id,
+                            'attribute_value_id' => $mainAttrValue->id,
+                            'price_adjustment' => 0,
+                        ]);
 
-                        // Gắn thuộc tính phụ (size)
-                        if (!empty($subAttr['attribute_value_id'])) {
-                            ProductVariantValue::create([
-                                'product_variant_id' => $variant->id,
-                                'attribute_value_id' => $subAttr['attribute_value_id'],
-                                'price_adjustment' => 0,
-                            ]);
-                        }
+                        // Gắn thuộc tính size
+                        ProductVariantValue::create([
+                            'product_variant_id' => $variant->id,
+                            'attribute_value_id' => $sizeAttrValueId,
+                            'price_adjustment' => 0,
+                        ]);
                     }
                 }
 
                 $this->updateProductStatus($productId);
             }
+
             DB::commit();
-            return redirect()->route('admin.product_variants.index')->with('success', 'Đã thêm biến thể cho nhiều sản phẩm!');
+            return redirect()->route('admin.product_variants.index')->with('success', 'Thêm biến thể thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Lỗi khi thêm biến thể: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Lỗi khi thêm biến thể: ' . $e->getMessage());
         }
     }
+
     public function cancel()
     {
         Session::forget('pending_product');
