@@ -1,85 +1,56 @@
 @extends('clients.layouts.app')
+
 @section('content')
-    <br><br><br><br><br><br>
-    <div class="container py-5">
-        <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold">Giới thiệu về <span class="text-primary">MomoFood</span></h1>
-            <p class="lead text-muted">Thế giới đồ ăn vặt dành cho bạn!</p>
-        </div>
+<br><br><br><br><br><br>
+<div class="container py-5 px-4 bg-light rounded shadow-sm">
+    <h2 class="fw-bold mb-4 text-center">Giới thiệu</h2>
 
-        <div class="mb-4">
-            <h2 class="h4 text-primary">🌟 MomoFood là gì?</h2>
-            <p>
-                MomoFood là website chuyên cung cấp <strong>đồ ăn vặt ngon – sạch – an toàn</strong>,
-                giúp bạn dễ dàng tìm thấy món ăn yêu thích chỉ với vài cú click chuột. Từ các món truyền thống như bánh
-                tráng, khô gà
-                đến snack nhập khẩu, chúng tôi đều có đủ!
-            </p>
-        </div>
-
-        <div class="mb-4">
-            <h2 class="h4 text-primary">🎯 Mục tiêu của chúng tôi</h2>
-            <ul>
-                <li>Cung cấp sản phẩm chất lượng, rõ nguồn gốc</li>
-                <li>Giao hàng nhanh chóng và đúng hẹn</li>
-                <li>Chăm sóc khách hàng tận tâm</li>
-                <li>Xây dựng cộng đồng yêu thích ẩm thực đường phố</li>
-            </ul>
-        </div>
-
-        <div class="mb-4">
-            <h2 class="h4 text-primary">🛍️ Vì sao chọn MomoFood?</h2>
-            <ul>
-                <li><strong>Đa dạng món ăn:</strong> Từ đồ khô, bánh kẹo đến đồ uống</li>
-                <li><strong>Giá cả hợp lý:</strong> Phù hợp cho học sinh, sinh viên, dân văn phòng</li>
-                <li><strong>Ưu đãi hấp dẫn:</strong> Mã giảm giá, quà tặng và chương trình thành viên</li>
-                <li><strong>Giao hàng toàn quốc:</strong> Nhanh – tiện – đúng giờ</li>
-            </ul>
-        </div>
-
-        <div class="mb-4">
-            <h2 class="h4 text-primary">💬 Kết nối với MomoFood</h2>
-            <p>Hãy theo dõi chúng tôi để cập nhật món mới mỗi ngày!</p>
-            <ul>
-                <li><strong>Địa chỉ:</strong> 1 Trịnh Văn Bô, Hà Nội</li>
-                <li><strong>Hotline:</strong> 0909 123 456</li>
-                <li><strong>Email:</strong> momofood@gmail.com</li>
-                <li><strong>Facebook:</strong> <a href="https://facebook.com/momofood"
-                        target="_blank">facebook.com/momofood</a></li>
-            </ul>
-        </div>
-
-        <div class="mb-5">
-            <h2 class="h4 text-primary">📖 Câu chuyện của MomoFood</h2>
-            <p>
-                Mọi hành trình đều bắt đầu từ một niềm đam mê – và MomoFood cũng vậy.
-                Chúng tôi là những người trẻ yêu ẩm thực đường phố, lớn lên với những bịch bánh tráng trộn, khô gà, nem chua
-                rán…
-                và luôn mang trong mình một câu hỏi: <strong>“Tại sao không tạo nên một nơi mà ai cũng có thể tìm thấy món
-                    ăn vặt yêu thích – nhanh chóng, sạch sẽ, đáng tin cậy?”</strong>
-            </p>
-            <p>
-                Từ đó, MomoFood ra đời – với mong muốn <strong>gắn kết cộng đồng yêu đồ ăn vặt</strong>, từ học sinh, sinh
-                viên đến dân văn phòng bận rộn.
-                Chúng tôi hiểu cảm giác thèm một món gì đó giữa buổi chiều làm việc mệt mỏi hay lúc đêm khuya ôn thi,
-                và chính vì vậy, MomoFood cam kết luôn đồng hành cùng bạn qua từng hương vị nhỏ.
-            </p>
-        </div>
-
-        <div class="mb-5">
-            <h2 class="h4 text-primary">💡 Giá trị cốt lõi của MomoFood</h2>
-            <ul>
-                <li><strong>Chất lượng là ưu tiên hàng đầu:</strong> Tất cả sản phẩm đều được chọn lọc kỹ lưỡng, rõ nguồn
-                    gốc</li>
-                <li><strong>Khách hàng là trung tâm:</strong> Phản hồi của bạn là nền tảng để chúng tôi phát triển</li>
-                <li><strong>Đổi mới liên tục:</strong> Không ngừng cập nhật món mới, cải tiến giao diện và trải nghiệm mua
-                    sắm</li>
-                <li><strong>Lan tỏa niềm vui:</strong> Mỗi món ăn vặt là một câu chuyện nhỏ kết nối cộng đồng</li>
-            </ul>
-        </div>
-
-        <div class="text-center mt-5">
-            <h3 class="fw-bold text-success">❤️ MomoFood – Đồ ăn vặt cho mọi khoảnh khắc!</h3>
-        </div>
+    <div class="mb-4">
+        <h4 class="fw-semibold">Khát vọng và Sứ mệnh</h4>
+        <p>
+            Tại <strong>MomoFood</strong>, chúng tôi tin rằng mỗi món ăn vặt là một niềm vui nhỏ trong cuộc sống. Với đam mê ẩm thực đường phố và tinh thần đổi mới không ngừng, chúng tôi không chỉ cung cấp sản phẩm, mà còn là người bạn đồng hành đáng tin cậy cho khách hàng trong mọi khoảnh khắc.
+        </p>
     </div>
+
+    <div class="mb-4">
+        <h4 class="fw-semibold">Giá trị cốt lõi</h4>
+        <ol>
+            <li><strong>Chất lượng:</strong> Sản phẩm được chọn lọc kỹ càng, rõ nguồn gốc và đảm bảo an toàn vệ sinh thực phẩm.</li>
+            <li><strong>Chuyên nghiệp:</strong> Dịch vụ thân thiện, tận tâm, giao hàng đúng hẹn và hỗ trợ khách hàng nhanh chóng.</li>
+            <li><strong>Sáng tạo:</strong> Không ngừng cập nhật món mới, cải tiến trải nghiệm người dùng và mang đến sự bất ngờ thú vị.</li>
+        </ol>
+    </div>
+
+    <div class="mb-4">
+        <h4 class="fw-semibold">Đội ngũ nhân sự</h4>
+        <p>
+            Đằng sau mỗi đơn hàng là một đội ngũ trẻ trung, năng động và đầy nhiệt huyết. Chúng tôi cùng nhau học hỏi, phát triển và cống hiến để mang lại dịch vụ tốt nhất cho cộng đồng yêu ẩm thực vặt.
+        </p>
+    </div>
+
+    <div class="mb-4">
+        <h4 class="fw-semibold">Cam kết phát triển bền vững</h4>
+        <p>
+            MomoFood không chỉ quan tâm đến kinh doanh, mà còn đặt trọng tâm vào trách nhiệm xã hội. Chúng tôi luôn nỗ lực đóng góp vào các hoạt động cộng đồng và bảo vệ môi trường thông qua những hành động thiết thực.
+        </p>
+    </div>
+
+    <div class="mb-4">
+        <h4 class="fw-semibold">Tầm nhìn tương lai</h4>
+        <p>
+            Chúng tôi mong muốn trở thành nền tảng đồ ăn vặt trực tuyến hàng đầu Việt Nam, không ngừng mở rộng hệ thống, nâng cao chất lượng sản phẩm và mang đến trải nghiệm tuyệt vời cho khách hàng ở mọi miền đất nước.
+        </p>
+    </div>
+
+    <div class="mb-5">
+        <h4 class="fw-semibold">Lời kết</h4>
+        <p>
+            Hãy đồng hành cùng <strong>MomoFood</strong> – nơi mỗi món ăn vặt đều là một phần ký ức tuổi thơ, một niềm vui hiện tại và một trải nghiệm đáng nhớ. Cùng nhau, chúng ta biến mỗi lần "thèm ăn vặt" thành một cơ hội khám phá hương vị mới!
+        </p>
+    </div>
+
+    <div class="text-center mt-5">
+        <h5 class="fw-bold text-success">❤️ MomoFood – Đồ ăn vặt cho mọi khoảnh khắc!</h5>
+    </div>
+</div>
 @endsection

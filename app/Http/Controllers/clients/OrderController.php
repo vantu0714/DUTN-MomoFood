@@ -212,7 +212,8 @@ class OrderController extends Controller
             DB::commit();
 
             session()->forget(['promotion', 'discount']);
-            return redirect()->route('carts.index')->with('success', 'Đặt hàng thành công!');
+            // return redirect()->route('carts.index')->with('success', 'Đặt hàng thành công!');
+            return view('clients.order-success');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
