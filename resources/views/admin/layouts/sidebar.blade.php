@@ -1,11 +1,14 @@
 <nav class="sidebar vertical-scroll  ps-container ps-theme-default ps-active-y">
-    <div class="logo d-flex justify-content-between align-items-center">
-        <a href="{{ route('admin.dashboard')}}">
-            <img src="{{ asset('admins/assets/img/image copy.png') }}"alt="Logo" style="max-width: 210px;"></a>
-        <div class="sidebar_close_icon d-lg-none">
-            <i class="ti-close"></i>
-        </div>
+    <div class="logo text-center py-1 position-relative">
+    <a href="{{ route('admin.dashboard') }}">
+        <img src="{{ asset('admins/assets/img/image copy.png') }}" alt="Logo" style="max-width: 100px;">
+    </a>
+    <div class="sidebar_close_icon d-lg-none position-absolute" style="top: 10px; right: 10px;">
+        <i class="ti-close"></i>
     </div>
+</div>
+
+
     <ul id="sidebar_menu">
         <li class="mm-active">
             <a class="has-arrow" href="{{ route('admin.dashboard') }}" aria-expanded="false">

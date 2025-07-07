@@ -1,28 +1,32 @@
 <!-- Navbar với active state động -->
 <div class="container-fluid fixed-top">
     <!-- Topbar -->
-    <div class="container topbar bg-primary d-none d-lg-block">
-        <div class="d-flex justify-content-between">
+    <div class="bg-momo-gradient py-2 border-bottom border-white border-opacity-25">
+        <div class="container d-flex justify-content-between align-items-center">
             <div class="top-info ps-2">
-                <small class="me-3"><i class="fas fa-map-marker-alt me-2 text-secondary"></i><a href="#"
-                        class="text-white">1 Trịnh Văn Bô, Hà Nội</a></small>
-                <small class="me-3"><i class="fas fa-envelope me-2 text-secondary"></i><a href="#"
-                        class="text-white">momofood@gmail.com</a></small>
+                <small class="me-4 text-white">
+                    <i class="fas fa-map-marker-alt me-1 text-warning"></i>
+                    1 Trịnh Văn Bô, Hà Nội
+                </small>
+                <small class="me-4 text-white">
+                    <i class="fas fa-envelope me-1 text-warning"></i>
+                    momofood@gmail.com
+                </small>
             </div>
             <div class="top-link pe-2">
-                <a href="#" class="text-white"><small class="text-white mx-2">Chính sách bảo mật</small></a>
-                <a href="#" class="text-white"><small class="text-white mx-2">Điều khoản sử dụng</small></a>
-                <a href="#" class="text-white"><small class="text-white ms-2">Bán hàng và hoàn tiền</small></a>
+                <a href="#" class="text-white me-3">Chính sách bảo mật</a>
+                <a href="#" class="text-white me-3">Điều khoản sử dụng</a>
+                <a href="#" class="text-white">Bán hàng và hoàn tiền</a>
             </div>
         </div>
     </div>
 
-    <!-- Main navbar -->
-    <div class="container px-0">
-        <nav class="navbar navbar-light bg-white navbar-expand-xl w-100">
+    <!-- Main Navbar -->
+    <div class="bg-white py-3 shadow-sm">
+        <div class="container d-flex align-items-center justify-content-between">
             <!-- Logo -->
-            <a href="{{ route('home') }}" class="navbar-brand">
-                <img class="img-logo" src="{{ asset('clients/img/logo_datn.png') }}" alt="">
+            <a href="{{ route('home') }}" class="navbar-brand d-flex align-items-center me-4">
+                <img src="{{ asset('clients/img/logo_datn.png') }}" alt="Logo" style="max-height: 55px;">
             </a>
 
             <!-- Collapsible menu -->
@@ -73,7 +77,7 @@
 
                     <!-- Cart -->
                     <a href="{{ route('carts.index') }}" class="position-relative me-4 my-auto">
-                        <i class="fa fa-shopping-bag fa-2x"></i>
+                        <i class="bi bi-cart3 fa-2x text-danger"></i>
                         <span id="cart-count"
                             class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
                             style="top: -5px; left: 15px; height: 20px; min-width: 20px;">
@@ -101,9 +105,10 @@
                     @endguest
                 </div>
             </div>
-        </nav>
+        </div>
     </div>
 </div>
+<!-- Navbar End -->
 
 <script>
     // JavaScript solution để xử lý active state
@@ -148,20 +153,46 @@
 </script>
 
 <style>
-    /* CSS để đảm bảo active state hoạt động đúng */
-    .navbar .navbar-nav .nav-link {
+    /* Màu nền cam nhạt */
+    .bg-momo-gradient {
+         background: linear-gradient(to right, #db735b, #d56a58);
+    }
+
+    /* NAVIGATION LINKS */
+    .navbar-nav .nav-link {
+        font-weight: 500;
+        color: #333 !important;
+        transition: all 0.3s ease-in-out;
+        padding: 10px 15px;
         position: relative;
-        transition: all 0.3s ease;
     }
 
-    .navbar .navbar-nav .nav-link.active {
-        color: var(--bs-primary) !important;
-        background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+    /* Hover effect */
+    .navbar-nav .nav-link:hover {
+        color: #b54d00 !important;
     }
 
-    /* Đảm bảo active state không bị override bởi hover */
-    .navbar .navbar-nav .nav-link.active:hover {
-        color: var(--bs-primary) !important;
-        background-color: rgba(var(--bs-primary-rgb), 0.15) !important;
+    /* Active state */
+    .navbar-nav .nav-link.active {
+        color: #b54d00 !important;
+        border-bottom: 2px solid #b54d00;
+        background-color: transparent;
+    }
+
+    /* Tách topbar và navbar bằng border */
+    .topbar {
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* Placeholder input */
+    .input-group input[type="search"]::placeholder {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    /* Optional: căn giữa vertically nếu cần */
+    .navbar-brand img {
+        max-height: 55px;
     }
 </style>
+
