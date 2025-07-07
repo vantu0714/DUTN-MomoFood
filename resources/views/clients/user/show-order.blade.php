@@ -58,7 +58,7 @@
             <div class="card-header bg-white border-bottom-0">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="mb-0 text-orange" style="font-family: 'Open Sans', sans-serif">Chi tiết đơn hàng
+                        <h4 class="mb-0" style="font-family: 'Open Sans', sans-serif">Chi tiết đơn hàng
                             #{{ $order->order_code }}
                         </h4>
                         <small class="text-muted">Ngày đặt: {{ $order->created_at->format('d/m/Y') }}</small>
@@ -77,7 +77,7 @@
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header bg-light">
-                                <h6 class="mb-0 text-orange fw-semibold">Thông tin nhận hàng</h6>
+                                <h6 class="mb-0 fw-semibold">Thông tin nhận hàng</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -122,7 +122,7 @@
 
                 <div class="card mb-4">
                     <div class="card-header bg-light">
-                        <h6 class="mb-0 text-orange fw-semibold">Sản phẩm trong đơn hàng</h6>
+                        <h6 class="mb-0 fw-semibold">Sản phẩm trong đơn hàng</h6>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover mb-0" style="table-layout: fixed;">
@@ -249,10 +249,6 @@
             :root {
                 --orange-primary: rgb(219, 115, 91);
                 --orange-hover: rgb(190, 90, 68);
-            }
-
-            .text-orange {
-                color: var(--orange-primary) !important;
             }
 
             .bg-orange {
