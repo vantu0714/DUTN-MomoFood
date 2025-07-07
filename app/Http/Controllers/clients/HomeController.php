@@ -22,7 +22,7 @@ class HomeController extends Controller
                 // Điều kiện cho sản phẩm đơn
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
-                        ->where('quantity', '>', 0)
+                        ->where('quantity_in_stock', '>', 0)
                         ->where('status', 1);
                 })
                     // Hoặc điều kiện cho sản phẩm có biến thể CÒN HÀNG
@@ -49,7 +49,7 @@ class HomeController extends Controller
         $bestSellingProducts = Product::with('category')
             ->where('product_type', 'simple')
             ->where('status', 1) // Đã đổi từ 'Còn hàng' sang 1
-            ->where('quantity', '>', 0)
+            ->where('quantity_in_stock', '>', 0)
             ->inRandomOrder()
             ->take(8)
             ->get();
@@ -80,7 +80,7 @@ class HomeController extends Controller
                 // Sản phẩm đơn còn hàng
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
-                        ->where('quantity', '>', 0);
+                        ->where('quantity_in_stock', '>', 0);
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {

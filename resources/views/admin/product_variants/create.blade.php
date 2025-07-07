@@ -55,7 +55,7 @@
                                             <i class="fas fa-seedling me-2"></i>Vị
                                         </th>
                                         <th class="py-4 fw-bold text-center" style="font-size: 1rem;">
-                                            <i class="fas fa-expand-arrows-alt me-2"></i>Size
+                                            <i class="fas fa-expand-arrows-alt me-2"></i>khối lượng
                                         </th>
                                         <th class="py-4 fw-bold text-center" style="font-size: 1rem;">
                                             <i class="fas fa-image me-2"></i>Ảnh
@@ -235,7 +235,7 @@
                                                     <button type="button"
                                                         class="btn btn-success btn-sm add-sub-attribute"
                                                         style="font-size: 1rem;">
-                                                        <i class="fas fa-plus me-1"></i> Thêm size khác
+                                                        <i class="fas fa-plus me-1"></i> Thêm khối lượng khác
                                                     </button>
                                                 </div>
                                             </div>
