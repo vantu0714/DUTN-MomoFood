@@ -21,15 +21,14 @@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom-0 py-3">
-                        <h5 class="mb-0 fw-bold" style="color: rgb(219, 115, 91)">
+                        <h5 class="mb-0 fw-bold">
                             <i class="bi bi-person-circle me-2"></i>Thông tin tài khoản
                         </h5>
                     </div>
                     <div class="card-body text-center px-4">
                         <div class="position-relative d-inline-block mb-3">
                             <img class="rounded-circle border border-4 shadow-sm" src="{{ auth()->user()->avatar_url }}"
-                                alt="{{ auth()->user()->name }}" width="150" height="150"
-                                style="object-fit: cover; border-color: rgb(219, 115, 91)">
+                                alt="{{ auth()->user()->name }}" width="150" height="150" style="object-fit: cover">
                         </div>
                         <h4 class="mt-2 mb-2 fw-bold">{{ Auth::user()->name }}</h4>
                         <div class="d-flex justify-content-center align-items-center text-muted small">
@@ -43,14 +42,14 @@
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white border-bottom-0 py-3">
-                        <h5 class="mb-0 fw-bold" style="color: rgb(219, 115, 91)">
+                        <h5 class="mb-0 fw-bold">
                             <i class="bi bi-info-circle me-2"></i>Chi tiết thông tin
                         </h5>
                     </div>
 
                     <div class="card-body">
                         <div class="mb-4">
-                            <h6 class="d-flex align-items-center mb-3" style="color: rgb(219, 115, 91)">
+                            <h6 class="d-flex align-items-center mb-3">
                                 <i class="bi bi-person-circle me-2"></i>Thông tin cá nhân
                             </h6>
                             <div class="row g-3">
@@ -70,7 +69,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <h6 class="d-flex align-items-center mb-3" style="color: rgb(219, 115, 91)">
+                            <h6 class="d-flex align-items-center mb-3">
                                 <i class="bi bi-telephone me-2"></i>Thông tin liên hệ
                             </h6>
                             <div class="row g-3">

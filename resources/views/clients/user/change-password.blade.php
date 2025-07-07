@@ -19,7 +19,7 @@
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom-0 py-3">
-                        <h5 class="mb-0 fw-bold" style="color: rgb(219, 115, 91)">
+                        <h5 class="mb-0 fw-bold">
                             <i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu
                         </h5>
                     </div>
@@ -27,7 +27,7 @@
                         <form method="POST" action="{{ route('clients.updatepassword') }}">
                             @csrf
                             <div class="mb-4">
-                                <h6 class="d-flex align-items-center mb-3" style="color: rgb(219, 115, 91)">
+                                <h6 class="d-flex align-items-center mb-3">
                                     <i class="bi bi-key me-2"></i>Thông tin mật khẩu
                                 </h6>
 
