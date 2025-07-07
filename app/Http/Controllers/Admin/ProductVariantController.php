@@ -55,9 +55,6 @@ class ProductVariantController extends Controller
             'stockFilter' => $request->input('stock_filter'),
         ]);
     }
-
-
-
     public function create(Request $request)
     {
         $productId = $request->input('product_id');
@@ -77,24 +74,27 @@ class ProductVariantController extends Controller
 
         return view('admin.product_variants.create', compact('product', 'attributes', 'sizeValues'));
     }
-
-
-
-
-
     public function store(Request $request)
     {
         DB::beginTransaction();
 
         try {
-            // Lấy dữ liệu từ session nếu chưa có product_id
-            $pendingProduct = Session::get('pending_product');
+            // Validate dữ liệu đầu vào
+            $request->validate([
+                'variants.*.main_attribute.name' => 'required|string|max:255',
+                'variants.*.main_attribute.value' => 'required|string|max:255',
+                'variants.*.sub_attributes.*.attribute_value_id' => 'required|exists:attribute_values,id',
+                'variants.*.sub_attributes.*.price' => 'required|numeric|min:0',
+                'variants.*.sub_attributes.*.quantity_in_stock' => 'required|integer|min:0',
+            ]);
 
+            // Lấy sản phẩm từ session nếu chưa có product_id
+            $pendingProduct = Session::get('pending_product');
             if (!$request->filled('product_id') && !$pendingProduct) {
                 return redirect()->route('admin.products.create')->with('error', 'Thông tin sản phẩm bị thiếu.');
             }
 
-            // Tạo product nếu chưa tồn tại
+            // Tạo sản phẩm nếu chưa tồn tại
             if (!$request->filled('product_id')) {
                 $product = Product::create($pendingProduct);
                 $productId = $product->id;
@@ -104,31 +104,31 @@ class ProductVariantController extends Controller
                 $product = Product::findOrFail($productId);
             }
 
+            // Xử lý các biến thể
             $variantsData = $request->input('variants', []);
 
             foreach ($variantsData as $variantIndex => $variant) {
-                // Xử lý thuộc tính chính (ví dụ: Vị)
+                // Thuộc tính chính (ví dụ: Vị)
                 $mainAttrName = trim($variant['main_attribute']['name']);
                 $mainAttrValue = trim($variant['main_attribute']['value']);
 
-                // Tạo hoặc tìm Attribute + AttributeValue cho thuộc tính chính
                 $mainAttribute = Attribute::firstOrCreate(['name' => $mainAttrName]);
                 $mainAttrVal = AttributeValue::firstOrCreate([
                     'attribute_id' => $mainAttribute->id,
-                    'value' => $mainAttrValue
+                    'value' => $mainAttrValue,
                 ]);
 
+                // Xử lý từng sub-attribute (ví dụ: Size)
                 foreach ($variant['sub_attributes'] as $subIndex => $subAttr) {
                     $variantModel = new ProductVariant();
                     $variantModel->product_id = $productId;
-                    $variantModel->price = $subAttr['price'];
-                    $variantModel->quantity_in_stock = $subAttr['quantity_in_stock'] ?? 0;
+                    $variantModel->price = (float) $subAttr['price'];
+                    $variantModel->quantity_in_stock = isset($subAttr['quantity_in_stock']) ? (int) $subAttr['quantity_in_stock'] : 0;
                     $variantModel->sku = $subAttr['sku'] ?? null;
 
-                    // Xử lý ảnh upload
+                    // Upload ảnh nếu có
                     $imageInputName = "variants.$variantIndex.sub_attributes.$subIndex.image";
                     $uploadedFile = $request->file($imageInputName);
-
                     if ($uploadedFile instanceof \Illuminate\Http\UploadedFile) {
                         $imagePath = $uploadedFile->store('product_variants', 'public');
                         $variantModel->image = $imagePath;
@@ -145,8 +145,8 @@ class ProductVariantController extends Controller
                 }
             }
 
-            // Cập nhật trạng thái sản phẩm (có thể là: active)
-            $this->updateProductStatus($productId);
+            // Cập nhật tồn kho và trạng thái cho sản phẩm chính
+            $this->updateProductStockAndStatus($product);
 
             DB::commit();
 
@@ -156,6 +156,20 @@ class ProductVariantController extends Controller
             return back()->withErrors(['error' => 'Đã xảy ra lỗi: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Cập nhật tổng số lượng tồn kho và trạng thái cho sản phẩm
+     */
+    protected function updateProductStockAndStatus(Product $product)
+    {
+        $totalStock = ProductVariant::where('product_id', $product->id)->sum('quantity_in_stock');
+
+        $product->update([
+            'quantity_in_stock' => $totalStock,
+            'status' => $totalStock > 0 ? 1 : 0,
+        ]);
+    }
+
 
     public function edit($id)
     {

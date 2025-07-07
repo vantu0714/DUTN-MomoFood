@@ -235,7 +235,7 @@
                                                     <button type="button"
                                                         class="btn btn-success btn-sm add-sub-attribute"
                                                         style="font-size: 1rem;">
-                                                        <i class="fas fa-plus me-1"></i> Thêm size
+                                                        <i class="fas fa-plus me-1"></i> Thêm size khác
                                                     </button>
                                                 </div>
                                             </div>

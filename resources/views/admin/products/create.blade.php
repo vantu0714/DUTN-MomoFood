@@ -1,5 +1,4 @@
 @extends('admin.layouts.app')
-
 @section('content')
     <div class="container-fluid mt-4">
         <div class="row justify-content-center">
@@ -147,7 +146,6 @@
                                         @enderror
                                     </div>
                                 </div>
-
                                 <!-- Cột phải -->
                                 <div class="col-md-6">
                                     <!-- Giá gốc -->
@@ -173,7 +171,6 @@
                                             </div>
                                         @enderror
                                     </div>
-
                                     <!-- % Giảm giá -->
                                     <div class="form-group mb-4">
                                         <label class="form-label fw-semibold">
@@ -187,14 +184,13 @@
                                         </div>
                                         <small class="text-muted">Để trống nếu không có giảm giá</small>
                                     </div>
-
                                     <!-- Giá khuyến mãi -->
                                     <div class="form-group mb-4">
                                         <label class="form-label fw-semibold">
                                             <i class="fas fa-tags text-primary me-2"></i>Giá khuyến mãi
                                         </label>
                                         <div class="input-group input-group-lg">
-                                         <input type="number" step="any" name="discounted_price"
+                                            <input type="number" step="any" name="discounted_price"
                                                 id="discounted_price" class="form-control border-2" placeholder="0"
                                                 value="{{ old('discounted_price') }}">
                                             <span class="input-group-text bg-success text-white fw-semibold">VND</span>
@@ -214,14 +210,13 @@
                                             </div>
                                         @enderror
                                     </div>
-
                                     <!-- Số lượng -->
-                                    <div class="form-group mb-4">
+                                    <div class="form-group mb-4" id="stockQuantityWrapper">
                                         <label class="form-label fw-semibold">
                                             <i class="fas fa-boxes text-primary me-2"></i>Số lượng trong kho
                                             <span class="text-danger">*</span>
                                         </label>
-                                        <input type="number" name="quantity_in_stock"
+                                        <input type="number" name="quantity_in_stock" id="quantity_in_stock"
                                             class="form-control form-control-lg border-2" placeholder="0"
                                             value="{{ old('quantity_in_stock', 0) }}" min="0">
                                         @error('quantity_in_stock')
@@ -232,9 +227,8 @@
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Mô tả sản phẩm -->
-                            <div class="form-group mb-4">
+                            <div class="form-group mb-4" id="stockQuantityWrapper">
                                 <label class="form-label fw-semibold">
                                     <i class="fas fa-align-left text-primary me-2"></i>Mô tả sản phẩm
                                 </label>
@@ -246,7 +240,6 @@
                                     </div>
                                 @enderror
                             </div>
-
                             <!-- Buttons -->
                             <div class="form-group mb-0">
                                 <div class="d-flex gap-3 justify-content-center">
@@ -269,126 +262,143 @@
 
 @push('scripts')
     <script>
-        const originalInput = document.getElementById('original_price');
-        const percentInput = document.getElementById('discount_percent');
-        const discountInput = document.getElementById('discounted_price');
-        const originalDisplay = document.getElementById('original_price_display');
-        const discountedDisplay = document.getElementById('discounted_price_display');
-
-        // Format số thành VND
-        function formatVND(amount) {
-            if (!amount || amount === 0) return '0 VND';
-            return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
-        }
-
-        // Cập nhật giá khuyến mãi
-        function updateDiscountedPrice() {
-            const original = parseFloat(originalInput.value) || 0;
-            const percent = parseFloat(percentInput.value) || 0;
-
-            // Cập nhật hiển thị giá gốc
-            originalDisplay.textContent = formatVND(original);
-
-            if (original > 0 && percent > 0) {
-                const discounted = original * (1 - percent / 100);
-
-                discountInput.value = Math.round(discounted);
-                discountedDisplay.textContent = formatVND(discounted);
-            } else {
-                discountedDisplay.textContent = formatVND(parseFloat(discountInput.value) || 0);
-            }
-        }
-
-        // Cập nhật hiển thị giá khuyến mãi khi nhập trực tiếp
-        function updateDiscountedDisplay() {
-            const discounted = parseFloat(discountInput.value) || 0;
-            discountedDisplay.textContent = formatVND(discounted);
-        }
-
-        // Xử lý upload ảnh
-        function handleImageUpload(input) {
-            const file = input.files[0];
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const originalInput = document.getElementById('original_price');
+            const percentInput = document.getElementById('discount_percent');
+            const discountInput = document.getElementById('discounted_price');
+            const originalDisplay = document.getElementById('original_price_display');
+            const discountedDisplay = document.getElementById('discounted_price_display');
+            const productTypeSelect = document.querySelector('select[name="product_type"]');
+            const stockQuantityWrapper = document.getElementById('stockQuantityWrapper');
+            const stockQuantityInput = document.getElementById('quantity_in_stock');
+            const uploadArea = document.querySelector('.upload-area');
+            const imageInput = document.getElementById('imageInput');
             const preview = document.getElementById('imagePreview');
             const previewImg = document.getElementById('previewImg');
+            const form = document.getElementById('product-form');
 
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
-                    preview.classList.remove('d-none');
-                };
-                reader.readAsDataURL(file);
+            // Format tiền
+            function formatVND(amount) {
+                if (!amount || amount === 0) return '0 VND';
+                return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
             }
-        }
 
-        // Xóa ảnh
-        function removeImage() {
-            document.getElementById('imageInput').value = '';
-            document.getElementById('imagePreview').classList.add('d-none');
-        }
+            // Cập nhật giá khuyến mãi khi nhập phần trăm
+            function updateDiscountedPrice() {
+                const original = parseFloat(originalInput.value) || 0;
+                const percent = parseFloat(percentInput.value) || 0;
 
-        // Event listeners
-        originalInput.addEventListener('input', updateDiscountedPrice);
-        percentInput.addEventListener('input', updateDiscountedPrice);
-        discountInput.addEventListener('input', updateDiscountedDisplay);
-        document.getElementById('imageInput').addEventListener('change', function() {
-            handleImageUpload(this);
-        });
+                originalDisplay.textContent = formatVND(original);
 
-        // Validation khi submit
-        document.getElementById('product-form').addEventListener('submit', function(e) {
-            const original = parseFloat(originalInput.value) || 0;
-            const discount = parseFloat(discountInput.value) || 0;
+                if (original > 0 && percent > 0) {
+                    const discounted = original * (1 - percent / 100);
+                    discountInput.value = Math.round(discounted);
+                    discountedDisplay.textContent = formatVND(discounted);
+                } else {
+                    discountedDisplay.textContent = formatVND(parseFloat(discountInput.value) || 0);
+                }
+            }
 
-            if (original > 0 && discount > 0 && discount > original) {
+            // Cập nhật giá khuyến mãi khi nhập trực tiếp
+            function updateDiscountedDisplay() {
+                const discounted = parseFloat(discountInput.value) || 0;
+                discountedDisplay.textContent = formatVND(discounted);
+            }
+
+            // Reset phần trăm nếu người dùng chỉnh giá khuyến mãi trực tiếp
+            discountInput.addEventListener('input', function() {
+                percentInput.value = '';
+                updateDiscountedDisplay();
+            });
+
+            // Ẩn/hiện ô nhập số lượng theo loại sản phẩm
+            function toggleStockQuantity() {
+                const isVariant = productTypeSelect.value === 'variant';
+                stockQuantityWrapper.style.display = isVariant ? 'none' : 'block';
+
+                if (isVariant) {
+                    // Nếu là sản phẩm có biến thể, xóa name để không gửi
+                    stockQuantityInput.removeAttribute('name');
+                } else {
+                    stockQuantityInput.setAttribute('name', 'quantity_in_stock');
+                }
+            }
+            // Upload ảnh
+            function handleImageUpload(input) {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        preview.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Xóa ảnh
+            window.removeImage = function() {
+                imageInput.value = '';
+                preview.classList.add('d-none');
+            };
+
+            // Drag & Drop
+            function preventDefaults(e) {
                 e.preventDefault();
-                alert('Giá khuyến mãi không được lớn hơn giá gốc!');
-                discountInput.focus();
+                e.stopPropagation();
             }
-        });
 
-        // Khởi tạo giá trị ban đầu
-        updateDiscountedPrice();
-
-        // Drag & Drop cho upload ảnh
-        const uploadArea = document.querySelector('.upload-area');
-        const imageInput = document.getElementById('imageInput');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight(e) {
-            uploadArea.classList.add('border-primary', 'bg-light');
-        }
-
-        function unhighlight(e) {
-            uploadArea.classList.remove('border-primary', 'bg-light');
-        }
-
-        uploadArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-
-            if (files.length > 0) {
-                imageInput.files = files;
-                handleImageUpload(imageInput);
+            function highlight(e) {
+                uploadArea.classList.add('border-primary', 'bg-light');
             }
-        }
+
+            function unhighlight(e) {
+                uploadArea.classList.remove('border-primary', 'bg-light');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    imageInput.files = files;
+                    handleImageUpload(imageInput);
+                }
+            }
+
+            // Validate trước khi submit
+            form.addEventListener('submit', function(e) {
+                const original = parseFloat(originalInput.value) || 0;
+                const discount = parseFloat(discountInput.value) || 0;
+                if (original > 0 && discount > original) {
+                    e.preventDefault();
+                    alert('Giá khuyến mãi không được lớn hơn giá gốc!');
+                    discountInput.focus();
+                }
+            });
+
+            // Event bindings
+            originalInput.addEventListener('input', updateDiscountedPrice);
+            percentInput.addEventListener('input', updateDiscountedPrice);
+            imageInput.addEventListener('change', function() {
+                handleImageUpload(this);
+            });
+            productTypeSelect.addEventListener('change', toggleStockQuantity);
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+                uploadArea.addEventListener(event, preventDefaults, false);
+            });
+            ['dragenter', 'dragover'].forEach(event => {
+                uploadArea.addEventListener(event, highlight, false);
+            });
+            ['dragleave', 'drop'].forEach(event => {
+                uploadArea.addEventListener(event, unhighlight, false);
+            });
+            uploadArea.addEventListener('drop', handleDrop, false);
+
+            // Khởi tạo ban đầu
+            toggleStockQuantity();
+            updateDiscountedPrice();
+        });
     </script>
 @endpush

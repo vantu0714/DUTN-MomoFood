@@ -74,5 +74,13 @@ class ProductVariant extends Model
     {
         return $this->image ? asset('storage/' . $this->image) : asset('images/no-image.png');
     }
-    
+    public function getFlavorAttribute()
+    {
+        return optional($this->attributeValues->firstWhere('attribute.name', 'Vị'))->value;
+    }
+
+    public function getSizeAttribute()
+    {
+        return optional($this->attributeValues->firstWhere('attribute.name', 'Size'))->value;
+    }
 }
