@@ -154,6 +154,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         //Route thêm biến thể cho nhiều sản phẩm
         Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
         Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
+        Route::get('/cancel', [ProductVariantController::class, 'cancel'])->name('cancel');
     });
 
 
