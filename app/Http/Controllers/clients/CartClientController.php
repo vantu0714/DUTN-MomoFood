@@ -44,6 +44,14 @@ class CartClientController extends Controller
             return redirect()->route('login')->with('error', 'Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.');
         }
 
+        if (Auth::user()->status == 0) {
+            if ($request->ajax()) {
+                Auth::logout();
+                session()->flash('error', 'Tài khoản của bạn đã bị khóa.Vui lòng liên hệ quản trị viên để kiểm tra.');
+                return response()->json(['status' => 'blocked'], 403);
+            }
+        }
+
         $userId = Auth::id();
         $productId = $request->input('product_id');
         $variantId = $request->input('product_variant_id');
@@ -129,9 +137,9 @@ class CartClientController extends Controller
             $total = $cart->items()->sum('total_price');
 
             return response()->json([
-                'success'  => true,
+                'success' => true,
                 'subtotal' => number_format($item->total_price, 0, ',', '.'),
-                'total'    => number_format($total + 30000, 0, ',', '.') // phí ship
+                'total' => number_format($total + 30000, 0, ',', '.') // phí ship
             ]);
         }
         return response()->json(['success' => false], 404);

@@ -161,14 +161,14 @@ class UserController extends Controller
 
         if (Auth::id() == $user->id) {
             dd(Auth::id(), $id, $user);
-            return redirect()->route('users.index')
+            return redirect()->route('admin.users.index')
                 ->with('error', 'Bạn không thể khóa tài khoản đang đăng nhập.');
         }
 
         $user->status = $user->status ? 0 : 1;
         $user->save();
 
-        return redirect()->route('users.index')
+        return redirect()->route('admin.users.index')
             ->with('success', 'Đã cập nhật trạng thái tài khoản.');
     }
 }

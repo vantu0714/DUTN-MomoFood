@@ -388,7 +388,7 @@
                         product_variant_id: variantId,
                         quantity: quantity
                     },
-                    success: function(res) {
+                    success: function(res) {                        
                         alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
                         // Nếu có hiển thị số lượng giỏ hàng ở header
                         if (res.cart_count !== undefined) {
@@ -397,6 +397,11 @@
                     },
                     error: function(xhr) {
                         let res = xhr.responseJSON;
+                        if(res.status == 'blocked') {
+                            window.location.href = '{{ route('login') }}';
+                            return
+                        }
+                        
                         alert(res?.message || ' Có lỗi xảy ra!');
                     }
                 });

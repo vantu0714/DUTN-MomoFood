@@ -80,7 +80,7 @@
                                 </form> --}}
 
                                 <form id="toggle-status-form-{{ $user->id }}"
-                                    action="{{ url('/users/' . $user->id . '/toggle-status') }}" method="POST"
+                                    action="{{ route('admin.users.toggleStatus', $user->id) }}" method="POST"
                                     style="display:inline-block;">
                                     @csrf
                                     @method('PATCH')
