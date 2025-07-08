@@ -2,6 +2,15 @@
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
+<script>
+    @if (session('success'))
+        showToast('{{ session('success') }}');
+    @endif
+
+    @if (session('error'))
+        showToast('{{ session('error') }}', 'error');
+    @endif
+</script>
 
 
 <!-- Modal Search Start -->
@@ -297,19 +306,34 @@
                                                     @endif
                                                 </div>
 
-                                                <form class="add-to-cart-form">
+                                                <form class="add-to-cart-form" method="POST"
+                                                    action="{{ route('carts.add') }}">
                                                     @csrf
                                                     <input type="hidden" name="product_id"
                                                         value="{{ $product->id }}">
-                                                    @if ($product->product_type === 'variant' && $product->variants->first())
+
+                                                    @php
+                                                        $firstAvailableVariant =
+                                                            $product->product_type === 'variant'
+                                                                ? $product->variants->firstWhere(
+                                                                    'quantity_in_stock',
+                                                                    '>',
+                                                                    0,
+                                                                )
+                                                                : null;
+                                                    @endphp
+
+                                                    @if ($firstAvailableVariant)
                                                         <input type="hidden" name="product_variant_id"
-                                                            value="{{ $product->variants->first()->id }}">
+                                                            value="{{ $firstAvailableVariant->id }}">
                                                     @endif
+
                                                     <input type="hidden" name="quantity" value="1">
-                                                    <button type="submit" class="btn btn-white p-0">
-                                                        <i class="bi bi-cart3 fa-lg text-danger"></i>
+                                                    <button type="submit" class="btn btn-white">
+                                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
                                                     </button>
                                                 </form>
+
 
                                             </div>
                                         </div>
@@ -365,42 +389,24 @@
         });
     </script>
 
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
-        $(document).ready(function() {
-            $('.add-to-cart-form').on('submit', function(e) {
-                e.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (session('success') || session('error'))
+                let message = "{{ session('success') ?? session('error') }}";
+                let isError = {{ session('error') ? 'true' : 'false' }};
 
-                let form = $(this);
-                let token = form.find('input[name="_token"]').val();
-                let productId = form.find('input[name="product_id"]').val();
-                let variantId = form.find('input[name="product_variant_id"]').val();
-                let quantity = form.find('input[name="quantity"]').val() || 1;
+                const container = document.getElementById('toast-container');
+                const messageEl = document.getElementById('toast-message');
 
-                $.ajax({
-                    url: '{{ route('carts.add') }}',
-                    type: 'POST',
-                    data: {
-                        _token: token,
-                        product_id: productId,
-                        product_variant_id: variantId,
-                        quantity: quantity
-                    },
-                    success: function(res) {
-                        alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
-                        // Nếu có hiển thị số lượng giỏ hàng ở header
-                        if (res.cart_count !== undefined) {
-                            $('#cart-count').text(res.cart_count);
-                        }
-                    },
-                    error: function(xhr) {
-                        let res = xhr.responseJSON;
-                        alert(res?.message || ' Có lỗi xảy ra!');
-                    }
-                });
-            });
+                messageEl.textContent = message;
+                container.classList.remove('d-none');
+                if (isError) container.classList.add('toast-error');
+
+                setTimeout(() => {
+                    container.classList.add('d-none');
+                    container.classList.remove('toast-error');
+                }, 4000);
+            @endif
         });
     </script>
 
