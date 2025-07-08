@@ -2,6 +2,20 @@
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+@endif
+
 <!-- Spinner Start -->
 <div id="spinner"
     class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50  d-flex align-items-center justify-content-center">
@@ -130,11 +144,11 @@
                                 class="text-decoration-none text-dark category-tab"data-category="">Tất cả</a>
                         </li>
                         @foreach ($categories as $category)
-                            <li
-                                class="list-group-item {{ request()->get('category_id') == $category->id ? 'active' : '' }}">
-                                <a href="javascript:void(0);" class="text-decoration-none text-dark category-tab"
-                                    data-category="{{ $category->id }}">
-                                    {{ $category->category_name }}
+                            <li class="nav-item">
+                                <a class="d-flex m-2 py-2 bg-light rounded-pill category-tab"
+                                    data-category="{{ $category->id }}" href="javascript:void(0);">
+                                    <span class="text-dark"
+                                        style="width: 130px;">{{ $category->category_name }}</span>
                                 </a>
                             </li>
                         @endforeach
@@ -154,6 +168,7 @@
                     <div class="tab-content">
                         <div id="tab-1" class="tab-pane fade show active p-0">
                             <div class="row g-4">
+
                                 @foreach ($products as $product)
                                     @php
                                         $firstVariant = null;
@@ -192,19 +207,34 @@
                                                     <p class="text-dark fw-bold mb-0">
                                                         {{ $price ? number_format($price, 0, ',', '.') . ' VNĐ' : 'Liên hệ' }}
                                                     </p>
-                                                    <form class="add-to-cart-form">
-                                                        @csrf
-                                                        <input type="hidden" name="product_id"
-                                                            value="{{ $product->id }}">
-                                                        @if ($product->product_type === 'variant' && $product->variants->first())
-                                                            <input type="hidden" name="product_variant_id"
-                                                                value="{{ $product->variants->first()->id }}">
-                                                        @endif
-                                                        <input type="hidden" name="quantity" value="1">
-                                                        <button type="submit" class="btn btn-white p-0">
-                                                            <i class="bi bi-cart3 fa-lg text-danger"></i>
-                                                        </button>
-                                                    </form>
+                                                     <form class="add-to-cart-form" method="POST"
+                                                    action="{{ route('carts.add') }}">
+                                                    @csrf
+                                                    <input type="hidden" name="product_id"
+                                                        value="{{ $product->id }}">
+
+                                                    @php
+                                                        $firstAvailableVariant =
+                                                            $product->product_type === 'variant'
+                                                                ? $product->variants->firstWhere(
+                                                                    'quantity_in_stock',
+                                                                    '>',
+                                                                    0,
+                                                                )
+                                                                : null;
+                                                    @endphp
+
+                                                    @if ($firstAvailableVariant)
+                                                        <input type="hidden" name="product_variant_id"
+                                                            value="{{ $firstAvailableVariant->id }}">
+                                                    @endif
+
+                                                    <input type="hidden" name="quantity" value="1">
+                                                    <button type="submit" class="btn btn-white">
+                                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
+                                                    </button>
+                                                </form>
+
                                                 </div>
                                             </div>
                                         </div>
@@ -271,64 +301,71 @@
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
     <div class="container py-5">
-        <h1 class="mb-0">SẢN PHẨM BÁN CHẠY</h1>
+        <h1 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h1>
         <div class="owl-carousel vegetable-carousel justify-content-center">
             @foreach ($bestSellingProducts as $product)
                 @php
                     $firstVariant = null;
                     $price = null;
+                    $original = null;
 
                     if ($product->product_type === 'variant') {
                         $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
                         $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
+                        $original = $firstVariant?->price ?? 0;
                     } else {
                         $price = $product->discounted_price ?? $product->original_price;
+                        $original = $product->original_price;
                     }
                 @endphp
 
-                <div class="product-card d-flex flex-column h-100">
+                <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
                     <div class="position-relative">
                         <a href="{{ route('product-detail.show', $product->id) }}">
-                            <div class="product-img-wrapper">
-                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                    alt="{{ $product->product_name }}"
-                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                    class="img-fluid w-100">
-                            </div>
+                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                alt="{{ $product->product_name }}"
+                                onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                class="card-img-top" style="height: 220px; object-fit: cover;">
                         </a>
-                        <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                            style="top: 10px; right: 10px;">
-                            {{ $product->category->category_name ?? 'Không có danh mục' }}
+
+                        <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
+                            {{ $product->category->category_name ?? 'Sản phẩm' }}
+                        </span>
+
+                        {{-- App hỗ trợ --}}
+                        <div class="position-absolute top-0 end-0 m-2 d-flex flex-column align-items-center">
+                            <img src="{{ asset('clients/icons/excel.png') }}" width="24" class="mb-1">
+                            <img src="{{ asset('clients/icons/word.png') }}" width="24" class="mb-1">
+                            <img src="{{ asset('clients/icons/photoshop.png') }}" width="24" class="mb-1">
+                            <img src="{{ asset('clients/icons/premiere.png') }}" width="24">
                         </div>
                     </div>
 
-                    <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
-                        <div>
-                            <h5 class="fw-bold text-truncate">{{ $product->product_name }}</h5>
-                            <p class="description mb-3 text-muted">{{ Str::limit($product->description, 80) }}</p>
-                        </div>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
+                        <p class="text-muted small mb-3">{{ Str::limit($product->description, 60) }}</p>
 
-                        <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
-                            <span class="price fw-bold text-dark fs-5 m-0">
-                                {{ $price ? number_format($price, 0, ',', '.') : 'Liên hệ' }} <span
-                                    class="currency">đ</span>
-                            </span>
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-danger fw-bold fs-5">
+                                    {{ number_format($price, 0, ',', '.') }} <small class="text-muted">VND</small>
+                                </div>
+                                @if ($price < $original)
+                                    <div class="text-muted text-decoration-line-through small">
+                                        {{ number_format($original, 0, ',', '.') }} VND
+                                    </div>
+                                @endif
+                            </div>
 
-                            @if ($price)
-                                <form class="add-to-cart-form">
-                                    @csrf
-                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                    @if ($product->product_type === 'variant' && $firstVariant)
-                                        <input type="hidden" name="product_variant_id"
-                                            value="{{ $firstVariant->id }}">
-                                    @endif
-                                    <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn btn-white"><i
-                                            class="bi bi-cart3 fa-2x text-danger"></i></button>
-                                </form>
-                            @else
-                                <span class="text-danger">Hết hàng</span>
-                            @endif
+                            <form method="POST" action="{{ route('carts.add') }}">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                <input type="hidden" name="quantity" value="1">
+
+                                <button type="submit" class="btn btn-white">
+                                    <i class="bi bi-cart3 fa-2x text-danger"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -336,6 +373,7 @@
         </div>
     </div>
 </div>
+
 
 
 <!-- Vesitable Shop End -->
@@ -703,84 +741,63 @@
         </div>
     </div>
 </div>
-<!-- Testimonial End -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rangeInput = document.getElementById('rangeInput');
+            const output = document.getElementById('amount');
 
-<script>
-    $(document).ready(function() {
-        // Gán sự kiện click cho danh mục
-        $(document).on('click', '.category-tab', function(e) {
-            e.preventDefault();
+            function formatCurrency(value) {
+                return parseInt(value).toLocaleString('vi-VN') + ' đ';
+            }
 
-            // Xử lý đổi màu các tab
-            $('.category-tab').removeClass('active bg-warning').addClass('bg-light');
-            $('.category-tab span').removeClass('text-white').addClass('text-dark');
+            rangeInput.addEventListener('input', function() {
+                output.textContent = formatCurrency(this.value);
+            });
 
-            $(this).addClass('active bg-warning').removeClass('bg-light');
-            $(this).find('span').addClass('text-white').removeClass('text-dark');
+            // Gọi lần đầu khi tải trang
+            output.textContent = formatCurrency(rangeInput.value);
 
-            const categoryId = $(this).data('category');
-            const url = `/filter-category?category=${categoryId}`;
 
-            // Gửi AJAX lọc danh mục
-            $.get(url, function(data) {
-                $('#tab-1').html(data);
-                $('html, body').animate({
-                    scrollTop: $('#tab-1').offset().top - 100
-                }, 300);
-            }).fail(function() {
-                alert('Không thể tải sản phẩm. Vui lòng thử lại.');
+            document.addEventListener('DOMContentLoaded', function() {
+                const radios = document.querySelectorAll('input[name="price_range"]');
+                const customInputs = document.getElementById('customPriceInputs');
+
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'custom') {
+                            customInputs.style.display = '';
+                        } else {
+                            customInputs.style.display = 'none';
+                            // Clear giá trị nếu không chọn tùy chỉnh
+                            document.querySelector('input[name="min_price"]').value = '';
+                            document.querySelector('input[name="max_price"]').value = '';
+                        }
+                    });
+                });
             });
         });
+    </script>
 
-        // Gán sự kiện submit form Thêm vào giỏ bằng class
-        $(document).on('submit', '.add-to-cart-form', function(e) {
-            e.preventDefault();
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (session('success') || session('error'))
+                let message = "{{ session('success') ?? session('error') }}";
+                let isError = {{ session('error') ? 'true' : 'false' }};
 
-            let form = $(this);
-            let token = form.find('input[name="_token"]').val();
-            let productId = form.find('input[name="product_id"]').val();
-            let variantId = form.find('input[name="product_variant_id"]').val();
-            let quantity = form.find('input[name="quantity"]').val() || 1;
+                const container = document.getElementById('toast-container');
+                const messageEl = document.getElementById('toast-message');
 
-            $.ajax({
-                url: '{{ route('carts.add') }}',
-                type: 'POST',
-                data: {
-                    _token: token,
-                    product_id: productId,
-                    product_variant_id: variantId,
-                    quantity: quantity
-                },
-                success: function(res) {
-                    alert(res.message || 'Đã thêm vào giỏ hàng!');
-                    if (res.cart_count !== undefined) {
-                        $('#cart-count').text(res.cart_count);
-                    }
-                },
-                error: function(xhr) {
-                    let res = xhr.responseJSON;
-                    alert(res?.message || 'Lỗi thêm giỏ hàng.');
-                }
-            });
+                messageEl.textContent = message;
+                container.classList.remove('d-none');
+                if (isError) container.classList.add('toast-error');
+
+                setTimeout(() => {
+                    container.classList.add('d-none');
+                    container.classList.remove('toast-error');
+                }, 4000);
+            @endif
         });
-
-        // Gán sự kiện click cho phân trang AJAX
-        $(document).on('click', '.pagination a', function(e) {
-            e.preventDefault();
-            const url = $(this).attr('href');
-
-            $.get(url, function(data) {
-                $('#tab-1').html(data);
-                $('html, body').animate({
-                    scrollTop: $('#tab-1').offset().top - 100
-                }, 300);
-            }).fail(function() {
-                alert('Không thể chuyển trang.');
-            });
-        });
-    });
-</script>
+    </script>
 @include('clients.layouts.footer')
 
 
