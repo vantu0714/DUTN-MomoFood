@@ -1,7 +1,7 @@
  <!-- Footer Start -->
         <div class="container-fluid bg-dark text-white-50 footer pt-5 mt-5">
             <div class="container py-5">
-                <div class="pb-4 mb-4" style="border-bottom: 1px solid rgba(226, 175, 24, 0.5) ;">
+                <div class="pb-4 mb-4 footer-divider">
                     <div class="row g-4">
                         <div class="col-lg-3">
                             <a href="#">
@@ -104,4 +104,22 @@
     <script src="{{ asset('clients/js/main.js') }}"></script>
     </body>
 
-</html>
+<style>
+.footer-divider::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px; /* Tăng độ dày cho rõ */
+    width: 100%;
+    background: linear-gradient(to right, #db735b, #d56a58);
+    border-radius: 2px;
+    z-index: 1;
+}
+.footer-divider {
+    position: relative;
+    padding-bottom: 1.5rem; /* Thêm khoảng cách để nhìn rõ vạch */
+    margin-bottom: 2rem;
+}
+
+</style>

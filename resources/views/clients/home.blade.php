@@ -2,6 +2,19 @@
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+@endif
 
 <!-- Spinner Start -->
 <div id="spinner"
@@ -41,8 +54,7 @@
 <!-- Hero Start -->
 <!-- Hero Banner Fullscreen Start -->
 <div class="hero-banner-full">
-    <img src="https://easy-ecom.sgp1.digitaloceanspaces.com/chuchu.sgp1.digitaloceanspaces.com/m9rt4cj9fkj46mnw5hge8sully9k?response-content-disposition=inline%3B%20filename%3D%22chuchu_banner1.jpeg%22%3B%20filename%2A%3DUTF-8%27%27chuchu_banner1.jpeg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=DO00MXMNET2HF6NTEB6A%2F20250705%2Funused%2Fs3%2Faws4_request&X-Amz-Date=20250705T141101Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=52b55900dd99fc542309612aa7dbb5e23c9ff6ef17d6260017895d12ec38546b"
-        alt="Banner MomoFood">
+    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood">
 </div>
 <!-- Hero Banner Fullscreen End -->
 
@@ -118,40 +130,45 @@
 <!-- Featurs Section End -->
 
 
-<!-- Fruits Shop Start-->
+<!-- Fruits Shop Start -->
 <div class="container-fluid fruite py-5">
     <div class="container py-5">
-        <div class="tab-class text-center">
-            <div class="row g-4">
-                <div class="col-lg-4 text-start">
-                    <h1>MÓN ĂN NỔI BẬT</h1>
-                </div>
-                <div class="col-lg-8 text-end">
-                    <ul class="nav nav-pills d-inline-flex text-center mb-5" id="category-tabs">
-                        <li class="nav-item">
-                            <a class="d-flex m-2 py-2 bg-warning rounded-pill category-tab active" data-category=""
-                                href="javascript:void(0);">
-                                <span class="text-white" style="width: 130px;">Tất cả</span>
-                            </a>
+        <div class="row">
+            <!-- DANH MỤC BÊN TRÁI -->
+            <div class="col-lg-3 mb-4 mb-lg-0">
+                <div class="bg-light p-3 rounded shadow-sm">
+                    <h5 class="mb-3 text-primary"><i class="bi bi-list-ul me-2"></i>Danh mục sản phẩm</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item {{ request()->get('category_id') == '' ? 'active' : '' }}">
+                            <a href="javascript:void(0);"
+                                class="text-decoration-none text-dark category-tab"data-category="">Tất cả</a>
                         </li>
                         @foreach ($categories as $category)
                             <li class="nav-item">
                                 <a class="d-flex m-2 py-2 bg-light rounded-pill category-tab"
                                     data-category="{{ $category->id }}" href="javascript:void(0);">
-                                    <span class="text-dark" style="width: 130px;">{{ $category->category_name }}</span>
+                                    <span class="text-dark"
+                                        style="width: 130px;">{{ $category->category_name }}</span>
                                 </a>
                             </li>
                         @endforeach
+
                     </ul>
-
                 </div>
-
             </div>
-            <div class="tab-content">
-                <div id="tab-1" class="tab-pane fade show p-0 active">
+
+            <!-- DANH SÁCH SẢN PHẨM BÊN PHẢI -->
+            <div class="col-lg-9">
+                <div class="tab-class text-center">
                     <div class="row g-4">
-                        <div class="col-lg-12">
+                        <div class="col-12 text-start">
+                            <h2 class="text-success">MÓN ĂN NỔI BẬT</h2>
+                        </div>
+                    </div>
+                    <div class="tab-content">
+                        <div id="tab-1" class="tab-pane fade show active p-0">
                             <div class="row g-4">
+
                                 @foreach ($products as $product)
                                     @php
                                         $firstVariant = null;
@@ -170,16 +187,16 @@
                                                 <div class="product-img-wrapper">
                                                     <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                                         onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                                        alt="Product Image">
+                                                        class="img-fluid" alt="Product Image">
                                                 </div>
                                             </a>
-                                            <div class="text-white bg-secondary px-3 py-1 rounded position-absolute"
-                                                style="top: 10px; left: 10px;">
+                                            <div class="text-white bg-secondary px-2 py-1 rounded position-absolute"
+                                                style="top: 10px; left: 10px; font-size: 12px;">
                                                 {{ $product->category?->category_name ?? 'Không có danh mục' }}
                                             </div>
                                             <div
-                                                class="product-content p-4 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
-                                                <h4 class="text-truncate" title="{{ $product->product_name }}">
+                                                class="product-content p-3 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
+                                                <h6 class="text-truncate" title="{{ $product->product_name }}">
                                                     {{ $product->product_name }}
                                                 </h4>
                                                 <p class="text-muted text-truncate">Mã sản phẩm:
@@ -226,14 +243,17 @@
                                     </div>
                                 @endforeach
                             </div>
+
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> <!-- End right column -->
         </div>
     </div>
 </div>
-<!-- Fruits Shop End-->
+<!-- Fruits Shop End -->
+
+
 
 
 <!-- Featurs Start -->
@@ -283,22 +303,25 @@
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
     <div class="container py-5">
-        <h1 class="mb-0">SẢN PHẨM BÁN CHẠY</h1>
+        <h1 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h1>
         <div class="owl-carousel vegetable-carousel justify-content-center">
             @foreach ($bestSellingProducts as $product)
                 @php
                     $firstVariant = null;
                     $price = null;
+                    $original = null;
 
                     if ($product->product_type === 'variant') {
                         $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
                         $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
+                        $original = $firstVariant?->price ?? 0;
                     } else {
                         $price = $product->discounted_price ?? $product->original_price;
+                        $original = $product->original_price;
                     }
                 @endphp
 
-                <div class="product-card d-flex flex-column h-100">
+                <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
                     <div class="position-relative">
                         <a href="{{ route('product-detail.show', $product->id) }}">
                             <div class="product-img-wrapper">
@@ -308,23 +331,35 @@
                                     class="img-fluid w-100">
                             </div>
                         </a>
-                        <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
-                            style="top: 10px; right: 10px;">
-                            {{ $product->category->category_name ?? 'Không có danh mục' }}
+
+                        <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
+                            {{ $product->category->category_name ?? 'Sản phẩm' }}
+                        </span>
+
+                        {{-- App hỗ trợ --}}
+                        <div class="position-absolute top-0 end-0 m-2 d-flex flex-column align-items-center">
+                            <img src="{{ asset('clients/icons/excel.png') }}" width="24" class="mb-1">
+                            <img src="{{ asset('clients/icons/word.png') }}" width="24" class="mb-1">
+                            <img src="{{ asset('clients/icons/photoshop.png') }}" width="24" class="mb-1">
+                            <img src="{{ asset('clients/icons/premiere.png') }}" width="24">
                         </div>
                     </div>
 
-                    <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
-                        <div>
-                            <h5 class="fw-bold text-truncate">{{ $product->product_name }}</h5>
-                            <p class="description mb-3 text-muted">{{ Str::limit($product->description, 80) }}</p>
-                        </div>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
+                        <p class="text-muted small mb-3">{{ Str::limit($product->description, 60) }}</p>
 
-                        <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
-                            <span class="price fw-bold text-dark fs-5 m-0">
-                                {{ $price ? number_format($price, 0, ',', '.') : 'Liên hệ' }} <span
-                                    class="currency">đ</span>
-                            </span>
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-danger fw-bold fs-5">
+                                    {{ number_format($price, 0, ',', '.') }} <small class="text-muted">VND</small>
+                                </div>
+                                @if ($price < $original)
+                                    <div class="text-muted text-decoration-line-through small">
+                                        {{ number_format($original, 0, ',', '.') }} VND
+                                    </div>
+                                @endif
+                            </div>
 
                             @if ($price)
                                 <form class="add-to-cart-form">
@@ -348,6 +383,7 @@
         </div>
     </div>
 </div>
+
 
 
 <!-- Vesitable Shop End -->
@@ -715,84 +751,63 @@
         </div>
     </div>
 </div>
-<!-- Testimonial End -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rangeInput = document.getElementById('rangeInput');
+            const output = document.getElementById('amount');
 
-<script>
-    $(document).ready(function() {
-        // Gán sự kiện click cho danh mục
-        $(document).on('click', '.category-tab', function(e) {
-            e.preventDefault();
+            function formatCurrency(value) {
+                return parseInt(value).toLocaleString('vi-VN') + ' đ';
+            }
 
-            // Xử lý đổi màu các tab
-            $('.category-tab').removeClass('active bg-warning').addClass('bg-light');
-            $('.category-tab span').removeClass('text-white').addClass('text-dark');
+            rangeInput.addEventListener('input', function() {
+                output.textContent = formatCurrency(this.value);
+            });
 
-            $(this).addClass('active bg-warning').removeClass('bg-light');
-            $(this).find('span').addClass('text-white').removeClass('text-dark');
+            // Gọi lần đầu khi tải trang
+            output.textContent = formatCurrency(rangeInput.value);
 
-            const categoryId = $(this).data('category');
-            const url = `/filter-category?category=${categoryId}`;
 
-            // Gửi AJAX lọc danh mục
-            $.get(url, function(data) {
-                $('#tab-1').html(data);
-                $('html, body').animate({
-                    scrollTop: $('#tab-1').offset().top - 100
-                }, 300);
-            }).fail(function() {
-                alert('Không thể tải sản phẩm. Vui lòng thử lại.');
+            document.addEventListener('DOMContentLoaded', function() {
+                const radios = document.querySelectorAll('input[name="price_range"]');
+                const customInputs = document.getElementById('customPriceInputs');
+
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'custom') {
+                            customInputs.style.display = '';
+                        } else {
+                            customInputs.style.display = 'none';
+                            // Clear giá trị nếu không chọn tùy chỉnh
+                            document.querySelector('input[name="min_price"]').value = '';
+                            document.querySelector('input[name="max_price"]').value = '';
+                        }
+                    });
+                });
             });
         });
+    </script>
 
-        // Gán sự kiện submit form Thêm vào giỏ bằng class
-        $(document).on('submit', '.add-to-cart-form', function(e) {
-            e.preventDefault();
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (session('success') || session('error'))
+                let message = "{{ session('success') ?? session('error') }}";
+                let isError = {{ session('error') ? 'true' : 'false' }};
 
-            let form = $(this);
-            let token = form.find('input[name="_token"]').val();
-            let productId = form.find('input[name="product_id"]').val();
-            let variantId = form.find('input[name="product_variant_id"]').val();
-            let quantity = form.find('input[name="quantity"]').val() || 1;
+                const container = document.getElementById('toast-container');
+                const messageEl = document.getElementById('toast-message');
 
-            $.ajax({
-                url: '{{ route('carts.add') }}',
-                type: 'POST',
-                data: {
-                    _token: token,
-                    product_id: productId,
-                    product_variant_id: variantId,
-                    quantity: quantity
-                },
-                success: function(res) {
-                    alert(res.message || 'Đã thêm vào giỏ hàng!');
-                    if (res.cart_count !== undefined) {
-                        $('#cart-count').text(res.cart_count);
-                    }
-                },
-                error: function(xhr) {
-                    let res = xhr.responseJSON;
-                    alert(res?.message || 'Lỗi thêm giỏ hàng.');
-                }
-            });
+                messageEl.textContent = message;
+                container.classList.remove('d-none');
+                if (isError) container.classList.add('toast-error');
+
+                setTimeout(() => {
+                    container.classList.add('d-none');
+                    container.classList.remove('toast-error');
+                }, 4000);
+            @endif
         });
-
-        // Gán sự kiện click cho phân trang AJAX
-        $(document).on('click', '.pagination a', function(e) {
-            e.preventDefault();
-            const url = $(this).attr('href');
-
-            $.get(url, function(data) {
-                $('#tab-1').html(data);
-                $('html, body').animate({
-                    scrollTop: $('#tab-1').offset().top - 100
-                }, 300);
-            }).fail(function() {
-                alert('Không thể chuyển trang.');
-            });
-        });
-    });
-</script>
+    </script>
 @include('clients.layouts.footer')
 
 
@@ -810,5 +825,12 @@
         height: 100%;
         object-fit: cover;
         display: block;
+    }
+
+    .list-group-item.active {
+        background-color: #fff3cd;
+        font-weight: bold;
+        color: #d35400;
+        border-left: 4px solid #ffc107;
     }
 </style>
