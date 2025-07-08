@@ -1,9 +1,6 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
-
-
-
 <!-- Modal Search Start -->
 <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
@@ -23,8 +20,6 @@
     </div>
 </div>
 <!-- Modal Search End -->
-
-
 <!-- Single Page Header start -->
 <div class="container-fluid page-header py-5">
     <h1 class="text-center text-white display-6">Cửa hàng</h1>
@@ -35,8 +30,6 @@
     </ol>
 </div>
 <!-- Single Page Header End -->
-
-
 <!-- Fruits Shop Start-->
 <div class="container-fluid fruite py-5">
     <div class="container py-5">
@@ -159,7 +152,6 @@
                                         </button>
                                     </div>
                                 </form>
-
                             </div>
 
                             <div class="col-lg-12">
