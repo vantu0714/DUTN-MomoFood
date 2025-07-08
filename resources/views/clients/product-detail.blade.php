@@ -43,6 +43,7 @@
                         <div class="product-image-container mb-3">
                             <img id="mainProductImage"
                                 src="{{ $product->image ? asset('storage/' . $product->image) : $product->variants->first()?->image_url ?? '' }}"
+                                data-original-src="{{ $product->image ? asset('storage/' . $product->image) : $product->variants->first()?->image_url ?? '' }}"
                                 class="product-image img-fluid rounded shadow-sm" alt="{{ $product->product_name }}"
                                 style="width: 100%; max-height: 450px; object-fit: cover;">
                             <div class="image-overlay"></div>
@@ -91,7 +92,7 @@
                             <a href="https://www.instagram.com/" target="_blank"
                                 class="btn btn-sm rounded-circle shadow-sm"
                                 style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
-           color: white; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                  color: white; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
                                 <i class="fab fa-instagram"></i>
                             </a>
 
@@ -142,18 +143,19 @@
                                     ? round((1 - $product->discounted_price / $product->original_price) * 100)
                                     : 0;
                             @endphp
-
+                            {{-- Giá sau giảm (nếu có) --}}
                             <span class="price-amount fw-bold me-2 {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
-                                style="font-size: 2rem;">
+                                style="font-size: 2rem;" data-original-price="{{ $product->discounted_price }}"
+                                data-original-original="{{ $product->original_price }}">
                                 <span
                                     class="text-decoration-none">đ</span>{{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
                             </span>
-
+                            {{-- Giá gốc --}}
                             <span class="original-price text-muted text-decoration-line-through me-2"
                                 style="font-size: 1.3rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
                                 đ{{ number_format($product->original_price, 0, ',', '.') }}
                             </span>
-
+                            {{-- Giảm giá phần trăm --}}
                             <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
                                 style="font-size: 1rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
                                 -{{ $discountPercent }}%
@@ -178,6 +180,7 @@
                                                     data-variant-name="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}"
                                                     data-variant-price="{{ $variant->formatted_final_price }}"
                                                     data-variant-image="{{ $variant->image_url }}"
+                                                    data-variant-stock="{{ $variant->quantity_in_stock }}"
                                                     style="cursor: pointer;">
                                                     <div class="variant-content">
                                                         @if ($variant->image_url)
@@ -186,19 +189,9 @@
                                                                 alt="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}">
                                                         @endif
                                                         <div class="flex-grow-1">
-                                                            <!-- Option 1: Single line with all info -->
                                                             <div class="variant-name">
                                                                 {{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}
                                                             </div>
-
-                                                            <!-- Option 2: Separate Vị and Size on same line (uncomment to use) -->
-                                                            <!--
-                                <div class="variant-name-inline">
-                                    <span class="variant-flavor">Vị: {{ $variant->flavor ?? 'Cay' }}</span>
-                                  
-                                    <span class="variant-size">Size: {{ $variant->size ?? 'M' }}</span>
-                                </div>
-                                -->
                                                         </div>
                                                     </div>
                                                 </div>
@@ -207,8 +200,16 @@
                                     </div>
                                     <input type="hidden" name="product_variant_id" id="selectedVariantId"
                                         value="">
+                                    <div class="text-end mt-2">
+                                        <button type="button" id="cancelVariantSelection"
+                                            class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-times-circle me-1"></i> Hủy chọn
+                                        </button>
+                                    </div>
                                 </div>
+
                             @endif
+
                             {{-- CHỌN SỐ LƯỢNG --}}
                             <div class="d-flex align-items-center gap-4">
                                 <label class="form-label fw-bold mb-0" style="font-size: 16px;">
@@ -223,6 +224,10 @@
                                     <button type="button" class="quantity-btn btn-plus">
                                         <i class="fa fa-plus"></i>
                                     </button>
+                                </div>
+                                <div class="available-stock text-muted ms-3" id="availableStock">
+                                    {{ $product->variants->first()?->quantity_in_stock ?? $product->quantity_in_stock }}
+                                    sản phẩm có sẵn
                                 </div>
                             </div>
                             <button type="submit" class="add-to-cart-btn w-100">
@@ -376,7 +381,9 @@
         const quantityInput = document.querySelector('#quantity');
         const minusBtn = document.querySelector('.btn-minus');
         const plusBtn = document.querySelector('.btn-plus');
+        const stockElement = document.getElementById('availableStock');
         const form = document.getElementById('addToCartForm');
+        const cancelButton = document.getElementById('cancelVariantSelection');
 
         function updateMainImage(newSrc) {
             if (!mainImage || !newSrc) return;
@@ -406,7 +413,6 @@
 
         function updatePriceDisplay(discounted, original) {
             if (!priceElement) return;
-
             priceElement.textContent = 'đ' + formatCurrency(discounted);
 
             if (original > discounted) {
@@ -414,7 +420,6 @@
                     originalPriceElement.textContent = 'đ' + formatCurrency(original);
                     originalPriceElement.style.display = 'inline';
                 }
-
                 if (discountPercentElement) {
                     const percent = Math.round((1 - discounted / original) * 100);
                     discountPercentElement.textContent = `-${percent}%`;
@@ -442,7 +447,8 @@
                     name: this.dataset.variantName || '',
                     price: this.dataset.variantPrice || '',
                     original: this.dataset.variantOriginal || this.dataset.variantPrice,
-                    image: this.dataset.variantImage || ''
+                    image: this.dataset.variantImage || '',
+                    stock: parseInt(this.dataset.variantStock || '0')
                 };
 
                 document.getElementById('selectedVariantId').value = selectedVariant.id;
@@ -457,6 +463,16 @@
                     discounted;
 
                 updatePriceDisplay(discounted, original);
+
+                if (stockElement) {
+                    stockElement.textContent = `${selectedVariant.stock} sản phẩm có sẵn`;
+                }
+
+                if (quantityInput && selectedVariant.stock > 0) {
+                    if (parseInt(quantityInput.value) > selectedVariant.stock) {
+                        quantityInput.value = selectedVariant.stock;
+                    }
+                }
             });
         });
 
@@ -470,6 +486,7 @@
             });
         });
 
+        // Star rating
         const stars = document.querySelectorAll('.star');
         const ratingInput = document.getElementById('rating-value');
 
@@ -500,6 +517,7 @@
             });
         }
 
+        // Quantity control
         if (minusBtn) {
             minusBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -514,10 +532,14 @@
             plusBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 let value = parseInt(quantityInput.value) || 1;
-                quantityInput.value = value + 1;
+                let max = selectedVariant?.stock || 9999;
+                if (value < max) {
+                    quantityInput.value = value + 1;
+                }
             });
         }
 
+        // Validate form before submit
         if (form) {
             form.addEventListener('submit', function(e) {
                 const hasVariants = variantOptions.length > 0;
@@ -527,8 +549,47 @@
                 }
             });
         }
+
+        // ❌ Cancel variant selection
+        if (cancelButton) {
+            cancelButton.addEventListener('click', function() {
+                selectedVariant = null;
+                document.getElementById('selectedVariantId').value = '';
+
+                // Bỏ chọn tất cả biến thể
+                variantOptions.forEach(opt => opt.classList.remove('selected'));
+
+                // Reset ảnh sản phẩm
+                if (mainImage && mainImage.dataset.originalSrc) {
+                    updateMainImage(mainImage.dataset.originalSrc);
+                }
+
+                // Reset giá
+                const defaultPrice = parseInt(document.getElementById('originalPrice').value || 0);
+                const defaultOriginalPrice = parseInt(document.getElementById('originalOriginalPrice')
+                    .value || 0);
+                updatePriceDisplay(defaultPrice, defaultOriginalPrice);
+
+                // Reset tồn kho
+                const defaultStock = parseInt(document.getElementById('originalStock').value || 0);
+                if (stockElement) {
+                    stockElement.textContent = `${defaultStock} sản phẩm có sẵn`;
+                }
+
+                // Reset số lượng
+                if (quantityInput) {
+                    quantityInput.value = 1;
+                }
+
+                // Bỏ chọn hình nhỏ
+                highlightThumbnail(null);
+            });
+        }
+
     });
 </script>
+
+
 
 <!-- Footer Start -->
 @include('clients.layouts.footer')

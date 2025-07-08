@@ -299,25 +299,23 @@
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-auto">
                                                 <div class="product-price-wrapper">
-                                                    @if ($product->discounted_price && $product->discounted_price < $product->original_price)
+                                                    @if ($price && $originalPrice && $price < $originalPrice)
                                                         <div class="product-price-sale">
-                                                            {{ number_format($product->discounted_price, 0, ',', '.') }}
-                                                            <span class="currency">VND</span>
+                                                            {{ number_format($price, 0, ',', '.') }} <span
+                                                                class="currency">VND</span>
                                                         </div>
                                                         <div class="product-price-original">
-                                                            {{ number_format($product->original_price, 0, ',', '.') }}
-                                                            VND
+                                                            {{ number_format($originalPrice, 0, ',', '.') }} VND
                                                         </div>
-                                                    @elseif ($product->original_price)
+                                                    @elseif ($price)
                                                         <div class="product-price-sale">
-                                                            {{ number_format($product->original_price, 0, ',', '.') }}
-                                                            <span class="currency">VND</span>
+                                                            {{ number_format($price, 0, ',', '.') }} <span
+                                                                class="currency">VND</span>
                                                         </div>
                                                     @else
                                                         <div class="text-muted">Liên hệ để biết giá</div>
                                                     @endif
                                                 </div>
-
                                                 <form class="add-to-cart-form">
                                                     @csrf
                                                     <input type="hidden" name="product_id"

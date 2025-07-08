@@ -164,7 +164,6 @@
                                             $price = $product->discounted_price ?? $product->original_price;
                                         }
                                     @endphp
-
                                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
                                             <a href="{{ route('product-detail.show', $product->id) }}">
@@ -178,7 +177,6 @@
                                                 style="top: 10px; left: 10px;">
                                                 {{ $product->category?->category_name ?? 'Không có danh mục' }}
                                             </div>
-
                                             <div
                                                 class="product-content p-4 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
                                                 <h4 class="text-truncate" title="{{ $product->product_name }}">
@@ -187,9 +185,28 @@
                                                 <p class="text-muted text-truncate">Mã sản phẩm:
                                                     {{ $product->product_code }}</p>
 
+                                                @php
+                                                    $originalPrice = $product->original_price;
+                                                    $price = $product->discounted_price ?? $product->original_price;
+                                                @endphp
                                                 <div class="d-flex justify-content-between align-items-center mt-auto">
                                                     <p class="text-dark fs-5 fw-bold mb-0">
-                                                        {{ $price ? number_format($price, 0, ',', '.') . ' VNĐ' : 'Liên hệ' }}
+                                                        @if ($price && $originalPrice && $price < $originalPrice)
+                                                            <div class="product-price-sale">
+                                                                {{ number_format($price, 0, ',', '.') }} <span
+                                                                    class="currency">VND</span>
+                                                            </div>
+                                                            <div class="product-price-original">
+                                                                {{ number_format($originalPrice, 0, ',', '.') }} VND
+                                                            </div>
+                                                        @elseif ($price)
+                                                            <div class="product-price-sale">
+                                                                {{ number_format($price, 0, ',', '.') }} <span
+                                                                    class="currency">VND</span>
+                                                            </div>
+                                                        @else
+                                                            <div class="text-muted">Liên hệ để biết giá</div>
+                                                        @endif
                                                     </p>
                                                     <form class="add-to-cart-form">
                                                         @csrf
@@ -200,14 +217,14 @@
                                                                 value="{{ $product->variants->first()->id }}">
                                                         @endif
                                                         <input type="hidden" name="quantity" value="1">
-                                                        <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                                        <button type="submit" class="btn btn-white"><i
+                                                                class="bi bi-cart3 fa-2x text-danger"></i></button>
                                                     </form>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
-
                             </div>
                         </div>
                     </div>
@@ -284,12 +301,12 @@
                 <div class="product-card d-flex flex-column h-100">
                     <div class="position-relative">
                         <a href="{{ route('product-detail.show', $product->id) }}">
-                        <div class="product-img-wrapper">
-                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                alt="{{ $product->product_name }}"
-                                onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                class="img-fluid w-100">
-                        </div>
+                            <div class="product-img-wrapper">
+                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    alt="{{ $product->product_name }}"
+                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                    class="img-fluid w-100">
+                            </div>
                         </a>
                         <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
                             style="top: 10px; right: 10px;">
@@ -318,7 +335,8 @@
                                             value="{{ $firstVariant->id }}">
                                     @endif
                                     <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn btn-white"><i class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                    <button type="submit" class="btn btn-white"><i
+                                            class="bi bi-cart3 fa-2x text-danger"></i></button>
                                 </form>
                             @else
                                 <span class="text-danger">Hết hàng</span>
