@@ -21,7 +21,7 @@
             @endif
 
             {{-- FORM THANH TOÁN --}}
-            <form action="{{ route('clients.create-payment') }}" method="POST">
+            <form action="{{ route('order.store') }}" method="POST">
                 @csrf
                 <div class="row g-4">
                     {{-- CỘT TRÁI: Địa chỉ + sản phẩm --}}
@@ -34,24 +34,23 @@
                                         <i class="fas fa-map-marker-alt text-danger me-2"></i>
                                         <h5 class="mb-0 text-danger">Địa Chỉ Nhận Hàng</h5>
                                     </div>
-                                    <a href="#" class="btn btn-outline-primary btn-sm">Thay Đổi</a>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#addressModal">
+                                        Thay Đổi
+                                    </button>
                                 </div>
-                                <div>
-                                    <strong>{{ old('recipient_name', $recipient['recipient_name'] ?? 'Đào Văn Tú') }} (+84)
-                                        {{ old('recipient_phone', $recipient['recipient_phone'] ?? '922701084') }}</strong>
+
+                                {{-- Hiển thị địa chỉ mặc định --}}
+                                <div id="address-display">
+                                    <strong>{{ $recipient['recipient_name'] ?? auth()->user()->name }} (+84)
+                                        {{ $recipient['recipient_phone'] ?? auth()->user()->phone }}</strong>
                                     <div class="text-muted mt-1">
-                                        {{ old('recipient_address', $recipient['recipient_address'] ?? '25 ngách 7 Xóm Phúc Sung, Xã Cao Viên, Huyện Thanh Oai, Hà Nội') }}
+                                        {{ $recipient['recipient_address'] ?? auth()->user()->address }}
                                     </div>
                                     <span class="badge bg-danger">Mặc Định</span>
                                 </div>
 
-                                {{-- Hidden inputs --}}
-                                <input type="hidden" name="recipient_name"
-                                    value="{{ old('recipient_name', $recipient['recipient_name'] ?? 'Đào Văn Tú') }}">
-                                <input type="hidden" name="recipient_phone"
-                                    value="{{ old('recipient_phone', $recipient['recipient_phone'] ?? '922701084') }}">
-                                <input type="hidden" name="recipient_address"
-                                    value="{{ old('recipient_address', $recipient['recipient_address'] ?? '25 ngách 7 Xóm Phúc Sung, Xã Cao Viên, Huyện Thanh Oai, Hà Nội') }}">
+
                             </div>
                         </div>
 
@@ -199,6 +198,9 @@
                                 <input type="hidden" name="grand_total" value="{{ $grandTotal }}">
                                 <input type="hidden" name="discount_amount" value="{{ $discount }}">
 
+                                <input type="hidden" name="recipient_id" id="recipient_id"
+                                    value="{{ old('recipient_id', $recipient['id'] ?? '') }}">
+
                                 <button type="submit" class="btn btn-danger w-100 mb-3">Đặt Hàng</button>
                                 <a href="{{ route('order.removeCoupon') }}" class="text-decoration-none">Quay lại</a>
 
@@ -270,4 +272,96 @@
         </div>
     </div>
 
+
+    <!-- Modal chọn địa chỉ giao hàng -->
+    <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <!-- Tiêu đề Modal -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addressModalLabel">Địa Chỉ Của Tôi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+
+                <!-- Nội dung Modal -->
+                <div class="modal-body">
+                    <!-- Danh sách địa chỉ đã lưu -->
+                    <form action="{{ route('recipients.select') }}" method="POST">
+                        @csrf
+                        @foreach ($savedRecipients as $recipientItem)
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="recipient_id"
+                                    id="recipient{{ $recipientItem->id }}" value="{{ $recipientItem->id }}">
+                                <label class="form-check-label" for="recipient{{ $recipientItem->id }}">
+                                    <strong>{{ $recipientItem->recipient_name }} (+84
+                                        {{ $recipientItem->recipient_phone }})</strong><br>
+                                    <span class="text-muted">{{ $recipientItem->recipient_address }}</span>
+                                    @if ($recipientItem->is_default)
+                                        <span class="badge bg-danger ms-2">Mặc định</span>
+                                    @endif
+                                </label>
+                            </div>
+                        @endforeach
+
+                        <button type="submit" class="btn btn-danger w-100 mt-2">Chọn địa chỉ này</button>
+                    </form>
+
+                    <hr>
+
+                    <!-- Thêm địa chỉ mới -->
+                    <button type="button" class="btn btn-outline-success w-100" onclick="toggleAddressForm()">+ Thêm Địa
+                        Chỉ Mới</button>
+
+                    <!-- Form thêm địa chỉ mới -->
+                    <form id="add-address-form" action="{{ route('recipients.store') }}" method="POST">
+                        @csrf
+                        <div id="address-form" class="mt-3" style="display: none;">
+                            <div class="mb-2">
+                                <label class="form-label">Họ và tên</label>
+                                <input type="text" name="recipient_name" class="form-control"
+                                    value="{{ old('recipient_name') }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="text" name="recipient_phone" class="form-control"
+                                    value="{{ old('recipient_phone') }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Địa chỉ chi tiết</label>
+                                <textarea name="recipient_address" class="form-control" rows="2" required>{{ old('recipient_address') }}</textarea>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_default" id="is_default"
+                                    {{ old('is_default') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_default">Đặt làm địa chỉ mặc định</label>
+                            </div>
+                            <button type="submit" name="save_recipient" value="1"
+                                class="btn btn-success mt-3 w-100">Lưu địa chỉ</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer Modal -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
 @endsection
+<script>
+    document.querySelectorAll('input[name="recipient_id"]').forEach(item => {
+        item.addEventListener('change', () => {
+            document.getElementById('recipient_id').value = item.value;
+        });
+    });
+
+    function toggleAddressForm() {
+        const form = document.getElementById('address-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+</script>
