@@ -152,12 +152,12 @@
                             </span>
                             {{-- Giá gốc --}}
                             <span class="original-price text-muted text-decoration-line-through me-2"
-                                style="font-size: 1.3rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
+                                style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
                                 đ{{ number_format($product->original_price, 0, ',', '.') }}
                             </span>
                             {{-- Giảm giá phần trăm --}}
                             <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
-                                style="font-size: 1rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
+                                style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
                                 -{{ $discountPercent }}%
                             </span>
                         </h3>
@@ -237,6 +237,9 @@
                         </form>
                     </div>
                     {{-- PHẦN MÔ TẢ VÀ ĐÁNH GIÁ --}}
+                    @php
+                        $hasRated = $product->comments->contains('user_id', Auth::id());
+                    @endphp
                     <div class="col-lg-12">
                         <nav>
                             <div class="nav nav-tabs mb-3">
@@ -274,10 +277,15 @@
                                                 <small
                                                     class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
                                             </div>
-                                            <div class="d-flex mb-2">
+                                            @php
+                                                $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0;
+                                            @endphp
+                                            <div class="mb-2">
+
+
                                                 @for ($i = 1; $i <= 5; $i++)
-                                                    <i
-                                                        class="fas fa-star {{ $i <= $comment->rating ? 'text-warning' : 'text-secondary' }}"></i>
+                                                    <i class="fas fa-star"
+                                                        style="color: {{ $i <= $rating ? '#ffc107' : '#ccc' }}"></i>
                                                 @endfor
                                             </div>
                                             <p class="mb-0 text-dark">{{ $comment->content }}</p>
@@ -292,8 +300,9 @@
                             </div>
                         </div>
                     </div>
+
                     {{-- FORM BÌNH LUẬN --}}
-                    @if (Auth::check())
+                    @if (Auth::check() && $hasPurchased)
                         <form action="{{ route('comments.store') }}" method="POST"
                             class="bg-light p-4 p-md-5 rounded shadow-sm">
                             @csrf
@@ -323,6 +332,11 @@
                                 </button>
                             </div>
                         </form>
+                    @elseif(Auth::check())
+                        <div class="alert alert-warning text-center py-4">
+                            <i class="fas fa-exclamation-circle me-2 text-warning"></i>
+                            Bạn cần mua sản phẩm này trước khi có thể đánh giá.
+                        </div>
                     @else
                         <div class="text-center py-4">
                             <p class="mb-3">Bạn cần đăng nhập để có thể đánh giá sản phẩm</p>
@@ -331,6 +345,36 @@
                             </a>
                         </div>
                     @endif
+
+
+                    {{-- SCRIPT CHỌN SAO --}}
+                    @push('scripts')
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const stars = document.querySelectorAll('.star');
+                                const ratingInput = document.getElementById('rating-value');
+
+                                stars.forEach(star => {
+                                    star.addEventListener('click', function() {
+                                        const rating = this.getAttribute('data-rating');
+                                        ratingInput.value = rating;
+
+                                        // Highlight sao đã chọn
+                                        stars.forEach(s => {
+                                            if (s.getAttribute('data-rating') <= rating) {
+                                                s.classList.remove('text-muted');
+                                                s.classList.add('text-warning');
+                                            } else {
+                                                s.classList.remove('text-warning');
+                                                s.classList.add('text-muted');
+                                            }
+                                        });
+                                    });
+                                });
+                            });
+                        </script>
+                    @endpush
+
                 </div>
             </div>
         </div>
