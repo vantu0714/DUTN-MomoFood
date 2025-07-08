@@ -118,67 +118,6 @@
             </form>
         </div>
 
-        @if ($carts->count() > 0)
-            <!-- Nút chọn voucher -->
-            <button class="btn btn-outline-primary my-3" data-bs-toggle="modal" data-bs-target="#voucherModal">
-                🎟️ Chọn Voucher
-            </button>
-        @endif
-
-        <!-- Modal voucher giống Shopee -->
-        <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header bg-light">
-                        <h5 class="modal-title">Voucher của Shop</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                    </div>
-                    <div class="modal-body">
-
-                        <!-- Form nhập mã voucher -->
-                        <form action="{{ route('carts.applyCoupon') }}" method="POST" class="d-flex mb-4">
-                            @csrf
-                            <input type="text" name="promotion" class="form-control me-2"
-                                placeholder="Nhập mã voucher của Shop">
-                            <button class="btn btn-outline-success" type="submit">Áp dụng</button>
-                        </form>
-
-                        <!-- Danh sách voucher -->
-                        @foreach ($vouchers as $voucher)
-                            <div class="border rounded p-3 mb-3 position-relative">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <div class="text-danger fw-bold">Giảm
-                                            {{ $voucher->discount_type === 'percent' ? $voucher->discount_value . '%' : number_format($voucher->discount_value) . 'đ' }}
-                                        </div>
-                                        <small class="text-muted">
-                                            Đơn tối thiểu: {{ number_format($voucher->min_total_spent ?? 0) }}đ <br>
-                                            HSD: {{ \Carbon\Carbon::parse($voucher->end_date)->format('d/m/Y H:i') }}
-                                        </small>
-                                    </div>
-                                    <form method="POST" action="{{ route('carts.applyCoupon') }}">
-                                        @csrf
-                                        <input type="hidden" name="promotion"
-                                            value="{{ $voucher->promotion_name }}">
-                                        <button class="btn btn-outline-danger">Lưu</button>
-                                    </form>
-                                </div>
-
-                                @if ($total < ($voucher->min_total_spent ?? 0))
-                                    <div class="alert alert-warning mt-2 p-2 mb-0">
-                                        <i class="bi bi-info-circle"></i> Mua thêm
-                                        {{ number_format($voucher->min_total_spent - $total) }}đ để sử dụng Voucher
-                                        này.
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-
-                    </div>
-                </div>
-            </div>
-        </div>
-
         @php
             $shipping = 30000;
             $discount = session('discount', 0);
@@ -203,12 +142,6 @@
                             <span>Phí vận chuyển:</span>
                             <span id="shipping-fee">{{ number_format($shipping, 0, ',', '.') }} đ</span>
                         </div>
-                        @if ($discount > 0 && $promotionName)
-                            <div class="d-flex justify-content-between mb-2 text-success fw-bold">
-                                <span>Giảm giá ({{ $promotionName }}):</span>
-                                <span>-{{ number_format($discount, 0, ',', '.') }} đ</span>
-                            </div>
-                        @endif
                         <hr>
                         <div class="d-flex justify-content-between fw-bold text-dark fs-5">
                             <span>Tổng cộng:</span>
