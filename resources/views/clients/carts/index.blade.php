@@ -73,7 +73,7 @@
                                                 ->implode(', ');
                                         }
 
-                                        $stock = $variant->quantity_in_stock ?? ($product->quantity ?? 0);
+                                        $stock = $variant->quantity_in_stock ?? ($product->quantity_in_stock ?? 0);
                                         $price = $item->discounted_price ?? 0;
                                         $subTotal = $price * $item->quantity;
                                         $total += $subTotal;
