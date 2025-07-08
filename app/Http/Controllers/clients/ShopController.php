@@ -15,6 +15,11 @@ class ShopController extends Controller
         $products = Product::with(['category', 'variants'])
             ->where('status', 1)
             ->get();
+        $featuredProducts = Product::with(['variants', 'category'])
+            ->where('status', 1)
+            ->inRandomOrder()
+            ->take(6)
+            ->get();
 
         $filtered = $products->filter(function ($product) {
             if ($product->product_type === 'variant') {
@@ -60,6 +65,7 @@ class ShopController extends Controller
         return view('clients.shop', [
             'products' => $paginated,
             'categories' => $categories,
+            'featuredProducts' => $featuredProducts
         ]);
     }
     public function category(Request $request, $id)
@@ -70,6 +76,11 @@ class ShopController extends Controller
         $products = Product::with(['category', 'variants'])
             ->where('status', 1)
             ->where('category_id', $category->id)
+            ->get();
+        $featuredProducts = Product::with(['variants', 'category'])
+            ->where('status', 1)
+            ->inRandomOrder()
+            ->take(6)
             ->get();
 
         // Lọc tồn kho & lọc giá theo từng biến thể
@@ -118,7 +129,8 @@ class ShopController extends Controller
         return view('clients.shop', [
             'products' => $paginated,
             'categories' => $categories,
-            'category' => $category
+            'category' => $category,
+            'featuredProducts' => $featuredProducts
         ]);
     }
 }

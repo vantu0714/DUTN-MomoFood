@@ -10,7 +10,7 @@ class SizeAttributeSeeder extends Seeder
 {
     public function run(): void
     {
-        $sizes = ['S', 'M', 'L', 'XL',];
+        $sizes = ['100g', '300g', '500g', '1kg',];
 
         // Tạo thuộc tính 'Size' nếu chưa có
         $sizeAttr = Attribute::firstOrCreate(['name' => 'Size']);

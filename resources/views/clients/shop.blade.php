@@ -3,11 +3,11 @@
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 <script>
-    @if(session('success'))
+    @if (session('success'))
         showToast('{{ session('success') }}');
     @endif
 
-    @if(session('error'))
+    @if (session('error'))
         showToast('{{ session('error') }}', 'error');
     @endif
 </script>
@@ -35,13 +35,27 @@
 
 
 <!-- Single Page Header start -->
-<div class="container-fluid page-header py-5">
-    <h1 class="text-center text-white display-6">Cửa hàng</h1>
-    <ol class="breadcrumb justify-content-center mb-0">
-        <li class="breadcrumb-item"><a href="#">Trang chủ</a></li>
-        <li class="breadcrumb-item"><a href="#">Trang</a></li>
-        <li class="breadcrumb-item active text-white">Cửa hàng</li>
-    </ol>
+<div class="container-fluid page-header mb-5"
+    style="
+    background: url('https://inan2h.vn/wp-content/uploads/2022/12/in-banner-quang-cao-do-an-7-1.jpg') center center / cover no-repeat;
+    position: relative;
+    height: 400px; /* Tăng chiều cao cho ảnh to hơn */">
+    <div class="overlay"
+        style="
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.2); /* mờ nhẹ cho chữ dễ đọc */
+        ">
+    </div>
+
+    <!-- Nội dung căn giữa -->
+    <div class="container h-100 position-relative" style="z-index: 2;">
+        <div class="d-flex justify-content-center align-items-center h-100">
+            <h1 class="text-white display-3 fw-bold" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.8);">
+                Cửa hàng
+            </h1>
+        </div>
+    </div>
 </div>
 <!-- Single Page Header End -->
 
@@ -172,103 +186,60 @@
                             </div>
 
                             <div class="col-lg-12">
-                                <div class="mb-3">
-                                    <h4>Thêm vào</h4>
-                                    <div class="mb-2">
-                                        <input type="radio" class="me-2" id="Categories-1" name="category"
-                                            value="Organic">
-                                        <label for="Categories-1">Organic</label>
+                                <h4 class="mb-4 text-primary"><i class="bi bi-star-fill me-2 text-warning"></i>SẢN
+                                    PHẨM NỔI BẬT</h4>
+
+                                @foreach ($featuredProducts->random(3) as $product)
+                                    @php
+                                        $price = $product->discounted_price ?? $product->original_price;
+                                    @endphp
+                                    <div class="d-flex align-items-center mb-4">
+                                        <!-- Hình ảnh -->
+                                        <div class="rounded me-3"
+                                            style="width: 100px; height: 100px; overflow: hidden;">
+                                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                class="img-fluid rounded h-100 w-100 object-fit-cover"
+                                                alt="{{ $product->product_name }}">
+                                        </div>
+
+                                        <!-- Thông tin -->
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 text-dark text-truncate"
+                                                title="{{ $product->product_name }}">
+                                                {{ $product->product_name }}
+                                            </h6>
+
+                                            <!-- Đánh giá giả lập -->
+                                            <div class="d-flex mb-1">
+                                                @for ($i = 0; $i < 4; $i++)
+                                                    <i class="fa fa-star text-warning me-1"></i>
+                                                @endfor
+                                                <i class="fa fa-star text-secondary"></i>
+                                            </div>
+
+                                            <!-- Giá -->
+                                            <div class="d-flex align-items-center">
+                                                <h6 class="text-danger fw-bold mb-0 me-2">
+                                                    {{ number_format($price, 0, ',', '.') }}đ
+                                                </h6>
+                                                @if ($product->original_price && $product->discounted_price)
+                                                    <small class="text-muted text-decoration-line-through">
+                                                        {{ number_format($product->original_price, 0, ',', '.') }}đ
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="me-2" id="Categories-2" name="category"
-                                            value="Fresh">
-                                        <label for="Categories-2">Fresh</label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="me-2" id="Categories-3" name="category"
-                                            value="Sales">
-                                        <label for="Categories-3">Sales</label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="me-2" id="Categories-4" name="category"
-                                            value="Discount">
-                                        <label for="Categories-4">Discount</label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="me-2" id="Categories-5" name="category"
-                                            value="Expired">
-                                        <label for="Categories-5">Expired</label>
-                                    </div>
+                                @endforeach
+
+                                <div class="d-flex justify-content-center mt-3">
+                                    <a href="{{ route('shop.index') }}"
+                                        class="btn btn-outline-secondary px-4 py-2 rounded-pill text-primary">
+                                        Xem thêm
+                                    </a>
                                 </div>
                             </div>
-                            <div class="col-lg-12">
-                                <h4 class="mb-3">SẢN PHẨM NỔI BẬT</h4>
-                                <div class="d-flex align-items-center justify-content-start">
-                                    <div class="rounded me-4" style="width: 100px; height: 100px;">
-                                        <img src="{{ asset('storage/products/6bdnSqSQ20goGJtQqRsBDoYPY2538avaRiqRLmOO.jpg') }}"
-                                            class="img-fluid rounded" alt="">
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-2">Cơm gà sốt tiêu</h6>
-                                        <div class="d-flex mb-2">
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star"></i>
-                                        </div>
-                                        <div class="d-flex mb-2">
-                                            <h5 class="fw-bold me-2"> 100.000vnđ</h5>
-                                            <h5 class="text-danger text-decoration-line-through">150.000vnđ</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-start">
-                                    <div class="rounded me-4" style="width: 100px; height: 100px;">
-                                        <img src="{{ asset('storage/products/6bdnSqSQ20goGJtQqRsBDoYPY2538avaRiqRLmOO.jpg') }}"
-                                            class="img-fluid rounded" alt="">
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-2">Combo gà nước</h6>
-                                        <div class="d-flex mb-2">
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star"></i>
-                                        </div>
-                                        <div class="d-flex mb-2">
-                                            <h5 class="fw-bold me-2">170.00vnđ</h5>
-                                            <h5 class="text-danger text-decoration-line-through">220.000vnđ</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-start">
-                                    <div class="rounded me-4" style="width: 100px; height: 100px;">
-                                        <img src="{{ asset('storage/products/6bdnSqSQ20goGJtQqRsBDoYPY2538avaRiqRLmOO.jpg') }}"
-                                            class="img-fluid rounded" alt="">
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-2">Bánh Mứt</h6>
-                                        <div class="d-flex mb-2">
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star text-secondary"></i>
-                                            <i class="fa fa-star"></i>
-                                        </div>
-                                        <div class="d-flex mb-2">
-                                            <h5 class="fw-bold me-2">98.000vnđ</h5>
-                                            <h5 class="text-danger text-decoration-line-through">150.000vnđ</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-center my-4">
-                                    <a href="#"
-                                        class="btn border border-secondary px-4 py-3 rounded-pill text-primary w-100">Xem
-                                        thêm</a>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                     <div class="col-lg-9">
@@ -335,7 +306,8 @@
                                                     @endif
                                                 </div>
 
-                                                <form class="add-to-cart-form">
+                                                <form class="add-to-cart-form" method="POST"
+                                                    action="{{ route('carts.add') }}">
                                                     @csrf
                                                     <input type="hidden" name="product_id"
                                                         value="{{ $product->id }}">
@@ -351,13 +323,7 @@
                                                                 : null;
                                                     @endphp
 
-                                                    @if ($product->product_type === 'variant' && $firstAvailableVariant)
-                                                        <input type="hidden" name="product_variant_id"
-                                                            value="{{ $firstAvailableVariant->id }}">
-                                                    @endif
-
-
-                                                    @if ($product->product_type === 'variant' && $firstAvailableVariant)
+                                                    @if ($firstAvailableVariant)
                                                         <input type="hidden" name="product_variant_id"
                                                             value="{{ $firstAvailableVariant->id }}">
                                                     @endif
@@ -367,6 +333,7 @@
                                                         <i class="bi bi-cart3 fa-2x text-danger"></i>
                                                     </button>
                                                 </form>
+
 
                                             </div>
                                         </div>
@@ -422,26 +389,26 @@
         });
     </script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        @if(session('success') || session('error'))
-            let message = "{{ session('success') ?? session('error') }}";
-            let isError = {{ session('error') ? 'true' : 'false' }};
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (session('success') || session('error'))
+                let message = "{{ session('success') ?? session('error') }}";
+                let isError = {{ session('error') ? 'true' : 'false' }};
 
-            const container = document.getElementById('toast-container');
-            const messageEl = document.getElementById('toast-message');
+                const container = document.getElementById('toast-container');
+                const messageEl = document.getElementById('toast-message');
 
-            messageEl.textContent = message;
-            container.classList.remove('d-none');
-            if (isError) container.classList.add('toast-error');
+                messageEl.textContent = message;
+                container.classList.remove('d-none');
+                if (isError) container.classList.add('toast-error');
 
-            setTimeout(() => {
-                container.classList.add('d-none');
-                container.classList.remove('toast-error');
-            }, 4000);
-        @endif
-    });
-</script>
+                setTimeout(() => {
+                    container.classList.add('d-none');
+                    container.classList.remove('toast-error');
+                }, 4000);
+            @endif
+        });
+    </script>
 
     @include('clients.layouts.footer')
-    <!-- Fruits Shop Start-->
+    <!-- Fruits Shop End-->

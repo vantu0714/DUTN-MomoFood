@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
 
 class ProductController extends Controller
 {
@@ -88,36 +89,46 @@ class ProductController extends Controller
             'discounted_price' => 'nullable|numeric|min:0|lte:original_price',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'quantity_in_stock' => 'required_if:product_type,simple|nullable|integer|min:0',
+            'quantity_in_stock' => 'exclude_if:product_type,variant|required|integer|min:0',
             'product_type' => 'required|in:simple,variant',
         ], [
             'discounted_price.lte' => 'Giá khuyến mãi không được lớn hơn giá gốc.',
         ]);
 
+        // Nếu không có giá khuyến mãi thì set = null
         if (!array_key_exists('discounted_price', $validated)) {
             $validated['discounted_price'] = null;
         }
 
-        if ($validated['product_type'] === 'simple') {
-            $validated['status'] = isset($validated['quantity_in_stock']) && $validated['quantity_in_stock'] > 0 ? 1 : 0;
-        } else {
-            $validated['status'] = 0;
+        // Nếu là sản phẩm có biến thể
+        if ($validated['product_type'] === 'variant') {
+            // Xử lý ảnh lưu tạm (tùy ý)
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('products/temp', 'public');
+                $validated['image'] = $imagePath;
+            }
+
+            // Lưu vào session để dùng ở trang tạo biến thể
+            Session::put('pending_product', $validated);
+
+            return redirect()->route('admin.product_variants.create')
+                ->with('success', 'Tiếp tục thêm biến thể cho sản phẩm.');
         }
 
+        // Nếu là sản phẩm đơn
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
             $validated['image'] = $imagePath;
         }
 
-        $product = Product::create($validated);
+        // Trạng thái sản phẩm đơn: còn hàng nếu số lượng > 0
+        $validated['status'] = isset($validated['quantity_in_stock']) && $validated['quantity_in_stock'] > 0 ? 1 : 0;
 
-        if ($validated['product_type'] === 'variant') {
-            return redirect()->route('admin.product_variants.create', ['product_id' => $product->id])
-                ->with('success', 'Thêm sản phẩm thành công. Bây giờ hãy thêm các biến thể.');
-        }
+        Product::create($validated);
 
-        return redirect()->route('admin.products.index')->with('success', 'Sản phẩm không biến thể đã được thêm thành công.');
+        return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công.');
     }
+
 
     public function edit($id)
     {
