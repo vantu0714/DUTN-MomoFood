@@ -14,27 +14,18 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $users = User::all();
         return view('admin.users.index', compact('users'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $roles = Role::all(); // Lấy tất cả vai trò
         return view('admin.users.create', compact('roles'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreUserRequest $request)
     {
         $request->validated();
@@ -66,9 +57,6 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Đã thêm người dùng thành công');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $user = User::findOrFail($id);
@@ -77,9 +65,6 @@ class UserController extends Controller
         return view('admin.users.show', compact('user', 'roles'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $user = User::findOrFail($id);
@@ -88,9 +73,6 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateUserRequest $request, string $id)
     {
         try {
@@ -126,33 +108,12 @@ class UserController extends Controller
         }
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
     // public function destroy($id)
     // {
     //     $user = User::findOrFail($id);
     //     $user->delete();
 
     //     return redirect()->route('users.index')->with('success', 'Đã xoá người dùng');
-    // }
-
-    // public function toggleStatus($id)
-    // {
-    //     $user = User::findOrFail($id);
-
-    //     if ($user->role && $user->role->name === 'admin') {
-    //         return redirect()->route('users.index')
-    //             ->with('error', 'Không thể khóa tài khoản quản trị viên.');
-    //     }
-
-    //     // Đảo trạng thái: 1 => 0, 0 => 1
-    //     $user->status = $user->status == 1 ? 0 : 1;
-    //     $user->save();
-
-    //     return redirect()->route('users.index')
-    //         ->with('success', 'Đã cập nhật trạng thái tài khoản.');
     // }
 
     public function toggleStatus($id)

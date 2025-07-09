@@ -51,9 +51,14 @@
                             <td> {{ $user->created_at->format('d-m-Y') }}</td>
                             <td> {{ $user->updated_at->format('d-m-Y') }}</td>
                             <td>
-                                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn  btn-warning">Sửa</a>
+                                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-warning"
+                                    title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
 
-                                <a href="{{ route('admin.users.show', $user->id) }}" class="btn  btn-info">Xem</a>
+                                <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-info" title="Xem">
+                                    <i class="fas fa-eye"></i>
+                                </a>
 
                                 {{-- <form id="delete-form-{{ $user->id }}"
                                     action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
@@ -66,19 +71,6 @@
                                     </button>
                                 </form> --}}
 
-                                {{-- Nút đổi trạng thái --}}
-                                {{-- <form action="{{ url('/users/' . $user->id . '/toggle-status') }}" method="POST"
-                                    style="display:inline-block;">
-                                    @csrf
-                                    @method('PATCH')
-
-                                    @if ($user->status == 1)
-                                        <button type="submit" class="btn btn-secondary">Khóa</button>
-                                    @else
-                                        <button type="submit" class="btn btn-success">Kích hoạt</button>
-                                    @endif
-                                </form> --}}
-
                                 <form id="toggle-status-form-{{ $user->id }}"
                                     action="{{ route('admin.users.toggleStatus', $user->id) }}" method="POST"
                                     style="display:inline-block;">
@@ -86,11 +78,15 @@
                                     @method('PATCH')
 
                                     @if ($user->status == 1)
-                                        <button type="button" class="btn btn-secondary "
-                                            onclick="confirmToggle({{ $user->id }}, false)">Khóa</button>
+                                        <button type="button" class="btn btn-secondary" title="Khóa"
+                                            onclick="confirmToggle({{ $user->id }}, false)">
+                                            <i class="fas fa-lock"></i>
+                                        </button>
                                     @else
-                                        <button type="button" class="btn btn-success "
-                                            onclick="confirmToggle({{ $user->id }}, true)">Kích hoạt</button>
+                                        <button type="button" class="btn btn-success" title="Kích hoạt"
+                                            onclick="confirmToggle({{ $user->id }}, true)">
+                                            <i class="fas fa-unlock"></i>
+                                        </button>
                                     @endif
                                 </form>
 
