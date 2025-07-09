@@ -59,20 +59,31 @@
                                     @php
                                         $product = $item->product;
                                         $variant = $item->productVariant;
+
                                         $image = $product->image ?? 'clients/img/default.png';
                                         $productName = $product->product_name ?? 'Không có tên';
-                                        $variantName = $variant->name ?? null;
-                                        $stock = $variant->quantity ?? ($product->quantity ?? 0);
+
+                                        // ✅ Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
+                                        $variantName = '';
+                                        if ($variant && $variant->attributeValues) {
+                                            $variantName = $variant->attributeValues
+                                                ->map(function ($val) {
+                                                    return $val->attribute->name . ': ' . $val->value;
+                                                })
+                                                ->implode(', ');
+                                        }
+
+                                        $stock = $variant->quantity_in_stock ?? ($product->quantity ?? 0);
                                         $price = $item->discounted_price ?? 0;
                                         $subTotal = $price * $item->quantity;
                                         $total += $subTotal;
                                     @endphp
+
                                     <tr class="cart-item" data-id="{{ $item->id }}"
                                         data-stock="{{ $stock }}">
                                         <td>
                                             <input type="checkbox" name="selected_items[]" value="{{ $item->id }}"
                                                 class="select-item" data-subtotal="{{ $subTotal ?? 0 }}">
-
                                         </td>
                                         <td>
                                             <img src="{{ asset('storage/' . $image) }}" class="rounded"
@@ -80,8 +91,15 @@
                                         </td>
                                         <td class="text-start">
                                             <strong>{{ $productName }}</strong>
-                                            @if ($variantName)
-                                                <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
+                                            @if ($variant && $variant->attributeValues->count())
+                                                <div class="mt-1">
+                                                    @foreach ($variant->attributeValues as $value)
+                                                        <span class="badge bg-info text-dark me-1">
+                                                            {{ $value->attribute->name }}:
+                                                            <strong>{{ $value->value }}</strong>
+                                                        </span>
+                                                    @endforeach
+                                                </div>
                                             @endif
                                         </td>
                                         <td>{{ number_format($price, 0, ',', '.') }} đ</td>
@@ -113,6 +131,7 @@
                                 </tr>
                             @endif
                         </tbody>
+
                     </table>
                 </div>
             </form>
