@@ -35,10 +35,15 @@
                                 @php
                                     $existingCombinations = [];
                                     foreach ($product->variants as $variant) {
-                                        $flavor =
-                                            $variant->attributeValues->firstWhere('attribute.name', 'Vị')?->value ??
-                                            $variant->attributeValues->firstWhere('attribute.name', 'Đạng')?->value;
-                                        $size = $variant->attributeValues->firstWhere('attribute.name', 'Size')?->value;
+                                        $flavor = optional(
+                                            $variant->attributeValues->firstWhere('attribute.name', 'Vị') ??
+                                                $variant->attributeValues->firstWhere('attribute.name', 'Đạng'),
+                                        )->value;
+
+                                        $size = optional(
+                                            $variant->attributeValues->firstWhere('attribute.name', 'Size'),
+                                        )->value;
+
                                         if ($flavor && $size) {
                                             $existingCombinations[] = strtolower($flavor . '|' . $size);
                                         }

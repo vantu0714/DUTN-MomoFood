@@ -18,11 +18,11 @@
 
         $statusClasses = [
             1 => 'bg-warning text-dark',
-            2 => 'bg-primary',
-            3 => 'bg-info',
-            4 => 'bg-success',
-            5 => 'bg-secondary',
-            6 => 'bg-danger',
+            2 => 'bg-orange text-white',
+            3 => 'bg-info text-white',
+            4 => 'bg-success text-white',
+            5 => 'bg-secondary text-white',
+            6 => 'bg-danger text-white',
         ];
 
         $paymentStatusClasses = [
@@ -39,12 +39,12 @@
         $calculatedDiscount = max(0, $calculatedDiscount);
     @endphp
 
-    <div class="container mb-5" style="margin-top: 200px">
+    <div class="container mb-5" style="margin-top: 150px">
         <nav class="nav nav-borders">
-            <a class="nav-link active ms-0" href="{{ route('clients.info') }}">Thông tin</a>
-            <a class="nav-link" href="{{ route('clients.changepassword') }}">Đổi mật khẩu</a>
-            <a class="nav-link" href="{{ route('clients.orders') }}">Đơn hàng</a>
-            <a href="#" class="nav-link"
+            <a class="nav-link text-dark" href="{{ route('clients.info') }}">Thông tin</a>
+            <a class="nav-link text-dark" href="{{ route('clients.changepassword') }}">Đổi mật khẩu</a>
+            <a class="nav-link active fw-semibold" href="{{ route('clients.orders') }}">Đơn hàng</a>
+            <a href="#" class="nav-link text-dark"
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 Đăng xuất
             </a>
@@ -56,50 +56,56 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom-0">
-                <h4 class="mb-0" style="font-family: 'Open Sans', sans-serif">Chi tiết đơn hàng #{{ $order->order_code }}
-                </h4>
-                <small class="text-muted">Ngày đặt: {{ $order->created_at->format('d/m/Y') }}</small>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-0" style="font-family: 'Open Sans', sans-serif">Chi tiết đơn hàng
+                            #{{ $order->order_code }}
+                        </h4>
+                        <small class="text-muted">Ngày đặt: {{ $order->created_at->format('d/m/Y') }}</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge {{ $statusClasses[$order->status] ?? 'bg-secondary' }} me-3"
+                            style="font-size: 1.1em;">
+                            {{ $statusLabels[$order->status] ?? 'Không xác định' }}
+                        </span>
+                    </div>
+                </div>
             </div>
 
             <div class="card-body">
                 <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card mb-3">
+                    <div class="col-md-12">
+                        <div class="card">
                             <div class="card-header bg-light">
-                                <h6 class="mb-0">Thông tin đơn hàng</h6>
+                                <h6 class="mb-0 fw-semibold">Thông tin nhận hàng</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex flex-column">
-                                            <span class="text-muted small">Mã đơn hàng:</span>
-                                            <span class="fw-bold">{{ $order->order_code }}</span>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <p class="mb-1"><strong>Người nhận:</strong></p>
+                                            <p class="mb-0">{{ $order->recipient_name ?? Auth::user()->name }}</p>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex flex-column">
-                                            <span class="text-muted small">Ngày đặt:</span>
-                                            <span class="fw-bold">{{ $order->created_at->format('d/m/Y') }}</span>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <p class="mb-1"><strong>Số điện thoại:</strong></p>
+                                            <p class="mb-0">{{ $order->recipient_phone ?? Auth::user()->phone }}</p>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex flex-column">
-                                            <span class="text-muted small">Trạng thái:</span>
-                                            <span>
-                                                <span class="badge {{ $statusClasses[$order->status] ?? 'bg-secondary' }}">
-                                                    {{ $statusLabels[$order->status] ?? 'Không xác định' }}
-                                                </span>
-                                            </span>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <p class="mb-1"><strong>Địa chỉ nhận hàng:</strong></p>
+                                            <p class="mb-0">{{ $order->recipient_address ?? Auth::user()->address }}</p>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex flex-column">
-                                            <span class="text-muted small">Thanh toán:</span>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <p class="mb-1"><strong>Trạng thái thanh toán:</strong></p>
                                             <span
-                                                class="fw-bold">{{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}</span>
+                                                class="badge {{ $paymentStatusClasses[$order->payment_status] ?? 'bg-secondary' }}">
+                                                {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -112,42 +118,11 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header bg-light">
-                                <h6 class="mb-0">Thông tin nhận hàng</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted">Trạng thái thanh toán:</span>
-                                    <span>
-                                        <span
-                                            class="badge {{ $paymentStatusClasses[$order->payment_status] ?? 'bg-secondary' }}">
-                                            {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
-                                        </span>
-                                    </span>
-                                </div>
-                                <div class="mb-3">
-                                    <p class="mb-1"><strong>Người nhận:</strong></p>
-                                    <p class="mb-0">{{ $order->recipient_name ?? Auth::user()->name }}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <p class="mb-1"><strong>Địa chỉ nhận hàng:</strong></p>
-                                    <p class="mb-0">{{ $order->recipient_address ?? Auth::user()->address }}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <p class="mb-1"><strong>Số điện thoại:</strong></p>
-                                    <p class="mb-0">{{ $order->recipient_phone ?? Auth::user()->phone }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="card mb-4">
                     <div class="card-header bg-light">
-                        <h6 class="mb-0">Sản phẩm trong đơn hàng</h6>
+                        <h6 class="mb-0 fw-semibold">Sản phẩm trong đơn hàng</h6>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover mb-0" style="table-layout: fixed;">
@@ -181,15 +156,16 @@
                                             <div class="d-flex flex-column">
                                                 <span>{{ $item->product->product_name ?? '[Đã xoá]' }}</span>
                                                 @if ($item->productVariant && $item->productVariant->sku)
-                                                    <small class="text-muted">Loại: {{ $item->productVariant->sku }}</small>
+                                                    <small class="text-muted">Loại:
+                                                        {{ $item->productVariant->sku }}</small>
                                                 @endif
                                             </div>
                                         </td>
                                         <td class="ps-2 pe-2 text-center">
-                                            <span class="badge bg-primary">{{ $item->quantity }}</span>
+                                            <span class="badge bg-orange">{{ $item->quantity }}</span>
                                         </td>
                                         <td class="ps-2 pe-2 text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
-                                        <td class="ps-2 pe-2 text-end fw-bold">
+                                        <td class="ps-2 pe-2 text-end fw-bold text-orange">
                                             {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫
                                         </td>
                                     </tr>
@@ -222,7 +198,7 @@
                                 <div class="d-flex justify-content-between mt-3 pt-2 border-top">
                                     <span class="fw-bold">Tổng thanh toán:</span>
                                     <span
-                                        class="fw-bold text-success">{{ number_format($order->total_price, 0, ',', '.') }}₫</span>
+                                        class="fw-bold text-orange">{{ number_format($order->total_price, 0, ',', '.') }}₫</span>
                                 </div>
                             </div>
                         </div>
@@ -267,4 +243,42 @@
             </div>
         </div>
     </div>
+
+    @push('styles')
+        <style>
+            :root {
+                --orange-primary: rgb(219, 115, 91);
+                --orange-hover: rgb(190, 90, 68);
+            }
+
+            .bg-orange {
+                background-color: var(--orange-primary) !important;
+            }
+
+            .border-orange {
+                border-color: var(--orange-primary) !important;
+            }
+
+            .btn-orange {
+                background-color: var(--orange-primary);
+                border-color: var(--orange-primary);
+                color: white;
+            }
+
+            .btn-orange:hover {
+                background-color: var(--orange-hover);
+                border-color: var(--orange-hover);
+                color: white;
+            }
+
+            .nav-borders .nav-link.active {
+                color: var(--orange-primary) !important;
+                border-bottom: 2px solid var(--orange-primary);
+            }
+
+            .nav-borders .nav-link:hover {
+                color: var(--orange-primary);
+            }
+        </style>
+    @endpush
 @endsection

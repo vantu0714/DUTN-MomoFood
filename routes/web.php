@@ -71,6 +71,8 @@ Route::post('/comments', [ClientCommentController::class, 'store'])->name('comme
 Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.payment');
 Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.return');
 
+Route::post('carts/add', [CartClientController::class, 'addToCart'])->name('carts.add')->middleware('auth');
+
 // ==================== CLIENT AUTHENTICATED ROUTES ====================
 Route::middleware(['auth', 'client'])->group(function () {
     // Profile Management
@@ -91,7 +93,6 @@ Route::middleware(['auth', 'client'])->group(function () {
     // Cart Management
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
-        Route::post('/add', [CartClientController::class, 'addToCart'])->name('carts.add');
         Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
         Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
         Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
@@ -164,6 +165,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         //Route thêm biến thể cho nhiều sản phẩm
         Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
         Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
+        Route::get('/cancel', [ProductVariantController::class, 'cancel'])->name('cancel');
     });
 
 

@@ -17,10 +17,11 @@ class ClientMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
-
+        
         if ($user && $user->role && $user->role->name === 'user') {
-            if($user->status == 1) return $next($request);
-            if($user->status == 0){
+            if ($user->status == 1)
+                return $next($request);
+            if ($user->status == 0) {
                 Auth::logout();
                 return redirect()->route('login')->with('error', 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.');
             }
