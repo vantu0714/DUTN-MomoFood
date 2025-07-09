@@ -1,18 +1,6 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
-
-<script>
-    @if (session('success'))
-        showToast('{{ session('success') }}');
-    @endif
-
-    @if (session('error'))
-        showToast('{{ session('error') }}', 'error');
-    @endif
-</script>
-
-
 <!-- Modal Search Start -->
 <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
@@ -32,8 +20,6 @@
     </div>
 </div>
 <!-- Modal Search End -->
-
-
 <!-- Single Page Header start -->
 <div class="container-fluid page-header mb-5"
     style="
@@ -58,8 +44,6 @@
     </div>
 </div>
 <!-- Single Page Header End -->
-
-
 <!-- Fruits Shop Start-->
 <div class="container-fluid fruite py-5">
     <div class="container py-5">
@@ -182,7 +166,6 @@
                                         </button>
                                     </div>
                                 </form>
-
                             </div>
 
                             <div class="col-lg-12">
@@ -287,27 +270,24 @@
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-auto">
                                                 <div class="product-price-wrapper">
-                                                    @if ($product->discounted_price && $product->discounted_price < $product->original_price)
+                                                    @if ($price && $originalPrice && $price < $originalPrice)
                                                         <div class="product-price-sale">
-                                                            {{ number_format($product->discounted_price, 0, ',', '.') }}
-                                                            <span class="currency">VND</span>
+                                                            {{ number_format($price, 0, ',', '.') }} <span
+                                                                class="currency">VND</span>
                                                         </div>
                                                         <div class="product-price-original">
-                                                            {{ number_format($product->original_price, 0, ',', '.') }}
-                                                            VND
+                                                            {{ number_format($originalPrice, 0, ',', '.') }} VND
                                                         </div>
-                                                    @elseif ($product->original_price)
+                                                    @elseif ($price)
                                                         <div class="product-price-sale">
-                                                            {{ number_format($product->original_price, 0, ',', '.') }}
-                                                            <span class="currency">VND</span>
+                                                            {{ number_format($price, 0, ',', '.') }} <span
+                                                                class="currency">VND</span>
                                                         </div>
                                                     @else
                                                         <div class="text-muted">Liên hệ để biết giá</div>
                                                     @endif
                                                 </div>
-
-                                                <form class="add-to-cart-form" method="POST"
-                                                    action="{{ route('carts.add') }}">
+                                                <form class="add-to-cart-form">
                                                     @csrf
                                                     <input type="hidden" name="product_id"
                                                         value="{{ $product->id }}">

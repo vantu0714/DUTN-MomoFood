@@ -2,63 +2,167 @@
 @include('clients.layouts.sidebar')
 {{-- @vite('resources/css/shop.css') --}}
 <link rel="stylesheet" href="{{ asset('clients/css/shop-detail.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <!-- Single Page Header start -->
 <div class="container-fluid page-header py-5">
     <h1 class="text-center text-white display-6">Chi Tiết Sản Phẩm</h1>
 </div>
+
 <!-- Single Product Start -->
 <div class="container-fluid py-5 mt-5">
     <div class="container py-3">
         <div class="row g-4 mb-5 justify-content-center">
             <div class="col-lg-8 col-xl-9">
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ route('home') }}">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('shop.index') }}">Cửa hàng</a></li>
+                        @if ($product->category)
+                            @if ($product->category->parent)
+                                <li class="breadcrumb-item">
+                                    <a href="{{ route('shop.category', $product->category->parent->id) }}">
+                                        {{ $product->category->parent->category_name }}
+                                    </a>
+                                </li>
+                            @endif
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('shop.category', $product->category->id) }}">
+                                    {{ $product->category->category_name }}
+                                </a>
+                            </li>
+                        @else
+                            <li class="breadcrumb-item">Không có danh mục</li>
+                        @endif
+                        <li class="breadcrumb-item active" aria-current="page">{{ $product->product_name }}</li>
+                    </ol>
+                </nav>
+
                 <div class="row g-4">
                     <div class="col-lg-6">
-                        <div class="product-image-container">
-                            <img id="mainProductImage" src="{{ asset('storage/' . $product->image) }}"
-                                class="product-image" alt="{{ $product->product_name }}">
+                        {{-- Ảnh chính --}}
+                        <div class="product-image-container mb-3">
+                            <img id="mainProductImage"
+                                src="{{ $product->image ? asset('storage/' . $product->image) : $product->variants->first()?->image_url ?? '' }}"
+                                data-original-src="{{ $product->image ? asset('storage/' . $product->image) : $product->variants->first()?->image_url ?? '' }}"
+                                class="product-image img-fluid rounded shadow-sm" alt="{{ $product->product_name }}"
+                                style="width: 100%; max-height: 450px; object-fit: cover;">
                             <div class="image-overlay"></div>
                             <div class="zoom-icon">
                                 <i class="fas fa-search-plus text-success"></i>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-lg-6 product-info">
-                        <h2 class="fw-bold text-dark mb-3 section-title">{{ $product->product_name }}</h2>
+                        {{-- Ảnh biến thể hiển thị bên dưới --}}
+                        <div class="variant-thumbnails d-flex gap-2 flex-wrap">
+                            {{-- Ảnh chính cũng là thumbnail đầu tiên --}}
+                            @if ($product->image)
+                                <img src="{{ asset('storage/' . $product->image) }}"
+                                    alt="{{ $product->product_name }}"
+                                    class="variant-thumbnail img-thumbnail border border-primary"
+                                    data-full-image="{{ asset('storage/' . $product->image) }}"
+                                    style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
+                            @endif
+                            {{-- Ảnh từ biến thể --}}
+                            @foreach ($product->variants as $variant)
+                                @if ($variant->image_url)
+                                    <img src="{{ $variant->image_url }}" alt="{{ $variant->full_name }}"
+                                        class="variant-thumbnail img-thumbnail"
+                                        data-full-image="{{ $variant->image_url }}"
+                                        style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
+                                @endif
+                            @endforeach
+                        </div>
+                        {{-- Chia sẻ mạng xã hội --}}
+                        <strong>Chia sẻ:</strong>
+                        <div class="d-flex gap-2 mt-2">
+                            {{-- Messenger --}}
+                            <a href="https://www.facebook.com/dialog/send?link={{ urlencode(Request::url()) }}&app_id=1507345650254377&redirect_uri={{ urlencode(Request::url()) }}"
+                                target="_blank" class="btn btn-sm rounded-circle shadow-sm"
+                                style="background-color: #0084FF; color: white; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fab fa-facebook-messenger"></i>
+                            </a>
 
+                            {{-- Facebook --}}
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(Request::url()) }}"
+                                target="_blank" class="btn btn-sm rounded-circle shadow-sm"
+                                style="background-color: #3b5998; color: white; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+
+                            {{-- Instagram (chỉ mở Instagram trang chủ, không có API chia sẻ trực tiếp) --}}
+                            <a href="https://www.instagram.com/" target="_blank"
+                                class="btn btn-sm rounded-circle shadow-sm"
+                                style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+                                  color: white; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+
+
+                            {{-- Twitter --}}
+                            <a href="https://twitter.com/intent/tweet?url={{ urlencode(Request::url()) }}"
+                                target="_blank" class="btn btn-sm rounded-circle shadow-sm"
+                                style="background-color: #1DA1F2; color: white; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 product-info">
+                        <h3 class="fw-bold text-dark mb-3 section-title">{{ $product->product_name }}</h3>
+                        <!-- START: Đánh giá tổng quan -->
+                        <div class="product-summary-stats d-flex align-items-center gap-4 mb-3">
+                            <div class="rating-summary d-flex align-items-center border-end pe-4">
+                                <span class="fw-bold me-1 text-dark" style="font-size: 1.2rem;">
+                                    {{ number_format($averageRating, 1) }}
+                                </span>
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <i
+                                        class="fa fa-star {{ $i <= round($averageRating) ? 'text-warning' : 'text-muted' }}"></i>
+                                @endfor
+                            </div>
+                            <div class="review-count border-end px-4">
+                                <span class="fw-bold text-dark">{{ number_format($product->comments->count()) }}</span>
+                                <span class="text-muted">Đánh Giá</span>
+                            </div>
+                            <div class="sold-count ps-4">
+                                <span class="text-muted">Đã Bán</span>
+                                <span class="fw-bold text-dark ms-1">
+                                    {{ $product->sold_count >= 1000 ? number_format($product->sold_count / 1000, 1) . 'k' : $product->sold_count }}
+                                </span>
+                            </div>
+                        </div>
+                        <!-- END: Đánh giá tổng quan -->
                         <p class="text-muted mb-3">
                             <i class="fas fa-tag me-2"></i>
                             <strong>Danh mục:</strong> {{ $product->category?->category_name ?? 'Không có danh mục' }}
                         </p>
-
-                        <h3 class="product-price mb-4 d-flex align-items-baseline">
-                            @if ($product->discounted_price && $product->discounted_price < $product->original_price)
-                                <span class="price-amount fw-bold text-danger me-3" style="font-size: 2.2rem;">
-                                    {{ number_format($product->discounted_price, 0, ',', '.') }}
-                                </span>
-                                <span class="original-price text-muted text-decoration-line-through"
-                                    style="font-size: 1.5rem;">
-                                    {{ number_format($product->original_price, 0, ',', '.') }}
-                                </span>
-                            @else
-                                <span class="price-amount fw-bold" style="font-size: 2.2rem;">
-                                    {{ number_format($product->original_price, 0, ',', '.') }}
-                                </span>
-                            @endif
-                            <span class="currency ms-2 text-muted">VND</span>
+                        <h3 class="product-price mb-4 d-flex align-items-center">
+                            @php
+                                $isDiscounted =
+                                    $product->discounted_price && $product->discounted_price < $product->original_price;
+                                $discountPercent = $isDiscounted
+                                    ? round((1 - $product->discounted_price / $product->original_price) * 100)
+                                    : 0;
+                            @endphp
+                            {{-- Giá sau giảm (nếu có) --}}
+                            <span class="price-amount fw-bold me-2 {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
+                                style="font-size: 2rem;" data-original-price="{{ $product->discounted_price }}"
+                                data-original-original="{{ $product->original_price }}">
+                                <span
+                                    class="text-decoration-none">đ</span>{{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
+                            </span>
+                            {{-- Giá gốc --}}
+                            <span class="original-price text-muted text-decoration-line-through me-2"
+                                style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
+                                đ{{ number_format($product->original_price, 0, ',', '.') }}
+                            </span>
+                            {{-- Giảm giá phần trăm --}}
+                            <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
+                                style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
+                                -{{ $discountPercent }}%
+                            </span>
                         </h3>
-
-
-                        <div class="rating-stars mb-4">
-                            @for ($i = 1; $i <= 5; $i++)
-                                <i class="fa fa-star {{ $i <= 4 ? 'text-warning' : 'text-muted' }}"
-                                    style="font-size: 1.2rem;"></i>
-                            @endfor
-                            <span class="ms-2 text-muted fw-semibold">(4.0 / 5)</span>
-                        </div>
-
                         <p class="text-muted mb-4" style="line-height: 1.8; font-size: 15px;">
                             {{ $product->description ?? 'Không có mô tả.' }}</p>
-
                         <form id="addToCartForm" action="{{ route('carts.add') }}" method="POST"
                             class="d-flex flex-column gap-4">
                             @csrf
@@ -76,26 +180,18 @@
                                                     data-variant-name="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}"
                                                     data-variant-price="{{ $variant->formatted_final_price }}"
                                                     data-variant-image="{{ $variant->image_url }}"
+                                                    data-variant-stock="{{ $variant->quantity_in_stock }}"
                                                     style="cursor: pointer;">
                                                     <div class="variant-content">
                                                         @if ($variant->image_url)
-                                                            <img src="{{ $variant->image_url }}" class="variant-image"
+                                                            <img src="{{ $variant->image_url }}"
+                                                                class="variant-image"
                                                                 alt="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}">
                                                         @endif
                                                         <div class="flex-grow-1">
-                                                            <!-- Option 1: Single line with all info -->
                                                             <div class="variant-name">
                                                                 {{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}
                                                             </div>
-
-                                                            <!-- Option 2: Separate Vị and Size on same line (uncomment to use) -->
-                                                            <!--
-                                <div class="variant-name-inline">
-                                    <span class="variant-flavor">Vị: {{ $variant->flavor ?? 'Cay' }}</span>
-                                  
-                                    <span class="variant-size">Size: {{ $variant->size ?? 'M' }}</span>
-                                </div>
-                                -->
                                                         </div>
                                                     </div>
                                                 </div>
@@ -104,8 +200,16 @@
                                     </div>
                                     <input type="hidden" name="product_variant_id" id="selectedVariantId"
                                         value="">
+                                    <div class="text-end mt-2">
+                                        <button type="button" id="cancelVariantSelection"
+                                            class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-times-circle me-1"></i> Hủy chọn
+                                        </button>
+                                    </div>
                                 </div>
+
                             @endif
+
                             {{-- CHỌN SỐ LƯỢNG --}}
                             <div class="d-flex align-items-center gap-4">
                                 <label class="form-label fw-bold mb-0" style="font-size: 16px;">
@@ -121,8 +225,11 @@
                                         <i class="fa fa-plus"></i>
                                     </button>
                                 </div>
+                                <div class="available-stock text-muted ms-3" id="availableStock">
+                                    {{ $product->variants->first()?->quantity_in_stock ?? $product->quantity_in_stock }}
+                                    sản phẩm có sẵn
+                                </div>
                             </div>
-
                             <button type="submit" class="add-to-cart-btn w-100">
                                 <i class="fa fa-shopping-bag me-2"></i>
                                 Thêm vào giỏ hàng
@@ -130,12 +237,15 @@
                         </form>
                     </div>
                     {{-- PHẦN MÔ TẢ VÀ ĐÁNH GIÁ --}}
+                    @php
+                        $hasRated = $product->comments->contains('user_id', Auth::id());
+                    @endphp
                     <div class="col-lg-12">
                         <nav>
                             <div class="nav nav-tabs mb-3">
                                 <button class="nav-link active border-white border-bottom-0" type="button"
-                                    role="tab" id="nav-about-tab" data-bs-toggle="tab" data-bs-target="#nav-about"
-                                    aria-controls="nav-about" aria-selected="true">
+                                    role="tab" id="nav-about-tab" data-bs-toggle="tab"
+                                    data-bs-target="#nav-about" aria-controls="nav-about" aria-selected="true">
                                     <i class="fas fa-info-circle me-2"></i>Mô tả
                                 </button>
                                 <button class="nav-link border-white border-bottom-0" type="button" role="tab"
@@ -167,10 +277,15 @@
                                                 <small
                                                     class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
                                             </div>
-                                            <div class="d-flex mb-2">
+                                            @php
+                                                $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0;
+                                            @endphp
+                                            <div class="mb-2">
+
+
                                                 @for ($i = 1; $i <= 5; $i++)
-                                                    <i
-                                                        class="fas fa-star {{ $i <= $comment->rating ? 'text-warning' : 'text-secondary' }}"></i>
+                                                    <i class="fas fa-star"
+                                                        style="color: {{ $i <= $rating ? '#ffc107' : '#ccc' }}"></i>
                                                 @endfor
                                             </div>
                                             <p class="mb-0 text-dark">{{ $comment->content }}</p>
@@ -187,7 +302,7 @@
                     </div>
 
                     {{-- FORM BÌNH LUẬN --}}
-                    @if (Auth::check())
+                    @if (Auth::check() && $hasPurchased)
                         <form action="{{ route('comments.store') }}" method="POST"
                             class="bg-light p-4 p-md-5 rounded shadow-sm">
                             @csrf
@@ -217,6 +332,11 @@
                                 </button>
                             </div>
                         </form>
+                    @elseif(Auth::check())
+                        <div class="alert alert-warning text-center py-4">
+                            <i class="fas fa-exclamation-circle me-2 text-warning"></i>
+                            Bạn cần mua sản phẩm này trước khi có thể đánh giá.
+                        </div>
                     @else
                         <div class="text-center py-4">
                             <p class="mb-3">Bạn cần đăng nhập để có thể đánh giá sản phẩm</p>
@@ -225,6 +345,36 @@
                             </a>
                         </div>
                     @endif
+
+
+                    {{-- SCRIPT CHỌN SAO --}}
+                    @push('scripts')
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const stars = document.querySelectorAll('.star');
+                                const ratingInput = document.getElementById('rating-value');
+
+                                stars.forEach(star => {
+                                    star.addEventListener('click', function() {
+                                        const rating = this.getAttribute('data-rating');
+                                        ratingInput.value = rating;
+
+                                        // Highlight sao đã chọn
+                                        stars.forEach(s => {
+                                            if (s.getAttribute('data-rating') <= rating) {
+                                                s.classList.remove('text-muted');
+                                                s.classList.add('text-warning');
+                                            } else {
+                                                s.classList.remove('text-warning');
+                                                s.classList.add('text-muted');
+                                            }
+                                        });
+                                    });
+                                });
+                            });
+                        </script>
+                    @endpush
+
                 </div>
             </div>
         </div>
@@ -265,70 +415,124 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         let selectedVariant = null;
-        // Xử lý chọn biến thể
+
         const variantOptions = document.querySelectorAll('[data-variant-id]');
+        const thumbnails = document.querySelectorAll('.variant-thumbnail');
+        const priceElement = document.querySelector('.price-amount');
+        const originalPriceElement = document.querySelector('.original-price');
+        const discountPercentElement = document.querySelector('.discount-percent');
+        const mainImage = document.getElementById('mainProductImage');
+        const quantityInput = document.querySelector('#quantity');
+        const minusBtn = document.querySelector('.btn-minus');
+        const plusBtn = document.querySelector('.btn-plus');
+        const stockElement = document.getElementById('availableStock');
+        const form = document.getElementById('addToCartForm');
+        const cancelButton = document.getElementById('cancelVariantSelection');
+
+        function updateMainImage(newSrc) {
+            if (!mainImage || !newSrc) return;
+            mainImage.style.opacity = '0.7';
+            mainImage.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                mainImage.src = newSrc;
+                mainImage.style.opacity = '1';
+                mainImage.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        function highlightThumbnail(imageSrc) {
+            thumbnails.forEach(thumb => {
+                const thumbImage = thumb.getAttribute('data-full-image');
+                if (thumbImage === imageSrc) {
+                    thumb.classList.add('border-success');
+                } else {
+                    thumb.classList.remove('border-success');
+                }
+            });
+        }
+
+        function formatCurrency(number) {
+            return number.toLocaleString('vi-VN');
+        }
+
+        function updatePriceDisplay(discounted, original) {
+            if (!priceElement) return;
+            priceElement.textContent = 'đ' + formatCurrency(discounted);
+
+            if (original > discounted) {
+                if (originalPriceElement) {
+                    originalPriceElement.textContent = 'đ' + formatCurrency(original);
+                    originalPriceElement.style.display = 'inline';
+                }
+                if (discountPercentElement) {
+                    const percent = Math.round((1 - discounted / original) * 100);
+                    discountPercentElement.textContent = `-${percent}%`;
+                    discountPercentElement.style.display = 'inline-block';
+                }
+            } else {
+                if (originalPriceElement) {
+                    originalPriceElement.textContent = '';
+                    originalPriceElement.style.display = 'none';
+                }
+                if (discountPercentElement) {
+                    discountPercentElement.textContent = '';
+                    discountPercentElement.style.display = 'none';
+                }
+            }
+        }
+
         variantOptions.forEach(option => {
             option.addEventListener('click', function() {
-                // Bỏ chọn variant hiện tại
                 variantOptions.forEach(opt => opt.classList.remove('selected'));
-
-                // Chọn variant mới
                 this.classList.add('selected');
-                selectedVariant = {
-                    id: this.dataset.variantId,
-                    name: this.dataset.variantName,
-                    price: this.dataset.variantPrice,
-                    image: this.dataset.variantImage
-                };
-                document.getElementById('selectedVariantId').value = selectedVariant.id;
-                // Cập nhật ảnh chính với hiệu ứng smooth
-                if (selectedVariant.image) {
-                    const mainImage = document.getElementById('mainProductImage');
-                    mainImage.style.opacity = '0.7';
-                    mainImage.style.transform = 'scale(0.95)';
 
-                    setTimeout(() => {
-                        mainImage.src = selectedVariant.image;
-                        mainImage.style.opacity = '1';
-                        mainImage.style.transform = 'scale(1)';
-                    }, 200);
+                selectedVariant = {
+                    id: this.dataset.variantId || '',
+                    name: this.dataset.variantName || '',
+                    price: this.dataset.variantPrice || '',
+                    original: this.dataset.variantOriginal || this.dataset.variantPrice,
+                    image: this.dataset.variantImage || '',
+                    stock: parseInt(this.dataset.variantStock || '0')
+                };
+
+                document.getElementById('selectedVariantId').value = selectedVariant.id;
+
+                if (selectedVariant.image) {
+                    updateMainImage(selectedVariant.image);
+                    highlightThumbnail(selectedVariant.image);
                 }
 
-                // Cập nhật giá
-                const priceElement = document.querySelector('.price-amount');
-                if (priceElement && selectedVariant.price) {
-                    // Lấy số từ chuỗi price (ví dụ: "50,000 VND" -> 50000)
-                    const numericPrice = selectedVariant.price.replace(/[^\d]/g, '');
-                    if (numericPrice) {
-                        priceElement.textContent = parseInt(numericPrice).toLocaleString(
-                            'vi-VN');
+                const discounted = parseInt(selectedVariant.price.replace(/[^\d]/g, '')) || 0;
+                const original = parseInt(selectedVariant.original.replace(/[^\d]/g, '')) ||
+                    discounted;
+
+                updatePriceDisplay(discounted, original);
+
+                if (stockElement) {
+                    stockElement.textContent = `${selectedVariant.stock} sản phẩm có sẵn`;
+                }
+
+                if (quantityInput && selectedVariant.stock > 0) {
+                    if (parseInt(quantityInput.value) > selectedVariant.stock) {
+                        quantityInput.value = selectedVariant.stock;
                     }
                 }
             });
         });
-        // Xử lý rating (chọn sao)
+
+        thumbnails.forEach(thumbnail => {
+            thumbnail.addEventListener('click', function() {
+                const fullImage = this.getAttribute('data-full-image');
+                if (fullImage) {
+                    updateMainImage(fullImage);
+                    highlightThumbnail(fullImage);
+                }
+            });
+        });
+
+        // Star rating
         const stars = document.querySelectorAll('.star');
         const ratingInput = document.getElementById('rating-value');
-
-        if (stars.length > 0 && ratingInput) {
-            stars.forEach(star => {
-                star.addEventListener('mouseenter', function() {
-                    const rating = parseInt(this.dataset.rating);
-                    highlightStars(rating);
-                });
-
-                star.addEventListener('mouseleave', function() {
-                    const currentRating = parseInt(ratingInput.value);
-                    highlightStars(currentRating);
-                });
-
-                star.addEventListener('click', function() {
-                    const rating = parseInt(this.dataset.rating);
-                    ratingInput.value = rating;
-                    highlightStars(rating);
-                });
-            });
-        }
 
         function highlightStars(rating) {
             stars.forEach((star, index) => {
@@ -341,11 +545,23 @@
                 }
             });
         }
-        // Xử lý tăng giảm số lượng
-        const minusBtn = document.querySelector('.btn-minus');
-        const plusBtn = document.querySelector('.btn-plus');
-        const quantityInput = document.querySelector('#quantity');
 
+        if (stars.length > 0 && ratingInput) {
+            stars.forEach(star => {
+                star.addEventListener('mouseenter', function() {
+                    highlightStars(parseInt(this.dataset.rating));
+                });
+                star.addEventListener('mouseleave', function() {
+                    highlightStars(parseInt(ratingInput.value));
+                });
+                star.addEventListener('click', function() {
+                    ratingInput.value = this.dataset.rating;
+                    highlightStars(parseInt(this.dataset.rating));
+                });
+            });
+        }
+
+        // Quantity control
         if (minusBtn) {
             minusBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -355,29 +571,69 @@
                 }
             });
         }
+
         if (plusBtn) {
             plusBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 let value = parseInt(quantityInput.value) || 1;
-                quantityInput.value = value + 1;
-            });
-        }
-
-        // Xử lý submit form
-        const form = document.getElementById('addToCartForm');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                // Kiểm tra xem đã chọn biến thể chưa (nếu có)
-                const hasVariants = variantOptions.length > 0;
-
-                if (hasVariants && !selectedVariant) {
-                    e.preventDefault();
-                    alert('Vui lòng chọn loại sản phẩm!');
-                    return;
+                let max = selectedVariant?.stock || 9999;
+                if (value < max) {
+                    quantityInput.value = value + 1;
                 }
             });
         }
+
+        // Validate form before submit
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const hasVariants = variantOptions.length > 0;
+                if (hasVariants && !selectedVariant) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn loại sản phẩm!');
+                }
+            });
+        }
+
+        // ❌ Cancel variant selection
+        if (cancelButton) {
+            cancelButton.addEventListener('click', function() {
+                selectedVariant = null;
+                document.getElementById('selectedVariantId').value = '';
+
+                // Bỏ chọn tất cả biến thể
+                variantOptions.forEach(opt => opt.classList.remove('selected'));
+
+                // Reset ảnh sản phẩm
+                if (mainImage && mainImage.dataset.originalSrc) {
+                    updateMainImage(mainImage.dataset.originalSrc);
+                }
+
+                // Reset giá
+                const defaultPrice = parseInt(document.getElementById('originalPrice').value || 0);
+                const defaultOriginalPrice = parseInt(document.getElementById('originalOriginalPrice')
+                    .value || 0);
+                updatePriceDisplay(defaultPrice, defaultOriginalPrice);
+
+                // Reset tồn kho
+                const defaultStock = parseInt(document.getElementById('originalStock').value || 0);
+                if (stockElement) {
+                    stockElement.textContent = `${defaultStock} sản phẩm có sẵn`;
+                }
+
+                // Reset số lượng
+                if (quantityInput) {
+                    quantityInput.value = 1;
+                }
+
+                // Bỏ chọn hình nhỏ
+                highlightThumbnail(null);
+            });
+        }
+
     });
 </script>
+
+
+
 <!-- Footer Start -->
 @include('clients.layouts.footer')

@@ -217,8 +217,8 @@
                                             <span class="text-danger">*</span>
                                         </label>
                                         <input type="number" name="quantity_in_stock" id="quantity_in_stock"
-                                            class="form-control form-control-lg border-2" placeholder="0"
-                                            value="{{ old('quantity_in_stock', 0) }}" min="0">
+                                            class="form-control form-control-lg border-2" placeholder="Nhập số lượng"
+                                            value="{{ old('quantity_in_stock') }}" min="1" required>
                                         @error('quantity_in_stock')
                                             <div class="text-danger mt-1">
                                                 <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}

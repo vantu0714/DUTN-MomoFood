@@ -89,7 +89,7 @@ class ProductController extends Controller
             'discounted_price' => 'nullable|numeric|min:0|lte:original_price',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'quantity_in_stock' => 'exclude_if:product_type,variant|required|integer|min:0',
+           'quantity_in_stock' => 'exclude_if:product_type,variant|required|integer|min:1',
             'product_type' => 'required|in:simple,variant',
         ], [
             'discounted_price.lte' => 'Giá khuyến mãi không được lớn hơn giá gốc.',

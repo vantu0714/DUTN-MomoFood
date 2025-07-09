@@ -181,8 +181,7 @@
                                             $price = $product->discounted_price ?? $product->original_price;
                                         }
                                     @endphp
-
-                                    <div class="col-md-6 col-lg-3">
+                                    <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                                         <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
                                             <a href="{{ route('product-detail.show', $product->id) }}">
                                                 <div class="product-img-wrapper">
@@ -199,42 +198,45 @@
                                                 class="product-content p-3 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
                                                 <h6 class="text-truncate" title="{{ $product->product_name }}">
                                                     {{ $product->product_name }}
-                                                </h6>
-                                                <p class="text-muted mb-1" style="font-size: 13px;">
-                                                    Mã sản phẩm: {{ $product->product_code }}
-                                                </p>
+                                                </h4>
+                                                <p class="text-muted text-truncate">Mã sản phẩm:
+                                                    {{ $product->product_code }}</p>
+
+                                                @php
+                                                    $originalPrice = $product->original_price;
+                                                    $price = $product->discounted_price ?? $product->original_price;
+                                                @endphp
                                                 <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                    <p class="text-dark fw-bold mb-0">
-                                                        {{ $price ? number_format($price, 0, ',', '.') . ' VNĐ' : 'Liên hệ' }}
+                                                    <p class="text-dark fs-5 fw-bold mb-0">
+                                                        @if ($price && $originalPrice && $price < $originalPrice)
+                                                            <div class="product-price-sale">
+                                                                {{ number_format($price, 0, ',', '.') }} <span
+                                                                    class="currency">VND</span>
+                                                            </div>
+                                                            <div class="product-price-original">
+                                                                {{ number_format($originalPrice, 0, ',', '.') }} VND
+                                                            </div>
+                                                        @elseif ($price)
+                                                            <div class="product-price-sale">
+                                                                {{ number_format($price, 0, ',', '.') }} <span
+                                                                    class="currency">VND</span>
+                                                            </div>
+                                                        @else
+                                                            <div class="text-muted">Liên hệ để biết giá</div>
+                                                        @endif
                                                     </p>
-                                                     <form class="add-to-cart-form" method="POST"
-                                                    action="{{ route('carts.add') }}">
-                                                    @csrf
-                                                    <input type="hidden" name="product_id"
-                                                        value="{{ $product->id }}">
-
-                                                    @php
-                                                        $firstAvailableVariant =
-                                                            $product->product_type === 'variant'
-                                                                ? $product->variants->firstWhere(
-                                                                    'quantity_in_stock',
-                                                                    '>',
-                                                                    0,
-                                                                )
-                                                                : null;
-                                                    @endphp
-
-                                                    @if ($firstAvailableVariant)
-                                                        <input type="hidden" name="product_variant_id"
-                                                            value="{{ $firstAvailableVariant->id }}">
-                                                    @endif
-
-                                                    <input type="hidden" name="quantity" value="1">
-                                                    <button type="submit" class="btn btn-white">
-                                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                                    </button>
-                                                </form>
-
+                                                    <form class="add-to-cart-form">
+                                                        @csrf
+                                                        <input type="hidden" name="product_id"
+                                                            value="{{ $product->id }}">
+                                                        @if ($product->product_type === 'variant' && $product->variants->first())
+                                                            <input type="hidden" name="product_variant_id"
+                                                                value="{{ $product->variants->first()->id }}">
+                                                        @endif
+                                                        <input type="hidden" name="quantity" value="1">
+                                                        <button type="submit" class="btn btn-white"><i
+                                                                class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -322,10 +324,12 @@
                 <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
                     <div class="position-relative">
                         <a href="{{ route('product-detail.show', $product->id) }}">
-                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                alt="{{ $product->product_name }}"
-                                onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                class="card-img-top" style="height: 220px; object-fit: cover;">
+                            <div class="product-img-wrapper">
+                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    alt="{{ $product->product_name }}"
+                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                    class="img-fluid w-100">
+                            </div>
                         </a>
 
                         <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
@@ -357,15 +361,21 @@
                                 @endif
                             </div>
 
-                            <form method="POST" action="{{ route('carts.add') }}">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <input type="hidden" name="quantity" value="1">
-
-                                <button type="submit" class="btn btn-white">
-                                    <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                </button>
-                            </form>
+                            @if ($price)
+                                <form class="add-to-cart-form">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                    @if ($product->product_type === 'variant' && $firstVariant)
+                                        <input type="hidden" name="product_variant_id"
+                                            value="{{ $firstVariant->id }}">
+                                    @endif
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-white"><i
+                                            class="bi bi-cart3 fa-2x text-danger"></i></button>
+                                </form>
+                            @else
+                                <span class="text-danger">Hết hàng</span>
+                            @endif
                         </div>
                     </div>
                 </div>
