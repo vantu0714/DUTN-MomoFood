@@ -23,6 +23,7 @@ class Order extends Model
         'status',
         'note',
         'cancellation_reason',
+        'recipient_id'
     ];
 
     public function user()

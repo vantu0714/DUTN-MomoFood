@@ -23,6 +23,7 @@ use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\VNPayController;
 use App\Http\Controllers\clients\CommentController as ClientCommentController;
 use App\Http\Controllers\Clients\GioithieuController;
+use App\Http\Controllers\RecipientController;
 use App\Http\Controllers\ThongKeController;
 
 // ==================== PUBLIC ROUTES ====================
@@ -96,15 +97,24 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
         Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
         Route::post('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
-        Route::post('/apply-coupon', [CartClientController::class, 'applyCoupon'])->name('carts.applyCoupon');
-        Route::post('/remove-coupon', [CartClientController::class, 'removeCoupon'])->name('carts.removeCoupon');
-
         Route::post('/remove-selected', [CartClientController::class, 'removeSelected'])->name('carts.removeSelected');
     });
 
     // Checkout
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
     Route::post('/store', [ClientsOrderController::class, 'store'])->name('order.store');
+    Route::post('/apply-coupon', [ClientsOrderController::class, 'applyCoupon'])->name('order.applyCoupon');
+    Route::get('/remove-coupon', [ClientsOrderController::class, 'removeCoupon'])->name('order.removeCoupon');
+
+    Route::post('/recipients', [RecipientController::class, 'store'])->name('recipients.store');
+    // Route chọn địa chỉ
+    Route::post('/recipients/select', [RecipientController::class, 'select'])->name('recipients.select');
+
+
+
+    //tt nguoi nhan
+    // Route::post('/store', [RecipientController::class, 'store'])->name('recipients.store');
+
 });
 
 // ==================== ADMIN ROUTES ====================
