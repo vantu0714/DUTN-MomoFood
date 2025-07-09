@@ -8,7 +8,6 @@
             @csrf
 
             <div class="row">
-                <!-- Cột trái: Avatar + thông tin tóm tắt -->
                 <div class="col-md-4 text-center">
                     <div class="card shadow-sm p-3">
                         <label for="imageInput" class="d-block mb-2 fw-bold">Ảnh đại diện</label>
@@ -28,7 +27,6 @@
                     </div>
                 </div>
 
-                <!-- Cột phải: Form nhập -->
                 <div class="col-md-8">
                     <div class="card shadow-sm p-4">
                         <div class="mb-3">
@@ -70,19 +68,6 @@
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
-
-                        {{-- <div class="mb-3">
-                            <label for="role_id" class="form-label">Vai trò người dùng</label>
-                            <select name="role_id" class="form-control">
-                                <option value="">-- Chọn vai trò --</option>
-                                @foreach ($roles as $role)
-                                    <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('role_id')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                        </div> --}}
 
                         <div class="mb-3">
                             <label for="role_id" class="form-label">Vai trò người dùng</label>
