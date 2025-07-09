@@ -207,33 +207,55 @@
                                                     <p class="text-dark fw-bold mb-0">
                                                         {{ $price ? number_format($price, 0, ',', '.') . ' VNĐ' : 'Liên hệ' }}
                                                     </p>
-                                                     <form class="add-to-cart-form" method="POST"
-                                                    action="{{ route('carts.add') }}">
-                                                    @csrf
-                                                    <input type="hidden" name="product_id"
-                                                        value="{{ $product->id }}">
-
                                                     @php
-                                                        $firstAvailableVariant =
+                                                        $firstVariant = null;
+                                                        $price = null;
+                                                        $original = null;
+
+                                                        if ($product->product_type === 'variant') {
+                                                            $firstVariant = $product->variants->firstWhere(
+                                                                'quantity_in_stock',
+                                                                '>',
+                                                                0,
+                                                            );
+                                                            $price =
+                                                                $firstVariant?->discounted_price ??
+                                                                $firstVariant?->price;
+                                                            $original = $firstVariant?->price ?? 0;
+                                                        } else {
+                                                            $price =
+                                                                $product->discounted_price ?? $product->original_price;
+                                                            $original = $product->original_price;
+                                                        }
+
+                                                        $variants =
                                                             $product->product_type === 'variant'
-                                                                ? $product->variants->firstWhere(
-                                                                    'quantity_in_stock',
-                                                                    '>',
-                                                                    0,
+                                                                ? $product->variants->map(
+                                                                    fn($v) => [
+                                                                        'id' => $v->id,
+                                                                        'flavor' => $v->flavor,
+                                                                        'size' => $v->size,
+                                                                        'price' => $v->price,
+                                                                        'discounted_price' => $v->discounted_price,
+                                                                        'quantity' => $v->quantity_in_stock,
+                                                                    ],
                                                                 )
-                                                                : null;
+                                                                : [];
                                                     @endphp
 
-                                                    @if ($firstAvailableVariant)
-                                                        <input type="hidden" name="product_variant_id"
-                                                            value="{{ $firstAvailableVariant->id }}">
-                                                    @endif
-
-                                                    <input type="hidden" name="quantity" value="1">
-                                                    <button type="submit" class="btn btn-white">
+                                                    <button type="button" class="btn btn-white open-cart-modal"
+                                                        data-product-id="{{ $product->id }}"
+                                                        data-product-name="{{ $product->product_name }}"
+                                                        data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                        data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
+                                                        data-product-price="{{ $price ?? 0 }}"
+                                                        data-product-original-price="{{ $original ?? 0 }}"
+                                                        data-product-description="{{ $product->description }}"
+                                                        data-variants='@json($variants)'
+                                                        data-bs-toggle="modal" data-bs-target="#cartModal">
                                                         <i class="bi bi-cart3 fa-2x text-danger"></i>
                                                     </button>
-                                                </form>
+
 
                                                 </div>
                                             </div>
@@ -302,75 +324,7 @@
 <div class="container-fluid vesitable py-5">
     <div class="container py-5">
         <h1 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h1>
-        <div class="owl-carousel vegetable-carousel justify-content-center">
-            @foreach ($bestSellingProducts as $product)
-                @php
-                    $firstVariant = null;
-                    $price = null;
-                    $original = null;
 
-                    if ($product->product_type === 'variant') {
-                        $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
-                        $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
-                        $original = $firstVariant?->price ?? 0;
-                    } else {
-                        $price = $product->discounted_price ?? $product->original_price;
-                        $original = $product->original_price;
-                    }
-                @endphp
-
-                <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
-                    <div class="position-relative">
-                        <a href="{{ route('product-detail.show', $product->id) }}">
-                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                alt="{{ $product->product_name }}"
-                                onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                class="card-img-top" style="height: 220px; object-fit: cover;">
-                        </a>
-
-                        <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
-                            {{ $product->category->category_name ?? 'Sản phẩm' }}
-                        </span>
-
-                        {{-- App hỗ trợ --}}
-                        <div class="position-absolute top-0 end-0 m-2 d-flex flex-column align-items-center">
-                            <img src="{{ asset('clients/icons/excel.png') }}" width="24" class="mb-1">
-                            <img src="{{ asset('clients/icons/word.png') }}" width="24" class="mb-1">
-                            <img src="{{ asset('clients/icons/photoshop.png') }}" width="24" class="mb-1">
-                            <img src="{{ asset('clients/icons/premiere.png') }}" width="24">
-                        </div>
-                    </div>
-
-                    <div class="card-body d-flex flex-column">
-                        <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
-                        <p class="text-muted small mb-3">{{ Str::limit($product->description, 60) }}</p>
-
-                        <div class="mt-auto d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="text-danger fw-bold fs-5">
-                                    {{ number_format($price, 0, ',', '.') }} <small class="text-muted">VND</small>
-                                </div>
-                                @if ($price < $original)
-                                    <div class="text-muted text-decoration-line-through small">
-                                        {{ number_format($original, 0, ',', '.') }} VND
-                                    </div>
-                                @endif
-                            </div>
-
-                            <form method="POST" action="{{ route('carts.add') }}">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <input type="hidden" name="quantity" value="1">
-
-                                <button type="submit" class="btn btn-white">
-                                    <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
     </div>
 </div>
 
@@ -409,7 +363,6 @@
     </div>
 </div>
 <!-- Banner Section End -->
-
 
 <!-- Bestsaler Product Start -->
 <div class="container-fluid py-5">
@@ -657,7 +610,6 @@
 </div>
 <!-- Bestsaler Product End -->
 
-
 <!-- Fact Start -->
 <div class="container-fluid py-5">
     <div class="container">
@@ -741,63 +693,206 @@
         </div>
     </div>
 </div>
-  <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const rangeInput = document.getElementById('rangeInput');
-            const output = document.getElementById('amount');
+<!-- Modal chi tiết sản phẩm -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" action="{{ route('carts.add') }}" id="modal-add-to-cart-form" class="modal-content">
+            @csrf
+            <input type="hidden" name="product_id" id="modal-product-id">
+            <input type="hidden" name="product_variant_id" id="modal-variant-id">
 
-            function formatCurrency(value) {
-                return parseInt(value).toLocaleString('vi-VN') + ' đ';
-            }
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-primary" id="cartModalLabel">Chọn sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
 
-            rangeInput.addEventListener('input', function() {
-                output.textContent = formatCurrency(this.value);
-            });
+            <div class="modal-body">
+                <div class="row g-4">
+                    <!-- Hình ảnh -->
+                    <div class="col-md-6 text-center">
+                        <img id="modal-product-image" src="" alt="Hình sản phẩm"
+                            class="img-fluid rounded shadow-sm" style="max-height: 300px;">
+                    </div>
 
-            // Gọi lần đầu khi tải trang
-            output.textContent = formatCurrency(rangeInput.value);
+                    <!-- Thông tin -->
+                    <div class="col-md-6">
+                        <h4 id="modal-product-name" class="fw-bold mb-2 text-dark"></h4>
+                        <p class="text-muted mb-2">Danh mục: <span id="modal-product-category"
+                                class="fw-medium text-dark"></span></p>
+                        <p class="h5 text-danger fw-bold mb-3">
+                            <span id="modal-product-price">0</span> <span class="text-muted fs-6">VND</span>
+                            <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
+                        </p>
+                        <div class="mb-3" id="modal-rating"></div>
+                        <p id="modal-product-description" class="text-muted mb-3" style="min-height: 60px;"></p>
+
+                        <!-- Biến thể -->
+                        <div class="mb-3" id="variant-options">
+                            <!-- JS sẽ chèn radio các biến thể vào đây -->
+                        </div>
+
+                        <!-- Số lượng -->
+                        <div class="mb-3">
+                            <label for="modal-quantity" class="form-label fw-semibold">🔁 Số lượng:</label>
+                            <div class="input-group" style="width: 160px;">
+                                <button type="button" class="btn btn-outline-secondary" id="decrease-qty">-</button>
+                                <input type="number" class="form-control text-center" id="modal-quantity"
+                                    name="quantity" value="1" min="1">
+                                <button type="button" class="btn btn-outline-secondary" id="increase-qty">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="submit" class="btn btn-danger w-100 fw-bold py-2">
+                    <i class="bi bi-bag-plus-fill me-1"></i> Thêm vào giỏ hàng
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 
-            document.addEventListener('DOMContentLoaded', function() {
-                const radios = document.querySelectorAll('input[name="price_range"]');
-                const customInputs = document.getElementById('customPriceInputs');
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+        const productNameEl = document.getElementById('modal-product-name');
+        const productImageEl = document.getElementById('modal-product-image');
+        const productCategoryEl = document.getElementById('modal-product-category');
+        const productPriceEl = document.getElementById('modal-product-price');
+        const productOriginalPriceEl = document.getElementById('modal-product-original-price');
+        const productDescEl = document.getElementById('modal-product-description');
+        const variantOptionsEl = document.getElementById('variant-options');
+        const productIdInput = document.getElementById('modal-product-id');
+        const productVariantIdInput = document.getElementById('modal-variant-id');
 
-                radios.forEach(radio => {
-                    radio.addEventListener('change', function() {
-                        if (this.value === 'custom') {
-                            customInputs.style.display = '';
-                        } else {
-                            customInputs.style.display = 'none';
-                            // Clear giá trị nếu không chọn tùy chỉnh
-                            document.querySelector('input[name="min_price"]').value = '';
-                            document.querySelector('input[name="max_price"]').value = '';
-                        }
+        // quantity
+        const quantityInput = document.getElementById('modal-quantity');
+        document.getElementById('increase-qty').onclick = () => quantityInput.stepUp();
+        document.getElementById('decrease-qty').onclick = () => quantityInput.stepDown();
+
+        // Khi click nút giỏ hàng
+        document.querySelectorAll('.open-cart-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productImage = this.dataset.productImage;
+                const productCategory = this.dataset.productCategory;
+                const productPrice = this.dataset.productPrice;
+                const productOriginalPrice = this.dataset.productOriginalPrice;
+                const productDescription = this.dataset.productDescription;
+                const variants = JSON.parse(this.dataset.variants || '[]');
+
+                // Đổ dữ liệu vào modal
+                productIdInput.value = productId;
+                productNameEl.textContent = productName;
+                productImageEl.src = productImage;
+                productCategoryEl.textContent = productCategory;
+                productPriceEl.textContent = parseInt(productPrice).toLocaleString();
+                productOriginalPriceEl.textContent = productOriginalPrice ? parseInt(
+                    productOriginalPrice).toLocaleString() + ' VND' : '';
+                productDescEl.textContent = productDescription || '';
+
+                // Render biến thể
+                variantOptionsEl.innerHTML = '';
+                if (variants.length > 0) {
+                    variants.forEach(variant => {
+                        const option = document.createElement('div');
+                        option.className = 'form-check';
+                        option.innerHTML = `
+                            <input class="form-check-input" type="radio" name="product_variant_id" value="${variant.id}" id="variant-${variant.id}">
+                            <label class="form-check-label" for="variant-${variant.id}">
+                                Vị: ${variant.flavor || 'N/A'}, Size: ${variant.size || 'N/A'}
+                            </label>
+                        `;
+                        variantOptionsEl.appendChild(option);
                     });
+
+                    // Auto chọn biến thể đầu tiên
+                    productVariantIdInput.value = variants[0].id;
+                    variantOptionsEl.querySelector('input').checked = true;
+
+                    // Khi chọn biến thể, gán lại value
+                    variantOptionsEl.querySelectorAll('input[name="product_variant_id"]')
+                        .forEach(input => {
+                            input.addEventListener('change', () => {
+                                productVariantIdInput.value = input.value;
+                            });
+                        });
+                } else {
+                    productVariantIdInput.value = '';
+                }
+
+                // Mở modal
+                modal.show();
+            });
+        });
+    });
+</script>
+
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const rangeInput = document.getElementById('rangeInput');
+        const output = document.getElementById('amount');
+
+        function formatCurrency(value) {
+            return parseInt(value).toLocaleString('vi-VN') + ' đ';
+        }
+
+        rangeInput.addEventListener('input', function() {
+            output.textContent = formatCurrency(this.value);
+        });
+
+        // Gọi lần đầu khi tải trang
+        output.textContent = formatCurrency(rangeInput.value);
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const radios = document.querySelectorAll('input[name="price_range"]');
+            const customInputs = document.getElementById('customPriceInputs');
+
+            radios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customInputs.style.display = '';
+                    } else {
+                        customInputs.style.display = 'none';
+                        // Clear giá trị nếu không chọn tùy chỉnh
+                        document.querySelector('input[name="min_price"]').value = '';
+                        document.querySelector('input[name="max_price"]').value = '';
+                    }
                 });
             });
         });
-    </script>
+    });
+</script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            @if (session('success') || session('error'))
-                let message = "{{ session('success') ?? session('error') }}";
-                let isError = {{ session('error') ? 'true' : 'false' }};
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        @if (session('success') || session('error'))
+            let message = "{{ session('success') ?? session('error') }}";
+            let isError = {{ session('error') ? 'true' : 'false' }};
 
-                const container = document.getElementById('toast-container');
-                const messageEl = document.getElementById('toast-message');
+            const container = document.getElementById('toast-container');
+            const messageEl = document.getElementById('toast-message');
 
-                messageEl.textContent = message;
-                container.classList.remove('d-none');
-                if (isError) container.classList.add('toast-error');
+            messageEl.textContent = message;
+            container.classList.remove('d-none');
+            if (isError) container.classList.add('toast-error');
 
-                setTimeout(() => {
-                    container.classList.add('d-none');
-                    container.classList.remove('toast-error');
-                }, 4000);
-            @endif
-        });
-    </script>
+            setTimeout(() => {
+                container.classList.add('d-none');
+                container.classList.remove('toast-error');
+            }, 4000);
+        @endif
+    });
+</script>
 @include('clients.layouts.footer')
 
 
