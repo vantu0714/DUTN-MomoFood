@@ -370,6 +370,45 @@
     </script>
 
     <script>
+
+        $(document).ready(function() {
+            $('.add-to-cart-form').on('submit', function(e) {
+                e.preventDefault();
+
+                let form = $(this);
+                let token = form.find('input[name="_token"]').val();
+                let productId = form.find('input[name="product_id"]').val();
+                let variantId = form.find('input[name="product_variant_id"]').val();
+                let quantity = form.find('input[name="quantity"]').val() || 1;
+
+                $.ajax({
+                    url: '{{ route('carts.add') }}',
+                    type: 'POST',
+                    data: {
+                        _token: token,
+                        product_id: productId,
+                        product_variant_id: variantId,
+                        quantity: quantity
+                    },
+                    success: function(res) {                        
+                        alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
+                        // Nếu có hiển thị số lượng giỏ hàng ở header
+                        if (res.cart_count !== undefined) {
+                            $('#cart-count').text(res.cart_count);
+                        }
+                    },
+                    error: function(xhr) {
+                        let res = xhr.responseJSON;
+                        if(res.status == 'blocked') {
+                            window.location.href = '{{ route('login') }}';
+                            return
+                        }
+                        
+                        alert(res?.message || ' Có lỗi xảy ra!');
+                    }
+                });
+            });
+
         document.addEventListener('DOMContentLoaded', function() {
             @if (session('success') || session('error'))
                 let message = "{{ session('success') ?? session('error') }}";
