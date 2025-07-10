@@ -313,8 +313,6 @@
                                                         <i class="bi bi-cart3 fa-2x text-danger"></i>
                                                     </button>
                                                 </form>
-
-
                                             </div>
                                         </div>
                                     </div>
