@@ -103,6 +103,17 @@ class VNPayController extends Controller
 
     public function vnpayReturn(Request $request)
     {
+        $vnp_ResponseCode = $request->input('vnp_ResponseCode');
+        $vnp_TransactionStatus = $request->input('vnp_TransactionStatus');
+
+        // Nếu thanh toán thất bại
+        if ($vnp_ResponseCode != '00') {
+            $message = $this->getVnpErrorMessage($vnp_ResponseCode);
+
+            return view('clients.vnpay_fail', compact('message'));
+        }
+
+
         $vnp_HashSecret = env('VNPAY_HASH_SECRET');
         $vnp_SecureHash = $request->input('vnp_SecureHash');
 
@@ -204,5 +215,20 @@ class VNPayController extends Controller
 
         return view('clients.vnpay_success');
     }
+
+    private function getVnpErrorMessage($code)
+    {
+        $messages = [
+            '00' => 'Giao dịch thành công.',
+            '02' => 'Giao dịch không thành công do tài khoản không tồn tại.',
+            '06' => 'Sai số PIN.',
+            '24' => 'Khách hàng hủy giao dịch.',
+            '91' => 'Ngân hàng không phản hồi.',
+            'default' => 'Giao dịch không thành công. Vui lòng thử lại.'
+        ];
+
+        return $messages[$code] ?? $messages['default'];
+    }
+
 
 }
