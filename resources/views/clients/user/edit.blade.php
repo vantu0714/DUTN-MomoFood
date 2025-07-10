@@ -23,7 +23,7 @@
                 <div class="col-lg-4">
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white py-3">
-                            <h5 class="mb-0 fw-bold" style="color: rgb(219, 115, 91)">
+                            <h5 class="mb-0 fw-bold">
                                 <i class="bi bi-person-circle me-2"></i>Ảnh đại diện
                             </h5>
                         </div>
@@ -51,13 +51,13 @@
                 <div class="col-lg-8">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-white py-3">
-                            <h5 class="mb-0 fw-bold" style="color: rgb(219, 115, 91)">
+                            <h5 class="mb-0 fw-bold">
                                 <i class="bi bi-pencil-square me-2"></i>Thông tin cá nhân
                             </h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-4">
-                                <h6 class="d-flex align-items-center mb-3" style="color: rgb(219, 115, 91)">
+                                <h6 class="d-flex align-items-center mb-3">
                                     <i class="bi bi-person-lines-fill me-2"></i>Thông tin cơ bản
                                 </h6>
                                 <div class="row g-3">
@@ -75,7 +75,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <h6 class="d-flex align-items-center mb-3" style="color: rgb(219, 115, 91)">
+                                <h6 class="d-flex align-items-center mb-3">
                                     <i class="bi bi-telephone-fill me-2"></i>Liên hệ
                                 </h6>
                                 <div class="row g-3">
