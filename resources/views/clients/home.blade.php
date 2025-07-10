@@ -165,107 +165,98 @@
                             <h2 class="text-success">MÓN ĂN NỔI BẬT</h2>
                         </div>
                     </div>
-                    <div class="tab-content">
-                        <div id="tab-1" class="tab-pane fade show active p-0">
-                            <div class="row g-4">
+                   <div class="tab-content">
+    <div id="tab-1" class="tab-pane fade show active p-0">
+        <div class="row g-4">
+            @foreach ($products as $product)
+                @php
+                    $firstVariant = null;
+                    $price = null;
+                    $original = null;
 
-                                @foreach ($products as $product)
-                                    @php
-                                        $firstVariant = null;
-                                        $price = null;
+                    if ($product->product_type === 'variant') {
+                        $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                        $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
+                        $original = $firstVariant?->price ?? 0;
+                    } else {
+                        $price = $product->discounted_price ?? $product->original_price;
+                        $original = $product->original_price;
+                    }
 
-                                        if ($product->product_type === 'variant') {
-                                            $firstVariant = $product->variants->first();
-                                            $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
-                                        } elseif ($product->product_type === 'simple') {
-                                            $price = $product->discounted_price ?? $product->original_price;
-                                        }
-                                    @endphp
+                    $variants = $product->product_type === 'variant'
+                        ? $product->variants->map(fn($v) => [
+                            'id' => $v->id,
+                            'flavor' => $v->flavor,
+                            'size' => $v->size,
+                            'price' => $v->price,
+                            'discounted_price' => $v->discounted_price,
+                            'quantity' => $v->quantity_in_stock,
+                        ])
+                        : [];
+                @endphp
 
-                                    <div class="col-md-6 col-lg-3">
-                                        <div class="rounded position-relative fruite-item h-100 d-flex flex-column">
-                                            <a href="{{ route('product-detail.show', $product->id) }}">
-                                                <div class="product-img-wrapper">
-                                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                                        class="img-fluid" alt="Product Image">
-                                                </div>
-                                            </a>
-                                            <div class="text-white bg-secondary px-2 py-1 rounded position-absolute"
-                                                style="top: 10px; left: 10px; font-size: 12px;">
-                                                {{ $product->category?->category_name ?? 'Không có danh mục' }}
-                                            </div>
-                                            <div
-                                                class="product-content p-3 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
-                                                <h6 class="text-truncate" title="{{ $product->product_name }}">
-                                                    {{ $product->product_name }}
-                                                </h6>
-                                                <p class="text-muted mb-1" style="font-size: 13px;">
-                                                    Mã sản phẩm: {{ $product->product_code }}
-                                                </p>
-                                                <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                    <p class="text-dark fw-bold mb-0">
-                                                        {{ $price ? number_format($price, 0, ',', '.') . ' VNĐ' : 'Liên hệ' }}
-                                                    </p>
-                                                    @php
-                                                        $firstVariant = null;
-                                                        $price = null;
-                                                        $original = null;
+                <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                    <div class="card h-100 shadow-sm border border-secondary rounded-4 d-flex flex-column">
+                        <a href="{{ route('product-detail.show', $product->id) }}">
+                            <div class="product-img-wrapper">
+                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    alt="{{ $product->product_name }}"
+                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                    class="img-fluid w-100">
+                            </div>
+                        </a>
 
-                                                        if ($product->product_type === 'variant') {
-                                                            $firstVariant = $product->variants->firstWhere(
-                                                                'quantity_in_stock',
-                                                                '>',
-                                                                0,
-                                                            );
-                                                            $price =
-                                                                $firstVariant?->discounted_price ??
-                                                                $firstVariant?->price;
-                                                            $original = $firstVariant?->price ?? 0;
-                                                        } else {
-                                                            $price =
-                                                                $product->discounted_price ?? $product->original_price;
-                                                            $original = $product->original_price;
-                                                        }
+                        <div class="badge bg-secondary text-white position-absolute top-0 start-0 m-2 rounded-pill px-3 py-1">
+                            {{ $product->category?->category_name ?? 'Không rõ' }}
+                        </div>
 
-                                                        $variants =
-                                                            $product->product_type === 'variant'
-                                                                ? $product->variants->map(
-                                                                    fn($v) => [
-                                                                        'id' => $v->id,
-                                                                        'flavor' => $v->flavor,
-                                                                        'size' => $v->size,
-                                                                        'price' => $v->price,
-                                                                        'discounted_price' => $v->discounted_price,
-                                                                        'quantity' => $v->quantity_in_stock,
-                                                                    ],
-                                                                )
-                                                                : [];
-                                                    @endphp
-
-                                                    <button type="button" class="btn btn-white open-cart-modal"
-                                                        data-product-id="{{ $product->id }}"
-                                                        data-product-name="{{ $product->product_name }}"
-                                                        data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                        data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                                        data-product-price="{{ $price ?? 0 }}"
-                                                        data-product-original-price="{{ $original ?? 0 }}"
-                                                        data-product-description="{{ $product->description }}"
-                                                        data-variants='@json($variants)'
-                                                        data-bs-toggle="modal" data-bs-target="#cartModal">
-                                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                                    </button>
-
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="fw-bold text-dark text-truncate" title="{{ $product->product_name }}">
+                                    {{ $product->product_name }}
+                                </h6>
+                                <p class="text-muted small mb-2">Mã: {{ $product->product_code }}</p>
                             </div>
 
+                            <div class="mb-2">
+                                @if ($price && $original && $price < $original)
+                                    <div class="text-danger fw-bold fs-5">
+                                        {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                    </div>
+                                    <div class="text-muted text-decoration-line-through small">
+                                        {{ number_format($original, 0, ',', '.') }} VND
+                                    </div>
+                                @elseif ($price)
+                                    <div class="text-danger fw-bold fs-5">
+                                        {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                    </div>
+                                @else
+                                    <div class="text-muted">Liên hệ để biết giá</div>
+                                @endif
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-auto">
+                                <button type="button" class="btn btn-white open-cart-modal"
+                                    data-product-id="{{ $product->id }}"
+                                    data-product-name="{{ $product->product_name }}"
+                                    data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
+                                    data-product-price="{{ $price ?? 0 }}"
+                                    data-product-original-price="{{ $original ?? 0 }}"
+                                    data-product-description="{{ $product->description }}"
+                                    data-variants='@json($variants)'
+                                    data-bs-toggle="modal" data-bs-target="#cartModal">
+                                    <i class="bi bi-cart3 fa-2x text-danger"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </div>
+            @endforeach
+        </div> {{-- row --}}
+    </div>
+</div>
+
                 </div>
             </div> <!-- End right column -->
         </div>
@@ -325,8 +316,84 @@
     <div class="container py-5">
         <h1 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h1>
 
+        <div class="row g-4">
+            @foreach ($bestSellingProducts as $product)
+                @php
+                    $firstVariant = null;
+                    $price = 0;
+                    $original = 0;
+
+                    if ($product->product_type === 'variant') {
+                        $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
+                        if ($firstVariant) {
+                            $price = $firstVariant->discounted_price ?? $firstVariant->price;
+                            $original = $firstVariant->price;
+                        }
+                    } else {
+                        $price = $product->discounted_price ?? $product->original_price;
+                        $original = $product->original_price;
+                    }
+                @endphp
+
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
+                        <div class="position-relative">
+                            <a href="{{ route('product-detail.show', $product->id) }}">
+                                <div class="product-img-wrapper">
+                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                        alt="{{ $product->product_name }}"
+                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                        class="img-fluid w-100">
+                                </div>
+                            </a>
+
+                            <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
+                                {{ $product->category->category_name ?? 'Sản phẩm' }}
+                            </span>
+
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
+                            <p class="text-muted small mb-3">{{ Str::limit($product->description, 60) }}</p>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-danger fw-bold fs-5">
+                                        {{ number_format($price, 0, ',', '.') }} <small class="text-muted">VND</small>
+                                    </div>
+                                    @if ($price < $original)
+                                        <div class="text-muted text-decoration-line-through small">
+                                            {{ number_format($original, 0, ',', '.') }} VND
+                                        </div>
+                                    @endif
+                                </div>
+
+                                @if ($price > 0)
+                                    <form class="add-to-cart-form" method="POST" action="{{ route('carts.add') }}">
+                                        @csrf
+                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                        @if ($product->product_type === 'variant' && $firstVariant)
+                                            <input type="hidden" name="product_variant_id" value="{{ $firstVariant->id }}">
+                                        @endif
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-white">
+                                            <i class="bi bi-cart3 fa-2x text-danger"></i>
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-danger">Hết hàng</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div> {{-- row --}}
     </div>
 </div>
+
+
 
 
 
@@ -768,12 +835,12 @@
         const productIdInput = document.getElementById('modal-product-id');
         const productVariantIdInput = document.getElementById('modal-variant-id');
 
-        // quantity
+        // Quantity buttons
         const quantityInput = document.getElementById('modal-quantity');
         document.getElementById('increase-qty').onclick = () => quantityInput.stepUp();
         document.getElementById('decrease-qty').onclick = () => quantityInput.stepDown();
 
-        // Khi click nút giỏ hàng
+        // Xử lý click vào nút giỏ hàng
         document.querySelectorAll('.open-cart-modal').forEach(button => {
             button.addEventListener('click', function() {
                 const productId = this.dataset.productId;
@@ -785,14 +852,13 @@
                 const productDescription = this.dataset.productDescription;
                 const variants = JSON.parse(this.dataset.variants || '[]');
 
-                // Đổ dữ liệu vào modal
+                // Set thông tin vào modal
                 productIdInput.value = productId;
                 productNameEl.textContent = productName;
                 productImageEl.src = productImage;
                 productCategoryEl.textContent = productCategory;
                 productPriceEl.textContent = parseInt(productPrice).toLocaleString();
-                productOriginalPriceEl.textContent = productOriginalPrice ? parseInt(
-                    productOriginalPrice).toLocaleString() + ' VND' : '';
+                productOriginalPriceEl.textContent = productOriginalPrice ? parseInt(productOriginalPrice).toLocaleString() + ' VND' : '';
                 productDescEl.textContent = productDescription || '';
 
                 // Render biến thể
@@ -810,11 +876,10 @@
                         variantOptionsEl.appendChild(option);
                     });
 
-                    // Auto chọn biến thể đầu tiên
-                    productVariantIdInput.value = variants[0].id;
-                    variantOptionsEl.querySelector('input').checked = true;
+                    // Không tự chọn biến thể
+                    productVariantIdInput.value = '';
 
-                    // Khi chọn biến thể, gán lại value
+                    // Khi chọn biến thể, cập nhật hidden input
                     variantOptionsEl.querySelectorAll('input[name="product_variant_id"]')
                         .forEach(input => {
                             input.addEventListener('change', () => {
@@ -825,12 +890,25 @@
                     productVariantIdInput.value = '';
                 }
 
-                // Mở modal
+                // Reset số lượng
+                quantityInput.value = 1;
+
+                // Hiển thị modal
                 modal.show();
             });
         });
+
+        // Bắt buộc chọn biến thể trước khi submit
+        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function (e) {
+            const selectedVariant = document.querySelector('input[name="product_variant_id"]:checked');
+            if (!selectedVariant && variantOptionsEl.innerHTML !== '') {
+                e.preventDefault();
+                alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+            }
+        });
     });
 </script>
+
 
 
 
@@ -919,3 +997,38 @@
         border-left: 4px solid #ffc107;
     }
 </style>
+<style>
+    .product-img-wrapper {
+        height: 180px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .product-img-wrapper img {
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        transform: scale(1.03);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    }
+
+    .btn-white {
+        background-color: white;
+        border: 1px solid #ffc107;
+        border-radius: 10px;
+    }
+
+    .btn-white:hover {
+        background-color: #ffc107;
+    }
+</style>
+
+

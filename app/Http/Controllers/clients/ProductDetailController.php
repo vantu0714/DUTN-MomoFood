@@ -1,25 +1,25 @@
 <?php
 
 namespace App\Http\Controllers\Clients;
+
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\OrderDetail;
+use Illuminate\Support\Facades\Auth;
 
 class ProductDetailController extends Controller
 {
-
     public function show($id)
     {
-        // Lấy sản phẩm cùng category, cùng comments và user
         $product = Product::with([
             'category',
-             'variants.attributeValues.attribute',
+            'variants.attributeValues.attribute',
             'comments' => function ($query) {
                 $query->latest(); // sắp xếp bình luận mới nhất trước
             },
             'comments.user'
         ])->findOrFail($id);
 
-        // Lấy các sản phẩm liên quan (khác ID, cùng danh mục, status = 1)
         $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('status', 1)
@@ -27,7 +27,28 @@ class ProductDetailController extends Controller
             ->take(8)
             ->get();
 
-        // Trả về view với đầy đủ dữ liệu
-        return view('clients.product-detail', compact('product', 'relatedProducts'));
+        // Tính trung bình rating
+        $averageRating = round($product->comments->avg('rating'), 1) ?? 0;
+
+        // Kiểm tra người dùng đã mua sản phẩm chưa
+        $hasPurchased = false;
+
+        if (Auth::check()) {
+            $userId = Auth::id();
+
+            $hasPurchased = OrderDetail::whereHas('order', function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                      ->where('status', '!=', 'cancelled'); // Có thể sửa theo trạng thái thực tế như "completed"
+            })
+            ->where('product_id', $product->id)
+            ->exists();
+        }
+
+        return view('clients.product-detail', compact(
+            'product',
+            'relatedProducts',
+            'averageRating',
+            'hasPurchased'
+        ));
     }
 }

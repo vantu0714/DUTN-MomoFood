@@ -1,12 +1,12 @@
 <nav class="sidebar vertical-scroll  ps-container ps-theme-default ps-active-y">
     <div class="logo text-center py-1 position-relative">
-    <a href="{{ route('admin.dashboard') }}">
-        <img src="{{ asset('admins/assets/img/image copy.png') }}" alt="Logo" style="max-width: 100px;">
-    </a>
-    <div class="sidebar_close_icon d-lg-none position-absolute" style="top: 10px; right: 10px;">
-        <i class="ti-close"></i>
+        <a href="{{ route('admin.dashboard') }}">
+            <img src="{{ asset('admins/assets/img/image copy.png') }}" alt="Logo" style="max-width: 100px;">
+        </a>
+        <div class="sidebar_close_icon d-lg-none position-absolute" style="top: 10px; right: 10px;">
+            <i class="ti-close"></i>
+        </div>
     </div>
-</div>
 
 
     <ul id="sidebar_menu">
@@ -15,7 +15,7 @@
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/dashboard.svg') }}" alt>
                 </div>
-                <span>Dashboard</span>
+                <span>Thống kê</span>
             </a>
         </li>
         <li class>
@@ -60,14 +60,14 @@
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/4.svg') }}" alt>
                 </div>
-                <span>Quản lí biến thể </span>
+                <span>Quản lí thuộc tính </span>
             </a>
             <ul>
-                <li><a href="{{ route('admin.product_variants.index') }}">Danh sách biến thể</a></li>
+                <li><a href="{{ route('admin.product_variants.index') }}">Danh sách thuộc tính</a></li>
                 <li><a href="Groups.html">Thêm</a></li>
             </ul>
         </li>
-        <li class>
+        {{-- <li class>
             <a class="has-arrow" href="#" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/4.svg') }}" alt>
@@ -78,7 +78,7 @@
                 <li><a href="{{ route('admin.combo_items.index') }}">Danh sách Combo</a></li>
                 <li><a href="Groups.html">Thêm</a></li>
             </ul>
-        </li>
+        </li> --}}
         <li class>
             <a href="#" class="has-arrow" aria-expanded="false">
                 <div class="icon_menu">
@@ -103,14 +103,7 @@
                 <li><a href="#">Thêm đơn hàng</a></li>
             </ul>
         </li>
-        <li class>
-            <a href="calender.html" aria-expanded="false">
-                <div class="icon_menu">
-                    <img src="{{ asset('admins/assets/img/menu-icon/7.svg') }}" alt>
-                </div>
-                <span>Quản lí kho</span>
-            </a>
-        </li>
+
         <li class>
             <a href="{{ route('admin.comments.index') }}" aria-expanded="false">
                 <div class="icon_menu">
@@ -119,37 +112,5 @@
                 <span>Quản lí bình luận</span>
             </a>
         </li>
-        <li class>
-             <a href="{{ route('admin.thongke') }}" aria-expanded="false">
-                <div class="icon_menu">
-                    <img src="{{ asset('admins/assets/img/menu-icon/8.svg') }}" alt>
-                </div>
-                <span>Thống kê</span>
-            </a>
-        </li>
-            
-        </li>
-
-        <li class>
-            <a class="has-arrow" href="#" aria-expanded="false">
-                <div class="icon_menu">
-                    <img src="{{ asset('admins/assets/img/menu-icon/16.svg') }}" alt>
-                </div>
-                <span>Pages</span>
-            </a>
-            <ul>
-                <li><a href="login.html">Login</a></li>
-                <li><a href="resister.html">Register</a></li>
-                <li><a href="error_400.html">Error 404</a></li>
-                <li><a href="error_500.html">Error 500</a></li>
-                <li><a href="forgot_pass.html">Forgot Password</a></li>
-                <li><a href="gallery.html">Gallery</a></li>
-            </ul>
-        </li>
     </ul>
 </nav>
-
-
-<style>
- 
-</style>
