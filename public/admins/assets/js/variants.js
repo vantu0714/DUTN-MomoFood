@@ -395,12 +395,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (select.options[0].value !== '') {
                     const defaultOption = document.createElement('option');
                     defaultOption.value = '';
-                    defaultOption.textContent = 'Chọn size';
+                    defaultOption.textContent = 'Chọn khối lượng';
                     defaultOption.selected = true;
                     select.insertBefore(defaultOption, select.firstChild);
                 } else {
                     // Update text of existing empty option
-                    select.options[0].textContent = 'Chọn size';
+                    select.options[0].textContent = 'Chọn khối lượng';
                 }
             }
         });
@@ -459,19 +459,21 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Reset size selects in new variant
+            // Reset size selects in new variant
             const sizeSelects = clone.querySelectorAll('select[name*="[attribute_value_id]"]');
             sizeSelects.forEach(select => {
                 select.selectedIndex = 0;
                 if (select.options[0].value !== '') {
                     const defaultOption = document.createElement('option');
                     defaultOption.value = '';
-                    defaultOption.textContent = 'Chọn size';
+                    defaultOption.textContent = 'Chọn khối lượng'; // 
                     defaultOption.selected = true;
                     select.insertBefore(defaultOption, select.firstChild);
                 } else {
-                    select.options[0].textContent = 'Chọn size';
+                    select.options[0].textContent = 'Chọn khối lượng'; // 
                 }
             });
+
 
             // Add to container
             variantsContainer.appendChild(clone);
@@ -502,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Add error message
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'size-error text-danger small mt-1';
-                    errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Vui lòng chọn size!';
+                    errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Vui lòng chọn khối lượng!';
 
                     // Remove existing error first
                     const existingError = select.parentNode.querySelector('.size-error');
@@ -521,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (hasError) {
                 e.preventDefault();
-                alert('Vui lòng kiểm tra lại! Phải chọn size cho tất cả biến thể và không được chọn size trùng lặp.');
+                alert('Vui lòng kiểm tra lại! Phải chọn size cho tất cả biến thể và không được chọn khối lượng trùng lặp.');
                 return false;
             }
 
@@ -620,7 +622,9 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-/*..........*/
+
+
+/*......edit....*/
 document.addEventListener('DOMContentLoaded', function () {
     // Enhanced delete confirmation
     window.confirmDelete = function (button) {
@@ -1110,6 +1114,8 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Enhanced Product Variants UI loaded successfully');
     }
 });
+
+
 //create-multiple.blade
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('variantForm');
