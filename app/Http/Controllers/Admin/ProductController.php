@@ -155,12 +155,12 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'original_price' => 'nullable|numeric|min:0',
-            'discount_percent' => 'nullable|numeric|min:0|max:99.99', 
+            'discount_percent' => 'nullable|numeric|min:0|max:99.99',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'quantity_in_stock' => 'required_if:product_type,simple|nullable|integer|min:0',
+            'quantity_in_stock' => 'nullable|integer|min:0', // bỏ required_if nếu có biến thể
         ]);
 
-        // Tính giá sau giảm (discounted_price)
+        // Tính discounted_price
         if (!empty($validated['original_price']) && !empty($validated['discount_percent'])) {
             $percent = $validated['discount_percent'];
             $discountAmount = $validated['original_price'] * ($percent / 100);
@@ -169,10 +169,7 @@ class ProductController extends Controller
             $validated['discounted_price'] = null;
         }
 
-        // Cập nhật trạng thái
-        $validated['status'] = isset($validated['quantity_in_stock']) && $validated['quantity_in_stock'] > 0 ? 1 : 0;
-
-        // Xử lý ảnh mới
+        // Xử lý ảnh
         if ($request->hasFile('image')) {
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
@@ -181,20 +178,25 @@ class ProductController extends Controller
             $validated['image'] = $imagePath;
         }
 
-        // Không lưu discount_percent vào DB nếu không cần
         unset($validated['discount_percent']);
 
-        // Cập nhật sản phẩm
+        // Cập nhật sản phẩm lần đầu
         $product->update($validated);
 
-        // Nếu có biến thể thì cập nhật lại tổng số lượng tồn kho
+        // Nếu có biến thể thì tính lại tồn kho
         if ($product->variants()->exists()) {
             $totalVariantQty = $product->variants()->sum('quantity_in_stock');
             $product->update(['quantity_in_stock' => $totalVariantQty]);
         }
 
+        // Cập nhật trạng thái chính xác sau cùng
+        $product->update([
+            'status' => $product->quantity_in_stock > 0 ? 1 : 0
+        ]);
+
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công');
     }
+
 
 
     public function destroy(Request $request, $id)
