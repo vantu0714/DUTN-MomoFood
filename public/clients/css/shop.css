@@ -299,3 +299,15 @@ input[type="number"] {
     text-decoration: line-through;
 }
 
+/* css input carts */
+ /* Ẩn spinner trong input type="number" trên Chrome, Safari */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Ẩn spinner trên Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
