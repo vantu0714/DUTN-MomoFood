@@ -1,6 +1,6 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 <div class="main_content_iner overly_inner">
     <div class="container-fluid p-0">
         <div class="container-fluid page-header py-5 bg-primary text-white">
@@ -73,7 +73,7 @@
                                                 ->implode(', ');
                                         }
 
-                                        $stock = $variant->quantity_in_stock ?? ($product->quantity ?? 0);
+                                        $stock = $variant->quantity_in_stock ?? ($product->quantity_in_stock ?? 0);
                                         $price = $item->discounted_price ?? 0;
                                         $subTotal = $price * $item->quantity;
                                         $total += $subTotal;
@@ -394,3 +394,4 @@
         });
     });
 </script>
+
