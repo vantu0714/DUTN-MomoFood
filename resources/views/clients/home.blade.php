@@ -715,8 +715,7 @@
             <h1 class="display-5 text-dark">Khách hàng nói gì về chúng tôi</h1>
         </div>
         <div class="owl-carousel testimonial-carousel">
-
-            @foreach ($product->comments as $comment)
+            @foreach ($comments as $comment)
                 <div class="testimonial-item img-border-radius bg-light rounded p-4">
                     <div class="position-relative">
                         <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
@@ -747,7 +746,6 @@
                     </div>
                 </div>
             @endforeach
-
         </div>
     </div>
 </div>

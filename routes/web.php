@@ -151,6 +151,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
         Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
+        Route::get('/{product_variant}', [ProductVariantController::class, 'show'])->name('show');
         //Route thêm biến thể cho nhiều sản phẩm
         Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
         Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Clients;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,43 +20,40 @@ class HomeController extends Controller
 
         $query = Product::with(['category', 'variants'])
             ->where(function ($q) {
-                // Điều kiện cho sản phẩm đơn
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
                         ->where('quantity_in_stock', '>', 0)
                         ->where('status', 1);
-                })
-                    // Hoặc điều kiện cho sản phẩm có biến thể CÒN HÀNG
-                    ->orWhere(function ($q2) {
-                        $q2->where('product_type', 'variant')
-                            ->where('status', 1)
-                            ->whereHas('variants', function ($q3) {
-                                $q3->where('quantity_in_stock', '>', 0);
-                            });
-                    });
+                })->orWhere(function ($q2) {
+                    $q2->where('product_type', 'variant')
+                        ->where('status', 1)
+                        ->whereHas('variants', function ($q3) {
+                            $q3->where('quantity_in_stock', '>', 0);
+                        });
+                });
             });
 
-
-        // Lọc theo danh mục nếu có
         if ($request->has('category')) {
             $query->where('category_id', $request->category);
         }
 
         $products = $query->paginate(12);
-
         $categories = Category::withCount('products')->get();
 
-        // Đổi bestSellingProducts để không lấy sản phẩm hết hàng
         $bestSellingProducts = Product::with('category')
             ->where('product_type', 'simple')
-            ->where('status', 1) // Đã đổi từ 'Còn hàng' sang 1
+            ->where('status', 1)
             ->where('quantity_in_stock', '>', 0)
             ->inRandomOrder()
             ->take(8)
             ->get();
 
-        return view('clients.home', compact('products', 'categories', 'bestSellingProducts'));
+       
+        $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
+
+        return view('clients.home', compact('products', 'categories', 'bestSellingProducts', 'comments'));
     }
+
     public function search(Request $request)
     {
         $keyword = $request->input('keyword');

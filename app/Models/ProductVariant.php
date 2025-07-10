@@ -44,6 +44,10 @@ class ProductVariant extends Model
     {
         return $this->hasMany(OrderDetail::class, 'product_variant_id');
     }
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class, 'product_variant_id'); 
+    }
     public function getFinalPriceAttribute()
     {
         $adjustment = $this->attributeValues->sum(function ($value) {
