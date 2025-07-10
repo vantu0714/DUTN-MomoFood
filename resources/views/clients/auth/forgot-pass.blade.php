@@ -2,40 +2,30 @@
 
 @push('styles')
     <style>
-        body {
-            background-color: #f9f9f9;
-        }
-
-        .register-card {
-            background-color: #f5f5f5;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .register-left {
-            background-color: #ffffff;
-            padding: 40px;
-        }
-
-        .register-right {
-            background-color: #9cd62b;
+        .btn-custom {
+            background-color: rgb(219, 115, 91);
+            border-color: rgb(219, 115, 91);
             color: white;
-            padding: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
         }
 
-        .btn-green {
-            background-color: #9cd62b;
+        .btn-custom:hover,
+        .btn-custom:focus {
+            background-color: rgb(200, 100, 75);
+            border-color: rgb(200, 100, 75);
             color: white;
-            border: none;
         }
 
-        .btn-green:hover {
-            background-color: #8ec027;
+        .btn-custom:focus {
+            box-shadow: 0 0 0 0.2rem rgba(219, 115, 91, 0.25);
+        }
+
+        .bg-custom {
+            background-color: rgb(219, 115, 91);
+        }
+
+        .form-control:focus {
+            border-color: rgb(219, 115, 91);
+            box-shadow: 0 0 0 0.2rem rgba(219, 115, 91, 0.25);
         }
     </style>
 @endpush
@@ -45,37 +35,36 @@
         style="padding-top: 180px; padding-bottom: 1%; min-height: 80vh;">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-lg-10 register-card shadow">
-                    <div class="row">
-                        <div class="col-md-7 register-left">
-                            <h2>Quên mật khẩu</h2>
-                            <p class="text-muted">Nhập địa chỉ email để nhận liên kết đặt lại mật khẩu</p>
+                <div class="col-lg-10 rounded shadow overflow-hidden">
+                    <div class="row g-0">
+                        <div class="col-md-7 bg-white p-5">
+                            <h2 class="mb-3">Quên mật khẩu</h2>
+                            <p class="text-muted mb-4">Nhập địa chỉ email để nhận liên kết đặt lại mật khẩu</p>
                             <form method="POST" action="{{ route('password.email') }}">
                                 @csrf
                                 <div class="mb-3">
-                                    <label for="email">Email</label>
+                                    <label for="email" class="form-label">Email</label>
                                     <input type="email" class="form-control" name="email" placeholder="Nhập email"
                                         value="{{ old('email') }}" required>
                                     @error('email')
-                                        <div class="text-danger mt-1" style="font-size: 0.875rem;">{{ $message }}</div>
+                                        <div class="text-danger mt-1 small">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="row">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button type="submit" class="btn btn-green px-4">Gửi</button>
-                                    </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-custom px-4">Gửi</button>
                                 </div>
                             </form>
                         </div>
 
-                        <div class="col-md-5 register-right">
-                            <h4>Quay lại trang đăng nhập</h4>
-                            <p class="mt-2 text-white text-center">
+                        <div
+                            class="col-md-5 bg-custom text-white p-5 d-flex flex-column justify-content-center align-items-center">
+                            <h4 class="mb-3">Quay lại trang đăng nhập</h4>
+                            <p class="text-center text-white mb-4">
                                 Bạn đã nhớ lại mật khẩu?<br>
                                 <a href="{{ route('login') }}" class="text-white text-decoration-underline">Hãy nhấn vào đây
                                     để quay lại trang đăng nhập</a>
                             </p>
-                            <i class="fa fa-envelope fa-4x mt-3"></i>
+                            <i class="fa fa-envelope fa-4x"></i>
                         </div>
                     </div>
                 </div>

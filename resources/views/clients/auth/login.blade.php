@@ -3,90 +3,132 @@
 @push('styles')
     <style>
         .login-card {
-            background-color: #f5f5f5;
-            border-radius: 10px;
-            overflow: hidden;
+            background-color: transparent;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .login-left {
             background-color: #ffffff;
-            padding: 40px;
-            height: 100%;
+            border-radius: 20px;
         }
 
         .login-right {
-            background-color: #9cd62b;
-            color: white;
-            padding: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+            background-color: rgb(219, 115, 91);
+            border-radius: 0;
         }
 
-        .btn-green {
-            background-color: #9cd62b;
+        .btn-orange {
+            background-color: rgb(219, 115, 91);
+            border-color: rgb(219, 115, 91);
             color: white;
-            border: none;
+            transition: all 0.3s ease;
         }
 
-        .btn-green:hover {
-            background-color: #8ec027;
+        .btn-orange:hover {
+            background-color: rgb(199, 95, 71);
+            border-color: rgb(199, 95, 71);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .text-orange {
+            color: rgb(219, 115, 91) !important;
+        }
+
+        .border-orange {
+            border-color: rgb(219, 115, 91) !important;
+        }
+
+        .form-control:focus {
+            border-color: rgb(219, 115, 91);
+            box-shadow: 0 0 0 0.2rem rgba(219, 115, 91, 0.25);
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="d-flex justify-content-center align-items-center"
-        style="padding-top: 140px; padding-bottom: 20px; min-height: 80vh;">
+    <div class="d-flex justify-content-center align-items-center pt-5 pb-4" style="min-height: 80vh; margin-top: 100px;">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-lg-10 login-card shadow">
-                    <div class="row">
-                        <div class="col-md-7 login-left">
-                            <h2>Login</h2>
-                            <p class="text-muted">Đăng Nhập</p>
+                <div class="col-lg-10 login-card shadow-sm border-0">
+                    <div class="row g-0 h-100">
+                        <div class="col-md-7 login-left p-5">
+                            <div class="mb-4">
+                                <h2 class="fw-bold mb-2">Đăng nhập</h2>
+                                <p class="text-muted mb-0">Chào mừng bạn quay lại</p>
+                            </div>
 
                             @if (session('error'))
-                                <div class="alert alert-danger text-center" style="font-size: 0.9rem;">
+                                <div class="alert alert-danger text-center border-0 rounded-4 mb-4"
+                                    style="font-size: 0.9rem;">
                                     {{ session('error') }}
                                 </div>
                             @endif
 
                             <form method="POST" action="{{ route('login') }}" novalidate>
                                 @csrf
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text"><i class="fa fa-user text-success"></i></span>
-                                    <input type="email" class="form-control" name="email"
-                                        placeholder="Nhâp địa chỉ email" value="{{ old('email') }}" required>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 border-orange rounded-start-3">
+                                            <i class="bi bi-envelope text-orange"></i>
+                                        </span>
+                                        <input type="email"
+                                            class="form-control border-start-0 border-orange ps-0 rounded-end-3"
+                                            name="email" placeholder="Nhập địa chỉ email" value="{{ old('email') }}"
+                                            required>
+                                    </div>
                                 </div>
-                                <div class="input-group mb-4">
-                                    <span class="input-group-text"><i class="fa fa-lock text-success"></i></span>
-                                    <input type="password" class="form-control" id="password" name="password"
-                                        placeholder="Mật khẩu" required>
-                                    <span class="input-group-text" onclick="togglePassword()" style="cursor: pointer;">
-                                        <i class="fa fa-eye" id="togglePasswordIcon"></i>
-                                    </span>
+
+                                <div class="mb-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 border-orange rounded-start-3">
+                                            <i class="bi bi-lock text-orange"></i>
+                                        </span>
+                                        <input type="password"
+                                            class="form-control border-start-0 border-end-0 border-orange ps-0"
+                                            id="password" name="password" placeholder="Mật khẩu" required>
+                                        <span class="input-group-text bg-light border-start-0 border-orange rounded-end-3"
+                                            onclick="togglePassword()" style="cursor: pointer;">
+                                            <i class="bi bi-eye text-orange" id="togglePasswordIcon"></i>
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <button type="submit" class="btn btn-green px-4">Đăng nhập</button>
-                                    <a href="{{ route('password.request') }}" class="text-success">Quên mật khẩu</a>
+
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <button type="submit" class="btn btn-orange px-4 fw-semibold rounded-3">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+                                    </button>
+                                    <a href="{{ route('password.request') }}" class="text-orange text-decoration-none">
+                                        Quên mật khẩu?
+                                    </a>
                                 </div>
                             </form>
 
                             <hr class="my-4">
+
                             <div class="text-center">
-                                <p class="mb-2">Hoặc đăng nhập bằng</p>
-                                <a href="{{ url('/auth/google') }}" class="btn btn-danger">
-                                    <i class="fab fa-google"></i> Google
+                                <p class="text-muted mb-3">Hoặc đăng nhập bằng</p>
+                                <a href="{{ url('/auth/google') }}" class="btn btn-danger rounded-pill px-4">
+                                    <i class="bi bi-google me-2"></i>Google
                                 </a>
                             </div>
                         </div>
 
-                        <div class="col-md-5 login-right">
-                            <h2>Đăng ký tài khoản</h2>
-                            <p class="text-white text-center px-2">Đăng ký ngay hôm nay để có các ưu đãi đặc biệt!</p>
-                            <a href="{{ route('register') }}" class="btn btn-light mt-3">Đăng ký</a>
+                        <div
+                            class="col-md-5 login-right text-white p-5 d-flex align-items-center justify-content-center flex-column">
+                            <div class="text-center">
+                                <div class="mb-4">
+                                    <i class="bi bi-person-plus display-1 text-white opacity-75"></i>
+                                </div>
+                                <h3 class="fw-bold mb-3 text-white">Tạo tài khoản mới</h3>
+                                <p class="text-white-50 mb-4 px-3">
+                                    Đăng ký ngay hôm nay để trải nghiệm các dịch vụ tuyệt vời và nhận những ưu đãi đặc biệt!
+                                </p>
+                                <a href="{{ route('register') }}"
+                                    class="btn btn-light btn-lg rounded-pill px-4 fw-semibold">
+                                    <i class="bi bi-person-plus me-2"></i>Đăng ký ngay
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -100,8 +142,8 @@
             const icon = document.getElementById("togglePasswordIcon");
             const isPassword = passwordInput.type === "password";
             passwordInput.type = isPassword ? "text" : "password";
-            icon.classList.toggle("fa-eye");
-            icon.classList.toggle("fa-eye-slash");
+            icon.classList.toggle("bi-eye");
+            icon.classList.toggle("bi-eye-slash");
         }
     </script>
 @endsection
