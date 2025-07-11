@@ -89,22 +89,40 @@
                                         <div class="info-item">
                                             <label class="form-label text-dark fw-semibold mb-2">Giá bán</label>
                                             <div class="price-display">
-                                                @if ($product->discounted_price)
-                                                    <span class="text-decoration-line-through text-secondary me-2 fs-6">
-                                                        {{ number_format($product->original_price) }}đ
-                                                    </span>
-                                                    <span class="text-danger fw-bold fs-4">
-                                                        {{ number_format($product->discounted_price) }}đ
-                                                    </span>
-                                                    <span class="badge bg-danger ms-2">
-                                                        -{{ round((($product->original_price - $product->discounted_price) / $product->original_price) * 100) }}%
-                                                    </span>
+                                                @if ($product->product_type === 'variant' && $product->variants->count())
+                                                    @php
+                                                        $minPrice = $product->variants->min('price');
+                                                        $maxPrice = $product->variants->max('price');
+                                                    @endphp
+
+                                                    @if ($minPrice === $maxPrice)
+                                                        <span
+                                                            class="text-primary fw-bold fs-4">{{ number_format($minPrice) }}đ</span>
+                                                    @else
+                                                        <span class="text-primary fw-bold fs-4">
+                                                            {{ number_format($minPrice) }}đ -
+                                                            {{ number_format($maxPrice) }}đ
+                                                        </span>
+                                                    @endif
                                                 @else
-                                                    <span class="text-primary fw-bold fs-4">
-                                                        {{ number_format($product->original_price) }}đ
-                                                    </span>
+                                                    @if ($product->discounted_price)
+                                                        <span class="text-decoration-line-through text-secondary me-2 fs-6">
+                                                            {{ number_format($product->original_price) }}đ
+                                                        </span>
+                                                        <span class="text-danger fw-bold fs-4">
+                                                            {{ number_format($product->discounted_price) }}đ
+                                                        </span>
+                                                        <span class="badge bg-danger ms-2">
+                                                            -{{ round((($product->original_price - $product->discounted_price) / $product->original_price) * 100) }}%
+                                                        </span>
+                                                    @else
+                                                        <span class="text-primary fw-bold fs-4">
+                                                            {{ number_format($product->original_price) }}đ
+                                                        </span>
+                                                    @endif
                                                 @endif
                                             </div>
+
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -254,5 +272,5 @@
         </div>
     </div>
 
-   
+
 @endsection

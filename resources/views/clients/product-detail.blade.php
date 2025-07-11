@@ -9,7 +9,7 @@
 </div>
 
 <!-- Single Product Start -->
-<div class="container-fluid py-5 mt-5">
+<div class="container-fluid  ">
     <div class="container py-3">
         <div class="row g-4 mb-5 justify-content-center">
             <div class="col-lg-8 col-xl-9">

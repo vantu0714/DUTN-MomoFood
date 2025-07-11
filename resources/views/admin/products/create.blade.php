@@ -147,83 +147,85 @@
                                     </div>
                                 </div>
                                 <!-- Cột phải -->
-                                <div class="col-md-6">
-                                    <!-- Giá gốc -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label fw-semibold">
-                                            <i class="fas fa-money-bill-wave text-primary me-2"></i>Giá gốc
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group input-group-lg">
-                                            <input type="number" step="1000" name="original_price"
-                                                id="original_price" class="form-control border-2" placeholder="0"
-                                                value="{{ old('original_price') }}">
-                                            <span class="input-group-text bg-primary text-white fw-semibold">VND</span>
-                                        </div>
-                                        <div class="price-display mt-2">
-                                            <small class="text-muted">Giá hiển thị: </small>
-                                            <span id="original_price_display" class="fw-semibold text-primary">0
-                                                VND</span>
-                                        </div>
-                                        @error('original_price')
-                                            <div class="text-danger mt-1">
-                                                <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                <div id="simpleProductFields">
+                                    <div class="col-md-6">
+                                        <!-- Giá gốc -->
+                                        <div class="form-group mb-4">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-money-bill-wave text-primary me-2"></i>Giá gốc
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <input type="number" step="1000" name="original_price"
+                                                    id="original_price" class="form-control border-2" placeholder="0"
+                                                    value="{{ old('original_price') }}">
+                                                <span class="input-group-text bg-primary text-white fw-semibold">VND</span>
                                             </div>
-                                        @enderror
-                                    </div>
-                                    <!-- % Giảm giá -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label fw-semibold">
-                                            <i class="fas fa-percentage text-primary me-2"></i>Phần trăm giảm giá
-                                        </label>
-                                        <div class="input-group input-group-lg">
-                                            <input type="number" step="0.1" id="discount_percent"
-                                                class="form-control border-2" placeholder="0" min="0"
-                                                max="100">
-                                            <span class="input-group-text bg-warning text-dark fw-semibold">%</span>
-                                        </div>
-                                        <small class="text-muted">Để trống nếu không có giảm giá</small>
-                                    </div>
-                                    <!-- Giá khuyến mãi -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label fw-semibold">
-                                            <i class="fas fa-tags text-primary me-2"></i>Giá khuyến mãi
-                                        </label>
-                                        <div class="input-group input-group-lg">
-                                            <input type="number" step="any" name="discounted_price"
-                                                id="discounted_price" class="form-control border-2" placeholder="0"
-                                                value="{{ old('discounted_price') }}">
-                                            <span class="input-group-text bg-success text-white fw-semibold">VND</span>
-                                        </div>
-                                        <div class="price-display mt-2">
-                                            <small class="text-muted">Giá hiển thị: </small>
-                                            <span id="discounted_price_display" class="fw-semibold text-success">0
-                                                VND</span>
-                                        </div>
-                                        <small class="text-warning mt-1 d-block">
-                                            <i class="fas fa-exclamation-triangle me-1"></i>
-                                            Giá khuyến mãi không được lớn hơn giá gốc
-                                        </small>
-                                        @error('discounted_price')
-                                            <div class="text-danger mt-1">
-                                                <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                            <div class="price-display mt-2">
+                                                <small class="text-muted">Giá hiển thị: </small>
+                                                <span id="original_price_display" class="fw-semibold text-primary">0
+                                                    VND</span>
                                             </div>
-                                        @enderror
-                                    </div>
-                                    <!-- Số lượng -->
-                                    <div class="form-group mb-4" id="stockQuantityWrapper">
-                                        <label class="form-label fw-semibold">
-                                            <i class="fas fa-boxes text-primary me-2"></i>Số lượng trong kho
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number" name="quantity_in_stock" id="quantity_in_stock"
-                                            class="form-control form-control-lg border-2" placeholder="Nhập số lượng"
-                                            value="{{ old('quantity_in_stock') }}" min="1" required>
-                                        @error('quantity_in_stock')
-                                            <div class="text-danger mt-1">
-                                                <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                            @error('original_price')
+                                                <div class="text-danger mt-1">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
+                                        <!-- % Giảm giá -->
+                                        <div class="form-group mb-4">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-percentage text-primary me-2"></i>Phần trăm giảm giá
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <input type="number" step="0.1" id="discount_percent"
+                                                    class="form-control border-2" placeholder="0" min="0"
+                                                    max="100">
+                                                <span class="input-group-text bg-warning text-dark fw-semibold">%</span>
                                             </div>
-                                        @enderror
+                                            <small class="text-muted">Để trống nếu không có giảm giá</small>
+                                        </div>
+                                        <!-- Giá khuyến mãi -->
+                                        <div class="form-group mb-4">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-tags text-primary me-2"></i>Giá khuyến mãi
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <input type="number" step="any" name="discounted_price"
+                                                    id="discounted_price" class="form-control border-2" placeholder="0"
+                                                    value="{{ old('discounted_price') }}">
+                                                <span class="input-group-text bg-success text-white fw-semibold">VND</span>
+                                            </div>
+                                            <div class="price-display mt-2">
+                                                <small class="text-muted">Giá hiển thị: </small>
+                                                <span id="discounted_price_display" class="fw-semibold text-success">0
+                                                    VND</span>
+                                            </div>
+                                            <small class="text-warning mt-1 d-block">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                Giá khuyến mãi không được lớn hơn giá gốc
+                                            </small>
+                                            @error('discounted_price')
+                                                <div class="text-danger mt-1">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
+                                        <!-- Số lượng -->
+                                        <div class="form-group mb-4" id="stockQuantityWrapper">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-boxes text-primary me-2"></i>Số lượng 
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="number" name="quantity_in_stock" id="quantity_in_stock"
+                                                class="form-control form-control-lg border-2" placeholder="Nhập số lượng"
+                                                value="{{ old('quantity_in_stock') }}" min="1" required>
+                                            @error('quantity_in_stock')
+                                                <div class="text-danger mt-1">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -268,16 +270,25 @@
             const discountInput = document.getElementById('discounted_price');
             const originalDisplay = document.getElementById('original_price_display');
             const discountedDisplay = document.getElementById('discounted_price_display');
+
             const productTypeSelect = document.querySelector('select[name="product_type"]');
             const stockQuantityWrapper = document.getElementById('stockQuantityWrapper');
             const stockQuantityInput = document.getElementById('quantity_in_stock');
+
+            const form = document.getElementById('product-form');
             const uploadArea = document.querySelector('.upload-area');
             const imageInput = document.getElementById('imageInput');
             const preview = document.getElementById('imagePreview');
-            const form = document.getElementById('product-form');
+
+            // Thêm các thẻ cha chứa các trường cần ẩn/hiện
+            const originalPriceWrapper = originalInput.closest('.form-group');
+            const discountPercentWrapper = percentInput.closest('.form-group');
+            const discountedPriceWrapper = discountInput.closest('.form-group');
 
             function formatVND(amount) {
-                return (!amount || amount === 0) ? '0 VND' : new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
+                return (!amount || amount === 0) ?
+                    '0 VND' :
+                    new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
             }
 
             function updateDiscountedPrice() {
@@ -294,29 +305,53 @@
                 discountedDisplay.textContent = formatVND(discounted);
             }
 
-            percentInput.addEventListener('input', updateDiscountedPrice);
-            originalInput.addEventListener('input', updateDiscountedPrice);
-
-            function toggleStockQuantity() {
+            function togglePriceAndStockFields() {
                 const isVariant = productTypeSelect.value === 'variant';
 
-                stockQuantityWrapper.style.display = isVariant ? 'none' : 'block';
+                const fields = [{
+                        wrapper: originalPriceWrapper,
+                        input: originalInput,
+                        name: 'original_price'
+                    },
+                    {
+                        wrapper: discountPercentWrapper,
+                        input: percentInput,
+                        name: null
+                    }, // không cần submit
+                    {
+                        wrapper: discountedPriceWrapper,
+                        input: discountInput,
+                        name: 'discounted_price'
+                    },
+                    {
+                        wrapper: stockQuantityWrapper,
+                        input: stockQuantityInput,
+                        name: 'quantity_in_stock'
+                    },
+                ];
 
-                if (isVariant) {
-                    stockQuantityInput.removeAttribute('name');
-                    stockQuantityInput.removeAttribute('required'); // 
-                } else {
-                    stockQuantityInput.setAttribute('name', 'quantity_in_stock');
-                    stockQuantityInput.setAttribute('required', 'required');
-                }
+                fields.forEach(({
+                    wrapper,
+                    input,
+                    name
+                }) => {
+                    if (isVariant) {
+                        wrapper.style.display = 'none';
+                        input.removeAttribute('name');
+                        input.removeAttribute('required');
+                    } else {
+                        wrapper.style.display = 'block';
+                        if (name) input.setAttribute('name', name);
+                        if (wrapper.id === 'stockQuantityWrapper') input.setAttribute('required',
+                            'required');
+                    }
+                });
             }
 
             function handleImageUpload(input) {
                 const files = input.files;
                 preview.innerHTML = '';
-                if (files.length > 0) {
-                    preview.classList.remove('d-none');
-                }
+                if (files.length > 0) preview.classList.remove('d-none');
 
                 Array.from(files).forEach((file, index) => {
                     const reader = new FileReader();
@@ -373,20 +408,21 @@
             }
 
             form.addEventListener('submit', function(e) {
+                const isVariant = productTypeSelect.value === 'variant';
                 const original = parseFloat(originalInput.value) || 0;
                 const discount = parseFloat(discountInput.value) || 0;
-                if (discount > original) {
+
+                if (!isVariant && discount > original) {
                     e.preventDefault();
                     alert('Giá khuyến mãi không được lớn hơn giá gốc!');
                     percentInput.focus();
                 }
             });
 
+            productTypeSelect.addEventListener('change', togglePriceAndStockFields);
             imageInput.addEventListener('change', function() {
                 handleImageUpload(this);
             });
-
-            productTypeSelect.addEventListener('change', toggleStockQuantity);
 
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
                 uploadArea.addEventListener(event, preventDefaults, false);
@@ -399,8 +435,11 @@
             });
             uploadArea.addEventListener('drop', handleDrop, false);
 
-            // Init
-            toggleStockQuantity();
+            percentInput.addEventListener('input', updateDiscountedPrice);
+            originalInput.addEventListener('input', updateDiscountedPrice);
+
+            // Init on load
+            togglePriceAndStockFields();
             updateDiscountedPrice();
         });
     </script>
