@@ -2,12 +2,7 @@
 
 @push('styles')
     <style>
-        body {
-            background-color: #f9f9f9;
-        }
-
         .reset-card {
-            background-color: #f5f5f5;
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
@@ -18,14 +13,26 @@
             padding: 40px;
         }
 
-        .btn-green {
-            background-color: #9cd62b;
+        .btn-custom {
+            background-color: rgb(219, 115, 91);
+            border-color: rgb(219, 115, 91);
             color: white;
-            border: none;
         }
 
-        .btn-green:hover {
-            background-color: #8ec027;
+        .btn-custom:hover,
+        .btn-custom:focus {
+            background-color: rgb(200, 100, 75);
+            border-color: rgb(200, 100, 75);
+            color: white;
+        }
+
+        .btn-custom:focus {
+            box-shadow: 0 0 0 0.2rem rgba(219, 115, 91, 0.25);
+        }
+
+        .form-control:focus {
+            border-color: rgb(219, 115, 91);
+            box-shadow: 0 0 0 0.2rem rgba(219, 115, 91, 0.25);
         }
     </style>
 @endpush
@@ -68,7 +75,7 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                <button type="submit" class="btn btn-green px-4">Đặt lại mật khẩu</button>
+                                <button type="submit" class="btn btn-custom px-4">Đặt lại mật khẩu</button>
                             </div>
                         </form>
                     </div>
@@ -100,7 +107,7 @@
                 title: 'Thành công!',
                 text: '{{ session('success') }}',
                 confirmButtonText: 'OK',
-                confirmButtonColor: '#9cd62b',
+                confirmButtonColor: 'rgb(219, 115, 91)',
             }).then(() => {
                 fetch("{{ route('reset.session.clear') }}")
                     .then(() => window.location.href = "{{ route('login') }}");

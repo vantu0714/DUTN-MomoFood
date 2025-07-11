@@ -217,8 +217,8 @@
                                             <span class="text-danger">*</span>
                                         </label>
                                         <input type="number" name="quantity_in_stock" id="quantity_in_stock"
-                                            class="form-control form-control-lg border-2" placeholder="0"
-                                            value="{{ old('quantity_in_stock', 0) }}" min="0">
+                                            class="form-control form-control-lg border-2" placeholder="Nhập số lượng"
+                                            value="{{ old('quantity_in_stock') }}" min="1" required>
                                         @error('quantity_in_stock')
                                             <div class="text-danger mt-1">
                                                 <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
@@ -263,7 +263,6 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // DOM Elements
             const originalInput = document.getElementById('original_price');
             const percentInput = document.getElementById('discount_percent');
             const discountInput = document.getElementById('discounted_price');
@@ -275,75 +274,82 @@
             const uploadArea = document.querySelector('.upload-area');
             const imageInput = document.getElementById('imageInput');
             const preview = document.getElementById('imagePreview');
-            const previewImg = document.getElementById('previewImg');
             const form = document.getElementById('product-form');
 
-            // Format tiền
             function formatVND(amount) {
-                if (!amount || amount === 0) return '0 VND';
-                return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
+                return (!amount || amount === 0) ? '0 VND' : new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
             }
 
-            // Cập nhật giá khuyến mãi khi nhập phần trăm
             function updateDiscountedPrice() {
                 const original = parseFloat(originalInput.value) || 0;
                 const percent = parseFloat(percentInput.value) || 0;
-
                 originalDisplay.textContent = formatVND(original);
 
+                let discounted = 0;
                 if (original > 0 && percent > 0) {
-                    const discounted = original * (1 - percent / 100);
-                    discountInput.value = Math.round(discounted);
-                    discountedDisplay.textContent = formatVND(discounted);
-                } else {
-                    discountedDisplay.textContent = formatVND(parseFloat(discountInput.value) || 0);
+                    discounted = original * (1 - percent / 100);
                 }
-            }
 
-            // Cập nhật giá khuyến mãi khi nhập trực tiếp
-            function updateDiscountedDisplay() {
-                const discounted = parseFloat(discountInput.value) || 0;
+                discountInput.value = Math.round(discounted);
                 discountedDisplay.textContent = formatVND(discounted);
             }
 
-            // Reset phần trăm nếu người dùng chỉnh giá khuyến mãi trực tiếp
-            discountInput.addEventListener('input', function() {
-                percentInput.value = '';
-                updateDiscountedDisplay();
-            });
+            percentInput.addEventListener('input', updateDiscountedPrice);
+            originalInput.addEventListener('input', updateDiscountedPrice);
 
-            // Ẩn/hiện ô nhập số lượng theo loại sản phẩm
             function toggleStockQuantity() {
                 const isVariant = productTypeSelect.value === 'variant';
+
                 stockQuantityWrapper.style.display = isVariant ? 'none' : 'block';
 
                 if (isVariant) {
-                    // Nếu là sản phẩm có biến thể, xóa name để không gửi
                     stockQuantityInput.removeAttribute('name');
+                    stockQuantityInput.removeAttribute('required'); // 
                 } else {
                     stockQuantityInput.setAttribute('name', 'quantity_in_stock');
+                    stockQuantityInput.setAttribute('required', 'required');
                 }
             }
-            // Upload ảnh
+
             function handleImageUpload(input) {
-                const file = input.files[0];
-                if (file) {
+                const files = input.files;
+                preview.innerHTML = '';
+                if (files.length > 0) {
+                    preview.classList.remove('d-none');
+                }
+
+                Array.from(files).forEach((file, index) => {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        previewImg.src = e.target.result;
-                        preview.classList.remove('d-none');
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'position-relative';
+
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.classList.add('img-thumbnail', 'me-2');
+                        img.style.maxWidth = '120px';
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'btn btn-sm btn-danger position-absolute top-0 end-0';
+                        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                        removeBtn.onclick = function() {
+                            const dt = new DataTransfer();
+                            Array.from(imageInput.files).forEach((f, i) => {
+                                if (i !== index) dt.items.add(f);
+                            });
+                            imageInput.files = dt.files;
+                            handleImageUpload(imageInput);
+                        };
+
+                        wrapper.appendChild(img);
+                        wrapper.appendChild(removeBtn);
+                        preview.appendChild(wrapper);
                     };
                     reader.readAsDataURL(file);
-                }
+                });
             }
 
-            // Xóa ảnh
-            window.removeImage = function() {
-                imageInput.value = '';
-                preview.classList.add('d-none');
-            };
-
-            // Drag & Drop
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -366,23 +372,20 @@
                 }
             }
 
-            // Validate trước khi submit
             form.addEventListener('submit', function(e) {
                 const original = parseFloat(originalInput.value) || 0;
                 const discount = parseFloat(discountInput.value) || 0;
-                if (original > 0 && discount > original) {
+                if (discount > original) {
                     e.preventDefault();
                     alert('Giá khuyến mãi không được lớn hơn giá gốc!');
-                    discountInput.focus();
+                    percentInput.focus();
                 }
             });
 
-            // Event bindings
-            originalInput.addEventListener('input', updateDiscountedPrice);
-            percentInput.addEventListener('input', updateDiscountedPrice);
             imageInput.addEventListener('change', function() {
                 handleImageUpload(this);
             });
+
             productTypeSelect.addEventListener('change', toggleStockQuantity);
 
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
@@ -396,7 +399,7 @@
             });
             uploadArea.addEventListener('drop', handleDrop, false);
 
-            // Khởi tạo ban đầu
+            // Init
             toggleStockQuantity();
             updateDiscountedPrice();
         });

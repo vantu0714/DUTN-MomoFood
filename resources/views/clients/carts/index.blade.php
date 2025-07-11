@@ -1,6 +1,6 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 <div class="main_content_iner overly_inner">
     <div class="container-fluid p-0">
         <div class="container-fluid page-header py-5 bg-primary text-white">
@@ -59,20 +59,31 @@
                                     @php
                                         $product = $item->product;
                                         $variant = $item->productVariant;
+
                                         $image = $product->image ?? 'clients/img/default.png';
                                         $productName = $product->product_name ?? 'Không có tên';
-                                        $variantName = $variant->name ?? null;
-                                        $stock = $variant->quantity ?? ($product->quantity ?? 0);
+
+                                        // ✅ Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
+                                        $variantName = '';
+                                        if ($variant && $variant->attributeValues) {
+                                            $variantName = $variant->attributeValues
+                                                ->map(function ($val) {
+                                                    return $val->attribute->name . ': ' . $val->value;
+                                                })
+                                                ->implode(', ');
+                                        }
+
+                                        $stock = $variant->quantity_in_stock ?? ($product->quantity_in_stock ?? 0);
                                         $price = $item->discounted_price ?? 0;
                                         $subTotal = $price * $item->quantity;
                                         $total += $subTotal;
                                     @endphp
+
                                     <tr class="cart-item" data-id="{{ $item->id }}"
                                         data-stock="{{ $stock }}">
                                         <td>
                                             <input type="checkbox" name="selected_items[]" value="{{ $item->id }}"
                                                 class="select-item" data-subtotal="{{ $subTotal ?? 0 }}">
-
                                         </td>
                                         <td>
                                             <img src="{{ asset('storage/' . $image) }}" class="rounded"
@@ -80,8 +91,15 @@
                                         </td>
                                         <td class="text-start">
                                             <strong>{{ $productName }}</strong>
-                                            @if ($variantName)
-                                                <br><small class="text-muted">Biến thể: {{ $variantName }}</small>
+                                            @if ($variant && $variant->attributeValues->count())
+                                                <div class="mt-1">
+                                                    @foreach ($variant->attributeValues as $value)
+                                                        <span class="badge bg-info text-dark me-1">
+                                                            {{ $value->attribute->name }}:
+                                                            <strong>{{ $value->value }}</strong>
+                                                        </span>
+                                                    @endforeach
+                                                </div>
                                             @endif
                                         </td>
                                         <td>{{ number_format($price, 0, ',', '.') }} đ</td>
@@ -113,70 +131,10 @@
                                 </tr>
                             @endif
                         </tbody>
+
                     </table>
                 </div>
             </form>
-        </div>
-
-        @if ($carts->count() > 0)
-            <!-- Nút chọn voucher -->
-            <button class="btn btn-outline-primary my-3" data-bs-toggle="modal" data-bs-target="#voucherModal">
-                🎟️ Chọn Voucher
-            </button>
-        @endif
-
-        <!-- Modal voucher giống Shopee -->
-        <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header bg-light">
-                        <h5 class="modal-title">Voucher của Shop</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                    </div>
-                    <div class="modal-body">
-
-                        <!-- Form nhập mã voucher -->
-                        <form action="{{ route('carts.applyCoupon') }}" method="POST" class="d-flex mb-4">
-                            @csrf
-                            <input type="text" name="promotion" class="form-control me-2"
-                                placeholder="Nhập mã voucher của Shop">
-                            <button class="btn btn-outline-success" type="submit">Áp dụng</button>
-                        </form>
-
-                        <!-- Danh sách voucher -->
-                        @foreach ($vouchers as $voucher)
-                            <div class="border rounded p-3 mb-3 position-relative">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <div class="text-danger fw-bold">Giảm
-                                            {{ $voucher->discount_type === 'percent' ? $voucher->discount_value . '%' : number_format($voucher->discount_value) . 'đ' }}
-                                        </div>
-                                        <small class="text-muted">
-                                            Đơn tối thiểu: {{ number_format($voucher->min_total_spent ?? 0) }}đ <br>
-                                            HSD: {{ \Carbon\Carbon::parse($voucher->end_date)->format('d/m/Y H:i') }}
-                                        </small>
-                                    </div>
-                                    <form method="POST" action="{{ route('carts.applyCoupon') }}">
-                                        @csrf
-                                        <input type="hidden" name="promotion"
-                                            value="{{ $voucher->promotion_name }}">
-                                        <button class="btn btn-outline-danger">Lưu</button>
-                                    </form>
-                                </div>
-
-                                @if ($total < ($voucher->min_total_spent ?? 0))
-                                    <div class="alert alert-warning mt-2 p-2 mb-0">
-                                        <i class="bi bi-info-circle"></i> Mua thêm
-                                        {{ number_format($voucher->min_total_spent - $total) }}đ để sử dụng Voucher
-                                        này.
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-
-                    </div>
-                </div>
-            </div>
         </div>
 
         @php
@@ -203,12 +161,6 @@
                             <span>Phí vận chuyển:</span>
                             <span id="shipping-fee">{{ number_format($shipping, 0, ',', '.') }} đ</span>
                         </div>
-                        @if ($discount > 0 && $promotionName)
-                            <div class="d-flex justify-content-between mb-2 text-success fw-bold">
-                                <span>Giảm giá ({{ $promotionName }}):</span>
-                                <span>-{{ number_format($discount, 0, ',', '.') }} đ</span>
-                            </div>
-                        @endif
                         <hr>
                         <div class="d-flex justify-content-between fw-bold text-dark fs-5">
                             <span>Tổng cộng:</span>
@@ -442,3 +394,4 @@
         });
     });
 </script>
+

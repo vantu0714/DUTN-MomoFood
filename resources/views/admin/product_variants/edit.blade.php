@@ -37,7 +37,6 @@
             <input type="number" name="quantity_in_stock" class="form-control" min="0"
                    value="{{ old('quantity_in_stock', $variant->quantity_in_stock) }}" required>
         </div>
-
         {{-- SKU --}}
         <div class="form-group">
             <label for="sku">SKU</label>

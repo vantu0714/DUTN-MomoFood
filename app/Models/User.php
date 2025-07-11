@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Recipient;
+
 
 class User extends Authenticatable
 {
@@ -27,6 +29,7 @@ class User extends Authenticatable
         'avatar',
         'status',
         'is_vip'
+
     ];
 
     /**
@@ -91,6 +94,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(Comment::class);
     }
+    public function recipients()
+    {
+        return $this->hasMany(Recipient::class);
+    }
 
+    public function defaultRecipient()
+    {
+        return $this->hasOne(Recipient::class)->where('is_default', true);
+    }
 }
-
