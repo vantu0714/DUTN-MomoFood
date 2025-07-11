@@ -1,6 +1,12 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+
 
 <!-- Spinner Start -->
 <div id="spinner"
@@ -37,14 +43,12 @@
 <!-- Modal Search End -->
 
 
-<!-- Hero Start -->
 <!-- Hero Banner Fullscreen Start -->
 <div class="hero-banner-full">
     <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood">
 </div>
 <!-- Hero Banner Fullscreen End -->
 
-<!-- Hero End -->
 
 
 <!-- Featurs Section Start -->
@@ -122,12 +126,12 @@
         <div class="row">
             <!-- DANH MỤC BÊN TRÁI -->
             <div class="col-lg-3 mb-4 mb-lg-0">
-                <div class="bg-light p-3 rounded shadow-sm">
+                <div class="bg-light p-3 rounded shadow-sm sticky-sidebar">
                     <h5 class="mb-3 text-primary"><i class="bi bi-list-ul me-2"></i>Danh mục sản phẩm</h5>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item {{ request()->get('category_id') == '' ? 'active' : '' }}">
-                            <a href="javascript:void(0);"
-                                class="text-decoration-none text-dark category-tab"data-category="">Tất cả</a>
+                            <a href="javascript:void(0);" class="text-decoration-none text-dark category-tab"
+                                data-category="">Tất cả</a>
                         </li>
                         @foreach ($categories as $category)
                             <li
@@ -138,10 +142,10 @@
                                 </a>
                             </li>
                         @endforeach
-
                     </ul>
                 </div>
             </div>
+
 
             <!-- DANH SÁCH SẢN PHẨM BÊN PHẢI -->
             <div class="col-lg-9">
@@ -336,8 +340,6 @@
         </div>
     </div>
 </div>
-
-
 <!-- Vesitable Shop End -->
 
 
@@ -805,5 +807,14 @@
         font-weight: bold;
         color: #d35400;
         border-left: 4px solid #ffc107;
+    }
+
+    @media (min-width: 992px) {
+        .sticky-sidebar {
+            position: sticky;
+            top: 100px;
+            /* Căn chỉnh theo chiều cao header của bạn */
+            z-index: 2;
+        }
     }
 </style>
