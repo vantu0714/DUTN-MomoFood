@@ -101,10 +101,9 @@ class HomeController extends Controller
                 'id' => $product->id,
                 'name' => $product->product_name,
                 'code' => $product->product_code,
-                'price' => $product->price,
-                'original_price' => $product->original_price ?? $product->price,
+                'price' => $product->original_price ?? $product->price,
                 'discount_percentage' => $product->discount_percentage ?? 0,
-                'image' => $product->image_url,
+                'image' => $product->image ? asset('storage/' . $product->image) : asset('images/no-image.png'),
                 'category' => $product->category->name ?? '',
                 'url' => route('product-detail.show', $product->id),
                 'quantity_in_stock' => $product->quantity_in_stock ?? 0

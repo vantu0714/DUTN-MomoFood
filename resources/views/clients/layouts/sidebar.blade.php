@@ -221,25 +221,28 @@
                     const isInStock = product.quantity_in_stock > 0;
 
                     return `
-                    <div class="search-item ${!isInStock ? 'out-of-stock' : ''}" onclick="window.location.href='${product.url}'">
-                        <div class="search-item-image-container">
-                            <img src="${product.image}" alt="${product.name}" class="search-item-image">
-                            ${hasDiscount ? `<span class="search-item-discount">-${product.discount_percentage}%</span>` : ''}
-                            ${!isInStock ? '<span class="search-item-stock-status">Hết hàng</span>' : ''}
-                        </div>
-                        <div class="search-item-content">
-                            <div class="search-item-name">${product.name}</div>
-                            <div class="search-item-code">Mã: ${product.code}</div>
-                            <div class="search-item-info">
-                                <span class="search-item-category">${product.category}</span>
-                                <div class="search-item-price-container">
-                                    <span class="search-item-price">${formatPrice(product.price)}</span>
-                                    ${hasDiscount ? `<span class="search-item-original-price">${formatPrice(product.original_price)}</span>` : ''}
-                                </div>
-                            </div>
+            <div class="search-item ${!isInStock ? 'out-of-stock' : ''}" onclick="window.location.href='${product.url}'">
+                <div class="search-item-image-container">
+                    <img src="${product.image}"
+                         alt="${product.name}"
+                         class="search-item-image"
+                         onerror="this.src='https://via.placeholder.com/150x150?text=No+Image';">
+                    ${hasDiscount ? `<span class="search-item-discount">-${product.discount_percentage}%</span>` : ''}
+                    ${!isInStock ? '<span class="search-item-stock-status">Hết hàng</span>' : ''}
+                </div>
+                <div class="search-item-content">
+                    <div class="search-item-name">${product.name}</div>
+                    <div class="search-item-code">Mã: ${product.code}</div>
+                    <div class="search-item-info">
+                        <span class="search-item-category">${product.category}</span>
+                        <div class="search-item-price-container">
+                            <span class="search-item-price">${formatPrice(product.price)}</span>
+                            ${hasDiscount ? `<span class="search-item-original-price">${formatPrice(product.original_price)}</span>` : ''}
                         </div>
                     </div>
-                    `;
+                </div>
+            </div>
+            `;
                 }).join('');
             }
             showDropdown();
