@@ -66,10 +66,10 @@
                     <!-- Search Form -->
                     <form action="{{ route('clients.search') }}" method="GET" class="d-flex align-items-center me-4"
                         style="max-width: 300px;">
-                        <div class="input-group">
-                            <input type="search" name="keyword" class="form-control border-secondary"
+                        <div class="input-group search-group">
+                            <input type="search" name="keyword" class="form-control search-input"
                                 placeholder="Tìm kiếm..." required>
-                            <button type="submit" class="btn btn-outline-primary">
+                            <button type="submit" class="btn btn-search">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -155,7 +155,7 @@
 <style>
     /* Màu nền cam nhạt */
     .bg-momo-gradient {
-         background: linear-gradient(to right, #db735b, #d56a58);
+        background: linear-gradient(to right, #db735b, #d56a58);
     }
 
     /* NAVIGATION LINKS */
@@ -181,13 +181,39 @@
 
     /* Tách topbar và navbar bằng border */
     .topbar {
-        border-bottom: 1px solid rgba(0,0,0,0.1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     }
 
-    /* Placeholder input */
-    .input-group input[type="search"]::placeholder {
-        font-size: 0.9rem;
-        color: #666;
+    /* Style cho thanh tìm kiếm */
+    .search-group {
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-input {
+        border: none;
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+    }
+
+    .search-input:focus {
+        outline: none;
+        box-shadow: none;
+        background-color: #fff;
+    }
+
+    .btn-search {
+        background: linear-gradient(to right, #db735b, #d56a58);
+        color: white;
+        border: none;
+        padding: 0 15px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-search:hover {
+        background: linear-gradient(to right, #d56a58, #cf5f55);
+        color: white;
     }
 
     /* Optional: căn giữa vertically nếu cần */
@@ -195,4 +221,3 @@
         max-height: 55px;
     }
 </style>
-
