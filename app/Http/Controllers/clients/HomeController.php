@@ -48,7 +48,6 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
-       
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
 
         return view('clients.home', compact('products', 'categories', 'bestSellingProducts', 'comments'));
@@ -67,6 +66,53 @@ class HomeController extends Controller
         return view('clients.search', compact('products', 'keyword'));
     }
 
+    public function searchAjax(Request $request)
+    {
+        $keyword = $request->input('keyword');
+
+        if (strlen($keyword) < 2) {
+            return response()->json(['products' => []]);
+        }
+
+        $products = Product::with('category')
+            ->where('status', 1)
+            ->where(function ($q) use ($keyword) {
+                $q->where('product_name', 'like', "%$keyword%")
+                    ->orWhere('product_code', 'like', "%$keyword%")
+                    ->orWhere('description', 'like', "%$keyword%")
+                    ->orWhere('ingredients', 'like', "%$keyword%");
+            })
+            ->where(function ($q) {
+                $q->where(function ($q1) {
+                    $q1->where('product_type', 'simple')
+                        ->where('quantity_in_stock', '>', 0);
+                })->orWhere(function ($q2) {
+                    $q2->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q3) {
+                            $q3->where('quantity_in_stock', '>', 0);
+                        });
+                });
+            })
+            ->take(8)
+            ->get();
+
+        $results = $products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->product_name,
+                'code' => $product->product_code,
+                'price' => $product->price,
+                'original_price' => $product->original_price ?? $product->price,
+                'discount_percentage' => $product->discount_percentage ?? 0,
+                'image' => $product->image_url,
+                'category' => $product->category->name ?? '',
+                'url' => route('product-detail.show', $product->id),
+                'quantity_in_stock' => $product->quantity_in_stock ?? 0
+            ];
+        });
+
+        return response()->json(['products' => $results]);
+    }
 
     public function filterByCategory(Request $request)
     {
@@ -82,11 +128,11 @@ class HomeController extends Controller
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
-                        $q2->where('product_type', 'variant')
-                            ->whereHas('variants', function ($q3) {
-                                $q3->where('quantity_in_stock', '>', 0);
-                            });
-                    });
+                    $q2->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q3) {
+                            $q3->where('quantity_in_stock', '>', 0);
+                        });
+                });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()
