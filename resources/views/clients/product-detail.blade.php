@@ -9,7 +9,7 @@
 </div>
 
 <!-- Single Product Start -->
-<div class="container-fluid py-5 mt-5">
+<div class="container-fluid  ">
     <div class="container py-3">
         <div class="row g-4 mb-5 justify-content-center">
             <div class="col-lg-8 col-xl-9">
@@ -135,31 +135,52 @@
                             <i class="fas fa-tag me-2"></i>
                             <strong>Danh mục:</strong> {{ $product->category?->category_name ?? 'Không có danh mục' }}
                         </p>
-                        <h3 class="product-price mb-4 d-flex align-items-center">
-                            @php
-                                $isDiscounted =
-                                    $product->discounted_price && $product->discounted_price < $product->original_price;
-                                $discountPercent = $isDiscounted
-                                    ? round((1 - $product->discounted_price / $product->original_price) * 100)
-                                    : 0;
-                            @endphp
-                            {{-- Giá sau giảm (nếu có) --}}
-                            <span class="price-amount fw-bold me-2 {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
-                                style="font-size: 2rem;" data-original-price="{{ $product->discounted_price }}"
-                                data-original-original="{{ $product->original_price }}">
+                        @php
+                            $prices = $product->variants->pluck('price')->filter(); // loại bỏ null
+                            $minPrice = $prices->min();
+                            $maxPrice = $prices->max();
+                        @endphp
+
+                        <h3 class="product-price mb-4 d-flex align-items-center" id="productPriceDisplay">
+                            @if ($product->variants && $product->variants->count())
+                                <span id="variantPrice" class="fw-bold text-danger" style="font-size: 2rem;">
+                                    đ{{ number_format($minPrice, 0, ',', '.') }}
+                                    @if ($minPrice != $maxPrice)
+                                        - đ{{ number_format($maxPrice, 0, ',', '.') }}
+                                    @endif
+                                </span>
+
+                                {{-- Các giá trị mặc định để JS reset --}}
+                                <input type="hidden" id="minPrice" value="{{ $minPrice }}">
+                                <input type="hidden" id="maxPrice" value="{{ $maxPrice }}">
+                            @else
+                                @php
+                                    $isDiscounted =
+                                        $product->discounted_price &&
+                                        $product->discounted_price < $product->original_price;
+                                    $discountPercent = $isDiscounted
+                                        ? round((1 - $product->discounted_price / $product->original_price) * 100)
+                                        : 0;
+                                @endphp
+                                {{-- Với sản phẩm đơn --}}
                                 <span
-                                    class="text-decoration-none">đ</span>{{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
-                            </span>
-                            {{-- Giá gốc --}}
-                            <span class="original-price text-muted text-decoration-line-through me-2"
-                                style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
-                                đ{{ number_format($product->original_price, 0, ',', '.') }}
-                            </span>
-                            {{-- Giảm giá phần trăm --}}
-                            <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
-                                style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
-                                -{{ $discountPercent }}%
-                            </span>
+                                    class="price-amount fw-bold me-2 {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
+                                    style="font-size: 2rem;" id="variantPrice">
+                                    đ{{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
+                                </span>
+
+                                <span class="original-price text-muted text-decoration-line-through me-2"
+                                    id="originalPrice"
+                                    style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
+                                    đ{{ number_format($product->original_price, 0, ',', '.') }}
+                                </span>
+
+                                <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
+                                    id="discountPercent"
+                                    style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
+                                    -{{ $discountPercent }}%
+                                </span>
+                            @endif
                         </h3>
                         <p class="text-muted mb-4" style="line-height: 1.8; font-size: 15px;">
                             {{ $product->description ?? 'Không có mô tả.' }}</p>
@@ -178,20 +199,33 @@
                                             <div class="col-md-6">
                                                 <div class="variant-option" data-variant-id="{{ $variant->id }}"
                                                     data-variant-name="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}"
-                                                    data-variant-price="{{ $variant->formatted_final_price }}"
-                                                    data-variant-image="{{ $variant->image_url }}"
+                                                    data-variant-price="{{ $variant->discounted_price ?? $variant->price }}"
+                                                    data-variant-original="{{ $variant->price }}"
                                                     data-variant-stock="{{ $variant->quantity_in_stock }}"
+                                                    data-variant-image="{{ $variant->image_url }}"
                                                     style="cursor: pointer;">
-                                                    <div class="variant-content">
+                                                    <div class="variant-content d-flex align-items-center gap-2">
                                                         @if ($variant->image_url)
                                                             <img src="{{ $variant->image_url }}"
                                                                 class="variant-image"
-                                                                alt="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}">
+                                                                alt="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}"
+                                                                style="width: 50px; height: 50px; object-fit: cover;">
                                                         @endif
                                                         <div class="flex-grow-1">
+                                                            @php
+                                                                $cleaned = str_replace(
+                                                                    ['(', ')'],
+                                                                    '',
+                                                                    $variant->full_name,
+                                                                );
+                                                                $parts = explode(',', $cleaned);
+                                                            @endphp
                                                             <div class="variant-name">
-                                                                {{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}
+                                                                @foreach ($parts as $part)
+                                                                    <div>{{ trim($part) }}</div>
+                                                                @endforeach
                                                             </div>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -414,224 +448,130 @@
 <!-- Single Product End -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        let selectedVariant = null;
-
-        const variantOptions = document.querySelectorAll('[data-variant-id]');
-        const thumbnails = document.querySelectorAll('.variant-thumbnail');
-        const priceElement = document.querySelector('.price-amount');
-        const originalPriceElement = document.querySelector('.original-price');
-        const discountPercentElement = document.querySelector('.discount-percent');
+        const variantOptions = document.querySelectorAll('.variant-option');
         const mainImage = document.getElementById('mainProductImage');
-        const quantityInput = document.querySelector('#quantity');
-        const minusBtn = document.querySelector('.btn-minus');
-        const plusBtn = document.querySelector('.btn-plus');
+        const priceElement = document.getElementById('variantPrice');
+        const originalPriceElement = document.getElementById('originalPrice');
+        const discountPercentElement = document.getElementById('discountPercent');
         const stockElement = document.getElementById('availableStock');
-        const form = document.getElementById('addToCartForm');
+        const quantityInput = document.getElementById('quantity');
         const cancelButton = document.getElementById('cancelVariantSelection');
+        const selectedVariantIdInput = document.getElementById('selectedVariantId');
 
-        function updateMainImage(newSrc) {
-            if (!mainImage || !newSrc) return;
-            mainImage.style.opacity = '0.7';
-            mainImage.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                mainImage.src = newSrc;
-                mainImage.style.opacity = '1';
-                mainImage.style.transform = 'scale(1)';
-            }, 200);
-        }
-
-        function highlightThumbnail(imageSrc) {
-            thumbnails.forEach(thumb => {
-                const thumbImage = thumb.getAttribute('data-full-image');
-                if (thumbImage === imageSrc) {
-                    thumb.classList.add('border-success');
-                } else {
-                    thumb.classList.remove('border-success');
-                }
-            });
-        }
+        let selectedVariant = null;
 
         function formatCurrency(number) {
             return number.toLocaleString('vi-VN');
         }
 
-        function updatePriceDisplay(discounted, original) {
-            if (!priceElement) return;
-            priceElement.textContent = 'đ' + formatCurrency(discounted);
+        function updatePriceDisplay(price, original) {
+            if (priceElement) priceElement.textContent = 'đ' + formatCurrency(price);
 
-            if (original > discounted) {
-                if (originalPriceElement) {
+            if (originalPriceElement && discountPercentElement) {
+                if (original > price) {
                     originalPriceElement.textContent = 'đ' + formatCurrency(original);
                     originalPriceElement.style.display = 'inline';
-                }
-                if (discountPercentElement) {
-                    const percent = Math.round((1 - discounted / original) * 100);
+                    const percent = Math.round((1 - price / original) * 100);
                     discountPercentElement.textContent = `-${percent}%`;
                     discountPercentElement.style.display = 'inline-block';
-                }
-            } else {
-                if (originalPriceElement) {
-                    originalPriceElement.textContent = '';
+                } else {
                     originalPriceElement.style.display = 'none';
-                }
-                if (discountPercentElement) {
-                    discountPercentElement.textContent = '';
                     discountPercentElement.style.display = 'none';
                 }
             }
         }
 
+        function updateMainImage(imageUrl) {
+            if (!mainImage || !imageUrl) return;
+            mainImage.src = imageUrl;
+        }
+
+        function resetToDefault() {
+            selectedVariant = null;
+            selectedVariantIdInput.value = '';
+
+            variantOptions.forEach(opt => opt.classList.remove('selected'));
+
+            const min = parseInt(document.getElementById('minPrice')?.value || 0);
+            const max = parseInt(document.getElementById('maxPrice')?.value || 0);
+            if (priceElement) {
+                if (min && max && min !== max) {
+                    priceElement.textContent = `đ${formatCurrency(min)} - đ${formatCurrency(max)}`;
+                } else {
+                    priceElement.textContent = `đ${formatCurrency(min)}`;
+                }
+            }
+
+            if (originalPriceElement) originalPriceElement.style.display = 'none';
+            if (discountPercentElement) discountPercentElement.style.display = 'none';
+
+            if (mainImage?.dataset.originalSrc) {
+                mainImage.src = mainImage.dataset.originalSrc;
+            }
+
+            if (stockElement) {
+                const defaultStock = parseInt(document.getElementById('originalStock')?.value || 0);
+                stockElement.textContent = `${defaultStock} sản phẩm có sẵn`;
+            }
+
+            if (quantityInput) quantityInput.value = 1;
+        }
+
         variantOptions.forEach(option => {
-            option.addEventListener('click', function() {
+            option.addEventListener('click', () => {
                 variantOptions.forEach(opt => opt.classList.remove('selected'));
-                this.classList.add('selected');
+                option.classList.add('selected');
+
+                const price = parseFloat(option.dataset.variantPrice);
+                const original = parseFloat(option.dataset.variantOriginal || option.dataset
+                    .variantPrice);
+                const image = option.dataset.variantImage;
+                const stock = parseInt(option.dataset.variantStock || '0');
+                const id = option.dataset.variantId;
 
                 selectedVariant = {
-                    id: this.dataset.variantId || '',
-                    name: this.dataset.variantName || '',
-                    price: this.dataset.variantPrice || '',
-                    original: this.dataset.variantOriginal || this.dataset.variantPrice,
-                    image: this.dataset.variantImage || '',
-                    stock: parseInt(this.dataset.variantStock || '0')
+                    id,
+                    price,
+                    original,
+                    stock,
+                    image
                 };
+                selectedVariantIdInput.value = id;
 
-                document.getElementById('selectedVariantId').value = selectedVariant.id;
+                updatePriceDisplay(price, original);
+                updateMainImage(image);
 
-                if (selectedVariant.image) {
-                    updateMainImage(selectedVariant.image);
-                    highlightThumbnail(selectedVariant.image);
-                }
+                if (stockElement) stockElement.textContent = `${stock} sản phẩm có sẵn`;
 
-                const discounted = parseInt(selectedVariant.price.replace(/[^\d]/g, '')) || 0;
-                const original = parseInt(selectedVariant.original.replace(/[^\d]/g, '')) ||
-                    discounted;
-
-                updatePriceDisplay(discounted, original);
-
-                if (stockElement) {
-                    stockElement.textContent = `${selectedVariant.stock} sản phẩm có sẵn`;
-                }
-
-                if (quantityInput && selectedVariant.stock > 0) {
-                    if (parseInt(quantityInput.value) > selectedVariant.stock) {
-                        quantityInput.value = selectedVariant.stock;
-                    }
+                if (quantityInput && quantityInput.value > stock) {
+                    quantityInput.value = stock;
                 }
             });
         });
 
-        thumbnails.forEach(thumbnail => {
-            thumbnail.addEventListener('click', function() {
-                const fullImage = this.getAttribute('data-full-image');
-                if (fullImage) {
-                    updateMainImage(fullImage);
-                    highlightThumbnail(fullImage);
-                }
-            });
-        });
-
-        // Star rating
-        const stars = document.querySelectorAll('.star');
-        const ratingInput = document.getElementById('rating-value');
-
-        function highlightStars(rating) {
-            stars.forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.remove('text-muted');
-                    star.classList.add('text-warning');
-                } else {
-                    star.classList.remove('text-warning');
-                    star.classList.add('text-muted');
-                }
-            });
-        }
-
-        if (stars.length > 0 && ratingInput) {
-            stars.forEach(star => {
-                star.addEventListener('mouseenter', function() {
-                    highlightStars(parseInt(this.dataset.rating));
-                });
-                star.addEventListener('mouseleave', function() {
-                    highlightStars(parseInt(ratingInput.value));
-                });
-                star.addEventListener('click', function() {
-                    ratingInput.value = this.dataset.rating;
-                    highlightStars(parseInt(this.dataset.rating));
-                });
-            });
-        }
-
-        // Quantity control
-        if (minusBtn) {
-            minusBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                let value = parseInt(quantityInput.value) || 1;
-                if (value > 1) {
-                    quantityInput.value = value - 1;
-                }
-            });
-        }
-
-        if (plusBtn) {
-            plusBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                let value = parseInt(quantityInput.value) || 1;
-                let max = selectedVariant?.stock || 9999;
-                if (value < max) {
-                    quantityInput.value = value + 1;
-                }
-            });
-        }
-
-        // Validate form before submit
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                const hasVariants = variantOptions.length > 0;
-                if (hasVariants && !selectedVariant) {
-                    e.preventDefault();
-                    alert('Vui lòng chọn loại sản phẩm!');
-                }
-            });
-        }
-
-        // ❌ Cancel variant selection
         if (cancelButton) {
-            cancelButton.addEventListener('click', function() {
-                selectedVariant = null;
-                document.getElementById('selectedVariantId').value = '';
-
-                // Bỏ chọn tất cả biến thể
-                variantOptions.forEach(opt => opt.classList.remove('selected'));
-
-                // Reset ảnh sản phẩm
-                if (mainImage && mainImage.dataset.originalSrc) {
-                    updateMainImage(mainImage.dataset.originalSrc);
-                }
-
-                // Reset giá
-                const defaultPrice = parseInt(document.getElementById('originalPrice').value || 0);
-                const defaultOriginalPrice = parseInt(document.getElementById('originalOriginalPrice')
-                    .value || 0);
-                updatePriceDisplay(defaultPrice, defaultOriginalPrice);
-
-                // Reset tồn kho
-                const defaultStock = parseInt(document.getElementById('originalStock').value || 0);
-                if (stockElement) {
-                    stockElement.textContent = `${defaultStock} sản phẩm có sẵn`;
-                }
-
-                // Reset số lượng
-                if (quantityInput) {
-                    quantityInput.value = 1;
-                }
-
-                // Bỏ chọn hình nhỏ
-                highlightThumbnail(null);
-            });
+            cancelButton.addEventListener('click', resetToDefault);
         }
 
+        // Quantity buttons
+        document.querySelector('.btn-minus')?.addEventListener('click', () => {
+            let value = parseInt(quantityInput.value) || 1;
+            if (value > 1) quantityInput.value = value - 1;
+        });
+
+        document.querySelector('.btn-plus')?.addEventListener('click', () => {
+            let value = parseInt(quantityInput.value) || 1;
+            const max = selectedVariant?.stock || 9999;
+            if (value < max) quantityInput.value = value + 1;
+        });
+
+        // Init
+        resetToDefault();
     });
 </script>
+
+
+
 
 
 

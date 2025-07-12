@@ -11,10 +11,7 @@
                 <p class="text-muted mb-0">Quản lý toàn bộ sản phẩm trong hệ thống</p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-download me-1"></i>
-                    Xuất Excel
-                </button>
+              
                 <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm shadow">
                     <i class="fas fa-plus me-1"></i>
                     Thêm sản phẩm
@@ -83,7 +80,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-3 col-md-6 mb-3">
+            {{-- <div class="col-xl-3 col-md-6 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
@@ -99,7 +96,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         </div>
         <!-- Filter & Search Section -->
         <div class="card border-0 shadow-sm mb-4">
@@ -187,7 +184,7 @@
                                 <th class="border-0 fw-semibold text-dark">Giá gốc</th>
                                 <th class="border-0 fw-semibold text-dark">Giá khuyến mãi</th>
                                 <th class="border-0 fw-semibold text-dark">Trạng thái</th>
-                                <th class="border-0 fw-semibold text-dark">Lượt xem</th>
+                                {{-- <th class="border-0 fw-semibold text-dark">Lượt xem</th> --}}
                                 <th class="border-0 fw-semibold text-dark">Ngày tạo</th>
                                 <th class="border-0 fw-semibold text-dark text-center">Hành động</th>
                             </tr>
@@ -243,10 +240,20 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="fw-semibold">{{ number_format($item->original_price) }}đ</span>
+                                        @if ($item->product_type === 'variant' && $item->min_price && $item->max_price)
+                                            @if ($item->min_price != $item->max_price)
+                                                <span class="fw-semibold">{{ number_format($item->min_price) }}đ -
+                                                    {{ number_format($item->max_price) }}đ</span>
+                                            @else
+                                                <span class="fw-semibold">{{ number_format($item->min_price) }}đ</span>
+                                            @endif
+                                        @else
+                                            <span class="fw-semibold">{{ number_format($item->original_price) }}đ</span>
+                                        @endif
                                     </td>
+
                                     <td>
-                                        @if (!is_null($item->discounted_price) && $item->discounted_price < $item->original_price)
+                                        @if ($item->discounted_price !== null && $item->discounted_price > 0 && $item->discounted_price < $item->original_price)
                                             <span
                                                 class="fw-semibold text-danger">{{ number_format($item->discounted_price) }}đ</span>
                                             <div class="small text-muted">
@@ -270,12 +277,12 @@
                                         @endif
                                     </td>
 
-                                    <td>
+                                  {{--   <td>
                                         <div class="d-flex align-items-center">
                                             <i class="fas fa-eye text-muted me-2"></i>
                                             <span class="fw-semibold">{{ number_format($item->view) }}</span>
                                         </div>
-                                    </td>
+                                    </td> --}}
                                     <td>
                                         <span class="text-muted">{{ $item->created_at->format('d/m/Y') }}</span>
                                         <div class="small text-muted">{{ $item->created_at->format('H:i') }}</div>

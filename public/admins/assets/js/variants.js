@@ -6,7 +6,6 @@ function formatVND(number) {
     if (!number || isNaN(number)) return '';
     return new Intl.NumberFormat('vi-VN').format(number) + ' VND';
 }
-
 // Validate price input to prevent negative values
 function validatePrice(input) {
     const value = parseFloat(input.value);
@@ -18,7 +17,6 @@ function validatePrice(input) {
     hidePriceError(input);
     return true;
 }
-
 function showPriceError(input, message) {
     let errorDiv = input.parentNode.parentNode.querySelector('.price-error');
     if (!errorDiv) {
@@ -30,7 +28,6 @@ function showPriceError(input, message) {
     errorDiv.style.display = 'block';
     input.classList.add('is-invalid');
 }
-
 function hidePriceError(input) {
     const errorDiv = input.parentNode.parentNode.querySelector('.price-error');
     if (errorDiv) {
@@ -38,7 +35,6 @@ function hidePriceError(input) {
     }
     input.classList.remove('is-invalid');
 }
-
 // Function to validate duplicate sizes within a variant
 function validateDuplicateSizes(variantItem) {
     const sizeSelects = variantItem.querySelectorAll('select[name*="[attribute_value_id]"]');
@@ -75,7 +71,6 @@ function validateDuplicateSizes(variantItem) {
 
     return !hasError;
 }
-
 // Function to update available options (disable selected sizes)
 function updateSizeOptions(variantItem) {
     const sizeSelects = variantItem.querySelectorAll('select[name*="[attribute_value_id]"]');
@@ -112,7 +107,6 @@ function updateSizeOptions(variantItem) {
         });
     });
 }
-
 function updateSKUs(variantItem) {
     const productCode = document.getElementById('product_code')?.value?.trim() || 'SP';
     const mainAttr = variantItem.querySelector('input[name*="[main_attribute][value]"]')?.value?.trim()?.toUpperCase()
@@ -139,7 +133,6 @@ function updateSKUs(variantItem) {
         }
     });
 }
-
 function updatePreviewTable() {
     const previewBody = document.getElementById('preview-variants-body');
     if (!previewBody) return;
@@ -189,7 +182,6 @@ function updatePreviewTable() {
         });
     });
 }
-
 // Enhanced function to handle size selection changes
 function handleSizeChange(select) {
     const variantItem = select.closest('.variant-item');
@@ -206,7 +198,6 @@ function handleSizeChange(select) {
     // Update preview table
     updatePreviewTable();
 }
-
 // Enhanced function to attach events to sub-attribute rows
 function attachSubAttributeEvents(row, variantItem) {
     // Size select change event
@@ -274,7 +265,6 @@ function attachSubAttributeEvents(row, variantItem) {
         quantityInput.addEventListener('input', updatePreviewTable);
     }
 }
-
 function attachEvents(variantItem) {
     // Main attribute (flavor) input
     const flavorInput = variantItem.querySelector('input[name*="[main_attribute][value]"]');
