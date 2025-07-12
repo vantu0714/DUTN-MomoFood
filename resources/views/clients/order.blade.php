@@ -73,34 +73,51 @@
                                 @php $total = 0; @endphp
                                 @forelse ($cartItems as $item)
                                     @php
-                                        $price = $item->discounted_price ?? ($item->original_price ?? 59000);
-                                        $itemTotal = $price * $item->quantity;
-                                        $total += $itemTotal;
+                                        $product = $item->product;
+                                        $variant = $item->productVariant;
+
+                                        $total += $item->item_total;
+
+                                        $image = $product->image
+                                            ? asset('storage/' . $product->image)
+                                            : asset('images/default.jpg');
+                                        $productName = $product->product_name ?? 'Sản phẩm không tên';
+                                        $categoryName = $product->category->category_name ?? 'Không rõ';
+
+                                        // Ghép thông tin thuộc tính: Vị, Size, v.v.
+                                        $variantDetails = '';
+                                        if ($variant && $variant->attributeValues) {
+                                            $variantDetails = $variant->attributeValues
+                                                ->map(fn($val) => $val->attribute->name . ': ' . $val->value)
+                                                ->implode(', ');
+                                        }
                                     @endphp
+
                                     <input type="hidden" name="selected_items[]" value="{{ $item->id }}">
                                     <div class="row align-items-center py-3 border-bottom">
                                         <div class="col-5">
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ $item->product->image ? asset('storage/' . $item->product->image) : asset('images/default.jpg') }}"
-                                                    class="me-3 rounded"
+                                                <img src="{{ $image }}" class="me-3 rounded"
                                                     style="width: 60px; height: 60px; object-fit: cover;">
                                                 <div>
-                                                    <div class="fw-bold">
-                                                        {{ $item->product->product_name ?? 'Sản phẩm không tên' }}</div>
-                                                    <div class="text-muted small">
-                                                        Loại: {{ $item->product->category->category_name ?? 'Không rõ' }}
-                                                    </div>
+                                                    <div class="fw-bold">{{ $productName }}</div>
+                                                    @if ($variantDetails)
+                                                        <div class="text-muted small">{{ $variantDetails }}</div>
+                                                    @endif
+                                                    <div class="text-muted small">Loại: {{ $categoryName }}</div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-2 text-center">₫{{ number_format($price, 0, ',', '.') }}</div>
+                                        <div class="col-2 text-center">₫{{ number_format($item->calculated_price, 0, ',', '.') }}</div>
                                         <div class="col-2 text-center">{{ $item->quantity }}</div>
                                         <div class="col-3 text-end text-danger fw-bold">
-                                            ₫{{ number_format($itemTotal, 0, ',', '.') }}</div>
+                                            ₫{{ number_format($item->item_total, 0, ',', '.') }}
+                                        </div>                                        
                                     </div>
                                 @empty
                                     <div class="text-center py-5 text-muted">Không có sản phẩm nào</div>
                                 @endforelse
+
 
                                 {{-- Voucher --}}
                                 <div class="row py-3 border-top align-items-center">
@@ -369,8 +386,8 @@
 
                             <div class="form-check">
                                 <input type="hidden" name="is_default" value="0">
-                                <input class="form-check-input" type="checkbox" name="is_default" id="is_default" value="1"
-                                    {{ old('is_default') ? 'checked' : '' }}>
+                                <input class="form-check-input" type="checkbox" name="is_default" id="is_default"
+                                    value="1" {{ old('is_default') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="is_default">Đặt làm địa chỉ mặc định</label>
                             </div>
                             <button type="submit" name="save_recipient" value="1"
@@ -528,4 +545,3 @@
         console.log(locations);
     });
 </script>
-

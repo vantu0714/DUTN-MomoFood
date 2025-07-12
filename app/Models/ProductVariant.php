@@ -46,7 +46,7 @@ class ProductVariant extends Model
     }
     public function cartItems()
     {
-        return $this->hasMany(CartItem::class, 'product_variant_id'); 
+        return $this->hasMany(CartItem::class, 'product_variant_id');
     }
     public function getFinalPriceAttribute()
     {
@@ -86,5 +86,11 @@ class ProductVariant extends Model
     public function getSizeAttribute()
     {
         return optional($this->attributeValues->firstWhere('attribute.name', 'Size'))->value;
+    }
+    public function values()
+    {
+        return $this->belongsToMany(AttributeValue::class, 'product_variant_values', 'product_variant_id', 'attribute_value_id')
+            ->withPivot('price_adjustment')
+            ->withTimestamps();
     }
 }
