@@ -17,10 +17,35 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-        $orders = Order::latest()->paginate(10);
+        $query = Order::query();
+
+    // Lọc theo từ khóa
+    if ($request->filled('keyword')) {
+        $keyword = $request->keyword;
+        $query->where(function ($q) use ($keyword) {
+            $q->where('order_code', 'like', '%' . $keyword . '%')
+              ->orWhere('recipient_name', 'like', '%' . $keyword . '%')
+              ->orWhere('recipient_phone', 'like', '%' . $keyword . '%');
+        });
+    }
+
+    // Lọc theo phương thức thanh toán
+    if ($request->filled('payment_status')) {
+        if ($request->payment_status == 'paid') {
+            $query->where('payment_method', '!=', 'cod');
+        } elseif ($request->payment_status == 'unpaid') {
+            $query->where('payment_method', 'cod');
+        }
+    }
+
+    // Lọc theo trạng thái đơn hàng
+    if ($request->filled('order_status') && $request->order_status != 'all') {
+        $query->where('status', $request->order_status);
+    }
+
+    $orders = $query->latest()->paginate(10);
         return view('admin.orders.index', compact('orders'));
     }
 

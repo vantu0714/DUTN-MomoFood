@@ -12,9 +12,14 @@ class RecipientController extends Controller
     {
         $validated = $request->validate([
             'recipient_name' => 'required|string|max:255',
-            'recipient_phone' => 'required|string|max:15',
+            'recipient_phone' => 'required|regex:/^0[0-9]{9}$/',
             'recipient_address' => 'required|string|max:500',
             'is_default' => 'nullable|boolean',
+        ], [
+            'recipient_name.required' => 'Vui lòng nhập họ và tên.',
+            'recipient_phone.required' => 'Vui lòng nhập số điện thoại.',
+            'recipient_phone.regex' => 'Số điện thoại không đúng định dạng (bắt đầu bằng số 0 và có 10 số).',
+            'recipient_address.required' => 'Vui lòng nhập địa chỉ chi tiết.',
         ]);
 
         $userId = Auth::id();
@@ -32,6 +37,9 @@ class RecipientController extends Controller
             'recipient_address' => $validated['recipient_address'],
             'is_default' => $validated['is_default'] ?? false,
         ]);
+
+        // dd($request->all());
+
 
         return redirect()->route('clients.order')->with('success', 'Thêm địa chỉ mới thành công!');
     }
