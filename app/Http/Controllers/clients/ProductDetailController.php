@@ -30,25 +30,31 @@ class ProductDetailController extends Controller
         // Tính trung bình rating
         $averageRating = round($product->comments->avg('rating'), 1) ?? 0;
 
-        // Kiểm tra người dùng đã mua sản phẩm chưa
+        // Mặc định
         $hasPurchased = false;
+        $hasReviewed = false;
 
         if (Auth::check()) {
             $userId = Auth::id();
 
+            // Kiểm tra đã mua hàng chưa
             $hasPurchased = OrderDetail::whereHas('order', function ($query) use ($userId) {
                 $query->where('user_id', $userId)
-                      ->where('status', '!=', 'cancelled'); // Có thể sửa theo trạng thái thực tế như "completed"
+                    ->where('status', '!=', 'cancelled'); // hoặc 'completed'
             })
-            ->where('product_id', $product->id)
-            ->exists();
+                ->where('product_id', $product->id)
+                ->exists();
+
+            // Kiểm tra đã đánh giá chưa
+            $hasReviewed = $product->comments->where('user_id', $userId)->isNotEmpty();
         }
 
         return view('clients.product-detail', compact(
             'product',
             'relatedProducts',
             'averageRating',
-            'hasPurchased'
+            'hasPurchased',
+            'hasReviewed'
         ));
     }
 }

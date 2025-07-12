@@ -83,7 +83,7 @@ class ProductVariantController extends Controller
 
         return response()->json([
             'sku' => $product_variant->sku,
-            'price' => $product_variant->price,
+            'price' => (int) $product_variant->price,
             'quantity_in_stock' => $product_variant->quantity_in_stock,
             'image_url' => $product_variant->image ? asset('storage/' . $product_variant->image) : null,
             'product_code' => $product_variant->product->code, // 
@@ -97,8 +97,6 @@ class ProductVariantController extends Controller
             ]
         ]);
     }
-
-
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -193,9 +191,6 @@ class ProductVariantController extends Controller
             return back()->withErrors(['error' => 'Đã xảy ra lỗi: ' . $e->getMessage()]);
         }
     }
-
-
-
     /**
      * Cập nhật tổng số lượng tồn kho và trạng thái cho sản phẩm
      */
@@ -208,8 +203,6 @@ class ProductVariantController extends Controller
             'status' => $totalStock > 0 ? 1 : 0,
         ]);
     }
-
-
     public function edit($id)
     {
         $variant = ProductVariant::with('product', 'attributeValues')->findOrFail($id);
@@ -218,7 +211,6 @@ class ProductVariantController extends Controller
 
         return view('admin.product_variants.edit', compact('variant', 'products', 'attributes'));
     }
-
     public function update(Request $request, $id)
     {
         DB::beginTransaction();
