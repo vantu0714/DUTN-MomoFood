@@ -227,6 +227,7 @@
                     </div>
                     <div class="col-lg-9">
                         <div class="row g-4">
+
                             @foreach ($products as $product)
                                 @php
                                     $isVariant = $product->product_type === 'variant';
@@ -270,21 +271,55 @@
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-auto">
                                                 <div class="product-price-wrapper">
-                                                    @if ($price && $originalPrice && $price < $originalPrice)
-                                                        <div class="product-price-sale">
-                                                            {{ number_format($price, 0, ',', '.') }} <span
-                                                                class="currency">VND</span>
-                                                        </div>
-                                                        <div class="product-price-original">
-                                                            {{ number_format($originalPrice, 0, ',', '.') }} VND
-                                                        </div>
-                                                    @elseif ($price)
-                                                        <div class="product-price-sale">
-                                                            {{ number_format($price, 0, ',', '.') }} <span
-                                                                class="currency">VND</span>
-                                                        </div>
+                                                    @if ($product->product_type === 'variant')
+                                                        @php
+                                                            $availableVariants = $product->variants->where(
+                                                                'quantity_in_stock',
+                                                                '>',
+                                                                0,
+                                                            );
+
+                                                            $minPrice = $availableVariants->min(function ($v) {
+                                                                return $v->discounted_price ?? ($v->price ?? INF);
+                                                            });
+
+                                                            $maxPrice = $availableVariants->max(function ($v) {
+                                                                return $v->discounted_price ?? ($v->price ?? 0);
+                                                            });
+                                                        @endphp
+
+                                                        @if ($minPrice && $maxPrice && $minPrice !== $maxPrice)
+                                                            <div class="product-price-sale">
+                                                                {{ number_format($minPrice, 0, ',', '.') }} -
+                                                                {{ number_format($maxPrice, 0, ',', '.') }}
+                                                                <span class="currency">VND</span>
+                                                            </div>
+                                                        @elseif ($minPrice)
+                                                            <div class="product-price-sale">
+                                                                {{ number_format($minPrice, 0, ',', '.') }} <span
+                                                                    class="currency">VND</span>
+                                                            </div>
+                                                        @else
+                                                            <div class="text-muted">Liên hệ để biết giá</div>
+                                                        @endif
                                                     @else
-                                                        <div class="text-muted">Liên hệ để biết giá</div>
+                                                        @if ($product->discounted_price && $product->discounted_price < $product->original_price)
+                                                            <div class="product-price-sale">
+                                                                {{ number_format($product->discounted_price, 0, ',', '.') }}
+                                                                <span class="currency">VND</span>
+                                                            </div>
+                                                            <div class="product-price-original">
+                                                                {{ number_format($product->original_price, 0, ',', '.') }}
+                                                                VND
+                                                            </div>
+                                                        @elseif ($product->original_price)
+                                                            <div class="product-price-sale">
+                                                                {{ number_format($product->original_price, 0, ',', '.') }}
+                                                                <span class="currency">VND</span>
+                                                            </div>
+                                                        @else
+                                                            <div class="text-muted">Liên hệ để biết giá</div>
+                                                        @endif
                                                     @endif
                                                 </div>
                                                 <form class="add-to-cart-form">
@@ -368,63 +403,62 @@
     </script>
 
     <script>
-
         $(document).ready(function() {
-            $('.add-to-cart-form').on('submit', function(e) {
-                e.preventDefault();
+                    $('.add-to-cart-form').on('submit', function(e) {
+                        e.preventDefault();
 
-                let form = $(this);
-                let token = form.find('input[name="_token"]').val();
-                let productId = form.find('input[name="product_id"]').val();
-                let variantId = form.find('input[name="product_variant_id"]').val();
-                let quantity = form.find('input[name="quantity"]').val() || 1;
+                        let form = $(this);
+                        let token = form.find('input[name="_token"]').val();
+                        let productId = form.find('input[name="product_id"]').val();
+                        let variantId = form.find('input[name="product_variant_id"]').val();
+                        let quantity = form.find('input[name="quantity"]').val() || 1;
 
-                $.ajax({
-                    url: '{{ route('carts.add') }}',
-                    type: 'POST',
-                    data: {
-                        _token: token,
-                        product_id: productId,
-                        product_variant_id: variantId,
-                        quantity: quantity
-                    },
-                    success: function(res) {                        
-                        alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
-                        // Nếu có hiển thị số lượng giỏ hàng ở header
-                        if (res.cart_count !== undefined) {
-                            $('#cart-count').text(res.cart_count);
-                        }
-                    },
-                    error: function(xhr) {
-                        let res = xhr.responseJSON;
-                        if(res.status == 'blocked') {
-                            window.location.href = '{{ route('login') }}';
-                            return
-                        }
-                        
-                        alert(res?.message || ' Có lỗi xảy ra!');
-                    }
-                });
-            });
+                        $.ajax({
+                            url: '{{ route('carts.add') }}',
+                            type: 'POST',
+                            data: {
+                                _token: token,
+                                product_id: productId,
+                                product_variant_id: variantId,
+                                quantity: quantity
+                            },
+                            success: function(res) {
+                                alert(res.message || ' Đã thêm sản phẩm vào giỏ hàng!');
+                                // Nếu có hiển thị số lượng giỏ hàng ở header
+                                if (res.cart_count !== undefined) {
+                                    $('#cart-count').text(res.cart_count);
+                                }
+                            },
+                            error: function(xhr) {
+                                let res = xhr.responseJSON;
+                                if (res.status == 'blocked') {
+                                    window.location.href = '{{ route('login') }}';
+                                    return
+                                }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            @if (session('success') || session('error'))
-                let message = "{{ session('success') ?? session('error') }}";
-                let isError = {{ session('error') ? 'true' : 'false' }};
+                                alert(res?.message || ' Có lỗi xảy ra!');
+                            }
+                        });
+                    });
 
-                const container = document.getElementById('toast-container');
-                const messageEl = document.getElementById('toast-message');
+                    document.addEventListener('DOMContentLoaded', function() {
+                        @if (session('success') || session('error'))
+                            let message = "{{ session('success') ?? session('error') }}";
+                            let isError = {{ session('error') ? 'true' : 'false' }};
 
-                messageEl.textContent = message;
-                container.classList.remove('d-none');
-                if (isError) container.classList.add('toast-error');
+                            const container = document.getElementById('toast-container');
+                            const messageEl = document.getElementById('toast-message');
 
-                setTimeout(() => {
-                    container.classList.add('d-none');
-                    container.classList.remove('toast-error');
-                }, 4000);
-            @endif
-        });
+                            messageEl.textContent = message;
+                            container.classList.remove('d-none');
+                            if (isError) container.classList.add('toast-error');
+
+                            setTimeout(() => {
+                                container.classList.add('d-none');
+                                container.classList.remove('toast-error');
+                            }, 4000);
+                        @endif
+                    });
     </script>
 
     @include('clients.layouts.footer')

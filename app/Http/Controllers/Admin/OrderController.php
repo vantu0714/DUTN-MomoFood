@@ -124,6 +124,8 @@ class OrderController extends Controller
                     'quantity' => $detail['quantity'],
                     'price' => $detail['price'],
                 ]);
+
+                Product::where('id', $detail['product_id'])->increment('sold_count', $detail['quantity']);
             }
 
             DB::commit();
@@ -166,12 +168,16 @@ class OrderController extends Controller
     {
         //
         $order = Order::findOrFail($id);
+        $order->load('orderDetails');
         $status = $request->status;
         $paymentStatus = $request->payment_status;
 
         // Nếu đơn hàng đã giao thành công, thì auto đánh dấu đã thanh toán
         if ($status == 4) {
             $paymentStatus = 'paid';
+            foreach ($order->orderDetails as $detail) {
+                Product::where('id', $detail->product_id)->increment('sold_count', $detail->quantity);
+            }
         }
 
         // Nếu bị hủy thì mới cần lý do hủy, ngược lại set null
