@@ -34,12 +34,28 @@ class OrderController extends Controller
             ->where('user_id', $userId)
             ->first();
 
-        // Lọc item đã chọn hoặc tất cả
-        $cartItems = $cart && $cart->items
-            ? (!empty($selectedIds)
+        $cartItems = collect();
+
+        if ($cart && $cart->items) {
+            $items = !empty($selectedIds)
                 ? $cart->items->whereIn('id', $selectedIds)
-                : $cart->items)
-            : collect();
+                : $cart->items;
+
+            foreach ($items as $item) {
+                $price = $item->discounted_price ?? ($item->original_price ?? 59000);
+                $item->calculated_price = $price;
+                $item->item_total = $price * $item->quantity;
+
+                // Gộp tên biến thể (vị, size,...) nếu có
+                if ($item->productVariant && is_array($item->productVariant->variant_values)) {
+                    $item->variant_summary = implode(', ', array_filter($item->productVariant->variant_values));
+                } else {
+                    $item->variant_summary = null;
+                }
+
+                $cartItems->push($item);
+            }
+        }
 
         // Nếu có recipient_id từ form (người dùng chọn địa chỉ cụ thể)
         $recipient = Recipient::where('user_id', $userId)
