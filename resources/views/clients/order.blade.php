@@ -321,18 +321,55 @@
                                 <label class="form-label">Họ và tên</label>
                                 <input type="text" name="recipient_name" class="form-control"
                                     value="{{ old('recipient_name') }}" required>
+                                @error('recipient_name')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Số điện thoại</label>
                                 <input type="text" name="recipient_phone" class="form-control"
                                     value="{{ old('recipient_phone') }}" required>
+                                @error('recipient_phone')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <div class="mb-2">
-                                <label class="form-label">Địa chỉ chi tiết</label>
-                                <textarea name="recipient_address" class="form-control" rows="2" required>{{ old('recipient_address') }}</textarea>
+                            <div class="form-group">
+                                <label for="province">Tỉnh / Thành phố</label>
+                                <select id="province" name="province_code" class="form-control">
+                                    <option value="">-- Chọn tỉnh/thành --</option>
+                                    @foreach ($locations as $province)
+                                        <option value="{{ $province['code'] }}">{{ $province['name_with_type'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
+
+                            <div class="form-group">
+                                <label for="district">Quận / Huyện</label>
+                                <select id="district" name="district_code" class="form-control">
+                                    <option value="">-- Chọn quận/huyện --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="ward">Phường / Xã</label>
+                                <select id="ward" name="ward_code" class="form-control">
+                                    <option value="">-- Chọn phường/xã --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="detail_address">Địa chỉ chi tiết</label>
+                                <input type="text" id="detail_address" class="form-control"
+                                    placeholder="Số nhà, tên đường...">
+                            </div>
+
+                            <!-- Hidden input để gộp lại thành recipient_address -->
+                            <input type="hidden" name="recipient_address" id="recipient_address">
+
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="is_default" id="is_default"
+                                <input type="hidden" name="is_default" value="0">
+                                <input class="form-check-input" type="checkbox" name="is_default" id="is_default" value="1"
                                     {{ old('is_default') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="is_default">Đặt làm địa chỉ mặc định</label>
                             </div>
@@ -364,4 +401,131 @@
         const form = document.getElementById('address-form');
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.querySelector('[name="recipient_name"]');
+        const phoneInput = document.querySelector('[name="recipient_phone"]');
+        const addressInput = document.querySelector('[name="recipient_address"]');
+
+        function showError(input, message) {
+            let errorEl = input.parentElement.querySelector('.error-message');
+            if (!errorEl) {
+                errorEl = document.createElement('div');
+                errorEl.classList.add('text-danger', 'small', 'error-message');
+                input.parentElement.appendChild(errorEl);
+            }
+            errorEl.textContent = message;
+        }
+
+        function clearError(input) {
+            const errorEl = input.parentElement.querySelector('.error-message');
+            if (errorEl) errorEl.remove();
+        }
+
+        nameInput.addEventListener('blur', () => {
+            if (nameInput.value.trim() === '') {
+                showError(nameInput, 'Vui lòng nhập họ và tên.');
+            } else {
+                clearError(nameInput);
+            }
+        });
+
+        phoneInput.addEventListener('blur', () => {
+            const phoneRegex = /^0[0-9]{9}$/;
+            if (phoneInput.value.trim() === '') {
+                showError(phoneInput, 'Vui lòng nhập số điện thoại.');
+            } else if (!phoneRegex.test(phoneInput.value.trim())) {
+                showError(phoneInput, 'Số điện thoại không đúng định dạng.');
+            } else {
+                clearError(phoneInput);
+            }
+        });
+
+        addressInput.addEventListener('blur', () => {
+            if (addressInput.value.trim() === '') {
+                showError(addressInput, 'Vui lòng nhập địa chỉ chi tiết.');
+            } else {
+                clearError(addressInput);
+            }
+        });
+
+        const locations = @json($locations);
+
+        const provinceSelect = document.getElementById('province');
+        const districtSelect = document.getElementById('district');
+        const wardSelect = document.getElementById('ward');
+        const detailInput = document.getElementById('detail_address');
+        const fullAddressInput = document.getElementById('recipient_address');
+
+        let currentProvince = '',
+            currentDistrict = '',
+            currentWard = '';
+
+        if (!provinceSelect || !districtSelect || !wardSelect || !detailInput || !fullAddressInput) {
+            console.warn('❗ Không tìm thấy một số phần tử trong DOM.');
+            return;
+        }
+
+        provinceSelect.addEventListener('change', function() {
+            const provinceCode = this.value;
+            currentProvince = this.options[this.selectedIndex].text;
+            districtSelect.innerHTML = '<option value="">-- Chọn quận/huyện --</option>';
+            wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+            wardSelect.disabled = true;
+
+            const province = locations.find(p => p.code == provinceCode);
+            if (province?.districts) {
+                province.districts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.code;
+                    opt.textContent = d.name_with_type;
+                    districtSelect.appendChild(opt);
+                });
+                districtSelect.disabled = false;
+            }
+            updateFullAddress();
+        });
+
+        districtSelect.addEventListener('change', function() {
+            const districtCode = this.value;
+            currentDistrict = this.options[this.selectedIndex].text;
+            wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+
+            const provinceCode = provinceSelect.value;
+            const province = locations.find(p => p.code == provinceCode);
+            const district = province?.districts?.find(d => d.code == districtCode);
+
+            if (district?.wards) {
+                district.wards.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w.code;
+                    opt.textContent = w.name_with_type;
+                    wardSelect.appendChild(opt);
+                });
+                wardSelect.disabled = false;
+            }
+            updateFullAddress();
+        });
+
+        wardSelect.addEventListener('change', function() {
+            currentWard = this.options[this.selectedIndex].text;
+            updateFullAddress();
+        });
+
+        detailInput.addEventListener('input', updateFullAddress);
+
+        function updateFullAddress() {
+            const detail = detailInput.value.trim();
+            const addressParts = [detail, currentWard, currentDistrict, currentProvince].filter(Boolean);
+            fullAddressInput.value = addressParts.join(', ');
+        }
+
+        // Nếu đã có tỉnh sẵn được chọn (ví dụ khi validation trả về lỗi)
+        if (provinceSelect.value) {
+            provinceSelect.dispatchEvent(new Event('change'));
+        }
+
+        console.log(locations);
+    });
 </script>
+

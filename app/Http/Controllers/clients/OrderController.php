@@ -60,6 +60,37 @@ class OrderController extends Controller
             ->where('end_date', '>=', now())
             ->get();
 
+        //Đọc tree.json
+        $json = file_get_contents(public_path('data/dist/tree.json'));
+        $rawLocations = json_decode(file_get_contents(public_path('data/dist/tree.json')), true);
+
+        // Chuyển đổi thành mảng chuẩn
+        $locations = [];
+
+        foreach ($rawLocations as $provinceCode => $province) {
+            $districts = [];
+            foreach ($province['quan-huyen'] ?? [] as $districtCode => $district) {
+                $wards = [];
+                foreach ($district['xa-phuong'] ?? [] as $wardCode => $ward) {
+                    $wards[] = [
+                        'code' => $ward['code'],
+                        'name_with_type' => $ward['name_with_type'],
+                    ];
+                }
+                $districts[] = [
+                    'code' => $district['code'],
+                    'name_with_type' => $district['name_with_type'],
+                    'wards' => $wards,
+                ];
+            }
+
+            $locations[] = [
+                'code' => $province['code'],
+                'name_with_type' => $province['name_with_type'],
+                'districts' => $districts,
+            ];
+        }
+
         session()->forget('selected_recipient_id');
 
         return view('clients.order', compact(
@@ -67,7 +98,8 @@ class OrderController extends Controller
             'cartItems',
             'recipient',
             'savedRecipients',
-            'vouchers'
+            'vouchers',
+            'locations'
         ));
     }
 
@@ -75,20 +107,20 @@ class OrderController extends Controller
     {
         $userId = Auth::id();
         $cart = Cart::with('items')->where('user_id', $userId)->firstOrFail();
-    
+
         // Lọc sản phẩm đã chọn
         $selectedIds = $request->filled('selected_items')
             ? (is_array($request->selected_items) ? $request->selected_items : explode(',', $request->selected_items))
             : [];
-    
+
         $cartItems = !empty($selectedIds)
             ? $cart->items->whereIn('id', $selectedIds)
             : $cart->items;
-    
+
         if ($cartItems->isEmpty()) {
             return back()->with('error', 'Không có sản phẩm nào được chọn.');
         }
-    
+
         // Validate các trường cơ bản
         $request->validate([
             'shipping_fee' => 'required|numeric|min:0',
@@ -97,7 +129,7 @@ class OrderController extends Controller
             'promotion' => 'nullable|string',
             'selected_items' => 'nullable',
         ]);
-    
+
         // Kiểm tra địa chỉ nhận hàng
         if ($request->filled('recipient_id')) {
             $recipient = Recipient::where('user_id', $userId)->findOrFail($request->recipient_id);
@@ -108,7 +140,7 @@ class OrderController extends Controller
                 'recipient_phone' => 'required|string|max:15',
                 'recipient_address' => 'required|string|max:500',
             ]);
-    
+
             // Thêm địa chỉ mới
             $recipient = Recipient::create([
                 'user_id' => $userId,
@@ -119,18 +151,18 @@ class OrderController extends Controller
                 'is_default' => false,
             ]);
         }
-    
+
         DB::beginTransaction();
-    
+
         try {
             // Tính tổng đơn hàng
             $total = $cartItems->sum(function ($item) {
                 return $item->discounted_price * $item->quantity;
             });
-    
+
             $discount = 0;
             $promotionCode = null;
-    
+
             // Xử lý mã giảm giá
             if ($request->filled('promotion')) {
                 $promotion = Promotion::where('promotion_name', trim($request->promotion))
@@ -138,11 +170,11 @@ class OrderController extends Controller
                     ->where('start_date', '<=', now())
                     ->where('end_date', '>=', now())
                     ->first();
-    
+
                 if ($promotion) {
                     $discount = $promotion->discount_amount;
                     $promotionCode = $promotion->promotion_name;
-    
+
                     // Cập nhật số lần dùng
                     $promotion->increment('used_count');
                     PromotionUser::updateOrCreate(
@@ -151,9 +183,9 @@ class OrderController extends Controller
                     );
                 }
             }
-    
+
             $grandTotal = $total + $request->shipping_fee - $discount;
-    
+
             // Tạo đơn hàng
             $order = Order::create([
                 'user_id' => $userId,
@@ -169,7 +201,7 @@ class OrderController extends Controller
                 'payment_status' => 'unpaid',
                 'status' => 1,
             ]);
-    
+
             // Thêm chi tiết đơn hàng
             foreach ($cartItems as $item) {
                 OrderDetail::create([
@@ -180,21 +212,21 @@ class OrderController extends Controller
                     'price' => $item->discounted_price,
                 ]);
             }
-    
+
             // Cập nhật trạng thái VIP
             $totalSpent = Order::where('user_id', $userId)
                 ->whereIn('status', [2, 3, 4])
                 ->sum('total_price');
-    
+
             if ($totalSpent >= 5000000) {
                 User::where('id', $userId)->update(['is_vip' => true]);
             }
-    
+
             // Xóa sản phẩm đã đặt khỏi giỏ hàng
             $cart->items()->whereIn('id', $cartItems->pluck('id'))->delete();
-    
+
             DB::commit();
-    
+
             // Xử lý thanh toán
             if ($request->payment_method === 'vnpay') {
                 $vnpay = new VNPayController();
@@ -207,7 +239,7 @@ class OrderController extends Controller
             return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
     }
-    
+
 
     public function orderList(Request $request)
     {
