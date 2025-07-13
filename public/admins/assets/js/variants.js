@@ -272,9 +272,31 @@ function attachEvents(variantItem) {
         flavorInput.addEventListener('input', function () {
             updateSKUs(variantItem);
             updatePreviewTable();
+
+            // Kiểm tra trùng vị khi nhập
+            const allFlavorInputs = document.querySelectorAll('input[name*="[main_attribute][value]"]');
+            const currentValue = this.value.trim().toLowerCase();
+            let count = 0;
+            allFlavorInputs.forEach(input => {
+                if (input.value.trim().toLowerCase() === currentValue) count++;
+            });
+
+            const parent = this.parentNode;
+            const oldError = parent.querySelector('.flavor-error');
+            if (count > 1) {
+                this.classList.add('is-invalid');
+                if (!oldError) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'flavor-error text-danger small mt-1';
+                    errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Vị này đã được thêm!';
+                    parent.appendChild(errorDiv);
+                }
+            } else {
+                this.classList.remove('is-invalid');
+                if (oldError) oldError.remove();
+            }
         });
     }
-
     // Attach events to all existing sub-attribute rows
     const subRows = variantItem.querySelectorAll('.sub-attribute-row');
     subRows.forEach(row => {
@@ -424,51 +446,63 @@ document.addEventListener('DOMContentLoaded', function () {
             // Update variant title
             clone.querySelector('h5').innerHTML = `<i class="fas fa-cube me-2"></i>Biến thể #${variantIndex + 1}`;
 
-            // Clear and update form elements
+            // Clear & update input/select values
             clone.querySelectorAll('input, select').forEach(el => {
-                if (el.type !== 'file' && el.type !== 'hidden') {
+                if (
+                    el.type !== 'file' &&
+                    el.type !== 'hidden' &&
+                    !el.name.includes('[main_attribute][value]')
+                ) {
                     el.value = '';
                     el.selectedIndex = 0;
                 }
                 el.classList.remove('is-invalid');
 
-                // Update names with new variant index
+                // ✅ Cập nhật tên đúng variantIndex
                 if (el.name) {
-                    el.name = el.name.replace(/variants\[\d+\]/, `variants[${variantIndex}]`);
+                    el.name = el.name.replace(/variants\[\d+\]/g, `variants[${variantIndex}]`);
                     el.name = el.name.replace(/sub_attributes\[\d+\]/g, 'sub_attributes[0]');
                 }
             });
 
-            // Remove error messages
+            // ✅ Sau khi đã cập nhật tên → thêm hidden input `name = vị`
+            const flavorInput = clone.querySelector('input[name*="[main_attribute][value]"]');
+            if (flavorInput) {
+                const attrNameInput = document.createElement('input');
+                attrNameInput.type = 'hidden';
+                attrNameInput.name = `variants[${variantIndex}][main_attribute][name]`;
+                attrNameInput.value = 'Vị';
+                flavorInput.insertAdjacentElement('afterend', attrNameInput);
+            }
+
+            // Remove lỗi cũ nếu có
             clone.querySelectorAll('.size-error, .price-error, .invalid-feedback').forEach(el => el.remove());
 
-            // Keep only the first sub-attribute row
+            // Xóa các dòng size phụ dư thừa, chỉ giữ lại 1 dòng
             const subRows = clone.querySelectorAll('.sub-attribute-row');
             for (let i = 1; i < subRows.length; i++) {
                 subRows[i].remove();
             }
 
-            // Reset size selects in new variant
-            // Reset size selects in new variant
+            // Reset dropdown size
             const sizeSelects = clone.querySelectorAll('select[name*="[attribute_value_id]"]');
             sizeSelects.forEach(select => {
                 select.selectedIndex = 0;
                 if (select.options[0].value !== '') {
                     const defaultOption = document.createElement('option');
                     defaultOption.value = '';
-                    defaultOption.textContent = 'Chọn khối lượng'; // 
+                    defaultOption.textContent = 'Chọn khối lượng';
                     defaultOption.selected = true;
                     select.insertBefore(defaultOption, select.firstChild);
                 } else {
-                    select.options[0].textContent = 'Chọn khối lượng'; // 
+                    select.options[0].textContent = 'Chọn khối lượng';
                 }
             });
 
-
-            // Add to container
+            // Add vào giao diện
             variantsContainer.appendChild(clone);
 
-            // Attach events
+            // Kích hoạt lại các sự kiện
             attachEvents(clone);
             updateSizeOptions(clone);
             updateSKUs(clone);
@@ -477,6 +511,7 @@ document.addEventListener('DOMContentLoaded', function () {
             variantIndex++;
         });
     }
+
 
     // Form submission validation
     const form = document.querySelector('form');
