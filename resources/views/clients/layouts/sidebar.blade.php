@@ -99,7 +99,7 @@
                     @guest
                         <div class="position-relative d-flex">
                             <a href="{{ route('login') }}" class="d-flex align-items-center">
-                                <i class="fas fa-user fa-2x"></i>
+                                <i class="fas fa-user fa-2x" style="color: #db735b"></i>
                             </a>
                         </div>
                     @endguest
