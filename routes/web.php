@@ -32,6 +32,7 @@ use App\Http\Controllers\ThongKeController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [HomeController::class, 'search'])->name('clients.search');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/search-ajax', [HomeController::class, 'searchAjax'])->name('clients.search.ajax');
 Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
 Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
 Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
