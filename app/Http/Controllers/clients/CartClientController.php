@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Promotion;
@@ -27,7 +28,14 @@ class CartClientController extends Controller
 
         $total = $carts->sum(fn($item) => $item->total_price);
 
-        return view('clients.carts.index', compact('carts', 'total'));
+        //Nếu có session flash 'orderSuccess', load thông tin đơn hàng
+    $order = null;
+    if (session('orderSuccess')) {
+
+        $order = Order::with(['orderDetails.product', 'orderDetails.productVariant.attributeValues.attribute', 'orderDetails.product.category'])
+            ->find(session('orderSuccess'));
+    }
+        return view('clients.carts.index', compact('carts', 'total', 'order'));
     }
     public function addToCart(Request $request)
     {
@@ -109,7 +117,7 @@ class CartClientController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', '✅ Đã thêm sản phẩm vào giỏ hàng!');
+        return redirect()->back()->with('success', ' Đã thêm sản phẩm vào giỏ hàng!');
     }
 
 
@@ -198,7 +206,7 @@ class CartClientController extends Controller
     if ($item) {
         $quantity = max(1, (int) $request->quantity);
 
-        // ✅ Lấy đúng tồn kho từ biến thể hoặc sản phẩm
+        //Lấy đúng tồn kho từ biến thể hoặc sản phẩm
         $stock = $item->product_variant_id
             ? ($item->productVariant?->quantity_in_stock ?? 0)
             : ($item->product?->quantity_in_stock ?? 0);
@@ -229,77 +237,6 @@ class CartClientController extends Controller
 
     return response()->json(['success' => false], 404);
 }
-
-    public function applyCoupon(Request $request)
-    {
-        $code = $request->input('promotion');
-        $now = Carbon::now();
-        $userId = Auth::id();
-
-    //     $promotion = Promotion::where('promotion_name', $code)
-    //         ->where('status', 1)
-    //         ->where('start_date', '<=', $now)
-    //         ->where('end_date', '>=', $now)
-    //         ->first();
-
-    //     if (!$promotion) {
-    //         return back()->with('error', 'Mã giảm giá không hợp lệ!');
-    //     }
-
-    //     // Kiểm tra lượt dùng tổng
-    //     if ($promotion->usage_limit !== null && $promotion->used_count >= $promotion->usage_limit) {
-    //         return back()->with('error', 'Mã giảm giá đã hết lượt sử dụng!');
-    //     }
-
-    //     // Kiểm tra lượt dùng của user
-    //     $userUsage = DB::table('promotion_user')
-    //         ->where('promotion_id', $promotion->id)
-    //         ->where('user_id', $userId)
-    //         ->first();
-
-    //     if ($userUsage && $userUsage->used_count >= 1) {
-    //         return back()->with('error', 'Bạn đã sử dụng mã này rồi!');
-    //     }
-
-    //     // Tính giảm giá
-    //     $cart = Cart::with('items')->where('user_id', $userId)->first();
-    //     $subtotal = $cart ? $cart->items->sum('total_price') : 0;
-    //     $discount = 0;
-
-    //     //Kiểm tra min_total_spent
-    //     if ($promotion->min_total_spent && $subtotal < $promotion->min_total_spent) {
-    //         return back()->with('error', 'Đơn hàng chưa đạt tối thiểu ' . number_format($promotion->min_total_spent) . 'đ để áp dụng mã.');
-    //     }
-
-    //     //Kiểm tra nếu là mã chỉ dành cho khách VIP
-    //     // if ($promotion->vip_only && (!$user->is_vip ?? false)) {
-    //     //     return back()->with('error', 'Mã này chỉ dành cho khách hàng VIP.');
-    //     // }
-
-    //     if ($promotion->discount_type === 'percent') {
-    //         $discount = round($subtotal * ($promotion->discount_value / 100));
-    //         if ($promotion->max_discount_value && $discount > $promotion->max_discount_value) {
-    //             $discount = $promotion->max_discount_value;
-    //         }
-    //     } elseif ($promotion->discount_type === 'fixed') {
-    //         $discount = $promotion->discount_value;
-    //     }
-
-    //     // Lưu vào session
-    //     session()->put('promotion', [
-    //         'id' => $promotion->id,
-    //         'name' => $promotion->promotion_name,
-    //         'type' => $promotion->discount_type,
-    //         'value' => $promotion->discount_value,
-    //         'max' => $promotion->max_discount_value,
-    //         'discount' => $discount
-    //     ]);
-    //     session()->put('discount', $discount);
-    //     session()->put('promotion_name', $promotion->promotion_name);
-
-    //     return back()->with('success', 'Áp dụng mã giảm giá thành công!');
-    }
-
 
     public function removeCoupon()
     {
