@@ -103,6 +103,7 @@ Route::middleware(['auth', 'client'])->group(function () {
     // Checkout
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
     Route::post('/store', [ClientsOrderController::class, 'store'])->name('order.store');
+    Route::get('/success/{id}', [ClientsOrderController::class, 'success'])->name('order.success');
     Route::post('/apply-coupon', [ClientsOrderController::class, 'applyCoupon'])->name('order.applyCoupon');
     Route::get('/remove-coupon', [ClientsOrderController::class, 'removeCoupon'])->name('order.removeCoupon');
 
