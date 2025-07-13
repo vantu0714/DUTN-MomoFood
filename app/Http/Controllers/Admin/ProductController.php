@@ -243,20 +243,19 @@ class ProductController extends Controller
         $product = Product::with('variants')->findOrFail($id);
         return view('products.variants', compact('product'));
     }
-public function show($id)
-{
-    $product = Product::with([
-        'category',
-        'variants.attributeValues.attribute'
-    ])->findOrFail($id);
+    public function show($id)
+    {
+        $product = Product::with([
+            'category',
+            'variants.attributeValues.attribute'
+        ])->findOrFail($id);
 
-    // Gọi riêng để đảm bảo lấy đúng thứ tự
-    $product->setRelation(
-        'variants',
-        $product->variants()->orderBy('price', 'asc')->get()
-    );
+        // Gọi riêng để đảm bảo lấy đúng thứ tự
+        $product->setRelation(
+            'variants',
+            $product->variants()->orderBy('price', 'asc')->get()
+        );
 
-    return view('admin.products.show', compact('product'));
-}
-
+        return view('admin.products.show', compact('product'));
+    }
 }

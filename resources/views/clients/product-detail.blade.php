@@ -334,9 +334,9 @@
                             </div>
                         </div>
                     </div>
-
                     {{-- FORM BÌNH LUẬN --}}
-                    @if (Auth::check() && $hasPurchased)
+
+                    @if (Auth::check() && $hasPurchased && !$hasReviewed)
                         <form action="{{ route('comments.store') }}" method="POST"
                             class="bg-light p-4 p-md-5 rounded shadow-sm">
                             @csrf
@@ -366,6 +366,11 @@
                                 </button>
                             </div>
                         </form>
+                    @elseif (Auth::check() && $hasPurchased && $hasReviewed)
+                        <div class="alert alert-info text-center py-4">
+                            <i class="fas fa-info-circle me-2 text-info"></i>
+                            Bạn đã đánh giá sản phẩm này. Cảm ơn bạn!
+                        </div>
                     @elseif(Auth::check())
                         <div class="alert alert-warning text-center py-4">
                             <i class="fas fa-exclamation-circle me-2 text-warning"></i>
@@ -379,36 +384,6 @@
                             </a>
                         </div>
                     @endif
-
-
-                    {{-- SCRIPT CHỌN SAO --}}
-                    @push('scripts')
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                const stars = document.querySelectorAll('.star');
-                                const ratingInput = document.getElementById('rating-value');
-
-                                stars.forEach(star => {
-                                    star.addEventListener('click', function() {
-                                        const rating = this.getAttribute('data-rating');
-                                        ratingInput.value = rating;
-
-                                        // Highlight sao đã chọn
-                                        stars.forEach(s => {
-                                            if (s.getAttribute('data-rating') <= rating) {
-                                                s.classList.remove('text-muted');
-                                                s.classList.add('text-warning');
-                                            } else {
-                                                s.classList.remove('text-warning');
-                                                s.classList.add('text-muted');
-                                            }
-                                        });
-                                    });
-                                });
-                            });
-                        </script>
-                    @endpush
-
                 </div>
             </div>
         </div>
@@ -446,7 +421,35 @@
     </div>
 </div>
 <!-- Single Product End -->
+{{-- SCRIPT CHỌN SAO --}}
+
+
+
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('rating-value');
+
+        if (!stars.length || !ratingInput) return;
+
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+
+                stars.forEach(s => {
+                    const sRating = s.getAttribute('data-rating');
+                    if (parseInt(sRating) <= rating) {
+                        s.classList.remove('text-muted');
+                        s.classList.add('text-warning');
+                    } else {
+                        s.classList.remove('text-warning');
+                        s.classList.add('text-muted');
+                    }
+                });
+            });
+        });
+    });
     document.addEventListener('DOMContentLoaded', function() {
         const variantOptions = document.querySelectorAll('.variant-option');
         const mainImage = document.getElementById('mainProductImage');
@@ -569,11 +572,5 @@
         resetToDefault();
     });
 </script>
-
-
-
-
-
-
 <!-- Footer Start -->
 @include('clients.layouts.footer')

@@ -500,7 +500,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 @endsection
 
@@ -523,7 +522,6 @@
                         <label for="editSku" class="form-label">SKU</label>
                         <input type="text" class="form-control" name="sku" id="editSku" readonly>
                     </div>
-
                     <!-- Chọn Vị -->
                     <!-- Vị: cho phép sửa nhưng giữ giá trị cũ -->
                     <div class="mb-3">
@@ -550,14 +548,12 @@
                             @endif
 
                         </select>
-
                     </div>
                     <div class="mb-3">
                         <label for="editPrice" class="form-label">Giá (VND)</label>
                         <input type="number" class="form-control" name="price" id="editPrice" min="0"
                             required>
                     </div>
-
                     <div class="mb-3">
                         <label for="editQuantity" class="form-label">Số lượng</label>
                         <input type="number" class="form-control" name="quantity_in_stock" id="editQuantity"
@@ -572,7 +568,6 @@
                         <input type="file" class="form-control" name="image">
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" class="btn btn-primary">Cập nhật</button>
@@ -583,6 +578,7 @@
 </div>
 <script>
     let globalProductCode = '';
+
     // Hiện/ẩn vùng biến thể
     window.toggleVariantSection = function() {
         const section = document.getElementById('variantSection');
@@ -594,7 +590,7 @@
 
     // Sửa biến thể
     window.editVariant = function(variantId, productCode) {
-        globalProductCode = productCode; //
+        globalProductCode = productCode;
 
         fetch(`/admin/product-variants/${variantId}`)
             .then(response => {
@@ -603,7 +599,8 @@
             })
             .then(variant => {
                 // Gán dữ liệu
-                document.getElementById('editPrice').value = variant.price ?? 0;
+               document.getElementById('editPrice').value = parsePrice(variant.price);
+
                 document.getElementById('editQuantity').value = variant.quantity_in_stock ?? 0;
 
                 if (variant.main_attribute) {
@@ -627,7 +624,7 @@
 
                 // Gán SKU (hoặc tự tạo nếu rỗng)
                 if (!variant.sku || variant.sku.trim() === '') {
-                    generateSku(); // Sẽ tự lấy từ input ẩn baseProductCode
+                    generateSku(); // Sẽ lấy từ globalProductCode
                 } else {
                     document.getElementById('editSku').value = variant.sku;
                 }
@@ -643,6 +640,48 @@
                 alert('Lỗi khi lấy dữ liệu biến thể');
             });
     };
+    function parsePrice(raw) {
+    if (typeof raw === 'string') {
+        return parseInt(raw.replace(/[.,]/g, ''), 10);
+    }
+    return raw || 0;
+}
+
+    // Tạo SKU từ mã sản phẩm, vị và size
+    function generateSku() {
+        const mainName = document.getElementById('editMainAttributeName')?.value?.trim() || '';
+        const subSelect = document.getElementById('editSubAttributeId');
+        const subText = subSelect?.options[subSelect.selectedIndex]?.text || '';
+        const baseCode = globalProductCode || document.getElementById('baseProductCode')?.value?.trim() || '';
+
+        const slugify = (str) => str
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '')
+            .toUpperCase();
+
+        const parts = [baseCode];
+
+        if (mainName) parts.push(slugify(mainName));
+        if (subText) parts.push(slugify(subText));
+
+        document.getElementById('editSku').value = parts.join('-');
+    }
+
+    // Tự động cập nhật SKU khi thay đổi Vị hoặc Khối lượng
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainAttrInput = document.getElementById('editMainAttributeName');
+        const subAttrSelect = document.getElementById('editSubAttributeId');
+
+        if (mainAttrInput) {
+            mainAttrInput.addEventListener('input', generateSku);
+        }
+
+        if (subAttrSelect) {
+            subAttrSelect.addEventListener('change', generateSku);
+        }
+    });
 
     // Xoá biến thể
     window.deleteVariant = function(variantId, sku) {
@@ -667,27 +706,7 @@
                 alert('Xoá thất bại: ' + error.message);
             });
     };
-
-    // Tạo SKU từ vị và size
-    function generateSku() {
-        const mainName = document.getElementById('editMainAttributeName')?.value?.trim() || '';
-        const subSelect = document.getElementById('editSubAttributeId');
-        const subText = subSelect?.options[subSelect.selectedIndex]?.text || '';
-        const baseCode = document.getElementById('baseProductCode')?.value?.trim() || '';
-
-        const slugify = (str) => str
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-zA-Z0-9]/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '')
-            .toUpperCase();
-
-        const sku = `${baseCode}${mainName ? '-' + slugify(mainName) : ''}${subText ? '-' + slugify(subText) : ''}`;
-        document.getElementById('editSku').value = sku;
-    }
-
-
-
+    // sửa sản phẩm 
     document.addEventListener('DOMContentLoaded', function() {
         // ==== Xử lý biến thể ====
         const form = document.getElementById('editVariantForm');
@@ -768,7 +787,7 @@
                     document.getElementById('current_original_price').textContent = formatCurrency(
                         originalPrice);
                     document.getElementById('current_discounted_price').textContent = formatCurrency(
-                    finalPrice);
+                        finalPrice);
                     document.getElementById('current_discount_percent').textContent = discountPercent + '%';
                     document.getElementById('final_price').textContent = formatCurrency(finalPrice);
                     document.getElementById('savings_amount').textContent = formatCurrency(discountAmount);
