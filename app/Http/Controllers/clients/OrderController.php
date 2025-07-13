@@ -248,7 +248,7 @@ class OrderController extends Controller
                 $vnpay = new VNPayController();
                 return $vnpay->create($request, $order);
             } else {
-                return redirect()->route('clients.order')->with('orderSuccess', $order->id);
+                return redirect()->route('carts.index')->with('orderSuccess', $order->id);
             }
         } catch (\Exception $e) {
             DB::rollBack();
