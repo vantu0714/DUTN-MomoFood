@@ -209,11 +209,28 @@
 
                         <div class="row">
                             <div class="col-md-6">
+                                @php
+                                    $statusLabels = [
+                                        1 => ['label' => 'Chưa xác nhận', 'class' => 'bg-secondary'],
+                                        2 => ['label' => 'Đã xác nhận', 'class' => 'bg-primary'],
+                                        3 => ['label' => 'Đang giao', 'class' => 'bg-info'],
+                                        4 => ['label' => 'Hoàn thành', 'class' => 'bg-success'],
+                                        5 => ['label' => 'Hoàn hàng', 'class' => 'bg-warning text-dark'],
+                                        6 => ['label' => 'Hủy đơn', 'class' => 'bg-danger'],
+                                    ];
+
+                                    $status = $statusLabels[$order->status] ?? [
+                                        'label' => 'Không rõ',
+                                        'class' => 'bg-light text-dark',
+                                    ];
+                                @endphp
+
+                                <span class="badge {{ $status['class'] }}">{{ $status['label'] }}</span>
                                 <h6 class="font-weight-bold">Thông tin đơn hàng</h6>
-                                <p><strong>Mã đơn hàng:</strong> #{{ $order->id }}</p>
+                                <p><strong>Mã đơn hàng:</strong> #{{ $order->order_code }}</p>
                                 <p><strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</p>
                                 <p><strong>Trạng thái:</strong>
-                                    {{ $order->payment_status }}
+                                    <span class="{{ $status['class'] }}">{{ $status['label'] }}</span>
                                 </p>
                             </div>
 
