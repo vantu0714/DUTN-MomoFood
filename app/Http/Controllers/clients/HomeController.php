@@ -97,14 +97,18 @@ class HomeController extends Controller
             ->get();
 
         $results = $products->map(function ($product) {
+            // Kiểm tra có giá khuyến mãi không
+            $hasDiscount = !is_null($product->discounted_price) && $product->discounted_price > 0;
+
             return [
                 'id' => $product->id,
                 'name' => $product->product_name,
                 'code' => $product->product_code,
-                'price' => $product->original_price ?? $product->price,
-                'discount_percentage' => $product->discount_percentage ?? 0,
+                'original_price' => $product->original_price,
+                'discounted_price' => $product->discounted_price,
+                'has_discount' => $hasDiscount,
                 'image' => $product->image ? asset('storage/' . $product->image) : asset('images/no-image.png'),
-                'category' => $product->category->name ?? '',
+                'category' => $product->category ? $product->category->category_name : 'Chưa phân loại',
                 'url' => route('product-detail.show', $product->id),
                 'quantity_in_stock' => $product->quantity_in_stock ?? 0
             ];

@@ -64,11 +64,11 @@
                 <!-- Right side icons -->
                 <div class="d-flex align-items-center">
                     <!-- Search Form -->
-                    <div class="search-container me-4" style="max-width: 300px; position: relative;">
+                    <div class="search-container me-4" style="min-width: 400px; position: relative;">
                         <form action="{{ route('clients.search') }}" method="GET" class="d-flex align-items-center">
                             <div class="input-group search-group">
                                 <input type="search" name="keyword" id="search-input" class="form-control search-input"
-                                    placeholder="Tìm kiếm..." required autocomplete="off">
+                                    placeholder="Tìm kiếm sản phẩm..." required autocomplete="off">
                                 <button type="submit" class="btn btn-search">
                                     <i class="fas fa-search"></i>
                                 </button>
@@ -212,41 +212,41 @@
         }
 
         function displayResults(products) {
-            if (products.length === 0) {
-                searchResults.innerHTML =
-                    '<div class="search-item no-results">Không tìm thấy sản phẩm nào</div>';
-            } else {
-                searchResults.innerHTML = products.map(product => {
-                    const hasDiscount = product.discount_percentage > 0;
-                    const isInStock = product.quantity_in_stock > 0;
+    if (products.length === 0) {
+        searchResults.innerHTML =
+            '<div class="search-item no-results">Không tìm thấy sản phẩm nào</div>';
+    } else {
+        searchResults.innerHTML = products.map(product => {
+            const hasDiscount = product.has_discount;
 
-                    return `
-            <div class="search-item ${!isInStock ? 'out-of-stock' : ''}" onclick="window.location.href='${product.url}'">
-                <div class="search-item-image-container">
-                    <img src="${product.image}"
-                         alt="${product.name}"
-                         class="search-item-image"
-                         onerror="this.src='https://via.placeholder.com/150x150?text=No+Image';">
-                    ${hasDiscount ? `<span class="search-item-discount">-${product.discount_percentage}%</span>` : ''}
-                    ${!isInStock ? '<span class="search-item-stock-status">Hết hàng</span>' : ''}
-                </div>
-                <div class="search-item-content">
-                    <div class="search-item-name">${product.name}</div>
-                    <div class="search-item-code">Mã: ${product.code}</div>
-                    <div class="search-item-info">
-                        <span class="search-item-category">${product.category}</span>
-                        <div class="search-item-price-container">
-                            <span class="search-item-price">${formatPrice(product.price)}</span>
-                            ${hasDiscount ? `<span class="search-item-original-price">${formatPrice(product.original_price)}</span>` : ''}
-                        </div>
-                    </div>
+            return `
+        <div class="search-item" onclick="window.location.href='${product.url}'">
+            <div class="search-item-image-container">
+                <img src="${product.image}"
+                     alt="${product.name}"
+                     class="search-item-image"
+                     onerror="this.src='https://via.placeholder.com/150x150?text=No+Image';">
+            </div>
+            <div class="search-item-content">
+                <h3 class="search-item-name">${product.name}</h3>
+                <div class="search-item-category">${product.category}</div>
+                <div class="search-item-price-section">
+                    ${hasDiscount ?
+                        `<div class="search-item-price-group">
+                            <span class="search-item-price current">${formatPrice(product.discounted_price)}</span>
+                            <span class="search-item-price original">${formatPrice(product.original_price)}</span>
+                        </div>`
+                        :
+                        `<span class="search-item-price current">${formatPrice(product.original_price)}</span>`
+                    }
                 </div>
             </div>
-            `;
-                }).join('');
-            }
-            showDropdown();
-        }
+        </div>
+        `;
+        }).join('');
+    }
+    showDropdown();
+}
 
         function showDropdown() {
             searchDropdown.style.display = 'block';
@@ -302,12 +302,15 @@
         border-radius: 30px;
         overflow: hidden;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        width: 100%;
     }
 
     .search-input {
         border: none;
-        padding: 10px 15px;
+        padding: 12px 20px;
         background-color: #f8f9fa;
+        font-size: 14px;
+        width: 100%;
     }
 
     .search-input:focus {
@@ -320,7 +323,7 @@
         background: linear-gradient(to right, #db735b, #d56a58);
         color: white;
         border: none;
-        padding: 0 15px;
+        padding: 0 18px;
         transition: all 0.3s ease;
     }
 
@@ -336,107 +339,228 @@
 
     /* Dropdown tìm kiếm */
     .search-container {
-        position: relative;
+    position: relative;
+}
+
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    max-height: 450px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    margin-top: 5px;
+}
+
+.search-results {
+    padding: 4px 0;
+}
+
+.search-item {
+    display: flex;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f1f3f4;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.search-item:hover {
+    background-color: #f8f9fa;
+}
+
+.search-item:last-child {
+    border-bottom: none;
+}
+
+.search-item-image-container {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+}
+
+.search-item-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+}
+
+.search-item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.search-item-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.search-item-category {
+    font-size: 12px;
+    color: #6b7280;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.search-item-price-section {
+    margin-top: auto;
+}
+
+.search-item-price-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-item-price.current {
+    font-weight: 600;
+    color: #d56a58;
+    font-size: 14px;
+}
+
+.search-item-price.original {
+    font-size: 12px;
+    color: #9ca3af;
+    text-decoration: line-through;
+    font-weight: 400;
+}
+
+.no-results {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 24px 20px;
+    border-bottom: none !important;
+    cursor: default !important;
+}
+
+.no-results:hover {
+    background-color: transparent !important;
+}
+
+/* Scrollbar styling */
+.search-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-container {
+        min-width: 250px !important;
     }
 
     .search-dropdown {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        max-height: 400px;
-        overflow-y: auto;
-        z-index: 1000;
-        display: none;
-        margin-top: 5px;
-    }
-
-    .search-results {
-        padding: 8px 0;
+        left: -20px;
+        right: -20px;
+        max-height: 350px;
     }
 
     .search-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        border-bottom: 1px solid #f0f0f0;
+        padding: 10px 12px;
+        gap: 10px;
     }
 
-    .search-item:hover {
-        background-color: #f8f9fa;
-    }
-
-    .search-item:last-child {
-        border-bottom: none;
-    }
-
-    .search-item-image {
+    .search-item-image-container {
         width: 50px;
         height: 50px;
-        object-fit: cover;
-        border-radius: 6px;
-        margin-right: 12px;
-        flex-shrink: 0;
-    }
-
-    .search-item-content {
-        flex: 1;
-        min-width: 0;
     }
 
     .search-item-name {
-        font-weight: 500;
-        color: #333;
-        margin-bottom: 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 13px;
     }
 
-    .search-item-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .search-item-code {
+        font-size: 11px;
+        padding: 1px 4px;
+    }
+
+    .search-item-header {
+        gap: 4px;
+        align-items: flex-start;
+    }
+
+    .search-item-price-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .search-item-price.current {
+        font-size: 13px;
     }
 
     .search-item-category {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-dropdown {
+        left: -30px;
+        right: -30px;
+        max-height: 300px;
+    }
+
+    .search-item {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .search-item-image-container {
+        width: 45px;
+        height: 45px;
+    }
+
+    .search-item-name {
         font-size: 12px;
-        color: #666;
-        background: #f0f0f0;
-        padding: 2px 6px;
-        border-radius: 3px;
     }
 
-    .search-item-price {
-        font-weight: 600;
-        color: #d56a58;
-        font-size: 14px;
+    .search-item-category {
+        font-size: 10px;
     }
 
-    .no-results {
-        text-align: center;
-        color: #666;
-        font-style: italic;
-        padding: 20px;
-        border-bottom: none !important;
+    .search-item-price.current {
+        font-size: 12px;
     }
 
-    .no-results:hover {
-        background-color: transparent !important;
-        cursor: default !important;
+    .search-item-price.original {
+        font-size: 11px;
     }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .search-dropdown {
-            left: -50px;
-            right: -50px;
-        }
-    }
+}
 </style>
