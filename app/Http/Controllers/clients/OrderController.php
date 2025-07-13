@@ -248,14 +248,13 @@ class OrderController extends Controller
                 $vnpay = new VNPayController();
                 return $vnpay->create($request, $order);
             } else {
-                return redirect()->route('carts.index')->with('success', 'Đặt hàng thành công!');
+                return redirect()->route('clients.order')->with('orderSuccess', $order->id);
             }
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
     }
-
 
     public function orderList(Request $request)
     {
