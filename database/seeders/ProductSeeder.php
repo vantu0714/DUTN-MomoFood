@@ -14,7 +14,7 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         //
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 5; $i++) {
             Product::create([
                 'product_code' => 'P' . str_pad($i, 4, '0', STR_PAD_LEFT),
                 'product_name' => 'Sản phẩm ' . $i,

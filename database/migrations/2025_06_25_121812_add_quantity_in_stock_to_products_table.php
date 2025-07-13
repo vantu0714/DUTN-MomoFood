@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,15 +12,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->renameColumn('quantity', 'quantity_in_stock');
-        });
+        DB::statement("ALTER TABLE products CHANGE quantity quantity_in_stock INT UNSIGNED DEFAULT 0");
     }
 
     public function down()
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->renameColumn('quantity_in_stock', 'quantity');
-        });
+        DB::statement("ALTER TABLE products CHANGE quantity_in_stock quantity INT UNSIGNED DEFAULT 0");
     }
 };
