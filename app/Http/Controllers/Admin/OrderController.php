@@ -21,31 +21,31 @@ class OrderController extends Controller
     {
         $query = Order::query();
 
-    // Lọc theo từ khóa
-    if ($request->filled('keyword')) {
-        $keyword = $request->keyword;
-        $query->where(function ($q) use ($keyword) {
-            $q->where('order_code', 'like', '%' . $keyword . '%')
-              ->orWhere('recipient_name', 'like', '%' . $keyword . '%')
-              ->orWhere('recipient_phone', 'like', '%' . $keyword . '%');
-        });
-    }
-
-    // Lọc theo phương thức thanh toán
-    if ($request->filled('payment_status')) {
-        if ($request->payment_status == 'paid') {
-            $query->where('payment_method', '!=', 'cod');
-        } elseif ($request->payment_status == 'unpaid') {
-            $query->where('payment_method', 'cod');
+        // Lọc theo từ khóa
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('order_code', 'like', '%' . $keyword . '%')
+                    ->orWhere('recipient_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('recipient_phone', 'like', '%' . $keyword . '%');
+            });
         }
-    }
 
-    // Lọc theo trạng thái đơn hàng
-    if ($request->filled('order_status') && $request->order_status != 'all') {
-        $query->where('status', $request->order_status);
-    }
+        // Lọc theo phương thức thanh toán
+        if ($request->filled('payment_status')) {
+            if ($request->payment_status == 'paid') {
+                $query->where('payment_method', '!=', 'cod');
+            } elseif ($request->payment_status == 'unpaid') {
+                $query->where('payment_method', 'cod');
+            }
+        }
 
-    $orders = $query->latest()->paginate(10);
+        // Lọc theo trạng thái đơn hàng
+        if ($request->filled('order_status') && $request->order_status != 'all') {
+            $query->where('status', $request->order_status);
+        }
+
+        $orders = $query->latest()->paginate(10);
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -137,7 +137,7 @@ class OrderController extends Controller
                 'payment_status' => $request->payment_status ?? 'unpaid',
                 'status' => $request->status ?? 1,
                 'note' => $request->note,
-                'cancellation_reason' => $request->cancellation_reason,
+                'reason' => $request->reason,
             ]);
 
             // Lưu chi tiết đơn hàng
@@ -206,13 +206,13 @@ class OrderController extends Controller
         }
 
         // Nếu bị hủy thì mới cần lý do hủy, ngược lại set null
-        $cancellationReason = $status == 6 ? $request->cancellation_reason : null;
+        $reason = $status == 6 ? $request->reason : null;
 
         $order->update([
             'status' => $status,
             'payment_status' => $paymentStatus,
             'note' => $request->note,
-            'cancellation_reason' => $cancellationReason,
+            'reason' => $reason,
         ]);
 
         return redirect()->route('admin.orders.index')->with('success', 'Cập nhật thành công');
@@ -231,7 +231,36 @@ class OrderController extends Controller
             'status' => 'required|integer|min:1|max:6',
         ]);
 
-        $order->status = $request->status;
+        $newStatus = (int) $request->status;
+
+        // Không cho phép chuyển từ trạng thái Hoàn hàng (5) sang Hủy đơn (6)
+        if ($order->status == 5 && $newStatus == 6) {
+            return back()->with('error', 'Không thể hủy đơn hàng sau khi đã hoàn hàng.');
+        }
+
+        // Nếu chuyển sang trạng thái Hoàn thành (4) → auto paid
+        if ($newStatus == 4) {
+            $order->status = 4;
+            $order->payment_status = 'paid';
+
+            foreach ($order->orderDetails as $detail) {
+                Product::where('id', $detail->product_id)->increment('sold_count', $detail->quantity);
+            }
+        }
+        // Nếu chuyển sang trạng thái Hoàn hàng (5) → bắt buộc có lý do
+        elseif ($newStatus == 5) {
+            $request->validate([
+                'reason' => 'required|string|max:1000',
+            ]);
+
+            $order->status = 5;
+            $order->reason = $request->reason;
+        }
+        // Các trạng thái khác
+        else {
+            $order->status = $newStatus;
+        }
+
         $order->save();
 
         return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật.');
@@ -241,7 +270,7 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         $request->validate([
-            'cancellation_reason' => 'required|string|max:1000',
+            'reason' => 'required|string|max:1000',
         ]);
 
         if ($order->status >= 4) {
@@ -249,7 +278,7 @@ class OrderController extends Controller
         }
 
         $order->status = 6; // hủy đơn
-        $order->cancellation_reason = $request->cancellation_reason;
+        $order->reason = $request->reason;
         $order->save();
 
         return redirect()->route('admin.orders.index')->with('success', 'Đã hủy đơn hàng.');

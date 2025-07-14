@@ -142,11 +142,27 @@
                                 ];
                             @endphp
 
-                            <select name="status" class="form-select form-select-sm mt-2" onchange="this.form.submit()">
+                            <select name="status" id="order-status-select" class="form-select form-select-sm mt-2"
+                                onchange="handleStatusChange(this)">
                                 @foreach ($statusOptions as $key => $info)
                                     @php
-                                        $canSelect = $key == $order->status || $key == $order->status + 1;
+                                        $canSelect = false;
+                                        // Cho phép chuyển đến trạng thái kế tiếp
+                                        if ($key == $order->status || $key == $order->status + 1) {
+                                            $canSelect = true;
+                                        }
+
+                                        // Cho phép chuyển từ Đang giao (3) → Hoàn hàng (5)
+                                        if ($order->status == 3 && $key == 5) {
+                                            $canSelect = true;
+                                        }
+
+                                        // Không cho chuyển từ 5 (Hoàn hàng) → 6 (Hủy)
+                                        if ($order->status == 5 && $key == 6) {
+                                            $canSelect = false;
+                                        }
                                     @endphp
+
                                     <option value="{{ $key }}" {{ $order->status == $key ? 'selected' : '' }}
                                         {{ $canSelect ? '' : 'disabled' }}>
                                         {{ $info['label'] }}
@@ -160,8 +176,8 @@
                         <strong>Phương thức thanh toán:</strong>
                         <span class="badge bg-{{ $payment_method['class'] }}">{{ $payment_method['label'] }}</span>
                     </div>
-                    @if ($order->status == 6 && $order->cancellation_reason)
-                        <div class="col-12"><strong>Lý do hủy:</strong> {{ $order->cancellation_reason }}</div>
+                    @if ($order->status == 6 && $order->reason)
+                        <div class="col-12"><strong>Lý do hủy:</strong> {{ $order->reason }}</div>
                     @endif
                     @if ($order->status == 1)
                         <div class="mt-3">
@@ -175,14 +191,34 @@
                                 @csrf
                                 @method('PUT')
                                 <div class="mb-3">
-                                    <label for="cancellation_reason" class="form-label">Lý do hủy đơn</label>
-                                    <textarea name="cancellation_reason" class="form-control" rows="3" required placeholder="Nhập lý do..."></textarea>
+                                    <label for="reason" class="form-label">Lý do hủy đơn</label>
+                                    <textarea name="reason" class="form-control" rows="3" required placeholder="Nhập lý do..."></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
                             </form>
                         </div>
                     @endif
+                    {{-- // li do hoan hang --}}
+                    @if ($order->status == 3)
+                        <div class="mt-3">
+                            <button class="btn btn-dark"
+                                onclick="document.getElementById('return-form').classList.toggle('d-none')">
+                                Hoàn hàng
+                            </button>
 
+                            <form action="{{ route('admin.orders.update-status', $order->id) }}" method="POST"
+                                class="mt-3 d-none" id="return-form">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="5">
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">Lý do hoàn hàng</label>
+                                    <textarea name="reason" class="form-control" rows="3" required placeholder="Nhập lý do hoàn hàng..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-dark">Xác nhận hoàn hàng</button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -195,3 +231,18 @@
         </div>
     </div>
 @endsection
+
+<script>
+    function handleStatusChange(select) {
+        const selectedValue = parseInt(select.value);
+
+        if (selectedValue === 5) {
+            // Nếu chọn "Hoàn hàng", thì hiển thị form thủ công
+            alert("Vui lòng bấm nút 'Hoàn hàng' bên dưới để nhập lý do.");
+            select.value = "{{ $order->status }}"; // reset về trạng thái cũ
+        } else {
+            // Submit form chọn trạng thái như bình thường
+            select.form.submit();
+        }
+    }
+</script>
