@@ -60,17 +60,6 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
 
-                                {{-- <form id="delete-form-{{ $user->id }}"
-                                    action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
-                                    style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" class="btn  btn-danger"
-                                        onclick="confirmDelete({{ $user->id }})">
-                                        Xóa
-                                    </button>
-                                </form> --}}
-
                                 <form id="toggle-status-form-{{ $user->id }}"
                                     action="{{ route('admin.users.toggleStatus', $user->id) }}" method="POST"
                                     style="display:inline-block;">

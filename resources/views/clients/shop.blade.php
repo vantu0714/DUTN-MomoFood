@@ -593,4 +593,4 @@
     </script>
 
     @include('clients.layouts.footer')
-    <!-- Fruits Shop End-->
+<!-- Fruits Shop End-->

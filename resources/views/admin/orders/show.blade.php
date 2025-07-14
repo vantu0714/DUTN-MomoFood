@@ -25,44 +25,59 @@
                 <table class="table table-striped table-bordered align-middle">
                     <thead class="table-light">
                         <tr class="text-center">
-                            <th>Hình ảnh</th>
-                            <th>Biến thể</th>
                             <th>Sản phẩm</th>
                             <th>Giá</th>
                             <th>Số lượng</th>
-                            <th>Tổng</th>
+                            <th>Thành tiền</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($order->orderDetails as $detail)
+                            @php
+                                $variant = $detail->productVariant;
+                                $product = $variant?->product ?? $detail->product;
+                                $image = $variant?->image ?? ($product?->image ?? null);
+                                $productName = $product?->product_name ?? 'Không rõ sản phẩm';
+                                $price = $detail->price;
+                                $quantity = $detail->quantity;
+                                $lineTotal = $price * $quantity;
+                            @endphp
                             <tr>
-                                <td class="text-center">
-                                    @php
-                                        $variant = $detail->productVariant;
-                                        $product = $variant->product ?? $detail->product;
-                                        $image = $variant?->image ?? ($product?->image ?? null);
-                                    @endphp
-
-                                    @if ($image)
-                                        <img src="{{ asset('storage/' . $image) }}" alt="Ảnh sản phẩm" width="60"
-                                            class="img-thumbnail">
-                                    @else
-                                        <span class="text-muted">Không có ảnh</span>
-                                    @endif
-                                </td>
-                                <td>{{ $detail->productVariant->name ?? 'Không có biến thể' }}</td>
                                 <td>
-                                    {{ $detail->productVariant->product->product_name ?? ($detail->product->product_name ?? 'Không rõ sản phẩm') }}
+                                    <div class="d-flex align-items-start gap-2">
+                                        @if ($image)
+                                            <img src="{{ asset('storage/' . $image) }}" alt="Ảnh sản phẩm" width="60"
+                                                class="rounded border">
+                                        @else
+                                            <div class="text-muted" style="width: 60px;">Không có ảnh</div>
+                                        @endif
+
+                                        <div>
+                                            <div class="fw-semibold">{{ $productName }}</div>
+
+                                            {{-- Hiển thị các thuộc tính của biến thể --}}
+                                            @if ($variant && $variant->values->count())
+                                                <div class="mt-1 d-flex flex-wrap gap-1">
+                                                    @foreach ($variant->values as $value)
+                                                        <span class="badge bg-info text-white px-2 py-1">
+                                                            {{ $value->attribute->name }}: {{ $value->value }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </td>
-                                <td>{{ number_format($detail->price) }}đ</td>
-                                <td class="text-center">{{ $detail->quantity }}</td>
-                                <td>{{ number_format($detail->price * $detail->quantity) }}đ</td>
+                                <td class="text-center">₫{{ number_format($price, 0, ',', '.') }}</td>
+                                <td class="text-center">{{ $quantity }}</td>
+                                <td class="text-end text-danger fw-bold">₫{{ number_format($lineTotal, 0, ',', '.') }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
+
 
         {{-- Thông tin đơn hàng --}}
         <div class="card mb-4 shadow-sm rounded">
@@ -180,4 +195,3 @@
         </div>
     </div>
 @endsection
-

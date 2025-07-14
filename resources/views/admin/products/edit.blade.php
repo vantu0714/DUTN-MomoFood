@@ -133,29 +133,31 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-6 mb-3">
-                                    <label for="quantity_in_stock" class="form-label fw-semibold">Số lượng <span
-                                            class="text-danger">*</span></label>
-                                    <input type="number"
-                                        class="form-control @error('quantity_in_stock') is-invalid @enderror"
-                                        id="quantity_in_stock" name="quantity_in_stock"
-                                        value="{{ old('quantity_in_stock', $product->quantity_in_stock) }}"
-                                        placeholder="Nhập số lượng" min="0">
-                                    @error('quantity_in_stock')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="ingredients" class="form-label fw-semibold">Thành phần</label>
-                                    <input type="text" class="form-control @error('ingredients') is-invalid @enderror"
-                                        id="ingredients" name="ingredients"
-                                        value="{{ old('ingredients', $product->ingredients) }}"
-                                        placeholder="Nhập thành phần sản phẩm">
-                                    @error('ingredients')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                @php
+                                    $hasVariants = $product->variants && $product->variants->isNotEmpty();
+                                @endphp
 
+                                @if (!$hasVariants)
+                                    <div class="col-md-6 mb-3">
+                                        <label for="quantity_in_stock" class="form-label fw-semibold">Số lượng <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number"
+                                            class="form-control @error('quantity_in_stock') is-invalid @enderror"
+                                            id="quantity_in_stock" name="quantity_in_stock"
+                                            value="{{ old('quantity_in_stock', $product->quantity_in_stock) }}"
+                                            placeholder="Nhập số lượng" min="0">
+                                        @error('quantity_in_stock')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                @else
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Số lượng biến thể</label>
+                                        <div class="form-control bg-light text-muted">
+                                            Sản phẩm có biến thể - chỉnh sửa số lượng trong phần biến thể.
+                                        </div>
+                                    </div>
+                                @endif
                                 <div class="col-md-12 mb-3">
                                     <label for="description" class="form-label fw-semibold">Mô tả sản phẩm</label>
                                     <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
@@ -168,65 +170,99 @@
                         </div>
                     </div>
                     <!-- Pricing Information -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white border-bottom py-3">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-dollar-sign me-2 text-primary"></i>
-                                Thông tin giá
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                {{-- Giá gốc --}}
-                                <div class="col-md-6 mb-3">
-                                    <label for="original_price" class="form-label fw-semibold">Giá gốc <span
-                                            class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <input type="number"
-                                            class="form-control @error('original_price') is-invalid @enderror"
-                                            id="original_price" name="original_price"
-                                            value="{{ old('original_price', $product->original_price) }}"
-                                            placeholder="Nhập giá gốc" min="0" step="1000">
-                                        <span class="input-group-text">đ</span>
-                                        @error('original_price')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                {{-- Phần trăm giảm giá --}}
-                                <div class="col-md-6 mb-3">
-                                    <label for="discounted_price" class="form-label fw-semibold">Phần trăm giảm
-                                        giá</label>
-                                    <div class="input-group">
-                                        <input type="number"
-                                            class="form-control @error('discounted_price') is-invalid @enderror"
-                                            id="discounted_price" name="discounted_price"
-                                            value="{{ old('discounted_price', $product->original_price && $product->discounted_price ? 100 - round(($product->discounted_price / $product->original_price) * 100, 2) : '') }}"
-                                            placeholder="Nhập phần trăm giảm" min="0" max="100"
-                                            step="0.1">
-                                        <span class="input-group-text">%</span>
-                                        @error('discounted_price')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <small class="text-muted">Để trống nếu không có khuyến mãi</small>
-                                </div>
+                    @if (!isset($product) || $product->product_type !== 'variant')
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="fas fa-dollar-sign me-2 text-primary"></i>
+                                    Thông tin giá
+                                </h6>
                             </div>
-                            {{-- Hiển thị giá sau khi giảm (nếu có) --}}
-                            @if ($product->discounted_price)
-                                <div class="row mt-2">
+                            <div class="card-body">
+                                <div class="row">
+                                    {{-- Giá gốc --}}
+                                    <div class="col-md-6 mb-3">
+                                        <label for="original_price" class="form-label fw-semibold">Giá gốc <span
+                                                class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="original_price"
+                                                name="original_price"
+                                                value="{{ old('original_price', $product->original_price ?? '') }}"
+                                                placeholder="Nhập giá gốc" min="0" step="1000"
+                                                oninput="calculateDiscountedPrice()">
+                                            <span class="input-group-text">VND</span>
+                                        </div>
+                                        <small class="text-muted">Giá tăng theo bước 1.000 VND</small>
+                                    </div>
+
+                                    {{-- Phần trăm giảm giá --}}
+                                    <div class="col-md-6 mb-3">
+                                        <label for="discount_percent" class="form-label fw-semibold">Phần trăm giảm
+                                            giá</label>
+                                        <div class="input-group">
+                                            @php
+                                                $discountPercent =
+                                                    isset($product) &&
+                                                    $product->original_price > 0 &&
+                                                    $product->discounted_price
+                                                        ? round(
+                                                            (($product->original_price - $product->discounted_price) /
+                                                                $product->original_price) *
+                                                                100,
+                                                            1,
+                                                        )
+                                                        : null;
+                                            @endphp
+                                            <input type="number" class="form-control" id="discount_percent"
+                                                name="discount_percent"
+                                                value="{{ old('discount_percent', $discountPercent) }}"
+                                                placeholder="Nhập phần trăm giảm" min="0" max="99.9"
+                                                step="0.1" oninput="calculateDiscountedPrice()">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <small class="text-muted">Để trống nếu không có khuyến mãi (tối đa 100%)</small>
+                                    </div>
+                                </div>
+                                {{-- Hiển thị giá hiện tại --}}
+                                <div class="row mt-2" id="current_price_display">
                                     <div class="col-md-12">
-                                        <div class="alert alert-info p-2">
-                                            <i class="fas fa-tag me-2"></i>
-                                            Giá sau giảm: <strong>{{ number_format($product->discounted_price) }}đ</strong>
-                                            (Tiết kiệm
-                                            {{ round((1 - $product->discounted_price / $product->original_price) * 100, 0) }}%)
+                                        <div class="alert alert-warning p-2">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Giá hiện tại:</strong>
+                                            @if (!empty($product->discounted_price) && $product->discounted_price < $product->original_price)
+                                                <span class="text-decoration-line-through" id="current_original_price">
+                                                    {{ number_format($product->original_price) }} VND
+                                                </span>
+                                                → <strong id="current_discounted_price">
+                                                    {{ number_format($product->discounted_price) }} VND
+                                                </strong>
+                                                (Giảm <span id="current_discount_percent">{{ $discountPercent }}%</span>)
+                                            @else
+                                                <strong id="current_discounted_price">
+                                                    {{ number_format($product->original_price ?? 0) }} VND
+                                                </strong>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
-                            @endif
+                                {{-- Hiển thị kết quả sau khi nhập giảm giá --}}
+                                <div class="row mt-2" id="discounted_price_display" style="display: none;">
+                                    <div class="col-md-12">
+                                        <div class="alert alert-info p-2">
+                                            <i class="fas fa-calculator me-2"></i>
+                                            <strong>Giá sau khi áp dụng giảm giá:</strong> <span id="final_price">0
+                                                VND</span><br>
+                                            <small>Tiết kiệm: <span id="savings_amount">0 VND</span> (<span
+                                                    id="savings_percent">0%</span>)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{-- Hidden input để gửi giá khuyến mãi --}}
+                                <input type="hidden" id="discounted_price" name="discounted_price"
+                                    value="{{ old('discounted_price', $product->discounted_price ?? '') }}">
+                            </div>
                         </div>
-                    </div>
+                    @endif
                     <!-- Additional Information -->
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white border-bottom py-3">
@@ -297,7 +333,7 @@
                                 <span class="text-muted">Cập nhật lần cuối:</span>
                                 <span class="fw-semibold">{{ $product->updated_at->format('d/m/Y H:i') }}</span>
                             </div>
-                    
+
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-muted">Trạng thái:</span>
                                 <span class="badge {{ $product->quantity_in_stock > 0 ? 'bg-success' : 'bg-danger' }}">
@@ -337,11 +373,7 @@
                                 Biến thể sản phẩm
                             </h6>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#addVariantModal">
-                                    <i class="fas fa-plus me-1"></i>
-                                    Thêm biến thể
-                                </button>
+
                                 <button type="button" class="btn btn-outline-primary btn-sm"
                                     onclick="toggleVariantSection()">
                                     <i class="fas fa-eye me-1"></i>
@@ -355,11 +387,7 @@
                             <div class="p-4 text-center text-muted">
                                 <i class="fas fa-box-open fa-3x mb-3 text-muted"></i>
                                 <p class="mb-2">Sản phẩm này chưa có biến thể nào.</p>
-                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#addVariantModal">
-                                    <i class="fas fa-plus me-1"></i>
-                                    Thêm biến thể đầu tiên
-                                </button>
+
                             </div>
                         @else
                             <div class="table-responsive">
@@ -376,7 +404,7 @@
                                             <th class="border-0 fw-semibold text-dark">Số lượng</th>
                                             <th class="border-0 fw-semibold text-dark">Trạng thái</th>
                                             <th class="border-0 fw-semibold text-dark">Thuộc tính</th>
-                                            <th class="border-0 fw-semibold text-dark">Thành phần</th>
+
                                             <th class="border-0 fw-semibold text-dark text-center">Hành động</th>
                                         </tr>
                                     </thead>
@@ -448,23 +476,11 @@
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    @if ($variant->ingredients)
-                                                        <span
-                                                            class="text-muted small">{{ Str::limit($variant->ingredients, 30) }}</span>
-                                                    @else
-                                                        <span class="text-muted small">-</span>
-                                                    @endif
-                                                </td>
-                                                <td>
                                                     <div class="d-flex justify-content-center gap-1">
-                                                        <button type="button" class="btn btn-sm btn-outline-info"
-                                                            data-bs-toggle="tooltip" title="Xem chi tiết"
-                                                            onclick="viewVariant({{ $variant->id }})">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
                                                         <button type="button" class="btn btn-sm btn-outline-warning"
                                                             data-bs-toggle="tooltip" title="Chỉnh sửa"
-                                                            onclick="editVariant({{ $variant->id }})">
+                                                            onclick="editVariant({{ $variant->id }}, '{{ $product->product_code }}')">
+
                                                             <i class="fas fa-edit"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-sm btn-outline-danger"
@@ -485,17 +501,314 @@
             </div>
         </div>
     </div>
-    <!-- Scripts -->
-    <script>
-        // Preview image function
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').src = e.target.result;
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-    </script>
 @endsection
+
+<!-- Modal chỉnh sửa biến thể -->
+<div class="modal fade" id="editVariantModal" tabindex="-1" aria-labelledby="editVariantModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="editVariantForm" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editVariantModalLabel">Chỉnh sửa biến thể</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <input type="hidden" id="baseProductCode" value="{{ $product->code ?? '' }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+
+                        <label for="editSku" class="form-label">SKU</label>
+                        <input type="text" class="form-control" name="sku" id="editSku" readonly>
+                    </div>
+                    <!-- Chọn Vị -->
+                    <!-- Vị: cho phép sửa nhưng giữ giá trị cũ -->
+                    <div class="mb-3">
+                        <label for="editMainAttributeName" class="form-label">Vị</label>
+                        <input type="text" class="form-control" name="main_attribute_name"
+                            id="editMainAttributeName" required>
+                        <input type="hidden" name="main_attribute_id" id="editMainAttributeId">
+                    </div>
+                    <!-- Chọn Size -->
+                    <div class="mb-3">
+                        <label for="editSubAttributeId" class="form-label">khối lượng</label>
+                        <select class="form-select" name="sub_attribute_id" id="editSubAttributeId" required>
+                            <option value="">-- Chọn khối lượng --</option>
+                            @php
+                                $sizeAttr = $attributes->firstWhere('name', 'Khối lượng');
+                            @endphp
+
+                            @if ($sizeAttr && $sizeAttr->values)
+                                @foreach ($sizeAttr->values as $value)
+                                    <option value="{{ $value->id }}">{{ $value->value }}</option>
+                                @endforeach
+                            @else
+                                <option disabled>Không có khối lượng nào</option>
+                            @endif
+
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPrice" class="form-label">Giá (VND)</label>
+                        <input type="number" class="form-control" name="price" id="editPrice" min="0"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editQuantity" class="form-label">Số lượng</label>
+                        <input type="number" class="form-control" name="quantity_in_stock" id="editQuantity"
+                            min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ảnh biến thể</label>
+                        <div class="mb-2" id="currentVariantImageWrapper" style="display: none;">
+                            <img id="currentVariantImage" src="" alt="Ảnh hiện tại" class="img-thumbnail"
+                                width="100">
+                        </div>
+                        <input type="file" class="form-control" name="image">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    let globalProductCode = '';
+
+    // Hiện/ẩn vùng biến thể
+    window.toggleVariantSection = function() {
+        const section = document.getElementById('variantSection');
+        const toggleText = document.getElementById('toggleVariantText');
+        const isHidden = section.style.display === 'none';
+        section.style.display = isHidden ? 'block' : 'none';
+        toggleText.innerText = isHidden ? 'Ẩn' : 'Hiện';
+    };
+
+    // Sửa biến thể
+    window.editVariant = function(variantId, productCode) {
+        globalProductCode = productCode;
+
+        fetch(`/admin/product-variants/${variantId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Không thể lấy dữ liệu biến thể');
+                return response.json();
+            })
+            .then(variant => {
+                // Gán dữ liệu
+               document.getElementById('editPrice').value = parsePrice(variant.price);
+
+                document.getElementById('editQuantity').value = variant.quantity_in_stock ?? 0;
+
+                if (variant.main_attribute) {
+                    document.getElementById('editMainAttributeId').value = variant.main_attribute.id ?? '';
+                    document.getElementById('editMainAttributeName').value = variant.main_attribute.name ?? '';
+                }
+
+                if (variant.sub_attribute) {
+                    document.getElementById('editSubAttributeId').value = variant.sub_attribute.id ?? '';
+                }
+
+                if (variant.image_url) {
+                    document.getElementById('currentVariantImage').src = variant.image_url;
+                    document.getElementById('currentVariantImageWrapper').style.display = 'block';
+                } else {
+                    document.getElementById('currentVariantImageWrapper').style.display = 'none';
+                }
+
+                // Gán action form
+                document.getElementById('editVariantForm').action = `/admin/product-variants/${variantId}`;
+
+                // Gán SKU (hoặc tự tạo nếu rỗng)
+                if (!variant.sku || variant.sku.trim() === '') {
+                    generateSku(); // Sẽ lấy từ globalProductCode
+                } else {
+                    document.getElementById('editSku').value = variant.sku;
+                }
+
+                // Hiển thị modal
+                const modalEl = document.getElementById('editVariantModal');
+                let modal = bootstrap.Modal.getInstance(modalEl);
+                if (!modal) modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Lỗi khi lấy dữ liệu biến thể');
+            });
+    };
+    function parsePrice(raw) {
+    if (typeof raw === 'string') {
+        return parseInt(raw.replace(/[.,]/g, ''), 10);
+    }
+    return raw || 0;
+}
+
+    // Tạo SKU từ mã sản phẩm, vị và size
+    function generateSku() {
+        const mainName = document.getElementById('editMainAttributeName')?.value?.trim() || '';
+        const subSelect = document.getElementById('editSubAttributeId');
+        const subText = subSelect?.options[subSelect.selectedIndex]?.text || '';
+        const baseCode = globalProductCode || document.getElementById('baseProductCode')?.value?.trim() || '';
+
+        const slugify = (str) => str
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '')
+            .toUpperCase();
+
+        const parts = [baseCode];
+
+        if (mainName) parts.push(slugify(mainName));
+        if (subText) parts.push(slugify(subText));
+
+        document.getElementById('editSku').value = parts.join('-');
+    }
+
+    // Tự động cập nhật SKU khi thay đổi Vị hoặc Khối lượng
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainAttrInput = document.getElementById('editMainAttributeName');
+        const subAttrSelect = document.getElementById('editSubAttributeId');
+
+        if (mainAttrInput) {
+            mainAttrInput.addEventListener('input', generateSku);
+        }
+
+        if (subAttrSelect) {
+            subAttrSelect.addEventListener('change', generateSku);
+        }
+    });
+
+    // Xoá biến thể
+    window.deleteVariant = function(variantId, sku) {
+        if (!confirm(`Bạn có chắc muốn xoá biến thể "${sku}" không?`)) return;
+
+        fetch(`/admin/product-variants/${variantId}/destroy`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) return response.json().then(err => {
+                    throw new Error(err.message || 'Không thể xoá');
+                });
+                alert('Xoá thành công!');
+                location.reload();
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Xoá thất bại: ' + error.message);
+            });
+    };
+    // sửa sản phẩm 
+    document.addEventListener('DOMContentLoaded', function() {
+        // ==== Xử lý biến thể ====
+        const form = document.getElementById('editVariantForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const url = form.action;
+
+                fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(async response => {
+                        const contentType = response.headers.get('content-type');
+                        if (!response.ok) {
+                            if (contentType && contentType.includes('application/json')) {
+                                const data = await response.json();
+                                alert('Cập nhật thất bại: ' + (data?.message ||
+                                    'Có lỗi xảy ra'));
+                            } else {
+                                console.error(await response.text());
+                                alert('Cập nhật thất bại (xem console)');
+                            }
+                            return;
+                        }
+
+                        alert('Cập nhật thành công!');
+                        bootstrap.Modal.getInstance(document.getElementById('editVariantModal'))
+                            ?.hide();
+                        setTimeout(() => location.reload(), 500);
+                    })
+                    .catch(error => {
+                        console.error('❌ Fetch Error:', error);
+                        alert('Đã xảy ra lỗi không xác định khi cập nhật.');
+                    });
+            });
+
+            // Gắn auto-SKU
+            document.getElementById('editMainAttributeName')?.addEventListener('input', generateSku);
+            document.getElementById('editSubAttributeId')?.addEventListener('change', generateSku);
+        }
+
+        // ==== Xử lý sản phẩm đơn ====
+        const originalPriceInput = document.getElementById('original_price');
+        const discountPercentInput = document.getElementById('discount_percent');
+        const discountedPriceInput = document.getElementById('discounted_price');
+
+        if (originalPriceInput && discountPercentInput && discountedPriceInput) {
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
+            }
+
+            function calculateDiscountedPrice() {
+                const originalPrice = parseFloat(originalPriceInput.value) || 0;
+                const discountPercent = parseFloat(discountPercentInput.value) || 0;
+
+                if (discountPercent >= 100) {
+                    alert("Phần trăm giảm giá phải nhỏ hơn 100%");
+                    discountPercentInput.value = '';
+                    discountedPriceInput.value = '';
+                    document.getElementById('current_price_display').style.display = 'none';
+                    document.getElementById('discounted_price_display').style.display = 'none';
+                    return;
+                }
+
+                const discountAmount = originalPrice * (discountPercent / 100);
+                const finalPrice = originalPrice - discountAmount;
+
+                if (originalPrice > 0 && discountPercent > 0) {
+                    document.getElementById('current_price_display').style.display = 'block';
+                    document.getElementById('discounted_price_display').style.display = 'block';
+
+                    document.getElementById('current_original_price').textContent = formatCurrency(
+                        originalPrice);
+                    document.getElementById('current_discounted_price').textContent = formatCurrency(
+                        finalPrice);
+                    document.getElementById('current_discount_percent').textContent = discountPercent + '%';
+                    document.getElementById('final_price').textContent = formatCurrency(finalPrice);
+                    document.getElementById('savings_amount').textContent = formatCurrency(discountAmount);
+                    document.getElementById('savings_percent').textContent = discountPercent + '%';
+
+                    discountedPriceInput.value = finalPrice;
+                } else {
+                    document.getElementById('current_price_display').style.display = 'none';
+                    document.getElementById('discounted_price_display').style.display = 'none';
+                    discountedPriceInput.value = '';
+                }
+            }
+
+            // Gắn sự kiện
+            originalPriceInput.addEventListener('input', calculateDiscountedPrice);
+            discountPercentInput.addEventListener('input', calculateDiscountedPrice);
+            calculateDiscountedPrice(); // Gọi khi trang load
+        }
+    });
+
+    // Thêm event listener cho cả hai input
+    document.getElementById('original_price').addEventListener('input', calculateDiscountedPrice);
+    document.getElementById('discount_percent').addEventListener('input', calculateDiscountedPrice);
+</script>

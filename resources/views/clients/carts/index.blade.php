@@ -181,6 +181,156 @@
     </div>
 </div>
 
+<!-- Modal chi tiết đơn hàng -->
+@if (session('orderSuccess'))
+    @php
+        $order = \App\Models\Order::with(['orderDetails.product', 'orderDetails.productVariant'])->find(
+            session('orderSuccess'),
+        );
+    @endphp
+
+    @if ($order)
+        <!-- Modal chi tiết đơn hàng -->
+        <div class="modal fade" id="orderSuccessModal" tabindex="-1" role="dialog"
+            aria-labelledby="orderSuccessModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="orderSuccessModalLabel">
+                            <i class="fas fa-check-circle"></i> Đặt hàng thành công!
+                        </h5>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="alert alert-success">
+                            <strong>Cảm ơn bạn đã đặt hàng!</strong> Đơn hàng của bạn đã được tiếp nhận và đang được xử
+                            lý.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                @php
+                                    $statusLabels = [
+                                        1 => ['label' => 'Chưa xác nhận', 'class' => 'bg-secondary'],
+                                        2 => ['label' => 'Đã xác nhận', 'class' => 'bg-primary'],
+                                        3 => ['label' => 'Đang giao', 'class' => 'bg-info'],
+                                        4 => ['label' => 'Hoàn thành', 'class' => 'bg-success'],
+                                        5 => ['label' => 'Hoàn hàng', 'class' => 'bg-warning text-dark'],
+                                        6 => ['label' => 'Hủy đơn', 'class' => 'bg-danger'],
+                                    ];
+
+                                    $status = $statusLabels[$order->status] ?? [
+                                        'label' => 'Không rõ',
+                                        'class' => 'bg-light text-dark',
+                                    ];
+                                @endphp
+
+                                <span class="badge {{ $status['class'] }}">{{ $status['label'] }}</span>
+                                <h6 class="font-weight-bold">Thông tin đơn hàng</h6>
+                                <p><strong>Mã đơn hàng:</strong> #{{ $order->order_code }}</p>
+                                <p><strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</p>
+                                <p><strong>Trạng thái:</strong>
+                                    <span class="{{ $status['class'] }}">{{ $status['label'] }}</span>
+                                </p>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="font-weight-bold">Thông tin giao hàng</h6>
+                                <p><strong>Người nhận:</strong> {{ $order->recipient_name }}</p>
+                                <p><strong>Số điện thoại:</strong> {{ $order->recipient_phone }}</p>
+                                <p><strong>Địa chỉ:</strong> {{ $order->recipient_address }}</p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="font-weight-bold">Chi tiết sản phẩm</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th>Đơn giá</th>
+                                        <th>Số lượng</th>
+                                        <th>Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($order->orderDetails as $item)
+                                        @php
+                                            $product = $item->product;
+                                            $variant = $item->productVariant;
+                                            $image = $product->image
+                                                ? asset('storage/' . $product->image)
+                                                : asset('images/default.jpg');
+                                            $variantDetails = '';
+                                            if ($variant && $variant->attributeValues) {
+                                                $variantDetails = $variant->attributeValues
+                                                    ->map(fn($val) => $val->attribute->name . ': ' . $val->value)
+                                                    ->implode(', ');
+                                            }
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ $image }}" class="me-2 rounded"
+                                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <div>
+                                                        <div class="fw-bold">{{ $product->product_name }}</div>
+                                                        @if ($variantDetails)
+                                                            <div class="text-muted small">{{ $variantDetails }}</div>
+                                                        @endif
+                                                        <div class="text-muted small">Loại:
+                                                            {{ $product->category->category_name ?? 'Không rõ' }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ number_format($item->price, 0, ',', '.') }}₫</td>
+                                            <td>{{ $item->quantity }}</td>
+                                            <td class="text-danger fw-bold">
+                                                {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Tạm tính:</strong>
+                                    {{ number_format($order->orderDetails->sum(fn($i) => $i->price * $i->quantity)) }}₫
+                                </p>
+                                <p><strong>Phí vận chuyển:</strong> {{ number_format($order->shipping_fee) }}₫</p>
+                                <p><strong>Voucher:</strong> {{ $order->promotion ?? 'Không áp dụng' }}</p>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <h5><strong>Tổng cộng: <span
+                                            class="text-danger">{{ number_format($order->total_price) }}₫</span></strong>
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i>
+                            Chúng tôi sẽ liên hệ với bạn trong vòng 24 giờ để xác nhận đơn hàng.
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Đóng
+                        </button>
+
+                        <a href="{{ route('home') }}" class="btn btn-success">
+                            <i class="fas fa-shopping-cart"></i> Tiếp tục mua sắm
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    @endif
+@endif
 
 @include('clients.layouts.footer')
 {{-- AJAX cập nhật số lượng --}}
@@ -188,6 +338,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         const rows = document.querySelectorAll('.cart-item');
         const alertBox = document.getElementById('cart-error-alert');
+
+        const modalEl = document.getElementById('orderSuccessModal');
+        if (modalEl) {
+            const orderSuccessModal = new bootstrap.Modal(modalEl);
+            orderSuccessModal.show();
+        }
 
         function showError(message) {
             if (alertBox) {
@@ -393,5 +549,10 @@
             document.getElementById('checkout-form').appendChild(input);
         });
     });
+    const modalEl = document.getElementById('orderSuccessModal');
+    if (modalEl) {
+        const orderSuccessModal = new bootstrap.Modal(modalEl);
+        orderSuccessModal.show();
+    }
+    // Xóa session sau 5 giây (gợi ý – cần backend hỗ trợ thêm nếu cần thiết)
 </script>
-

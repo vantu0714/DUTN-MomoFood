@@ -104,7 +104,7 @@ return new class extends Migration
         Schema::create('order_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained('orders');
-            $table->foreignId('product_variant_id')->constrained('product_variants');
+            $table->foreignId('product_variant_id')->nullable()->constrained('product_variants');
             $table->integer('quantity');
             $table->decimal('price', 10, 2);
             $table->timestamps();
@@ -129,9 +129,10 @@ return new class extends Migration
         Schema::create('cart_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cart_id')->constrained('cart');
-            $table->foreignId('product_variant_id')->constrained('product_variants');
+            $table->foreignId('product_id')->constrained('products');
+            $table->foreignId('product_variant_id')->nullable()->constrained('product_variants');
             $table->integer('quantity');
-            $table->decimal('original_price', 10, 2);
+            $table->decimal('original_price', 10, 2)->nullable();
             $table->decimal('discounted_price', 10, 2);
             $table->decimal('total_price', 10, 2);
             $table->timestamps();

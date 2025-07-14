@@ -33,6 +33,15 @@
                     </div>
                 </div>
             </div>
+            @if ($errors->any())
+    <div class="alert alert-danger mt-3">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
             <!-- Enhanced Preview Section -->
             <div class="fade-in mb-4">
@@ -72,7 +81,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="preview-variants-body" style="font-size: 1.4rem; font-weight: 600;"></tbody>
-                           
+
                             </table>
                         </div>
                     </div>
@@ -144,14 +153,13 @@
                                                     <i class="fas fa-list-ul me-2"></i>
                                                     Các lựa chọn chi tiết
                                                 </label>
-
                                                 <div class="table-responsive">
                                                     <table class="table table-bordered table-hover shadow-sm">
                                                         <thead class="table-primary">
                                                             <tr style="height: 55px;">
                                                                 <th class="text-center py-3 fw-bold"
                                                                     style="font-size: 1.1rem;">
-                                                                    <i class="fas fa-expand-arrows-alt me-1"></i>Size
+                                                                    <i class="fas fa-expand-arrows-alt me-1"></i>Khối lượng
                                                                 </th>
                                                                 <th class="text-center py-3 fw-bold"
                                                                     style="font-size: 1.1rem;">
@@ -180,8 +188,8 @@
                                                                 <td class="py-3">
                                                                     <select
                                                                         name="variants[0][sub_attributes][0][attribute_value_id]"
-                                                                        class="form-select size-select"
-                                                                        style="height: 45px; padding: 0.75rem; font-size: 1.4rem; font-weight: 500;">
+                                                                        class="form-select weight-select"
+                                                                        style="height: 50px; padding: 0.75rem; font-size: 1.2rem; font-weight: 400;">
                                                                         @foreach ($sizeValues as $size)
                                                                             <option value="{{ $size->id }}">
                                                                                 {{ $size->value }}
