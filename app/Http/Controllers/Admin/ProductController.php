@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductOrigin;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -87,111 +88,119 @@ class ProductController extends Controller
         return view('admin.products.index', compact('products', 'categories', 'availableProductsCount', 'outOfStockProductsCount', 'totalProducts'));
     }
 
-    public function create()
-    {
-        $categories = Category::all();
-        return view('admin.products.create', compact('categories'));
-    }
-
-   public function store(Request $request)
+ public function create()
 {
-    $rules = [
-        'product_name' => 'required|string|max:255',
-        'product_code' => 'required|string|max:50|unique:products,product_code',
-        'category_id' => 'required|exists:categories,id',
-        'product_type' => 'required|in:simple,variant',
-        'description' => 'nullable|string',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-    ];
+    $categories = Category::all(); 
+    $origins = ProductOrigin::all();
 
-    if ($request->input('product_type') === 'simple') {
-        $rules['original_price'] = ['required', 'numeric', 'gt:0'];
-        $rules['discounted_price'] = ['nullable', 'numeric', 'gt:0'];
-        $rules['quantity_in_stock'] = ['required', 'integer', 'min:1'];
-    }
-
-    $messages = [
-        'product_name.required' => 'Tên sản phẩm là bắt buộc.',
-        'product_code.required' => 'Mã sản phẩm là bắt buộc.',
-        'product_code.unique' => 'Mã sản phẩm đã tồn tại.',
-        'category_id.required' => 'Vui lòng chọn danh mục.',
-        'product_type.required' => 'Vui lòng chọn loại sản phẩm.',
-        'original_price.gt' => 'Giá gốc phải lớn hơn 0.',
-        'discounted_price.gt' => 'Giá khuyến mãi phải lớn hơn 0.',
-        'discounted_price.lt' => 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
-        'quantity_in_stock.required' => 'Vui lòng nhập số lượng tồn kho.',
-        'quantity_in_stock.min' => 'Số lượng tồn kho phải lớn hơn 0.',
-    ];
-
-    $validator = Validator::make($request->all(), $rules, $messages);
-
-    // Rule bổ sung: discounted_price phải < original_price (nếu có)
-    $validator->after(function ($validator) use ($request) {
-        if (
-            $request->input('product_type') === 'simple' &&
-            $request->filled('discounted_price') &&
-            floatval($request->input('discounted_price')) >= floatval($request->input('original_price'))
-        ) {
-            $validator->errors()->add('discounted_price', 'Giá khuyến mãi phải nhỏ hơn giá gốc.');
-        }
-    });
-
-    if ($validator->fails()) {
-        return redirect()->back()
-            ->withErrors($validator)
-            ->withInput();
-    }
-
-    $validated = $validator->validated();
-
-    // Nếu sản phẩm có biến thể
-    if ($validated['product_type'] === 'variant') {
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products/temp', 'public');
-        }
-
-        unset($validated['original_price'], $validated['discounted_price'], $validated['quantity_in_stock']);
-
-        Session::put('pending_product', $validated);
-        return redirect()->route('admin.product_variants.create')
-            ->with('success', 'Tiếp tục thêm biến thể cho sản phẩm.');
-    }
-
-    // Sản phẩm đơn
-    if ($request->hasFile('image')) {
-        $validated['image'] = $request->file('image')->store('products', 'public');
-    }
-
-    // Nếu không có giá khuyến mãi hoặc không hợp lệ
-    if (
-        !$request->filled('discounted_price') ||
-        floatval($request->input('discounted_price')) <= 0 ||
-        floatval($request->input('discounted_price')) >= floatval($request->input('original_price'))
-    ) {
-        $validated['discounted_price'] = null;
-    }
-
-    $validated['status'] = $validated['quantity_in_stock'] > 0 ? 1 : 0;
-
-    Product::create($validated);
-
-    return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công.');
+    return view('admin.products.create', compact('categories', 'origins'));
 }
 
-
-
-
-    public function edit($id)
+    public function store(Request $request)
     {
-        $product = Product::with('variants.attributeValues.attribute')->findOrFail($id);
-        $categories = Category::all();
-        $attributes = Attribute::with('values')->get();
+        $rules = [
+            'product_name' => 'required|string|max:255',
+            'product_code' => 'required|string|max:50|unique:products,product_code',
+            'category_id' => 'required|exists:categories,id',
+            'product_type' => 'required|in:simple,variant',
+            'original_price' => 'nullable|numeric|min:1',
+            'discounted_price' => 'nullable|numeric|lt:original_price|gt:0',
+            'quantity_in_stock' => 'exclude_if:product_type,variant|required|integer|min:1',
+            'expiration_date' => 'nullable|date|after:today',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'origin_id' => 'required|exists:product_origins,id',
+        ];
 
-        // Kiểm tra sản phẩm có biến thể không
-        $hasVariants = $product->variants && $product->variants->isNotEmpty();
 
-        return view('admin.products.edit', compact('product', 'categories', 'attributes', 'hasVariants'));
+        if ($request->input('product_type') === 'simple') {
+            $rules['original_price'] = ['required', 'numeric', 'gt:0'];
+            $rules['discounted_price'] = ['nullable', 'numeric', 'gt:0'];
+            $rules['quantity_in_stock'] = ['required', 'integer', 'min:1'];
+        }
+
+        $messages = [
+            'product_name.required' => 'Tên sản phẩm là bắt buộc.',
+            'product_code.required' => 'Mã sản phẩm là bắt buộc.',
+            'product_code.unique' => 'Mã sản phẩm đã tồn tại.',
+            'category_id.required' => 'Vui lòng chọn danh mục.',
+            'product_type.required' => 'Vui lòng chọn loại sản phẩm.',
+            'original_price.gt' => 'Giá gốc phải lớn hơn 0.',
+            'discounted_price.gt' => 'Giá khuyến mãi phải lớn hơn 0.',
+            'discounted_price.lt' => 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
+            'quantity_in_stock.required' => 'Vui lòng nhập số lượng tồn kho.',
+            'quantity_in_stock.min' => 'Số lượng tồn kho phải lớn hơn 0.',
+            'expiration_date.after' => 'Ngày hết hạn phải sau hôm nay.',
+            'origin_id.required' => 'Vui lòng chọn xuất xứ.',
+            'origin_id.exists' => 'Xuất xứ không hợp lệ.',
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        // Rule bổ sung: discounted_price phải < original_price (nếu có)
+        $validator->after(function ($validator) use ($request) {
+            if (
+                $request->input('product_type') === 'simple' &&
+                $request->filled('discounted_price') &&
+                floatval($request->input('discounted_price')) >= floatval($request->input('original_price'))
+            ) {
+                $validator->errors()->add('discounted_price', 'Giá khuyến mãi phải nhỏ hơn giá gốc.');
+            }
+        });
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
+
+        // Nếu sản phẩm có biến thể
+        if ($validated['product_type'] === 'variant') {
+            if ($request->hasFile('image')) {
+                $validated['image'] = $request->file('image')->store('products/temp', 'public');
+            }
+
+            unset($validated['original_price'], $validated['discounted_price'], $validated['quantity_in_stock']);
+
+            Session::put('pending_product', $validated);
+            return redirect()->route('admin.product_variants.create')
+                ->with('success', 'Tiếp tục thêm biến thể cho sản phẩm.');
+        }
+
+        // Sản phẩm đơn
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        // Nếu không có giá khuyến mãi hoặc không hợp lệ
+        if (
+            !$request->filled('discounted_price') ||
+            floatval($request->input('discounted_price')) <= 0 ||
+            floatval($request->input('discounted_price')) >= floatval($request->input('original_price'))
+        ) {
+            $validated['discounted_price'] = null;
+        }
+
+        $validated['status'] = $validated['quantity_in_stock'] > 0 ? 1 : 0;
+
+        Product::create($validated);
+
+        return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công.');
     }
+   public function edit($id)
+{
+    $product = Product::with('variants.attributeValues.attribute', 'origin')->findOrFail($id);
+    $categories = Category::all();
+    $attributes = Attribute::with('values')->get();
+    $origins = ProductOrigin::all(); 
+    // Kiểm tra sản phẩm có biến thể không
+    $hasVariants = $product->variants && $product->variants->isNotEmpty();
+
+    return view('admin.products.edit', compact('product', 'categories', 'attributes', 'hasVariants', 'origins'));
+}
+
 
     public function update(Request $request, $id)
     {
@@ -201,6 +210,7 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code,' . $product->id,
             'category_id' => 'required|exists:categories,id',
+             'origin_id' => 'required|exists:product_origins,id', 
             'description' => 'nullable|string',
             'original_price' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:99.99',
@@ -278,18 +288,20 @@ class ProductController extends Controller
         return view('products.variants', compact('product'));
     }
     public function show($id)
-    {
-        $product = Product::with([
-            'category',
-            'variants.attributeValues.attribute'
-        ])->findOrFail($id);
+{
+    $product = Product::with([
+        'category',
+        'origin', // <--- Thêm dòng này
+        'variants.attributeValues.attribute'
+    ])->findOrFail($id);
 
-        // Gọi riêng để đảm bảo lấy đúng thứ tự
-        $product->setRelation(
-            'variants',
-            $product->variants()->orderBy('price', 'asc')->get()
-        );
+    // Gọi riêng để đảm bảo lấy đúng thứ tự
+    $product->setRelation(
+        'variants',
+        $product->variants()->orderBy('price', 'asc')->get()
+    );
 
-        return view('admin.products.show', compact('product'));
-    }
+    return view('admin.products.show', compact('product'));
+}
+
 }

@@ -25,5 +25,8 @@ class DatabaseSeeder extends Seeder
             AttributeValueSeeder::class,
             SizeAttributeSeeder::class,
         ]);
+        $this->call([
+            ProductOriginsSeeder::class,
+        ]);
     }
 }

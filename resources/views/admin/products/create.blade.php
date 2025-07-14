@@ -114,11 +114,46 @@
                                                 </div>
                                             @enderror
                                         </div>
+                                        <!-- Expiration Date -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold text-dark">
+                                                <i class="fas fa-calendar-alt text-primary me-2"></i>Ngày hết hạn
+                                            </label>
+                                            <input type="date" name="expiration_date"
+                                                class="form-control form-control-lg @error('expiration_date') is-invalid @enderror"
+                                                value="{{ old('expiration_date') }}">
+                                            @error('expiration_date')
+                                                <div class="invalid-feedback">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold text-dark">
+                                                <i class="fas fa-globe-asia text-primary me-2"></i>Xuất xứ
+                                            </label>
+                                            <select name="origin_id"
+                                                class="form-control form-control-lg @error('origin_id') is-invalid @enderror"
+                                                required>
+                                                <option value="">-- Chọn xuất xứ --</option>
+                                                @foreach ($origins as $origin)
+                                                    <option value="{{ $origin->id }}"
+                                                        {{ old('origin_id') == $origin->id ? 'selected' : '' }}>
+                                                        {{ $origin->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('origin_id')
+                                                <div class="invalid-feedback">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
 
                                         <!-- Product Type -->
                                         <div class="col-md-6">
                                             <label class="form-label fw-semibold text-dark">
-                                                <i class="fas fa-layer-group text-primary me-2"></i>Loại sản phẩm
+                                                <i class="fas fa-layer-group text-primary me-"></i>Loại sản phẩm
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <select name="product_type"
@@ -160,6 +195,7 @@
                                         </div>
                                     @enderror
                                 </div>
+
                             </div>
 
                             <!-- Pricing Card -->
@@ -249,6 +285,7 @@
                                                 </div>
                                             @enderror
                                         </div>
+
                                     </div>
                                 </div>
                             </div>

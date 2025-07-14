@@ -154,6 +154,17 @@
                                     </div>
                                 </div>
                             @endif
+                           @if ($product->origin)
+    <div class="col-sm-6">
+        <div class="info-item">
+            <label class="form-label text-dark fw-semibold mb-1">Xuất xứ</label>
+            <div class="fw-semibold text-dark">
+                <i class="fas fa-globe-asia me-1 text-primary"></i>
+                {{ $product->origin->name }}
+            </div>
+        </div>
+    </div>
+@endif
 
                             @if ($product->description)
                                 <div class="col-12">
