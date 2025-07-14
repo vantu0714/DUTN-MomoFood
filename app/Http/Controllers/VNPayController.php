@@ -15,7 +15,7 @@ use Symfony\Component\Console\Input\Input;
 
 class VNPayController extends Controller
 {
-    public function create(Request $request)
+    public function create(Request $request, Order $order)
     {
         $user = Auth::user();
 
@@ -24,16 +24,9 @@ class VNPayController extends Controller
         }
 
         $grandTotal = $request->grand_total;
-        $recipient_name = $request->recipient_name;
-        $recipient_phone = $request->recipient_phone;
-        $recipient_address = $request->recipient_address;
-        $note = $request->note ?? 0;
-        $shipping_fee = $request->shipping_fee;
-        $promotion = $request->promotion ?? 0;
 
         $orderInfo =
-            $user->id . '-' . $recipient_name . '-' . $recipient_phone . '-' .
-            $recipient_address . '-' . $note . '-' . $shipping_fee . '-' . $grandTotal . '-' . $promotion
+            $user->id . '-' . $grandTotal . '-' . $order->id
         ;
 
         // Bắt đầu xử lý redirect qua VNPAY
@@ -103,6 +96,17 @@ class VNPayController extends Controller
 
     public function vnpayReturn(Request $request)
     {
+        $vnp_ResponseCode = $request->input('vnp_ResponseCode');
+        $vnp_TransactionStatus = $request->input('vnp_TransactionStatus');
+
+        // Nếu thanh toán thất bại
+        if ($vnp_ResponseCode != '00') {
+            $message = $this->getVnpErrorMessage($vnp_ResponseCode);
+
+            return view('clients.vnpay_fail', compact('message'));
+        }
+
+
         $vnp_HashSecret = env('VNPAY_HASH_SECRET');
         $vnp_SecureHash = $request->input('vnp_SecureHash');
 
@@ -127,82 +131,65 @@ class VNPayController extends Controller
             return view('clients.vnpay_fail');
         }
 
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        if (!isset($inputData['vnp_OrderInfo'])) {
+            if (!isset($inputData['vnp_OrderInfo'])) {
+                return view('clients.vnpay_fail');
+            }
+
+            $orderParts = explode('-', $inputData['vnp_OrderInfo']);
+
+            if (count($orderParts) <= 1) {
+                return view('clients.vnpay_fail');
+            }
+
+            $userId = filter_var(trim($orderParts[0], '"'), FILTER_VALIDATE_INT);
+
+            $user = User::query()->find($userId);
+
+            if (!$user) {
+                return view('clients.vnpay_fail');
+            }
+
+            $grandTotal = trim($orderParts[1], '"');
+            $order_id = $orderParts[2] == 0 ? '' : trim($orderParts[2], '"');
+
+            if (!$order_id) {
+                return view('clients.vnpay_fail');
+            } else {
+                $order = Order::where('id', $order_id)->where('user_id', $userId)->first();
+                if (!$order) {
+                    return view('clients.vnpay_fail');
+                }
+            }
+
+            $order->payment_status = 'paid';
+            $order->save();
+
+            DB::commit();
+
+            return view('clients.vnpay_success');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
             return view('clients.vnpay_fail');
         }
-
-        $orderParts = explode('-', $inputData['vnp_OrderInfo']);
-
-        if (count($orderParts) <= 7) {
-            return view('clients.vnpay_fail');
-        }
-
-        $userId = filter_var(trim($orderParts[0], '"'), FILTER_VALIDATE_INT);
-
-        $user = User::query()->find($userId);
-
-        if (!$user) {
-            return view('clients.vnpay_fail');
-        }
-
-        $grandTotal = trim($orderParts[6], '"');
-        $recipient_name = $orderParts[1];
-        $recipient_phone = trim($orderParts[2], '"');
-        $recipient_address = $orderParts[3];
-        $note = $orderParts[4] == 0 ? '' : $orderParts[4];
-        $shipping_fee = $orderParts[5] ?? 0;
-        $promotion = $orderParts[7] == 0 ? '' : trim($orderParts[7], '"');
-        $cart_user = Cart::with('items')->where('user_id', $userId)->first();
-
-        if (!$cart_user) {
-            return view('clients.vnpay_fail');
-        }
-
-        $order = Order::query()->create([
-            'user_id' => $userId,
-            'total_price' => $grandTotal,
-            'recipient_name' => $recipient_name,
-            'recipient_phone' => $recipient_phone,
-            'recipient_address' => $recipient_address,
-            'note' => $note,
-            'shipping_fee' => $shipping_fee,
-            'promotion' => $promotion,
-            'payment_method' => 'vnpay',
-            'payment_status' => 'paid',
-            'status' => 1
-        ]);
-
-        $dataOrderDetail = [];
-
-        foreach ($cart_user->items as $item) {
-            $dataOrderDetail[] = [
-                'order_id' => $order->id,
-                'product_id' => $item->product_id,
-                'product_variant_id' => $item->product_variant_id,
-                'quantity' => $item->quantity,
-                'price' => $item->discounted_price,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-        OrderDetail::query()->insert($dataOrderDetail);
-
-        $cart_user->items()->delete();
-
-
-        if ($promotion) {
-            $promotion = Promotion::query()->where('code', $promotion)->first();
-
-            $promotion->used_count = $promotion->used_count + 1;
-            $promotion->usage_limit = $promotion->usage_limit - 1;
-            $promotion->save();
-        }
-
-        DB::commit();
-
-        return view('clients.vnpay_success');
     }
+
+    private function getVnpErrorMessage($code)
+    {
+        $messages = [
+            '00' => 'Giao dịch thành công.',
+            '02' => 'Giao dịch không thành công do tài khoản không tồn tại.',
+            '06' => 'Sai số PIN.',
+            '24' => 'Khách hàng hủy giao dịch.',
+            '91' => 'Ngân hàng không phản hồi.',
+            'default' => 'Giao dịch không thành công. Vui lòng thử lại.'
+        ];
+
+        return $messages[$code] ?? $messages['default'];
+    }
+
 
 }

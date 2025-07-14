@@ -68,6 +68,56 @@ class HomeController extends Controller
         return view('clients.search', compact('products', 'keyword'));
     }
 
+    public function searchAjax(Request $request)
+    {
+        $keyword = $request->input('keyword');
+
+        if (strlen($keyword) < 2) {
+            return response()->json(['products' => []]);
+        }
+
+        $products = Product::with('category')
+            ->where('status', 1)
+            ->where(function ($q) use ($keyword) {
+                $q->where('product_name', 'like', "%$keyword%")
+                    ->orWhere('product_code', 'like', "%$keyword%")
+                    ->orWhere('description', 'like', "%$keyword%")
+                    ->orWhere('ingredients', 'like', "%$keyword%");
+            })
+            ->where(function ($q) {
+                $q->where(function ($q1) {
+                    $q1->where('product_type', 'simple')
+                        ->where('quantity_in_stock', '>', 0);
+                })->orWhere(function ($q2) {
+                    $q2->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q3) {
+                            $q3->where('quantity_in_stock', '>', 0);
+                        });
+                });
+            })
+            ->take(8)
+            ->get();
+
+        $results = $products->map(function ($product) {
+            // Kiểm tra có giá khuyến mãi không
+            $hasDiscount = !is_null($product->discounted_price) && $product->discounted_price > 0;
+
+            return [
+                'id' => $product->id,
+                'name' => $product->product_name,
+                'code' => $product->product_code,
+                'original_price' => $product->original_price,
+                'discounted_price' => $product->discounted_price,
+                'has_discount' => $hasDiscount,
+                'image' => $product->image ? asset('storage/' . $product->image) : asset('images/no-image.png'),
+                'category' => $product->category ? $product->category->category_name : 'Chưa phân loại',
+                'url' => route('product-detail.show', $product->id),
+                'quantity_in_stock' => $product->quantity_in_stock ?? 0
+            ];
+        });
+
+        return response()->json(['products' => $results]);
+    }
 
     public function filterByCategory(Request $request)
     {
@@ -83,11 +133,11 @@ class HomeController extends Controller
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
-                        $q2->where('product_type', 'variant')
-                            ->whereHas('variants', function ($q3) {
-                                $q3->where('quantity_in_stock', '>', 0);
-                            });
-                    });
+                    $q2->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q3) {
+                            $q3->where('quantity_in_stock', '>', 0);
+                        });
+                });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()

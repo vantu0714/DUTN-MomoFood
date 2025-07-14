@@ -125,44 +125,60 @@
                         <h6 class="mb-0 fw-semibold">Sản phẩm trong đơn hàng</h6>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0" style="table-layout: fixed;">
+                        <table class="table table-hover mb-0">
                             <thead class="bg-light">
                                 <tr>
                                     <th width="5%" class="ps-2 pe-2">#</th>
                                     <th width="12%" class="ps-2 pe-2">Ảnh</th>
-                                    <th width="18%" class="ps-2 pe-2">Sản phẩm</th>
+                                    <th width="25%" class="ps-2 pe-2">Sản phẩm</th>
                                     <th width="8%" class="ps-2 pe-2 text-center">SL</th>
-                                    <th width="17%" class="ps-2 pe-2 text-end">Đơn giá</th>
+                                    <th width="20%" class="ps-2 pe-2 text-end">Đơn giá</th>
                                     <th width="20%" class="ps-2 pe-2 text-end">Thành tiền</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($order->orderDetails as $index => $item)
+                                    @php
+                                        $product = $item->product;
+                                        $variant = $item->productVariant;
+
+                                        $variantAttributes = [];
+                                        if ($variant && $variant->attributeValues) {
+                                            foreach ($variant->attributeValues as $value) {
+                                                $variantAttributes[] = $value->attribute->name . ': ' . $value->value;
+                                            }
+                                        }
+                                    @endphp
                                     <tr>
                                         <td class="ps-2 pe-2">{{ $index + 1 }}</td>
                                         <td class="ps-2 pe-2">
-                                            @if ($item->product && $item->product->image)
-                                                <img src="{{ asset('storage/' . $item->product->image) }}"
-                                                    alt="{{ $item->product->product_name }}" class="img-thumbnail"
-                                                    style="width: 50px; height: 50px; object-fit: cover;">
+                                            @if ($product && $product->image)
+                                                <img src="{{ asset('storage/' . $product->image) }}"
+                                                    alt="{{ $product->product_name }}" class="img-thumbnail"
+                                                    style="width: 60px; height: 60px; object-fit: cover;">
                                             @else
                                                 <div class="bg-light d-flex align-items-center justify-content-center"
-                                                    style="width: 50px; height: 50px;">
+                                                    style="width: 60px; height: 60px;">
                                                     <i class="fas fa-image text-muted"></i>
                                                 </div>
                                             @endif
                                         </td>
                                         <td class="ps-2 pe-2">
                                             <div class="d-flex flex-column">
-                                                <span>{{ $item->product->product_name ?? '[Đã xoá]' }}</span>
-                                                @if ($item->productVariant && $item->productVariant->sku)
-                                                    <small class="text-muted">Loại:
-                                                        {{ $item->productVariant->sku }}</small>
+                                                <strong class="mb-1">{{ $product->product_name ?? '[Đã xoá]' }}</strong>
+                                                @if ($variant && count($variantAttributes) > 0)
+                                                    <div class="mt-1">
+                                                        @foreach ($variantAttributes as $attribute)
+                                                            <span class="badge bg-info text-dark me-1 mb-1">
+                                                                {{ $attribute }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
                                                 @endif
                                             </div>
                                         </td>
                                         <td class="ps-2 pe-2 text-center">
-                                            <span class="badge bg-orange">{{ $item->quantity }}</span>
+                                            <span class="badge bg-orange text-white">{{ $item->quantity }}</span>
                                         </td>
                                         <td class="ps-2 pe-2 text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
                                         <td class="ps-2 pe-2 text-end fw-bold text-orange">
@@ -255,6 +271,10 @@
                 background-color: var(--orange-primary) !important;
             }
 
+            .text-orange {
+                color: var(--orange-primary) !important;
+            }
+
             .border-orange {
                 border-color: var(--orange-primary) !important;
             }
@@ -278,6 +298,32 @@
 
             .nav-borders .nav-link:hover {
                 color: var(--orange-primary);
+            }
+
+            /* Styling cho badge thuộc tính */
+            .badge.bg-info {
+                background-color: #17a2b8 !important;
+                color: #fff !important;
+                font-size: 0.875rem;
+                padding: 0.25rem 0.5rem;
+                border-radius: 0.25rem;
+            }
+
+            .badge.bg-orange {
+                background-color: var(--orange-primary) !important;
+                color: white !important;
+            }
+
+            /* Responsive cho bảng */
+            @media (max-width: 768px) {
+                .table-responsive table {
+                    font-size: 0.875rem;
+                }
+
+                .badge {
+                    font-size: 0.75rem;
+                    padding: 0.125rem 0.25rem;
+                }
             }
         </style>
     @endpush

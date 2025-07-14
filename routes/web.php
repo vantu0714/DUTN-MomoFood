@@ -32,6 +32,7 @@ use App\Http\Controllers\ThongKeController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [HomeController::class, 'search'])->name('clients.search');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/search-ajax', [HomeController::class, 'searchAjax'])->name('clients.search.ajax');
 Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
 Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
 Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
@@ -103,6 +104,7 @@ Route::middleware(['auth', 'client'])->group(function () {
     // Checkout
     Route::get('/order', [ClientsOrderController::class, 'index'])->name('clients.order');
     Route::post('/store', [ClientsOrderController::class, 'store'])->name('order.store');
+    Route::get('/success/{id}', [ClientsOrderController::class, 'success'])->name('order.success');
     Route::post('/apply-coupon', [ClientsOrderController::class, 'applyCoupon'])->name('order.applyCoupon');
     Route::get('/remove-coupon', [ClientsOrderController::class, 'removeCoupon'])->name('order.removeCoupon');
 

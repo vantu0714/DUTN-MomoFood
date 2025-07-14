@@ -23,31 +23,38 @@
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title mb-3">Tìm kiếm đơn hàng</h5>
-                <div class="row">
-                    <div class="col-md-3">
-                        <select class="form-select">
-                            <option selected>Danh mục</option>
-                            <option>Tất cả</option>
-                            <option>Đã thanh toán</option>
-                            <option>Chưa thanh toán</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select">
-                            <option selected>Trạng thái</option>
-                            <option>Tất cả</option>
-                            <option>Đang xử lý</option>
-                            <option>Đã hoàn thành</option>
-                            <option>Đã hủy</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Nhập tên sản phẩm, mã đơn hàng...">
-                            <button class="btn btn-primary" type="button">Tìm kiếm</button>
+                <form method="GET" action="{{ route('admin.orders.index') }}">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <select class="form-select" name="payment_status">
+                                <option value="">Danh mục</option>
+                                <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
+                                <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>Chưa thanh toán</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="order_status">
+                                <option value="all">Trạng thái</option>
+                                <option value="1" {{ request('order_status') == '1' ? 'selected' : '' }}>Chưa xác nhận</option>
+                                <option value="2" {{ request('order_status') == '2' ? 'selected' : '' }}>Đã xác nhận</option>
+                                <option value="3" {{ request('order_status') == '3' ? 'selected' : '' }}>Đang giao</option>
+                                <option value="4" {{ request('order_status') == '4' ? 'selected' : '' }}>Hoàn thành</option>
+                                <option value="5" {{ request('order_status') == '5' ? 'selected' : '' }}>Hoàn hàng</option>
+                                <option value="6" {{ request('order_status') == '6' ? 'selected' : '' }}>Hủy đơn</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" name="keyword" value="{{ request('keyword') }}" class="form-control" placeholder="Nhập tên người nhận, mã đơn hàng...">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-filter me-1"></i>
+                                    Lọc
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </form>
+                
             </div>
         </div>
 
@@ -116,11 +123,16 @@
 
                                         <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                                         <td>
-                                            <a href="{{ route('admin.orders.show', $order->id) }}"
-                                                class="btn btn-sm btn-primary">Xem</a>
-                                            <a href="{{ route('admin.orders.edit', $order->id) }}"
-                                                class="btn btn-sm btn-warning">Sửa</a>
-
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <a href="{{ route('admin.orders.show', $order->id) }}"
+                                                    class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('admin.orders.edit', $order->id) }}"
+                                                    class="btn btn-sm btn-outline-warning">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
