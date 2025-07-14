@@ -137,137 +137,46 @@
 <!-- Fruits Shop Start -->
 <div class="container-fluid fruite py-5">
     <div class="container py-5">
-        <div class="row">
-            <!-- DANH MỤC BÊN TRÁI -->
-            <div class="col-lg-3 mb-4 mb-lg-0">
-                <div class="bg-light p-3 rounded shadow-sm sticky-sidebar">
+        <!-- DANH MỤC NGANG -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="bg-light p-3 rounded shadow-sm">
                     <h5 class="mb-3 text-primary"><i class="bi bi-list-ul me-2"></i>Danh mục sản phẩm</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item {{ request()->get('category_id') == '' ? 'active' : '' }}">
-                            <a href="javascript:void(0);" class="text-decoration-none text-dark category-tab"
-                                data-category="">Tất cả</a>
+                    <ul class="nav nav-pills flex-wrap gap-2" id="category-list">
+                        <li class="nav-item">
+                            <a class="nav-link active category-tab" href="#" data-category="">Tất cả</a>
                         </li>
                         @foreach ($categories as $category)
                             <li class="nav-item">
-                                <a class="d-flex m-2 py-2 bg-light rounded-pill category-tab"
-                                    data-category="{{ $category->id }}" href="javascript:void(0);">
-                                    <span class="text-dark"
-                                        style="width: 130px;">{{ $category->category_name }}</span>
+                                <a class="nav-link category-tab" href="#" data-category="{{ $category->id }}">
+                                    {{ $category->category_name }}
                                 </a>
                             </li>
                         @endforeach
                     </ul>
                 </div>
             </div>
+        </div>
 
-
-            <!-- DANH SÁCH SẢN PHẨM BÊN PHẢI -->
-            <div class="col-lg-9">
-                <div class="tab-class text-center">
+        <!-- DANH SÁCH SẢN PHẨM -->
+        <div class="row">
+            <div class="col-12">
+                <div class="tab-class text-center mt-4" id="best-selling-section">
                     <div class="row g-4">
                         <div class="col-12 text-start">
                             <h2 class="text-success">MÓN ĂN NỔI BẬT</h2>
                         </div>
                     </div>
-                   <div class="tab-content">
-    <div id="tab-1" class="tab-pane fade show active p-0">
-        <div class="row g-4">
-            @foreach ($products as $product)
-                @php
-                    $firstVariant = null;
-                    $price = null;
-                    $original = null;
-
-                    if ($product->product_type === 'variant') {
-                        $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
-                        $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
-                        $original = $firstVariant?->price ?? 0;
-                    } else {
-                        $price = $product->discounted_price ?? $product->original_price;
-                        $original = $product->original_price;
-                    }
-
-                    $variants = $product->product_type === 'variant'
-                        ? $product->variants->map(fn($v) => [
-                            'id' => $v->id,
-                            'flavor' => $v->flavor,
-                            'size' => $v->size,
-                            'price' => $v->price,
-                            'discounted_price' => $v->discounted_price,
-                            'quantity' => $v->quantity_in_stock,
-                        ])
-                        : [];
-                @endphp
-
-                <div class="col-12 col-md-6 col-lg-4 col-xl-3">
-                    <div class="card h-100 shadow-sm border border-secondary rounded-4 d-flex flex-column">
-                        <a href="{{ route('product-detail.show', $product->id) }}">
-                            <div class="product-img-wrapper">
-                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                    alt="{{ $product->product_name }}"
-                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                    class="img-fluid w-100">
-                            </div>
-                        </a>
-
-                        <div class="badge bg-secondary text-white position-absolute top-0 start-0 m-2 rounded-pill px-3 py-1">
-                            {{ $product->category?->category_name ?? 'Không rõ' }}
-                        </div>
-
-                        <div class="card-body d-flex flex-column justify-content-between">
-                            <div>
-                                <h6 class="fw-bold text-dark text-truncate" title="{{ $product->product_name }}">
-                                    {{ $product->product_name }}
-                                </h6>
-                                <p class="text-muted small mb-2">Mã: {{ $product->product_code }}</p>
-                            </div>
-
-                            <div class="mb-2">
-                                @if ($price && $original && $price < $original)
-                                    <div class="text-danger fw-bold fs-5">
-                                        {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                    </div>
-                                    <div class="text-muted text-decoration-line-through small">
-                                        {{ number_format($original, 0, ',', '.') }} VND
-                                    </div>
-                                @elseif ($price)
-                                    <div class="text-danger fw-bold fs-5">
-                                        {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                    </div>
-                                @else
-                                    <div class="text-muted">Liên hệ để biết giá</div>
-                                @endif
-                            </div>
-
-                            <div class="d-flex justify-content-end mt-auto">
-                                <button type="button" class="btn btn-white open-cart-modal"
-                                    data-product-id="{{ $product->id }}"
-                                    data-product-name="{{ $product->product_name }}"
-                                    data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                    data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                    data-product-price="{{ $price ?? 0 }}"
-                                    data-product-original-price="{{ $original ?? 0 }}"
-                                    data-product-description="{{ $product->description }}"
-                                    data-variants='@json($variants)'
-                                    data-bs-toggle="modal" data-bs-target="#cartModal">
-                                    <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                </button>
-                            </div>
-                        </div>
+                    <div id="filtered-products">
+                        @include('clients.components.filtered-products')
                     </div>
                 </div>
-            @endforeach
-        </div> {{-- row --}}
-    </div>
-</div>
-
-                </div>
-            </div> <!-- End right column -->
+            </div>
         </div>
     </div>
 </div>
-<!-- Fruits Shop End -->
 
+<!-- Fruits Shop End -->
 
 
 
@@ -378,7 +287,8 @@
                                         @csrf
                                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                                         @if ($product->product_type === 'variant' && $firstVariant)
-                                            <input type="hidden" name="product_variant_id" value="{{ $firstVariant->id }}">
+                                            <input type="hidden" name="product_variant_id"
+                                                value="{{ $firstVariant->id }}">
                                         @endif
                                         <input type="hidden" name="quantity" value="1">
                                         <button type="submit" class="btn btn-white">
@@ -855,7 +765,8 @@
                 productImageEl.src = productImage;
                 productCategoryEl.textContent = productCategory;
                 productPriceEl.textContent = parseInt(productPrice).toLocaleString();
-                productOriginalPriceEl.textContent = productOriginalPrice ? parseInt(productOriginalPrice).toLocaleString() + ' VND' : '';
+                productOriginalPriceEl.textContent = productOriginalPrice ? parseInt(
+                    productOriginalPrice).toLocaleString() + ' VND' : '';
                 productDescEl.textContent = productDescription || '';
 
                 // Render biến thể
@@ -896,7 +807,7 @@
         });
 
         // Bắt buộc chọn biến thể trước khi submit
-        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function (e) {
+        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
             const selectedVariant = document.querySelector('input[name="product_variant_id"]:checked');
             if (!selectedVariant && variantOptionsEl.innerHTML !== '') {
                 e.preventDefault();
@@ -905,11 +816,6 @@
         });
     });
 </script>
-
-
-
-
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -968,6 +874,7 @@
         @endif
     });
 </script>
+
 @include('clients.layouts.footer')
 
 
@@ -1003,6 +910,7 @@
         }
     }
 </style>
+
 <style>
     .product-img-wrapper {
         height: 180px;
@@ -1035,6 +943,85 @@
     .btn-white:hover {
         background-color: #ffc107;
     }
+
+
+    /* // form */
+    .category-tab.active {
+        background-color: #dc6d5c !important;
+        color: white;
+    }
+
+    .category-tab.active span {
+        color: white !important;
+    }
 </style>
 
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const categoryTabs = document.querySelectorAll('.category-tab');
+        const filteredProducts = document.querySelector('#filtered-products');
+
+        // Bắt sự kiện click vào danh mục
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault(); // Ngăn nhảy trang (nếu là thẻ <a>)
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                const categoryId = this.dataset.category;
+
+                fetch(`/filter-category?category=${categoryId}`)
+                    .then(res => res.text())
+                    .then(data => {
+                        filteredProducts.innerHTML = data;
+                        // Đã loại bỏ scroll nhảy lên
+                    })
+                    .catch(err => console.error('Lỗi lọc danh mục:', err));
+            });
+        });
+
+        // Bắt sự kiện phân trang (AJAX)
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('.pagination a');
+            if (link) {
+                e.preventDefault();
+
+                fetch(link.href)
+                    .then(res => res.text())
+                    .then(data => {
+                        filteredProducts.innerHTML = data;
+                        // Không scroll, giữ nguyên vị trí
+                    })
+                    .catch(err => console.error('Lỗi phân trang:', err));
+            }
+        });
+    });
+</script>
+
+<style>
+    .sticky-sidebar {
+        position: sticky;
+        top: 100px;
+        max-height: 450px;
+        overflow-y: auto;
+        padding-right: 5px;
+        z-index: 100;
+    }
+
+    #category-list .nav-link {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        color: #333;
+        border-radius: 30px;
+        padding: 6px 15px;
+        transition: all 0.2s;
+    }
+
+    #category-list .nav-link.active,
+    #category-list .nav-link:hover {
+        background-color: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+</style>

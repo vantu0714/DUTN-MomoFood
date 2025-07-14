@@ -33,9 +33,10 @@ class HomeController extends Controller
                 });
             });
 
-        if ($request->has('category')) {
-            $query->where('category_id', $request->category);
+        if ($request->has('category_id') && $request->category_id !== '') {
+            $query->where('category_id', $request->category_id);
         }
+
 
         $products = $query->paginate(12);
         $categories = Category::withCount('products')->get();
@@ -48,7 +49,7 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
-       
+
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
 
         return view('clients.home', compact('products', 'categories', 'bestSellingProducts', 'comments'));
@@ -78,7 +79,7 @@ class HomeController extends Controller
                 // Sản phẩm đơn còn hàng
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
-                        ->where('quantity_in_stock', '>', 0);
+                        ->where('quantity', '>', 0); // Sửa lại đúng tên cột
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
@@ -91,6 +92,7 @@ class HomeController extends Controller
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()
             ->paginate(12);
+
 
         return view('clients.components.filtered-products', compact('products'))->render();
     }
