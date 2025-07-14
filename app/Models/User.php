@@ -103,4 +103,8 @@ class User extends Authenticatable
     {
         return $this->hasOne(Recipient::class)->where('is_default', true);
     }
+     public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

@@ -25,7 +25,12 @@ class Product extends Model
         'category_id',
         'quantity_in_stock',
         'product_type',
+         'origin_id',
     ];
+    protected $casts = [
+        'expiration_date' => 'date',
+    ];
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
@@ -108,4 +113,9 @@ class Product extends Model
     {
         return $this->original_price ?? $this->variants()->min('price');
     }
+    public function origin()
+{
+    return $this->belongsTo(ProductOrigin::class, 'origin_id');
+}
+
 }

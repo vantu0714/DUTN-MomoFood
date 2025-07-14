@@ -158,6 +158,24 @@
                                         </div>
                                     </div>
                                 @endif
+                                <div class="col-md-6 mb-3">
+                                    <label for="origin_id" class="form-label fw-semibold">Xuất xứ <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select @error('origin_id') is-invalid @enderror" id="origin_id"
+                                        name="origin_id">
+                                        <option value="">Chọn xuất xứ</option>
+                                        @foreach ($origins as $origin)
+                                            <option value="{{ $origin->id }}"
+                                                {{ old('origin_id', $product->origin_id) == $origin->id ? 'selected' : '' }}>
+                                                {{ $origin->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('origin_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
                                 <div class="col-md-12 mb-3">
                                     <label for="description" class="form-label fw-semibold">Mô tả sản phẩm</label>
                                     <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
@@ -599,7 +617,7 @@
             })
             .then(variant => {
                 // Gán dữ liệu
-               document.getElementById('editPrice').value = parsePrice(variant.price);
+                document.getElementById('editPrice').value = parsePrice(variant.price);
 
                 document.getElementById('editQuantity').value = variant.quantity_in_stock ?? 0;
 
@@ -640,12 +658,13 @@
                 alert('Lỗi khi lấy dữ liệu biến thể');
             });
     };
+
     function parsePrice(raw) {
-    if (typeof raw === 'string') {
-        return parseInt(raw.replace(/[.,]/g, ''), 10);
+        if (typeof raw === 'string') {
+            return parseInt(raw.replace(/[.,]/g, ''), 10);
+        }
+        return raw || 0;
     }
-    return raw || 0;
-}
 
     // Tạo SKU từ mã sản phẩm, vị và size
     function generateSku() {

@@ -104,8 +104,61 @@
                                 <i class="fab fa-twitter"></i>
                             </a>
                         </div>
-                    </div>
+                        <div class="mt-5">
+                            <h4 class="fw-bold mb-3 text-uppercase section-title">Chi tiết sản phẩm</h4>
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th class="text-muted" style="width: 150px;">Danh mục</th>
+                                        <td>
+                                            @php
+                                                $categories = [];
+                                                $category = $product->category;
 
+                                                while ($category) {
+                                                    $categories[] = $category;
+                                                    $category = $category->parent;
+                                                }
+
+                                                $categories = array_reverse($categories);
+                                            @endphp
+
+                                            @foreach ($categories as $index => $cat)
+                                                <a
+                                                    href="{{ route('shop.category', $cat->id) }}">{{ $cat->category_name }}</a>
+                                                @if ($index < count($categories) - 1)
+                                                    &nbsp;&gt;&nbsp;
+                                                @endif
+                                            @endforeach
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Kho</th>
+                                        <td>{{ $product->quantity_in_stock ?? 'Không rõ' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Xuất xứ</th>
+                                        <td>{{ $product->origin ? $product->origin->name : 'Đang cập nhật' }}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <th class="text-muted">Hạn sử dụng</th>
+                                        <td>
+                                            @if ($product->expiration_date)
+                                                {{ \Carbon\Carbon::parse($product->expiration_date)->format('d/m/Y') }}
+                                                (còn
+                                                {{ \Carbon\Carbon::now()->diffInDays($product->expiration_date, false) }}
+                                                ngày)
+                                            @else
+                                                Không rõ
+                                            @endif
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                     <div class="col-lg-6 product-info">
                         <h3 class="fw-bold text-dark mb-3 section-title">{{ $product->product_name }}</h3>
                         <!-- START: Đánh giá tổng quan -->
@@ -420,10 +473,6 @@
         </div>
     </div>
 </div>
-<!-- Single Product End -->
-{{-- SCRIPT CHỌN SAO --}}
-
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
