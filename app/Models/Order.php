@@ -57,4 +57,8 @@ class Order extends Model
 
         return $code;
     }
+    public function orders()
+{
+    return $this->hasMany(Order::class);
+}
 }

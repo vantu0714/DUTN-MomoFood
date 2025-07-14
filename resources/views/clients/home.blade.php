@@ -174,39 +174,33 @@
                             <div class="row g-4">
                                 @foreach ($products as $product)
                                     @php
-                                        $variants = [];
+                                        $firstVariant = null;
                                         $price = null;
                                         $original = null;
 
                                         if ($product->product_type === 'variant') {
-                                            $availableVariants = $product->variants->where('quantity_in_stock', '>', 0);
-
-                                            $minPrice = $availableVariants->min(
-                                                fn($v) => $v->discounted_price ?? ($v->price ?? INF),
-                                            );
-                                            $maxPrice = $availableVariants->max(
-                                                fn($v) => $v->discounted_price ?? ($v->price ?? 0),
-                                            );
-
-                                            $price = $minPrice;
-                                            $original = $maxPrice;
-
-                                            $variants = $availableVariants->map(
-                                                fn($v) => [
-                                                    'id' => $v->id,
-                                                    'flavor' => $v->flavor,
-                                                    'size' => $v->size,
-                                                    'price' => $v->price,
-                                                    'discounted_price' => $v->discounted_price,
-                                                    'quantity' => $v->quantity_in_stock,
-                                                ],
-                                            );
+                                            $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                                            $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
+                                            $original = $firstVariant?->price ?? 0;
                                         } else {
                                             $price = $product->discounted_price ?? $product->original_price;
                                             $original = $product->original_price;
                                         }
-                                    @endphp
 
+                                        $variants =
+                                            $product->product_type === 'variant'
+                                                ? $product->variants->map(
+                                                    fn($v) => [
+                                                        'id' => $v->id,
+                                                        'flavor' => $v->flavor,
+                                                        'size' => $v->size,
+                                                        'price' => $v->price,
+                                                        'discounted_price' => $v->discounted_price,
+                                                        'quantity' => $v->quantity_in_stock,
+                                                    ],
+                                                )
+                                                : [];
+                                    @endphp
 
                                     <div class="col-12 col-md-6 col-lg-4 col-xl-3">
                                         <div
@@ -236,41 +230,21 @@
                                                 </div>
 
                                                 <div class="mb-2">
-                                                    @if ($product->product_type === 'variant')
-                                                        @if ($price && $original && $price !== $original)
-                                                            <div class="text-danger fw-bold fs-5">
-                                                                {{ number_format($price, 0, ',', '.') }} -
-                                                                {{ number_format($original, 0, ',', '.') }}
-                                                                <small>VND</small>
-                                                            </div>
-                                                        @elseif ($price)
-                                                            <div class="text-danger fw-bold fs-5">
-                                                                {{ number_format($price, 0, ',', '.') }}
-                                                                <small>VND</small>
-                                                            </div>
-                                                        @else
-                                                            <div class="text-muted">Liên hệ để biết giá</div>
-                                                        @endif
+                                                    @if ($price && $original && $price < $original)
+                                                        <div class="text-danger fw-bold fs-5">
+                                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                                        </div>
+                                                        <div class="text-muted text-decoration-line-through small">
+                                                            {{ number_format($original, 0, ',', '.') }} VND
+                                                        </div>
+                                                    @elseif ($price)
+                                                        <div class="text-danger fw-bold fs-5">
+                                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                                        </div>
                                                     @else
-                                                        @if ($price && $original && $price < $original)
-                                                            <div class="text-danger fw-bold fs-5">
-                                                                {{ number_format($price, 0, ',', '.') }}
-                                                                <small>VND</small>
-                                                            </div>
-                                                            <div class="text-muted text-decoration-line-through small">
-                                                                {{ number_format($original, 0, ',', '.') }} VND
-                                                            </div>
-                                                        @elseif ($price)
-                                                            <div class="text-danger fw-bold fs-5">
-                                                                {{ number_format($price, 0, ',', '.') }}
-                                                                <small>VND</small>
-                                                            </div>
-                                                        @else
-                                                            <div class="text-muted">Liên hệ để biết giá</div>
-                                                        @endif
+                                                        <div class="text-muted">Liên hệ để biết giá</div>
                                                     @endif
                                                 </div>
-
 
                                                 <div class="d-flex justify-content-end mt-auto">
                                                     <button type="button" class="btn btn-white open-cart-modal"
@@ -406,22 +380,37 @@
                                     @endif
                                 </div>
 
-                                @if ($price > 0)
-                                    <form class="add-to-cart-form" method="POST" action="{{ route('carts.add') }}">
-                                        @csrf
-                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                        @if ($product->product_type === 'variant' && $firstVariant)
-                                            <input type="hidden" name="product_variant_id"
-                                                value="{{ $firstVariant->id }}">
-                                        @endif
-                                        <input type="hidden" name="quantity" value="1">
-                                        <button type="submit" class="btn btn-white">
-                                            <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                        </button>
-                                    </form>
-                                @else
-                                    <span class="text-danger">Hết hàng</span>
-                                @endif
+                                <div class="mb-2">
+                                    @if ($price && $original && $price < $original)
+                                        <div class="text-danger fw-bold fs-5">
+                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                        </div>
+                                        <div class="text-muted text-decoration-line-through small">
+                                            {{ number_format($original, 0, ',', '.') }} VND
+                                        </div>
+                                    @elseif ($price)
+                                        <div class="text-danger fw-bold fs-5">
+                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                        </div>
+                                    @else
+                                        <div class="text-muted">Liên hệ để biết giá</div>
+                                    @endif
+                                </div>
+
+                                <div class="d-flex justify-content-end mt-auto">
+                                    <button type="button" class="btn btn-white open-cart-modal"
+                                        data-product-id="{{ $product->id }}"
+                                        data-product-name="{{ $product->product_name }}"
+                                        data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                        data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
+                                        data-product-price="{{ $price ?? 0 }}"
+                                        data-product-original-price="{{ $original ?? 0 }}"
+                                        data-product-description="{{ $product->description }}"
+                                        data-variants='@json($variants)' data-bs-toggle="modal"
+                                        data-bs-target="#cartModal">
+                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
