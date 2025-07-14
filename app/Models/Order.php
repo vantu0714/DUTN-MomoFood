@@ -22,7 +22,7 @@ class Order extends Model
         'payment_status',
         'status',
         'note',
-        'cancellation_reason',
+        'reason',
         'recipient_id'
     ];
 
