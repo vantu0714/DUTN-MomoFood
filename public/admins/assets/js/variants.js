@@ -433,6 +433,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updatePreviewTable();
 
     // Add variant button
+
     const addVariantBtn = document.getElementById('add-variant');
     if (addVariantBtn) {
         addVariantBtn.addEventListener('click', function (e) {
@@ -448,32 +449,49 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Clear & update input/select values
             clone.querySelectorAll('input, select').forEach(el => {
-                if (
-                    el.type !== 'file' &&
-                    el.type !== 'hidden' &&
-                    !el.name.includes('[main_attribute][value]')
-                ) {
+                if (el.type !== 'file' && el.type !== 'hidden') {
                     el.value = '';
                     el.selectedIndex = 0;
                 }
+
                 el.classList.remove('is-invalid');
 
-                // ✅ Cập nhật tên đúng variantIndex
+                // Update name với variantIndex mới
                 if (el.name) {
                     el.name = el.name.replace(/variants\[\d+\]/g, `variants[${variantIndex}]`);
                     el.name = el.name.replace(/sub_attributes\[\d+\]/g, 'sub_attributes[0]');
                 }
             });
 
-            // ✅ Sau khi đã cập nhật tên → thêm hidden input `name = vị`
+            // 🔧 Reset input vị (main_attribute[value]) và thêm lại input hidden "Vị"
             const flavorInput = clone.querySelector('input[name*="[main_attribute][value]"]');
             if (flavorInput) {
+                flavorInput.value = '';
+                flavorInput.classList.remove('is-invalid');
+
+                //  Cập nhật lại name đúng theo variantIndex
+                flavorInput.name = `variants[${variantIndex}][main_attribute][value]`;
+
+                // Gán lại giá trị từ biến thể trước nếu có
+                const previousVariant = document.querySelectorAll('.variant-item')[variantIndex - 1];
+                const previousFlavorInput = previousVariant?.querySelector('input[name*="[main_attribute][value]"]');
+                if (previousFlavorInput) {
+                    flavorInput.value = previousFlavorInput.value;
+                }
+
+                const oldError = flavorInput.parentNode.querySelector('.flavor-error');
+                if (oldError) oldError.remove();
+
+                const oldHidden = clone.querySelector('input[name*="[main_attribute][name]"]');
+                if (oldHidden) oldHidden.remove();
+
                 const attrNameInput = document.createElement('input');
                 attrNameInput.type = 'hidden';
                 attrNameInput.name = `variants[${variantIndex}][main_attribute][name]`;
                 attrNameInput.value = 'Vị';
                 flavorInput.insertAdjacentElement('afterend', attrNameInput);
             }
+
 
             // Remove lỗi cũ nếu có
             clone.querySelectorAll('.size-error, .price-error, .invalid-feedback').forEach(el => el.remove());
@@ -511,6 +529,7 @@ document.addEventListener('DOMContentLoaded', function () {
             variantIndex++;
         });
     }
+
 
 
     // Form submission validation

@@ -5,7 +5,8 @@
     $pendingProduct = session('pending_product');
 @endphp
 @section('content')
-    <div class="product-variants-container">
+    <div class="product-variants-container container-fluid px-0">
+
         <div class="main-content">
             <!-- Enhanced Header Section -->
             <div class="page-header-enhanced fade-in mb-4">
@@ -267,7 +268,6 @@
                                     class="btn btn-secondary btn-sm px-4 py-2">
                                     <i class="fas fa-times me-1"></i> Hủy bỏ
                                 </a>
-
                                 <button type="submit" class="btn btn-primary btn-sm px-4 py-2"
                                     style="font-size: 1.1rem;">
                                     <i class="fas fa-check me-1"></i> Lưu biến thể
@@ -280,7 +280,26 @@
         </div>
     </div>
 @endsection
+<style>
+    /* Bỏ khoảng trắng trái/phải của vùng nội dung */
+.product-variants-container,
+.main-content,
+.card,
+.card-body {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
 
+/* Tùy chỉnh table responsive nếu cần full */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+</style>
 @push('scripts')
     <script>
         window.productName = @json($product->product_name);

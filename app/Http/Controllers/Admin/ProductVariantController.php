@@ -102,24 +102,39 @@ class ProductVariantController extends Controller
         DB::beginTransaction();
 
         try {
-            // Validate dữ liệu biến thể
+            // Thông báo lỗi tùy chỉnh
+            $messages = [
+                'variants.*.main_attribute.name.required' => 'Tên thuộc tính chính không được để trống.',
+                'variants.*.main_attribute.value.required' => 'Giá trị thuộc tính chính không được để trống.',
+                'variants.*.sub_attributes.*.attribute_value_id.required' => 'Vui lòng chọn khối lượng.',
+                'variants.*.sub_attributes.*.attribute_value_id.exists' => 'Khối lượng không hợp lệ.',
+
+                'variants.*.sub_attributes.*.price.required' => 'Giá không được để trống.',
+                'variants.*.sub_attributes.*.price.numeric' => 'Giá phải là số.',
+                'variants.*.sub_attributes.*.price.min' => 'Giá phải lớn hơn 0.',
+
+                'variants.*.sub_attributes.*.quantity_in_stock.required' => 'Số lượng không được để trống.',
+                'variants.*.sub_attributes.*.quantity_in_stock.integer' => 'Số lượng phải là số nguyên.',
+                'variants.*.sub_attributes.*.quantity_in_stock.min' => 'Số lượng phải lớn hơn 0.',
+            ];
+
+            // Validate dữ liệu
             $request->validate([
                 'variants.*.main_attribute.name' => 'required|string|max:255',
                 'variants.*.main_attribute.value' => 'required|string|max:255',
                 'variants.*.sub_attributes.*.attribute_value_id' => 'required|exists:attribute_values,id',
-                'variants.*.sub_attributes.*.price' => 'required|numeric|min:0',
-                'variants.*.sub_attributes.*.quantity_in_stock' => 'required|integer|min:0',
-            ]);
+                'variants.*.sub_attributes.*.price' => 'required|numeric|min:0.01',
+                'variants.*.sub_attributes.*.quantity_in_stock' => 'required|integer|min:1',
+            ], $messages);
 
-            // Lấy thông tin sản phẩm đang chờ từ session
+            // Lấy thông tin sản phẩm từ session nếu chưa có
             $pendingProduct = Session::get('pending_product');
 
-            // Nếu thiếu dữ liệu
             if (!$request->filled('product_id') && !$pendingProduct) {
                 return redirect()->route('admin.products.create')->with('error', 'Thông tin sản phẩm bị thiếu.');
             }
 
-            // Nếu là lần đầu tạo sản phẩm (từ session)
+            // Tạo sản phẩm nếu là lần đầu
             if (!$request->filled('product_id')) {
                 $product = Product::create($pendingProduct);
                 $productId = $product->id;
@@ -129,33 +144,28 @@ class ProductVariantController extends Controller
                 $product = Product::findOrFail($productId);
             }
 
-            // Danh sách giá để tìm min
             $allPrices = [];
 
-            // Xử lý danh sách biến thể
             foreach ($request->input('variants', []) as $variantIndex => $variant) {
                 $mainAttrName = trim($variant['main_attribute']['name']);
                 $mainAttrValue = trim($variant['main_attribute']['value']);
 
-                // Tạo hoặc lấy attribute chính (ví dụ: Vị)
                 $mainAttribute = Attribute::firstOrCreate(['name' => $mainAttrName]);
                 $mainAttrVal = AttributeValue::firstOrCreate([
                     'attribute_id' => $mainAttribute->id,
                     'value' => $mainAttrValue,
                 ]);
 
-                // Tạo các sub-variants (ví dụ: Size M, Size L...)
                 foreach ($variant['sub_attributes'] as $subIndex => $subAttr) {
                     $variantModel = new ProductVariant();
                     $variantModel->product_id = $productId;
                     $variantModel->price = (float) $subAttr['price'];
-                    $variantModel->quantity_in_stock = (int) ($subAttr['quantity_in_stock'] ?? 0);
+                    $variantModel->quantity_in_stock = (int) $subAttr['quantity_in_stock'];
                     $variantModel->sku = $subAttr['sku'] ?? null;
 
-                    // Lưu giá để tìm min
                     $allPrices[] = $variantModel->price;
 
-                    // Xử lý ảnh biến thể (nếu có)
+                    // Ảnh biến thể
                     $imageInputName = "variants.$variantIndex.sub_attributes.$subIndex.image";
                     if ($request->hasFile($imageInputName)) {
                         $uploadedFile = $request->file($imageInputName);
@@ -164,22 +174,20 @@ class ProductVariantController extends Controller
 
                     $variantModel->save();
 
-                    // Gắn thuộc tính chính
+                    // Gắn giá trị thuộc tính chính và phụ
                     $variantModel->attributeValues()->attach($mainAttrVal->id);
-
-                    // Gắn thuộc tính phụ (ví dụ: Size)
                     $variantModel->attributeValues()->attach($subAttr['attribute_value_id']);
                 }
             }
 
-            // Cập nhật giá thấp nhất vào bảng products
+            // Cập nhật giá thấp nhất vào sản phẩm chính
             if (!empty($allPrices)) {
                 $product->original_price = min($allPrices);
-                $product->discounted_price = null; // hoặc tính nếu bạn có logic giảm giá
+                $product->discounted_price = null;
                 $product->save();
             }
 
-            // Cập nhật tổng tồn kho + trạng thái sản phẩm
+            // Cập nhật trạng thái tồn kho
             $this->updateProductStockAndStatus($product);
 
             DB::commit();
@@ -191,6 +199,7 @@ class ProductVariantController extends Controller
             return back()->withErrors(['error' => 'Đã xảy ra lỗi: ' . $e->getMessage()]);
         }
     }
+
     /**
      * Cập nhật tổng số lượng tồn kho và trạng thái cho sản phẩm
      */
