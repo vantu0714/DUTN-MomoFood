@@ -88,13 +88,13 @@ class ProductController extends Controller
         return view('admin.products.index', compact('products', 'categories', 'availableProductsCount', 'outOfStockProductsCount', 'totalProducts'));
     }
 
- public function create()
-{
-    $categories = Category::all(); 
-    $origins = ProductOrigin::all();
+    public function create()
+    {
+        $categories = Category::all();
+        $origins = ProductOrigin::all();
 
-    return view('admin.products.create', compact('categories', 'origins'));
-}
+        return view('admin.products.create', compact('categories', 'origins'));
+    }
 
     public function store(Request $request)
     {
@@ -189,17 +189,17 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công.');
     }
-   public function edit($id)
-{
-    $product = Product::with('variants.attributeValues.attribute', 'origin')->findOrFail($id);
-    $categories = Category::all();
-    $attributes = Attribute::with('values')->get();
-    $origins = ProductOrigin::all(); 
-    // Kiểm tra sản phẩm có biến thể không
-    $hasVariants = $product->variants && $product->variants->isNotEmpty();
+    public function edit($id)
+    {
+        $product = Product::with('variants.attributeValues.attribute', 'origin')->findOrFail($id);
+        $categories = Category::all();
+        $attributes = Attribute::with('values')->get();
+        $origins = ProductOrigin::all();
+        // Kiểm tra sản phẩm có biến thể không
+        $hasVariants = $product->variants && $product->variants->isNotEmpty();
 
-    return view('admin.products.edit', compact('product', 'categories', 'attributes', 'hasVariants', 'origins'));
-}
+        return view('admin.products.edit', compact('product', 'categories', 'attributes', 'hasVariants', 'origins'));
+    }
 
 
     public function update(Request $request, $id)
@@ -210,12 +210,13 @@ class ProductController extends Controller
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code,' . $product->id,
             'category_id' => 'required|exists:categories,id',
-             'origin_id' => 'required|exists:product_origins,id', 
+            'origin_id' => 'required|exists:product_origins,id',
             'description' => 'nullable|string',
             'original_price' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:99.99',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'quantity_in_stock' => 'nullable|integer|min:0', // bỏ required_if nếu có biến thể
+            'quantity_in_stock' => 'nullable|integer|min:0', 
+            'expiration_date' => 'nullable|date|after:today',
         ]);
 
         // Tính discounted_price
@@ -288,20 +289,19 @@ class ProductController extends Controller
         return view('products.variants', compact('product'));
     }
     public function show($id)
-{
-    $product = Product::with([
-        'category',
-        'origin', // <--- Thêm dòng này
-        'variants.attributeValues.attribute'
-    ])->findOrFail($id);
+    {
+        $product = Product::with([
+            'category',
+            'origin', // <--- Thêm dòng này
+            'variants.attributeValues.attribute'
+        ])->findOrFail($id);
 
-    // Gọi riêng để đảm bảo lấy đúng thứ tự
-    $product->setRelation(
-        'variants',
-        $product->variants()->orderBy('price', 'asc')->get()
-    );
+        // Gọi riêng để đảm bảo lấy đúng thứ tự
+        $product->setRelation(
+            'variants',
+            $product->variants()->orderBy('price', 'asc')->get()
+        );
 
-    return view('admin.products.show', compact('product'));
-}
-
+        return view('admin.products.show', compact('product'));
+    }
 }

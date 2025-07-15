@@ -734,3 +734,75 @@
     border-color: #28a745 !important;
     box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
 }
+/*shop*/
+
+                .bg-gradient-primary {
+                    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                }
+
+                .info-item {
+                    transition: all 0.3s ease;
+                }
+
+                .info-item:hover {
+                    transform: translateY(-2px);
+                }
+
+                .price-display {
+                    transition: all 0.3s ease;
+                }
+
+                .price-display:hover {
+                    transform: scale(1.02);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .badge {
+                    transition: all 0.3s ease;
+                }
+
+                .badge:hover {
+                    transform: scale(1.05);
+                }
+
+                .card {
+                    transition: all 0.3s ease;
+                }
+
+                .card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+                }
+
+                .bg-success-subtle {
+                    background-color: rgba(25, 135, 84, 0.1);
+                }
+
+                .bg-danger-subtle {
+                    background-color: rgba(220, 53, 69, 0.1);
+                }
+
+                .bg-info-subtle {
+                    background-color: rgba(13, 202, 240, 0.1);
+                }
+
+                .bg-warning-subtle {
+                    background-color: rgba(255, 193, 7, 0.1);
+                }
+
+                .border-success-subtle {
+                    border-color: rgba(25, 135, 84, 0.3) !important;
+                }
+
+                .border-danger-subtle {
+                    border-color: rgba(220, 53, 69, 0.3) !important;
+                }
+
+                .border-info-subtle {
+                    border-color: rgba(13, 202, 240, 0.3) !important;
+                }
+
+                .border-warning-subtle {
+                    border-color: rgba(255, 193, 7, 0.3) !important;
+                }
+          
