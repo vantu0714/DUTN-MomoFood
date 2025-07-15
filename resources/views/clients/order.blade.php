@@ -47,7 +47,9 @@
                                     <div class="text-muted mt-1">
                                         {{ $recipient['recipient_address'] ?? auth()->user()->address }}
                                     </div>
-                                    <span class="badge bg-danger">Mặc Định</span>
+                                    @if (!empty($recipient['is_default']) && $recipient['is_default'])
+                                        <span class="badge bg-danger mt-1">Địa Chỉ Mặc Định</span>
+                                    @endif
                                 </div>
 
 
@@ -312,15 +314,86 @@
                                 <input class="form-check-input" type="radio" name="recipient_id"
                                     id="recipient{{ $recipientItem->id }}" value="{{ $recipientItem->id }}">
                                 <label class="form-check-label" for="recipient{{ $recipientItem->id }}">
-                                    <strong>{{ $recipientItem->recipient_name }} (+84
-                                        {{ $recipientItem->recipient_phone }})</strong><br>
+                                    <strong>{{ $recipientItem->recipient_name }}
+                                        (+84{{ $recipientItem->recipient_phone }})
+                                    </strong><br>
                                     <span class="text-muted">{{ $recipientItem->recipient_address }}</span>
                                     @if ($recipientItem->is_default)
                                         <span class="badge bg-danger ms-2">Mặc định</span>
                                     @endif
                                 </label>
+
+                                <!-- Nút mở modal cập nhật -->
+                                <div class="mt-1">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editAddressModal-{{ $recipientItem->id }}">
+                                        Sửa
+                                    </button>
+
+                                    @if (!$recipientItem->is_default)
+                                        <form action="{{ url('/recipients/' . $recipientItem->id) }}" method="POST"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Bạn có chắc chắn muốn xoá địa chỉ này không?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Xoá</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Modal cập nhật địa chỉ -->
+                            <div class="modal fade" id="editAddressModal-{{ $recipientItem->id }}" tabindex="-1"
+                                aria-labelledby="editAddressModalLabel-{{ $recipientItem->id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <form action="{{ route('recipients.update', $recipientItem->id) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title"
+                                                    id="editAddressModalLabel-{{ $recipientItem->id }}">Cập nhật địa chỉ
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Đóng"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-2">
+                                                    <label class="form-label">Họ và tên</label>
+                                                    <input type="text" name="recipient_name" class="form-control"
+                                                        value="{{ $recipientItem->recipient_name }}" required>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Số điện thoại</label>
+                                                    <input type="text" name="recipient_phone" class="form-control"
+                                                        value="{{ $recipientItem->recipient_phone }}" required>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label">Địa chỉ</label>
+                                                    <input type="text" name="recipient_address" class="form-control"
+                                                        value="{{ $recipientItem->recipient_address }}" required>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input type="hidden" name="is_default" value="0">
+                                                    <input class="form-check-input" type="checkbox" name="is_default"
+                                                        id="is_default_{{ $recipientItem->id }}" value="1"
+                                                        {{ $recipientItem->is_default ? 'checked' : '' }}>
+                                                    <label class="form-check-label"
+                                                        for="is_default_{{ $recipientItem->id }}">Đặt làm địa chỉ mặc
+                                                        định</label>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Huỷ</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         @endforeach
+
 
                         <button type="submit" class="btn btn-danger w-100 mt-2">Chọn địa chỉ này</button>
                     </form>
@@ -406,7 +479,7 @@
         </div>
     </div>
 
-   
+
 @endsection
 <script>
     document.querySelectorAll('input[name="recipient_id"]').forEach(item => {

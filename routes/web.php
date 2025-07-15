@@ -108,14 +108,11 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::post('/apply-coupon', [ClientsOrderController::class, 'applyCoupon'])->name('order.applyCoupon');
     Route::get('/remove-coupon', [ClientsOrderController::class, 'removeCoupon'])->name('order.removeCoupon');
 
+    //thong tin nguoi nhan
     Route::post('/recipients', [RecipientController::class, 'store'])->name('recipients.store');
-    // Route chọn địa chỉ
     Route::post('/recipients/select', [RecipientController::class, 'select'])->name('recipients.select');
-
-
-
-    //tt nguoi nhan
-    // Route::post('/store', [RecipientController::class, 'store'])->name('recipients.store');
+    Route::put('/recipients/{id}', [RecipientController::class, 'update'])->name('recipients.update');
+    Route::delete('/recipients/{id}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
 
 });
 
