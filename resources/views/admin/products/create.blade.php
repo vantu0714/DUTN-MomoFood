@@ -1,8 +1,8 @@
 @extends('admin.layouts.app')
 @section('content')
-    <div class="container-fluid py-4">
-        <div class="row justify-content-center">
-            <div class="col-xl-10">
+    <div class="container-fluid px-0 py-4">
+        <div class="row">
+            <div class="col-12 px-0">
                 <!-- Header Section -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
@@ -30,8 +30,21 @@
                 @endif
 
                 <!-- Main Form -->
-                <form id="product-form" action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
+                <form id="product-form" action="{{ route('admin.products.store') }}" method="POST"
+                    enctype="multipart/form-data">
                     @csrf
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                            <strong><i class="fas fa-exclamation-triangle me-2"></i>Đã xảy ra lỗi:</strong>
+                            <ul class="mt-2 mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li><i class="fas fa-times-circle me-1 text-danger"></i>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
                     <div class="row g-4">
                         <!-- Left Column - Basic Information -->
                         <div class="col-lg-8">
@@ -50,10 +63,10 @@
                                                 <i class="fas fa-tag text-primary me-2"></i>Tên sản phẩm
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input type="text" name="product_name" 
-                                                class="form-control form-control-lg @error('product_name') is-invalid @enderror" 
-                                                placeholder="Nhập tên sản phẩm..." 
-                                                value="{{ old('product_name') }}" required>
+                                            <input type="text" name="product_name"
+                                                class="form-control form-control-lg @error('product_name') is-invalid @enderror"
+                                                placeholder="Nhập tên sản phẩm..." value="{{ old('product_name') }}"
+                                                required>
                                             @error('product_name')
                                                 <div class="invalid-feedback">
                                                     <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
@@ -67,10 +80,10 @@
                                                 <i class="fas fa-barcode text-primary me-2"></i>Mã sản phẩm
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input type="text" name="product_code" 
-                                                class="form-control form-control-lg @error('product_code') is-invalid @enderror" 
-                                                placeholder="Nhập mã sản phẩm..." 
-                                                value="{{ old('product_code') }}" required>
+                                            <input type="text" name="product_code"
+                                                class="form-control form-control-lg @error('product_code') is-invalid @enderror"
+                                                placeholder="Nhập mã sản phẩm..." value="{{ old('product_code') }}"
+                                                required>
                                             @error('product_code')
                                                 <div class="invalid-feedback">
                                                     <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
@@ -84,10 +97,12 @@
                                                 <i class="fas fa-list text-primary me-2"></i>Danh mục
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <select name="category_id" class="form-select form-select-lg @error('category_id') is-invalid @enderror" required>
+                                            <select name="category_id"
+                                                class="form-select form-select-lg @error('category_id') is-invalid @enderror"
+                                                required>
                                                 <option value="">-- Chọn danh mục --</option>
                                                 @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}" 
+                                                    <option value="{{ $category->id }}"
                                                         {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                                         {{ $category->category_name }}
                                                     </option>
@@ -99,19 +114,58 @@
                                                 </div>
                                             @enderror
                                         </div>
+                                        <!-- Expiration Date -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold text-dark">
+                                                <i class="fas fa-calendar-alt text-primary me-2"></i>Ngày hết hạn
+                                            </label>
+                                            <input type="date" name="expiration_date"
+                                                class="form-control form-control-lg @error('expiration_date') is-invalid @enderror"
+                                                value="{{ old('expiration_date') }}">
+                                            @error('expiration_date')
+                                                <div class="invalid-feedback">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold text-dark">
+                                                <i class="fas fa-globe-asia text-primary me-2"></i>Xuất xứ
+                                            </label>
+                                            <select name="origin_id"
+                                                class="form-control form-control-lg @error('origin_id') is-invalid @enderror"
+                                                required>
+                                                <option value="">-- Chọn xuất xứ --</option>
+                                                @foreach ($origins as $origin)
+                                                    <option value="{{ $origin->id }}"
+                                                        {{ old('origin_id') == $origin->id ? 'selected' : '' }}>
+                                                        {{ $origin->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('origin_id')
+                                                <div class="invalid-feedback">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
 
                                         <!-- Product Type -->
                                         <div class="col-md-6">
                                             <label class="form-label fw-semibold text-dark">
-                                                <i class="fas fa-layer-group text-primary me-2"></i>Loại sản phẩm
+                                                <i class="fas fa-layer-group text-primary me-"></i>Loại sản phẩm
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <select name="product_type" class="form-select form-select-lg @error('product_type') is-invalid @enderror" required>
+                                            <select name="product_type"
+                                                class="form-select form-select-lg @error('product_type') is-invalid @enderror"
+                                                required>
                                                 <option value="">-- Chọn loại sản phẩm --</option>
-                                                <option value="simple" {{ old('product_type') == 'simple' ? 'selected' : '' }}>
+                                                <option value="simple"
+                                                    {{ old('product_type') == 'simple' ? 'selected' : '' }}>
                                                     Sản phẩm đơn giản
                                                 </option>
-                                                <option value="variant" {{ old('product_type') == 'variant' ? 'selected' : '' }}>
+                                                <option value="variant"
+                                                    {{ old('product_type') == 'variant' ? 'selected' : '' }}>
                                                     Sản phẩm có biến thể
                                                 </option>
                                             </select>
@@ -133,9 +187,7 @@
                                     </h5>
                                 </div>
                                 <div class="card-body p-4">
-                                    <textarea name="description" 
-                                        class="form-control @error('description') is-invalid @enderror" 
-                                        rows="6" 
+                                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="6"
                                         placeholder="Nhập mô tả chi tiết về sản phẩm, tính năng, và thông tin khác...">{{ old('description') }}</textarea>
                                     @error('description')
                                         <div class="invalid-feedback">
@@ -143,6 +195,7 @@
                                         </div>
                                     @enderror
                                 </div>
+
                             </div>
 
                             <!-- Pricing Card -->
@@ -161,14 +214,16 @@
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <div class="input-group input-group-lg">
-                                                <input type="number" step="1000" name="original_price" id="original_price"
-                                                    class="form-control @error('original_price') is-invalid @enderror" 
+                                                <input type="number" step="1000" name="original_price"
+                                                    id="original_price"
+                                                    class="form-control @error('original_price') is-invalid @enderror"
                                                     placeholder="0" value="{{ old('original_price') }}" required>
                                                 <span class="input-group-text bg-primary text-white fw-semibold">VND</span>
                                             </div>
                                             <div class="mt-2">
                                                 <small class="text-muted">Hiển thị: </small>
-                                                <span id="original_price_display" class="fw-semibold text-primary">0 VND</span>
+                                                <span id="original_price_display" class="fw-semibold text-primary">0
+                                                    VND</span>
                                             </div>
                                             @error('original_price')
                                                 <div class="invalid-feedback d-block">
@@ -180,7 +235,7 @@
                                         <!-- Discount Percentage -->
                                         <div class="col-md-4">
                                             <label class="form-label fw-semibold text-dark">
-                                                <i class="fas fa-percentage text-primary me-2"></i>% Giảm giá
+                                                <i class="fas fa-percentage text-primary me-2"></i>Giảm giá
                                             </label>
                                             <div class="input-group input-group-lg">
                                                 <input type="number" step="0.1" id="discount_percent"
@@ -196,14 +251,16 @@
                                                 <i class="fas fa-tags text-primary me-2"></i>Giá khuyến mãi
                                             </label>
                                             <div class="input-group input-group-lg">
-                                                <input type="number" step="any" name="discounted_price" id="discounted_price"
-                                                    class="form-control @error('discounted_price') is-invalid @enderror" 
+                                                <input type="number" step="any" name="discounted_price"
+                                                    id="discounted_price"
+                                                    class="form-control @error('discounted_price') is-invalid @enderror"
                                                     placeholder="0" value="{{ old('discounted_price') }}">
                                                 <span class="input-group-text bg-success text-white fw-semibold">VND</span>
                                             </div>
                                             <div class="mt-2">
                                                 <small class="text-muted">Hiển thị: </small>
-                                                <span id="discounted_price_display" class="fw-semibold text-success">0 VND</span>
+                                                <span id="discounted_price_display" class="fw-semibold text-success">0
+                                                    VND</span>
                                             </div>
                                             @error('discounted_price')
                                                 <div class="invalid-feedback d-block">
@@ -215,18 +272,20 @@
                                         <!-- Stock Quantity -->
                                         <div class="col-md-6" id="stockQuantityWrapper">
                                             <label class="form-label fw-semibold text-dark">
-                                                <i class="fas fa-boxes text-primary me-2"></i>Số lượng tồn kho
+                                                <i class="fas fa-boxes text-primary me-2"></i>Số lượng
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <input type="number" name="quantity_in_stock" id="quantity_in_stock"
-                                                class="form-control form-control-lg @error('quantity_in_stock') is-invalid @enderror" 
-                                                placeholder="Nhập số lượng" value="{{ old('quantity_in_stock') }}" min="0" required>
+                                                class="form-control form-control-lg @error('quantity_in_stock') is-invalid @enderror"
+                                                placeholder="Nhập số lượng" value="{{ old('quantity_in_stock') }}"
+                                                min="0" required>
                                             @error('quantity_in_stock')
                                                 <div class="invalid-feedback">
                                                     <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
                                                 </div>
                                             @enderror
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -241,8 +300,10 @@
                                     </h5>
                                 </div>
                                 <div class="card-body p-4">
-                                    <div class="upload-area border-2 border-dashed border-light rounded-3 p-4 text-center position-relative bg-light">
-                                        <input type="file" name="image" class="form-control d-none" id="imageInput" accept="image/*">
+                                    <div
+                                        class="upload-area border-2 border-dashed border-light rounded-3 p-4 text-center position-relative bg-light">
+                                        <input type="file" name="image" class="form-control d-none" id="imageInput"
+                                            accept="image/*">
                                         <label for="imageInput" class="cursor-pointer d-block h-100">
                                             <div id="uploadPlaceholder">
                                                 <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
@@ -252,8 +313,10 @@
                                             </div>
                                         </label>
                                         <div id="imagePreview" class="d-none">
-                                            <img id="previewImg" src="" alt="Preview" class="img-fluid rounded-3 mb-3" style="max-height: 300px;">
-                                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeImage()">
+                                            <img id="previewImg" src="" alt="Preview"
+                                                class="img-fluid rounded-3 mb-3" style="max-height: 300px;">
+                                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                                onclick="removeImage()">
                                                 <i class="fas fa-trash me-1"></i>Xóa ảnh
                                             </button>
                                         </div>
@@ -275,10 +338,12 @@
                                 <button type="submit" class="btn btn-success btn-lg px-5 py-3">
                                     <i class="fas fa-save me-2"></i>Lưu sản phẩm
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary btn-lg px-5 py-3" onclick="resetForm()">
+                                <button type="button" class="btn btn-outline-secondary btn-lg px-5 py-3"
+                                    onclick="resetForm()">
                                     <i class="fas fa-redo me-2"></i>Đặt lại
                                 </button>
-                                <a href="{{ route('admin.products.index') }}" class="btn btn-outline-danger btn-lg px-5 py-3">
+                                <a href="{{ route('admin.products.index') }}"
+                                    class="btn btn-outline-danger btn-lg px-5 py-3">
                                     <i class="fas fa-times me-2"></i>Hủy bỏ
                                 </a>
                             </div>
@@ -293,12 +358,12 @@
         .card {
             transition: all 0.3s ease;
         }
-        
+
         .card:hover {
             transform: translateY(-2px);
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
         }
-        
+
         .upload-area {
             transition: all 0.3s ease;
             min-height: 200px;
@@ -306,48 +371,50 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .upload-area:hover {
             border-color: #007bff !important;
             background-color: #f8f9fa !important;
         }
-        
+
         .cursor-pointer {
             cursor: pointer;
         }
-        
+
         .form-control:focus,
         .form-select:focus {
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
             border-color: #007bff;
         }
-        
+
         .btn {
             transition: all 0.3s ease;
         }
-        
+
         .btn:hover {
             transform: translateY(-1px);
         }
-        
+
         .price-display {
             font-size: 0.9rem;
         }
-        
+
         .alert {
             border-radius: 0.75rem;
         }
-        
+
         .card-header {
             border-radius: 0.75rem 0.75rem 0 0 !important;
         }
-        
+
         .invalid-feedback {
             display: block;
         }
-        
+
         @media (max-width: 768px) {
-            .col-lg-8, .col-lg-4 {
+
+            .col-lg-8,
+            .col-lg-4 {
                 margin-bottom: 1rem;
             }
         }
@@ -362,7 +429,8 @@
             const discountedDisplay = document.getElementById('discounted_price_display');
 
             const productTypeSelect = document.querySelector('select[name="product_type"]');
-            const stockQuantityWrapper = document.getElementById('stockQuantityWrapper') || document.querySelector('input[name="quantity_in_stock"]').closest('.col-md-6');
+            const stockQuantityWrapper = document.getElementById('stockQuantityWrapper') || document.querySelector(
+                'input[name="quantity_in_stock"]').closest('.col-md-6');
             const stockQuantityInput = document.getElementById('quantity_in_stock');
 
             const form = document.getElementById('product-form');
@@ -387,33 +455,45 @@
             // Update discounted price based on original price and discount percentage
             function updateDiscountedPrice() {
                 const original = parseFloat(originalInput.value) || 0;
-                const percent = parseFloat(percentInput.value) || 0;
-                
-                // Update original price display
+                const percentRaw = percentInput.value; // lấy nguyên chuỗi để kiểm tra rỗng
+                const percent = parseFloat(percentRaw) || 0;
+
                 originalDisplay.textContent = formatVND(original);
 
-                // Calculate discounted price
-                let discounted = 0;
-                if (original > 0 && percent > 0) {
-                    discounted = original * (1 - percent / 100);
+                if (original > 0 && percentRaw !== '' && percent > 0) {
+                    const discounted = original * (1 - percent / 100);
                     discountInput.value = Math.round(discounted);
-                } else if (original > 0 && discountInput.value) {
-                    discounted = parseFloat(discountInput.value) || 0;
+                    discountedDisplay.textContent = formatVND(discounted);
+                } else {
+                    // Nếu phần trăm rỗng hoặc <= 0 → reset
+                    discountInput.value = '';
+                    discountedDisplay.textContent = '0 VND';
                 }
-
-                // Update discounted price display
-                discountedDisplay.textContent = formatVND(discounted);
             }
-
             // Toggle price and stock fields based on product type
             function togglePriceAndStockFields() {
                 const isVariant = productTypeSelect.value === 'variant';
 
-                const fields = [
-                    { wrapper: originalPriceWrapper, input: originalInput, name: 'original_price' },
-                    { wrapper: discountPercentWrapper, input: percentInput, name: null },
-                    { wrapper: discountedPriceWrapper, input: discountInput, name: 'discounted_price' },
-                    { wrapper: stockQuantityWrapper, input: stockQuantityInput, name: 'quantity_in_stock' }
+                const fields = [{
+                        wrapper: originalPriceWrapper,
+                        input: originalInput,
+                        name: 'original_price'
+                    },
+                    {
+                        wrapper: discountPercentWrapper,
+                        input: percentInput,
+                        name: null
+                    },
+                    {
+                        wrapper: discountedPriceWrapper,
+                        input: discountInput,
+                        name: 'discounted_price'
+                    },
+                    {
+                        wrapper: stockQuantityWrapper,
+                        input: stockQuantityInput,
+                        name: 'quantity_in_stock'
+                    }
                 ];
 
                 // Show/hide pricing card
@@ -423,7 +503,11 @@
                     pricingCard.style.display = 'block';
                 }
 
-                fields.forEach(({ wrapper, input, name }) => {
+                fields.forEach(({
+                    wrapper,
+                    input,
+                    name
+                }) => {
                     if (isVariant) {
                         if (wrapper) wrapper.style.display = 'none';
                         if (name) input.removeAttribute('name');
@@ -441,7 +525,7 @@
             // Handle multiple image upload with preview
             function handleImageUpload(input) {
                 const files = input.files;
-                
+
                 if (files.length > 0) {
                     imagePreview.innerHTML = '';
                     imagePreview.classList.remove('d-none');
@@ -461,13 +545,14 @@
 
                             const removeBtn = document.createElement('button');
                             removeBtn.type = 'button';
-                            removeBtn.className = 'btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle';
+                            removeBtn.className =
+                                'btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle';
                             removeBtn.innerHTML = '<i class="fas fa-times"></i>';
                             removeBtn.style.width = '25px';
                             removeBtn.style.height = '25px';
                             removeBtn.style.padding = '0';
                             removeBtn.style.transform = 'translate(50%, -50%)';
-                            
+
                             removeBtn.onclick = function() {
                                 const dt = new DataTransfer();
                                 Array.from(imageInput.files).forEach((f, i) => {
@@ -520,7 +605,12 @@
             }
 
             // Form validation
+            let allowSubmit = false;
+
+
             form.addEventListener('submit', function(e) {
+                if (allowSubmit) return true; // Cho submit nếu đã xác nhận
+
                 const isVariant = productTypeSelect.value === 'variant';
                 const original = parseFloat(originalInput.value) || 0;
                 const discount = parseFloat(discountInput.value) || 0;
@@ -531,7 +621,11 @@
                     discountInput.focus();
                     return false;
                 }
+
+                allowSubmit = true;
+                form.submit(); // Submit lại lần nữa
             });
+
 
             // Reset form function
             window.resetForm = function() {
@@ -580,7 +674,7 @@
             const imageInput = document.getElementById('imageInput');
             const imagePreview = document.getElementById('imagePreview');
             const uploadPlaceholder = document.getElementById('uploadPlaceholder');
-            
+
             imageInput.value = '';
             imagePreview.classList.add('d-none');
             uploadPlaceholder.classList.remove('d-none');

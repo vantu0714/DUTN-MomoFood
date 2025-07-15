@@ -22,18 +22,19 @@ class OrderController extends Controller
     {
         $userId = auth()->id();
 
-        // Lấy danh sách ID sản phẩm đã chọn (nếu có)
-        $selectedIds = $request->has('selected_items')
-            ? (is_array($request->input('selected_items'))
-                ? $request->input('selected_items')
-                : explode(',', $request->input('selected_items')))
-            : [];
+        $selectedIds = [];
 
-        // Lấy giỏ hàng của user
-        $cart = Cart::with(['items.product', 'items.productVariant'])
-            ->where('user_id', $userId)
-            ->first();
+        if ($request->has('selected_items')) {
+            $selectedIds = is_array($request->selected_items)
+                ? $request->selected_items
+                : explode(',', $request->selected_items);
+            session()->put('selected_items', $selectedIds); // lưu lại
+        } elseif (session()->has('selected_items')) {
+            $selectedIds = session('selected_items');
+        }
 
+        // Lấy cart và lọc items
+        $cart = Cart::with(['items.product', 'items.productVariant'])->where('user_id', $userId)->first();
         $cartItems = collect();
 
         if ($cart && $cart->items) {
@@ -42,16 +43,14 @@ class OrderController extends Controller
                 : $cart->items;
 
             foreach ($items as $item) {
-                $price = $item->discounted_price ?? ($item->original_price ?? 59000);
+                $price = $item->discounted_price ?? $item->original_price ?? 0;
                 $item->calculated_price = $price;
                 $item->item_total = $price * $item->quantity;
 
-                // Gộp tên biến thể (vị, size,...) nếu có
-                if ($item->productVariant && is_array($item->productVariant->variant_values)) {
-                    $item->variant_summary = implode(', ', array_filter($item->productVariant->variant_values));
-                } else {
-                    $item->variant_summary = null;
-                }
+                // Gộp tên biến thể
+                $item->variant_summary = $item->productVariant && is_array($item->productVariant->variant_values)
+                    ? implode(', ', array_filter($item->productVariant->variant_values))
+                    : null;
 
                 $cartItems->push($item);
             }
@@ -124,10 +123,16 @@ class OrderController extends Controller
         $userId = Auth::id();
         $cart = Cart::with('items')->where('user_id', $userId)->firstOrFail();
 
-        // Lọc sản phẩm đã chọn
-        $selectedIds = $request->filled('selected_items')
-            ? (is_array($request->selected_items) ? $request->selected_items : explode(',', $request->selected_items))
-            : [];
+        // Lấy selected_ids từ request hoặc session
+        $selectedIds = [];
+
+        if ($request->filled('selected_items')) {
+            $selectedIds = is_array($request->selected_items)
+                ? $request->selected_items
+                : explode(',', $request->selected_items);
+        } elseif (session()->has('selected_items')) {
+            $selectedIds = session('selected_items');
+        }
 
         $cartItems = !empty($selectedIds)
             ? $cart->items->whereIn('id', $selectedIds)
@@ -240,6 +245,8 @@ class OrderController extends Controller
 
             // Xóa sản phẩm đã đặt khỏi giỏ hàng
             $cart->items()->whereIn('id', $cartItems->pluck('id'))->delete();
+            // Xóa session selected_items
+            session()->forget('selected_items');
 
             DB::commit();
 

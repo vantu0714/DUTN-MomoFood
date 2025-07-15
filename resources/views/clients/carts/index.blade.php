@@ -210,6 +210,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 @php
+                                    $paymentStatus =
+                                        $order->payment_status === 'paid'
+                                            ? ['label' => 'Đã thanh toán', 'class' => 'bg-success']
+                                            : ['label' => 'Chưa thanh toán', 'class' => 'bg-secondary'];
+
                                     $statusLabels = [
                                         1 => ['label' => 'Chưa xác nhận', 'class' => 'bg-secondary'],
                                         2 => ['label' => 'Đã xác nhận', 'class' => 'bg-primary'],
@@ -229,8 +234,9 @@
                                 <h6 class="font-weight-bold">Thông tin đơn hàng</h6>
                                 <p><strong>Mã đơn hàng:</strong> #{{ $order->order_code }}</p>
                                 <p><strong>Ngày đặt:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</p>
-                                <p><strong>Trạng thái:</strong>
-                                    <span class="{{ $status['class'] }}">{{ $status['label'] }}</span>
+                                <p><strong>Trạng thái thanh toán::</strong>
+                                    <span
+                                        class="badge {{ $paymentStatus['class'] }}">{{ $paymentStatus['label'] }}</span>
                                 </p>
                             </div>
 
