@@ -128,10 +128,10 @@
                                                     class="btn btn-sm btn-outline-info">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('admin.orders.edit', $order->id) }}"
+                                                {{-- <a href="{{ route('admin.orders.edit', $order->id) }}"
                                                     class="btn btn-sm btn-outline-warning">
                                                     <i class="fas fa-edit"></i>
-                                                </a>
+                                                </a> --}}
                                             </div>
                                         </td>
                                     </tr>

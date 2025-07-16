@@ -102,7 +102,7 @@ class UserController extends Controller
                 'status' => $request->status ?? $user->status,
             ]);
 
-            return redirect()->route('users.index')->with('success', 'Cập nhật người dùng thành công');
+            return redirect()->route('admin.users.index')->with('success', 'Cập nhật người dùng thành công');
         } catch (\Throwable $th) {
             return back()->with('error', $th->getMessage());
         }

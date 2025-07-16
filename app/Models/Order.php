@@ -22,7 +22,7 @@ class Order extends Model
         'payment_status',
         'status',
         'note',
-        'cancellation_reason',
+        'reason',
         'recipient_id'
     ];
 
@@ -57,4 +57,8 @@ class Order extends Model
 
         return $code;
     }
+    public function orders()
+{
+    return $this->hasMany(Order::class);
+}
 }

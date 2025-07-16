@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
         // Bước 2: Tạo User sau khi có role
 
         // Bước 3: Các seed khác
-        \App\Models\Category::factory(5)->create();
+        $this->call(CategorySeeder::class);    
         $this->call(ProductSeeder::class);
         $this->call(OrderSeeder::class);
         $this->call([

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -18,8 +19,8 @@ class DashboardController extends Controller
         $month = $request->month;
         $year = $request->year ?? now()->year;
 
-        // Query cơ bản
-        $orderQuery = Order::where('status', 3);
+        // Query cơ bản cho đơn hàng đã hoàn thành
+        $orderQuery = Order::query()->where('status', 3);
 
         // Áp dụng bộ lọc
         if ($filterType === 'date' && $fromDate && $toDate) {
@@ -35,22 +36,21 @@ class DashboardController extends Controller
         $totalRevenue = $orderQuery->sum('total_price');
         $totalOrders = $orderQuery->count();
 
-        $totalSold = OrderDetail::whereHas('order', function ($q) use ($orderQuery) {
-            $q->mergeConstraintsFrom($orderQuery);
-        })->sum('quantity');
+        $orderIds = $orderQuery->pluck('id');
+
+        $totalSold = OrderDetail::whereIn('order_id', $orderIds)->sum('quantity');
 
         // Sản phẩm bán chạy
-        $bestSellers = Product::withSum(['orderDetails as total_sold' => function ($q) use ($orderQuery) {
-            $q->whereHas('order', function ($q2) use ($orderQuery) {
-                $q2->mergeConstraintsFrom($orderQuery);
-            });
+        $bestSellers = Product::withSum(['orderDetails as total_sold' => function ($q) use ($orderIds) {
+            $q->whereIn('order_id', $orderIds);
         }], 'quantity')
         ->orderByDesc('total_sold')
         ->take(5)
         ->get();
 
-        // Biểu đồ doanh thu theo tháng (không lọc để giữ toàn bộ 12 tháng)
+        // Biểu đồ doanh thu theo tháng (12 tháng trong năm)
         $monthlyData = Order::where('status', 3)
+            ->whereYear('created_at', $year)
             ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
             ->groupBy('month')
             ->orderBy('month')
@@ -64,6 +64,23 @@ class DashboardController extends Controller
             $chartData[] = $monthlyData[$i] ?? 0;
         }
 
+        // Khách hàng mua nhiều nhất
+        $topCustomers = User::whereHas('orders', function ($q) {
+                $q->where('status', 3);
+            })
+            ->withCount(['orders' => function ($q) {
+                $q->where('status', 3);
+            }])
+            ->withSum(['orders' => function ($q) {
+                $q->where('status', 3);
+            }], 'total_price')
+            ->orderByDesc('orders_count')
+            ->take(5)
+            ->get();
+
+        // Tổng tồn kho
+        $totalStock = Product::sum('quantity');
+
         return view('admin.dashboard', compact(
             'totalRevenue',
             'totalOrders',
@@ -75,7 +92,9 @@ class DashboardController extends Controller
             'fromDate',
             'toDate',
             'month',
-            'year'
+            'year',
+            'topCustomers',
+            'totalStock'
         ));
     }
 }
