@@ -200,19 +200,30 @@
                                 <div class="row">
                                     {{-- Giá gốc --}}
                                     <div class="col-md-6 mb-3">
-                                        <label for="original_price" class="form-label fw-semibold">Giá gốc <span
-                                                class="text-danger">*</span></label>
+                                        <label for="original_price_display" class="form-label fw-semibold">
+                                            Giá gốc <span class="text-danger">*</span>
+                                        </label>
+
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="original_price"
-                                                name="original_price"
-                                                value="{{ old('original_price', $product->original_price ?? '') }}"
-                                                placeholder="Nhập giá gốc" min="0" step="1000"
-                                                oninput="calculateDiscountedPrice()">
+                                            {{-- Hiển thị cho người dùng nhập (định dạng đẹp) --}}
+                                            <input type="text" class="form-control" id="original_price_display"
+                                                placeholder="Nhập giá gốc"
+                                                value="{{ old('original_price', number_format($product->original_price ?? 0, 0, ',', '.')) }}"
+                                                oninput="formatCurrency(this)" autocomplete="off">
+
+                                            {{-- Input thật được submit --}}
+                                            <input type="hidden" name="original_price" id="original_price"
+                                                value="{{ old('original_price', $product->original_price ?? 0) }}">
+
                                             <span class="input-group-text">VND</span>
                                         </div>
-                                        <small class="text-muted">Giá tăng theo bước 1.000 VND</small>
-                                    </div>
 
+                                        <small class="text-muted">Giá tăng theo bước 1.000 VND</small>
+
+                                        @error('original_price')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                     {{-- Phần trăm giảm giá --}}
                                     <div class="col-md-6 mb-3">
                                         <label for="discount_percent" class="form-label fw-semibold">Phần trăm giảm
@@ -727,11 +738,97 @@
     };
     // sửa sản phẩm 
     document.addEventListener('DOMContentLoaded', function() {
-        // ==== Xử lý biến thể ====
+        // ===== Xử lý sản phẩm đơn =====
+        const displayPriceInput = document.getElementById('original_price_display');
+        const hiddenPriceInput = document.getElementById('original_price');
+        const discountPercentInput = document.getElementById('discount_percent');
+        const discountedPriceInput = document.getElementById('discounted_price');
+
+        const currentPriceDisplay = document.getElementById('current_price_display');
+        const discountedPriceDisplay = document.getElementById('discounted_price_display');
+
+        const spanCurrentOriginal = document.getElementById('current_original_price');
+        const spanCurrentDiscounted = document.getElementById('current_discounted_price');
+        const spanCurrentPercent = document.getElementById('current_discount_percent');
+        const spanFinalPrice = document.getElementById('final_price');
+        const spanSavings = document.getElementById('savings_amount');
+        const spanSavingsPercent = document.getElementById('savings_percent');
+
+        function formatCurrency(input) {
+            let raw = input.value.replace(/[^\d]/g, '');
+            if (raw) {
+                input.value = parseInt(raw).toLocaleString('vi-VN');
+            } else {
+                input.value = '';
+            }
+        }
+
+        function parseCurrency(value) {
+            return parseFloat((value || '').replace(/[^\d]/g, '')) || 0;
+        }
+
+        function calculateDiscountedPrice() {
+            const original = parseCurrency(displayPriceInput.value);
+            const percent = parseFloat(discountPercentInput.value) || 0;
+
+            hiddenPriceInput.value = original; // cập nhật input hidden
+
+            if (percent >= 100) {
+                alert("Phần trăm giảm giá phải nhỏ hơn 100%");
+                discountPercentInput.value = '';
+                discountedPriceInput.value = '';
+                discountedPriceDisplay.style.display = 'none';
+                return;
+            }
+
+            if (original > 0 && percent > 0) {
+                const discountAmount = original * (percent / 100);
+                const finalPrice = original - discountAmount;
+
+                discountedPriceInput.value = Math.round(finalPrice);
+
+                // Cập nhật hiển thị
+                if (spanCurrentOriginal) spanCurrentOriginal.textContent = original.toLocaleString('vi-VN') +
+                    ' VND';
+                if (spanCurrentDiscounted) spanCurrentDiscounted.textContent = finalPrice.toLocaleString(
+                    'vi-VN') + ' VND';
+                if (spanCurrentPercent) spanCurrentPercent.textContent = percent + '%';
+                if (spanFinalPrice) spanFinalPrice.textContent = finalPrice.toLocaleString('vi-VN') + ' VND';
+                if (spanSavings) spanSavings.textContent = discountAmount.toLocaleString('vi-VN') + ' VND';
+                if (spanSavingsPercent) spanSavingsPercent.textContent = percent + '%';
+
+                discountedPriceDisplay.style.display = 'block';
+            } else {
+                discountedPriceInput.value = '';
+                discountedPriceDisplay.style.display = 'none';
+            }
+        }
+
+        if (displayPriceInput && discountPercentInput) {
+            displayPriceInput.addEventListener('input', function() {
+                formatCurrency(displayPriceInput);
+                calculateDiscountedPrice();
+            });
+
+            discountPercentInput.addEventListener('input', calculateDiscountedPrice);
+
+            // Gọi khi trang load để hiển thị đúng nếu có giá và phần trăm sẵn
+            formatCurrency(displayPriceInput);
+            calculateDiscountedPrice();
+        }
+
+        // ===== Xử lý form cập nhật biến thể =====
         const form = document.getElementById('editVariantForm');
         if (form) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
+
+                // Bỏ dấu chấm ngăn cách số tiền trong input giá
+                const inputPrice = document.getElementById('original_price');
+                if (inputPrice) {
+                    inputPrice.value = parseCurrency(inputPrice.value);
+                }
+
                 const formData = new FormData(form);
                 const url = form.action;
 
@@ -766,66 +863,16 @@
                         console.error('❌ Fetch Error:', error);
                         alert('Đã xảy ra lỗi không xác định khi cập nhật.');
                     });
+
             });
 
-            // Gắn auto-SKU
+            // Auto-SKU
             document.getElementById('editMainAttributeName')?.addEventListener('input', generateSku);
             document.getElementById('editSubAttributeId')?.addEventListener('change', generateSku);
         }
-
-        // ==== Xử lý sản phẩm đơn ====
-        const originalPriceInput = document.getElementById('original_price');
-        const discountPercentInput = document.getElementById('discount_percent');
-        const discountedPriceInput = document.getElementById('discounted_price');
-
-        if (originalPriceInput && discountPercentInput && discountedPriceInput) {
-            function formatCurrency(amount) {
-                return new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
-            }
-
-            function calculateDiscountedPrice() {
-                const originalPrice = parseFloat(originalPriceInput.value) || 0;
-                const discountPercent = parseFloat(discountPercentInput.value) || 0;
-
-                if (discountPercent >= 100) {
-                    alert("Phần trăm giảm giá phải nhỏ hơn 100%");
-                    discountPercentInput.value = '';
-                    discountedPriceInput.value = '';
-                    document.getElementById('current_price_display').style.display = 'none';
-                    document.getElementById('discounted_price_display').style.display = 'none';
-                    return;
-                }
-
-                const discountAmount = originalPrice * (discountPercent / 100);
-                const finalPrice = originalPrice - discountAmount;
-
-                if (originalPrice > 0 && discountPercent > 0) {
-                    document.getElementById('current_price_display').style.display = 'block';
-                    document.getElementById('discounted_price_display').style.display = 'block';
-
-                    document.getElementById('current_original_price').textContent = formatCurrency(
-                        originalPrice);
-                    document.getElementById('current_discounted_price').textContent = formatCurrency(
-                        finalPrice);
-                    document.getElementById('current_discount_percent').textContent = discountPercent + '%';
-                    document.getElementById('final_price').textContent = formatCurrency(finalPrice);
-                    document.getElementById('savings_amount').textContent = formatCurrency(discountAmount);
-                    document.getElementById('savings_percent').textContent = discountPercent + '%';
-
-                    discountedPriceInput.value = finalPrice;
-                } else {
-                    document.getElementById('current_price_display').style.display = 'none';
-                    document.getElementById('discounted_price_display').style.display = 'none';
-                    discountedPriceInput.value = '';
-                }
-            }
-
-            // Gắn sự kiện
-            originalPriceInput.addEventListener('input', calculateDiscountedPrice);
-            discountPercentInput.addEventListener('input', calculateDiscountedPrice);
-            calculateDiscountedPrice(); // Gọi khi trang load
-        }
     });
+
+
 
     // Thêm event listener cho cả hai input
     document.getElementById('original_price').addEventListener('input', calculateDiscountedPrice);

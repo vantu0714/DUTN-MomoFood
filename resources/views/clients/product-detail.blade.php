@@ -314,7 +314,7 @@
                                 </div>
                                 <div class="available-stock text-muted ms-3" id="availableStock">
                                     {{ $product->variants->first()?->quantity_in_stock ?? $product->quantity_in_stock }}
-                                    sản phẩm có sẵn
+                                     sản phẩm có sẵn
                                 </div>
                             </div>
                             <button type="submit" class="add-to-cart-btn w-100">
