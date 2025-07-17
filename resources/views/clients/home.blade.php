@@ -170,103 +170,6 @@
 
                     <div id="filtered-products">
                         @include('clients.components.filtered-products')
-                    <div class="tab-content">
-                        <div id="tab-1" class="tab-pane fade show active p-0">
-                            <div class="row g-4">
-                                @foreach ($products as $product)
-                                    @php
-                                        $firstVariant = null;
-                                        $price = null;
-                                        $original = null;
-
-                                        if ($product->product_type === 'variant') {
-                                            $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
-                                            $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
-                                            $original = $firstVariant?->price ?? 0;
-                                        } else {
-                                            $price = $product->discounted_price ?? $product->original_price;
-                                            $original = $product->original_price;
-                                        }
-
-                                        $variants =
-                                            $product->product_type === 'variant'
-                                                ? $product->variants->map(
-                                                    fn($v) => [
-                                                        'id' => $v->id,
-                                                        'flavor' => $v->flavor,
-                                                        'size' => $v->size,
-                                                        'price' => $v->price,
-                                                        'discounted_price' => $v->discounted_price,
-                                                        'quantity' => $v->quantity_in_stock,
-                                                    ],
-                                                )
-                                                : [];
-                                    @endphp
-
-                                    <div class="col-12 col-md-6 col-lg-4 col-xl-3">
-                                        <div
-                                            class="card h-100 shadow-sm border border-secondary rounded-4 d-flex flex-column">
-                                            <a href="{{ route('product-detail.show', $product->id) }}">
-                                                <div class="product-img-wrapper">
-                                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                        alt="{{ $product->product_name }}"
-                                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                                        class="img-fluid w-100">
-                                                </div>
-                                            </a>
-
-                                            <div
-                                                class="badge bg-secondary text-white position-absolute top-0 start-0 m-2 rounded-pill px-3 py-1">
-                                                {{ $product->category?->category_name ?? 'Không rõ' }}
-                                            </div>
-
-                                            <div class="card-body d-flex flex-column justify-content-between">
-                                                <div>
-                                                    <h6 class="fw-bold text-dark text-truncate"
-                                                        title="{{ $product->product_name }}">
-                                                        {{ $product->product_name }}
-                                                    </h6>
-                                                    <p class="text-muted small mb-2">Mã: {{ $product->product_code }}
-                                                    </p>
-                                                </div>
-
-                                                <div class="mb-2">
-                                                    @if ($price && $original && $price < $original)
-                                                        <div class="text-danger fw-bold fs-5">
-                                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                                        </div>
-                                                        <div class="text-muted text-decoration-line-through small">
-                                                            {{ number_format($original, 0, ',', '.') }} VND
-                                                        </div>
-                                                    @elseif ($price)
-                                                        <div class="text-danger fw-bold fs-5">
-                                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                                        </div>
-                                                    @else
-                                                        <div class="text-muted">Liên hệ để biết giá</div>
-                                                    @endif
-                                                </div>
-
-                                                <div class="d-flex justify-content-end mt-auto">
-                                                    <button type="button" class="btn btn-white open-cart-modal"
-                                                        data-product-id="{{ $product->id }}"
-                                                        data-product-name="{{ $product->product_name }}"
-                                                        data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                        data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                                        data-product-price="{{ $price ?? 0 }}"
-                                                        data-product-original-price="{{ $original ?? 0 }}"
-                                                        data-product-description="{{ $product->description }}"
-                                                        data-variants='@json($variants)'
-                                                        data-bs-toggle="modal" data-bs-target="#cartModal">
-                                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div> {{-- row --}}
-                        </div>
                     </div>
                 </div>
             </div>
@@ -333,6 +236,7 @@
                     $firstVariant = null;
                     $price = 0;
                     $original = 0;
+                    $variants = [];
 
                     if ($product->product_type === 'variant') {
                         $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
@@ -340,11 +244,23 @@
                             $price = $firstVariant->discounted_price ?? $firstVariant->price;
                             $original = $firstVariant->price;
                         }
+
+                        $variants = $product->variants->map(function ($v) {
+                            return [
+                                'id' => $v->id,
+                                'flavor' => $v->flavor,
+                                'size' => $v->size,
+                                'price' => $v->price,
+                                'discounted_price' => $v->discounted_price,
+                                'quantity' => $v->quantity,
+                            ];
+                        });
                     } else {
                         $price = $product->discounted_price ?? $product->original_price;
                         $original = $product->original_price;
                     }
                 @endphp
+
 
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
@@ -388,11 +304,6 @@
                                         <div class="text-muted text-decoration-line-through small">
                                             {{ number_format($original, 0, ',', '.') }} VND
                                         </div>
-                                    @elseif ($price)
-                                        <div class="text-danger fw-bold fs-5">
-                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                        </div>
-                                    @else
                                         <div class="text-muted">Liên hệ để biết giá</div>
                                     @endif
                                 </div>
@@ -842,9 +753,13 @@
 </div>
 
 
+
+
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+
+        // Lấy các phần tử modal
         const productNameEl = document.getElementById('modal-product-name');
         const productImageEl = document.getElementById('modal-product-image');
         const productCategoryEl = document.getElementById('modal-product-category');
@@ -854,81 +769,83 @@
         const variantOptionsEl = document.getElementById('variant-options');
         const productIdInput = document.getElementById('modal-product-id');
         const productVariantIdInput = document.getElementById('modal-variant-id');
-
-        // Quantity buttons
         const quantityInput = document.getElementById('modal-quantity');
-        document.getElementById('increase-qty').onclick = () => quantityInput.stepUp();
-        document.getElementById('decrease-qty').onclick = () => quantityInput.stepDown();
 
-        // Xử lý click vào nút giỏ hàng
+        // Nút tăng giảm số lượng
+        document.getElementById('increase-qty').addEventListener('click', () => quantityInput.stepUp());
+        document.getElementById('decrease-qty').addEventListener('click', () => {
+            if (quantityInput.value > 1) quantityInput.stepDown();
+        });
+
+        // Bắt sự kiện click vào các nút mở modal
         document.querySelectorAll('.open-cart-modal').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
+                // Lấy dữ liệu từ data attributes
                 const productId = this.dataset.productId;
                 const productName = this.dataset.productName;
                 const productImage = this.dataset.productImage;
                 const productCategory = this.dataset.productCategory;
-                const productPrice = this.dataset.productPrice;
-                const productOriginalPrice = this.dataset.productOriginalPrice;
-                const productDescription = this.dataset.productDescription;
+                const productPrice = parseInt(this.dataset.productPrice || 0);
+                const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
+                const productDescription = this.dataset.productDescription || '';
                 const variants = JSON.parse(this.dataset.variants || '[]');
 
-                // Set thông tin vào modal
+                // Gán dữ liệu vào modal
                 productIdInput.value = productId;
                 productNameEl.textContent = productName;
                 productImageEl.src = productImage;
                 productCategoryEl.textContent = productCategory;
-                productPriceEl.textContent = parseInt(productPrice).toLocaleString();
-                productOriginalPriceEl.textContent = productOriginalPrice ? parseInt(
-                    productOriginalPrice).toLocaleString() + ' VND' : '';
-                productDescEl.textContent = productDescription || '';
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice)
+                    ? productOriginalPrice.toLocaleString() + ' VND'
+                    : '';
+                productDescEl.textContent = productDescription;
 
-                // Render biến thể
-                variantOptionsEl.innerHTML = '';
-                if (variants.length > 0) {
-                    variants.forEach(variant => {
-                        const option = document.createElement('div');
-                        option.className = 'form-check';
-                        option.innerHTML = `
-                            <input class="form-check-input" type="radio" name="product_variant_id" value="${variant.id}" id="variant-${variant.id}">
-                            <label class="form-check-label" for="variant-${variant.id}">
-                                Vị: ${variant.flavor || 'N/A'}, Size: ${variant.size || 'N/A'}
-                            </label>
-                        `;
-                        variantOptionsEl.appendChild(option);
-                    });
-
-                    // Không tự chọn biến thể
-                    productVariantIdInput.value = '';
-
-                    // Khi chọn biến thể, cập nhật hidden input
-                    variantOptionsEl.querySelectorAll('input[name="product_variant_id"]')
-                        .forEach(input => {
-                            input.addEventListener('change', () => {
-                                productVariantIdInput.value = input.value;
-                            });
-                        });
-                } else {
-                    productVariantIdInput.value = '';
-                }
-
-                // Reset số lượng
+                // Gán lại số lượng mặc định
                 quantityInput.value = 1;
 
-                // Hiển thị modal
+                // Hiển thị các biến thể (nếu có)
+                variantOptionsEl.innerHTML = '';
+                productVariantIdInput.value = '';
+
+                if (variants.length > 0) {
+                    variants.forEach(variant => {
+                        const radioHtml = `
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="product_variant_id"
+                                    value="${variant.id}" id="variant-${variant.id}">
+                                <label class="form-check-label" for="variant-${variant.id}">
+                                    Vị: ${variant.flavor || 'N/A'}, Size: ${variant.size || 'N/A'},
+                                    Giá: ${parseInt(variant.discounted_price || variant.price).toLocaleString()} VND
+                                </label>
+                            </div>
+                        `;
+                        variantOptionsEl.insertAdjacentHTML('beforeend', radioHtml);
+                    });
+
+                    // Khi chọn biến thể → set vào input hidden
+                    variantOptionsEl.querySelectorAll('input[name="product_variant_id"]').forEach(input => {
+                        input.addEventListener('change', () => {
+                            productVariantIdInput.value = input.value;
+                        });
+                    });
+                }
+
+                // Mở modal
                 modal.show();
             });
         });
 
-        // Bắt buộc chọn biến thể trước khi submit
-        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
-            const selectedVariant = document.querySelector('input[name="product_variant_id"]:checked');
-            if (!selectedVariant && variantOptionsEl.innerHTML !== '') {
+        // Ngăn submit nếu chưa chọn biến thể (nếu có)
+        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function (e) {
+            if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
                 e.preventDefault();
                 alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
             }
         });
     });
 </script>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1071,13 +988,13 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const categoryTabs = document.querySelectorAll('.category-tab');
         const filteredProducts = document.querySelector('#filtered-products');
 
         // Bắt sự kiện click vào danh mục
         categoryTabs.forEach(tab => {
-            tab.addEventListener('click', function (e) {
+            tab.addEventListener('click', function(e) {
                 e.preventDefault(); // Ngăn nhảy trang (nếu là thẻ <a>)
                 categoryTabs.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
@@ -1095,7 +1012,7 @@
         });
 
         // Bắt sự kiện phân trang (AJAX)
-        document.addEventListener('click', function (e) {
+        document.addEventListener('click', function(e) {
             const link = e.target.closest('.pagination a');
             if (link) {
                 e.preventDefault();
@@ -1138,3 +1055,5 @@
         border-color: #dc3545;
     }
 </style>
+
+
