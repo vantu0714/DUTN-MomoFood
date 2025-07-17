@@ -62,7 +62,7 @@
                         <div class="action-buttons">
                             <a href="{{ route('admin.product_variants.createMultiple') }}" class="add-btn">
                                 <i class="fas fa-layer-group"></i>
-                                <span>Thêm biến thể hàng loạt</span>
+                                <span>Thêm biến thể sản phẩm có sẳn </span>
                             </a>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
                                                 <th><i class="fas fa-tag"></i> Giá</th>
                                                 <th><i class="fas fa-warehouse"></i> Tồn kho</th>
                                                 <th><i class="fas fa-image"></i> Ảnh</th>
-                                                <th><i class="fas fa-cogs"></i> Hành động</th>
+                                                {{-- <th><i class="fas fa-cogs"></i> Hành động</th> --}}
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -142,7 +142,7 @@
                                                             @endif
                                                         </div>
                                                     </td>
-                                                    <td class="actions-cell">
+                                                    {{-- <td class="actions-cell">
                                                         <div class="action-buttons-group">
                                                             <a href="{{ route('admin.product_variants.edit', $variant->id) }}" 
                                                                class="action-btn edit-btn" title="Chỉnh sửa">
@@ -157,7 +157,7 @@
                                                                 </button>
                                                             </form>
                                                         </div>
-                                                    </td>
+                                                    </td> --}}
                                                 </tr>
                                             @endforeach
                                         </tbody>
