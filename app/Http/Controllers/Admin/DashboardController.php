@@ -79,7 +79,8 @@ class DashboardController extends Controller
             ->get();
 
         // Tổng tồn kho
-        $totalStock = Product::sum('quantity');
+       $totalStock = Product::sum('quantity_in_stock');
+
 
         return view('admin.dashboard', compact(
             'totalRevenue',
