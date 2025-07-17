@@ -160,7 +160,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('product-variants')->name('product_variants.')->group(function () {
        
         Route::get('/cancel', [ProductVariantController::class, 'cancel'])->name('cancel');
-
         Route::get('/', [ProductVariantController::class, 'index'])->name('index');
         Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
         Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
