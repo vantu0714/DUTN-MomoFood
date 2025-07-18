@@ -13,7 +13,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $filterType = $request->filter_type ?? 'date';
+        $filterType = $request->filter_type;
+
         $fromDate = $request->from_date;
         $toDate = $request->to_date;
         $month = $request->month;
@@ -22,12 +23,12 @@ class DashboardController extends Controller
         // Query cơ bản cho đơn hàng đã hoàn thành
         $orderQuery = Order::query()->where('status', 3);
 
-        // Áp dụng bộ lọc
+        // Áp dụng bộ lọc nếu người dùng đã chọn
         if ($filterType === 'date' && $fromDate && $toDate) {
             $orderQuery->whereBetween('created_at', ["$fromDate 00:00:00", "$toDate 23:59:59"]);
         } elseif ($filterType === 'month' && $month && $year) {
             $orderQuery->whereMonth('created_at', $month)
-                       ->whereYear('created_at', $year);
+                ->whereYear('created_at', $year);
         } elseif ($filterType === 'year' && $year) {
             $orderQuery->whereYear('created_at', $year);
         }
@@ -44,18 +45,19 @@ class DashboardController extends Controller
         $bestSellers = Product::withSum(['orderDetails as total_sold' => function ($q) use ($orderIds) {
             $q->whereIn('order_id', $orderIds);
         }], 'quantity')
-        ->orderByDesc('total_sold')
-        ->take(5)
-        ->get();
+            ->orderByDesc('total_sold')
+            ->take(5)
+            ->get();
 
-        // Biểu đồ doanh thu theo tháng (12 tháng trong năm)
-        $monthlyData = Order::where('status', 3)
-            ->whereYear('created_at', $year)
+        $filteredOrders = clone $orderQuery;
+
+        $monthlyData = $filteredOrders
             ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total', 'month')
             ->toArray();
+
 
         $chartLabels = [];
         $chartData = [];
@@ -66,8 +68,8 @@ class DashboardController extends Controller
 
         // Khách hàng mua nhiều nhất
         $topCustomers = User::whereHas('orders', function ($q) {
-                $q->where('status', 3);
-            })
+            $q->where('status', 3);
+        })
             ->withCount(['orders' => function ($q) {
                 $q->where('status', 3);
             }])
@@ -80,6 +82,14 @@ class DashboardController extends Controller
 
         // Tổng tồn kho
         $totalStock = Product::sum('quantity');
+        // Lấy chi tiết đơn hàng để tính lợi nhuận
+        $orderDetails = OrderDetail::whereIn('order_id', $orderIds)
+            ->join('products', 'order_details.product_id', '=', 'products.id')
+            ->selectRaw('SUM((order_details.price - products.original_price) * order_details.quantity) as total_profit')
+            ->first();
+
+        $totalProfit = $orderDetails->total_profit ?? 0;
+
 
         return view('admin.dashboard', compact(
             'totalRevenue',
@@ -94,7 +104,10 @@ class DashboardController extends Controller
             'month',
             'year',
             'topCustomers',
-            'totalStock'
+            'totalStock',
+            'totalProfit',
+
         ));
     }
+    
 }

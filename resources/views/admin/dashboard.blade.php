@@ -5,40 +5,60 @@
     <h3 class="mb-4 fw-bold text-primary">📊 Thống kê đơn hàng</h3>
 
     {{-- Form lọc --}}
-    <form method="GET" class="row g-3 align-items-end bg-light p-3 rounded shadow-sm mb-4" id="filter-form">
+<form action="{{ route('admin.dashboard') }}" method="GET" class="mb-4">
+    <div class="row g-3 align-items-end">
+        {{-- Lọc theo loại --}}
         <div class="col-md-3">
-            <label for="filter_type" class="form-label">Lọc theo</label>
-            <select class="form-select" name="filter_type" id="filter_type">
-                <option value="date" {{ request('filter_type') == 'date' ? 'selected' : '' }}>📅 Khoảng ngày</option>
-                <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>🗓️ Tháng</option>
-                <option value="year" {{ request('filter_type') == 'year' ? 'selected' : '' }}>📆 Năm</option>
+            <label for="filter_type" class="form-label">Loại lọc</label>
+            <select name="filter_type" id="filter_type" class="form-select" onchange="toggleFilterInputs()">
+                <option value="">-- Chọn loại lọc --</option>
+                <option value="date" {{ request('filter_type') == 'date' ? 'selected' : '' }}>Theo ngày</option>
+                <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>Theo tháng</option>
+                <option value="year" {{ request('filter_type') == 'year' ? 'selected' : '' }}>Theo năm</option>
             </select>
         </div>
 
+        {{-- Chọn từ ngày đến ngày --}}
         <div class="col-md-3 filter-date">
             <label for="from_date" class="form-label">Từ ngày</label>
-            <input type="date" class="form-control" name="from_date" value="{{ request('from_date') }}">
+            <input type="date" name="from_date" id="from_date" class="form-control" value="{{ request('from_date') }}">
         </div>
-
         <div class="col-md-3 filter-date">
             <label for="to_date" class="form-label">Đến ngày</label>
-            <input type="date" class="form-control" name="to_date" value="{{ request('to_date') }}">
+            <input type="date" name="to_date" id="to_date" class="form-control" value="{{ request('to_date') }}">
         </div>
 
+        {{-- Chọn tháng --}}
         <div class="col-md-2 filter-month">
             <label for="month" class="form-label">Tháng</label>
-            <input type="number" name="month" min="1" max="12" class="form-control" value="{{ request('month') }}">
+            <select name="month" id="month" class="form-select">
+                <option value="">-- Chọn tháng --</option>
+                @for ($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>Tháng {{ $m }}</option>
+                @endfor
+            </select>
         </div>
 
+        {{-- Chọn năm --}}
         <div class="col-md-2 filter-month filter-year">
             <label for="year" class="form-label">Năm</label>
-            <input type="number" name="year" min="2000" class="form-control" value="{{ request('year') ?? now()->year }}">
+            <select name="year" id="year" class="form-select">
+                @php
+                    $currentYear = now()->year;
+                @endphp
+                @for ($y = $currentYear; $y >= $currentYear - 5; $y--)
+                    <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+            </select>
         </div>
 
+        {{-- Nút lọc --}}
         <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="fas fa-filter me-1"></i> Lọc</button>
+            <button type="submit" class="btn btn-primary w-100">Lọc</button>
         </div>
-    </form>
+    </div>
+</form>
+
 
     {{-- Tổng quan --}}
     <div class="row g-4 mb-4">
@@ -68,12 +88,14 @@
         </div>
         <div class="col-md-3">
             <div class="card shadow-sm border-0 bg-info text-white rounded-4">
-                <div class="card-body text-center">
-                    <h5 class="card-title">🏷️ Hàng tồn kho</h5>
-                    <p class="display-6 fw-bold mb-0">{{ $totalStock }}</p>
+                <div class="card-body text-center"> 
+                    <h5 class="card-title">🏷️ Lợi nhuận</h5>
+                    <p class="display-6 fw-bold mb-0">{{ number_format($totalProfit, 0, ',', '.') }} đ</p>
                 </div>
             </div>
         </div>
+</div>
+
     </div>
 
     {{-- Biểu đồ doanh thu --}}
@@ -97,6 +119,8 @@
                     <tr>
                         <th>#</th>
                         <th>Tên sản phẩm</th>
+                        <th>Hình ảnh</th>
+                        <th>giá</th>
                         <th>Số lượng đã bán</th>
                     </tr>
                 </thead>
@@ -105,6 +129,8 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $product->product_name }}</td>
+                            <td>{{ $product->image }}</td>
+                            <td>{{ $product->price }}</td>
                             <td>{{ $product->total_sold }}</td>
                         </tr>
                     @empty
@@ -195,27 +221,29 @@
 </script>
 
 {{-- Toggle bộ lọc --}}
+@push('scripts')
 <script>
-    function toggleFilterFields() {
+    function toggleFilterInputs() {
         const type = document.getElementById('filter_type').value;
 
-        document.querySelectorAll('.filter-date').forEach(el => el.classList.add('d-none'));
-        document.querySelectorAll('.filter-month').forEach(el => el.classList.add('d-none'));
-        document.querySelectorAll('.filter-year').forEach(el => el.classList.add('d-none'));
+        // Ẩn hết trước
+        document.querySelectorAll('.filter-date, .filter-month, .filter-year').forEach(el => {
+            el.style.display = 'none';
+        });
 
+        // Hiện theo loại chọn
         if (type === 'date') {
-            document.querySelectorAll('.filter-date').forEach(el => el.classList.remove('d-none'));
+            document.querySelectorAll('.filter-date').forEach(el => el.style.display = 'block');
         } else if (type === 'month') {
-            document.querySelectorAll('.filter-month').forEach(el => el.classList.remove('d-none'));
-            document.querySelectorAll('.filter-year').forEach(el => el.classList.remove('d-none'));
+            document.querySelectorAll('.filter-month').forEach(el => el.style.display = 'block');
         } else if (type === 'year') {
-            document.querySelectorAll('.filter-year').forEach(el => el.classList.remove('d-none'));
+            document.querySelectorAll('.filter-year').forEach(el => el.style.display = 'block');
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        toggleFilterFields();
-        document.getElementById('filter_type').addEventListener('change', toggleFilterFields);
-    });
+    // Chạy lần đầu để set đúng hiển thị
+    document.addEventListener('DOMContentLoaded', toggleFilterInputs);
 </script>
+@endpush
+
 @endsection
