@@ -38,6 +38,7 @@
                             <tr>
                                 <th class="border-0">#</th>
                                 <th class="border-0">Tên mã</th>
+                                <th class="border-0">Mã code</th>
                                 <th class="border-0">Loại giảm</th>
                                 <th class="border-0">Giá trị</th>
                                 <th class="border-0">Ngày</th>
@@ -49,16 +50,29 @@
                             @forelse ($promotions as $promotion)
                                 @php
                                     $now = \Carbon\Carbon::now();
-                                    $isActive = $promotion->status && $now->between($promotion->start_date, $promotion->end_date);
+                                    $isActive =
+                                        $promotion->status &&
+                                        $now->between($promotion->start_date, $promotion->end_date);
+
+                                    $typeText = [
+                                        'fixed' => 'Giảm theo số tiền',
+                                        'percent' => 'Giảm theo phần trăm',
+                                    ];
                                 @endphp
                                 <tr class="align-middle">
                                     <td>#{{ $promotion->id }}</td>
-                                    <td class="fw-semibold text-primary">{{ $promotion->promotion_name }}</td>
+                                    <td class="fw-semibold text-primary">{{ $promotion->promotion_name }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary text-uppercase">{{ $promotion->code }}</span>
+                                    </td>
+
                                     <td>
                                         <span class="badge bg-info text-dark text-uppercase">
-                                            {{ $promotion->discount_type }}
+                                            {{ $typeText[$promotion->discount_type] ?? $promotion->discount_type }}
                                         </span>
                                     </td>
+
                                     <td>
                                         @if ($promotion->discount_type === 'percent')
                                             {{ $promotion->discount_value }}%
@@ -67,7 +81,8 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <small>{{ $promotion->start_date->format('d/m/Y') }} → {{ $promotion->end_date->format('d/m/Y') }}</small>
+                                        <small>{{ $promotion->start_date->format('d/m/Y') }} →
+                                            {{ $promotion->end_date->format('d/m/Y') }}</small>
                                     </td>
                                     <td>
                                         @if ($isActive)
@@ -78,14 +93,16 @@
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-1">
-                                            <a href="{{ route('admin.promotions.show', $promotion->id) }}" class="btn btn-sm btn-outline-info">
+                                            <a href="{{ route('admin.promotions.show', $promotion->id) }}"
+                                                class="btn btn-sm btn-outline-info">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ route('admin.promotions.edit', $promotion->id) }}" class="btn btn-sm btn-outline-warning">
+                                            <a href="{{ route('admin.promotions.edit', $promotion->id) }}"
+                                                class="btn btn-sm btn-outline-warning">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <form action="{{ route('admin.promotions.destroy', $promotion->id) }}" method="POST"
-                                                onsubmit="return confirm('Bạn có chắc muốn xóa?')">
+                                            <form action="{{ route('admin.promotions.destroy', $promotion->id) }}"
+                                                method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">

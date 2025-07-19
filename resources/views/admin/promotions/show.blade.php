@@ -25,7 +25,17 @@
                 <table class="table table-borderless mb-0">
                     <tbody>
                         <tr>
-                            <th class="text-nowrap w-25">Loại giảm:</th>
+                            <th class="w-25 text-nowrap">Tên chương trình:</th>
+                            <td>{{ $promotion->promotion_name }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Mã giảm giá:</th>
+                            <td>{{ $promotion->code }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Loại giảm:</th>
                             <td>
                                 {{ $promotion->discount_type === 'percent' ? 'Giảm phần trăm' : 'Giảm số tiền' }}
                             </td>
@@ -45,12 +55,38 @@
                         <tr>
                             <th>Giảm tối đa:</th>
                             <td>
-                                @if ($promotion->max_discount_value)
+                                @if ($promotion->discount_type === 'percent' && $promotion->max_discount_value)
                                     {{ number_format($promotion->max_discount_value, 0, ',', '.') }}₫
                                 @else
                                     Không giới hạn
                                 @endif
                             </td>
+                        </tr>
+
+                        <tr>
+                            <th>Tổng đơn hàng tối thiểu:</th>
+                            <td>
+                                @if ($promotion->min_total_spent)
+                                    {{ number_format($promotion->min_total_spent, 0, ',', '.') }}₫
+                                @else
+                                    Không yêu cầu
+                                @endif
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th>Chỉ áp dụng cho khách VIP:</th>
+                            <td>{{ $promotion->vip_only ? 'Có' : 'Không' }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Số lượt đã sử dụng:</th>
+                            <td>{{ $promotion->used_count ?? 0 }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Giới hạn lượt sử dụng:</th>
+                            <td>{{ $promotion->usage_limit ?? 'Không giới hạn' }}</td>
                         </tr>
 
                         <tr>
@@ -64,22 +100,12 @@
                         </tr>
 
                         <tr>
-                            <th>Số lượt sử dụng:</th>
-                            <td>{{ $promotion->used_count ?? 0 }}</td>
-                        </tr>
-
-                        <tr>
-                            <th>Giới hạn lượt sử dụng:</th>
-                            <td>{{ $promotion->usage_limit ?? 'Không giới hạn' }}</td>
-                        </tr>
-
-                        <tr>
                             <th>Mô tả:</th>
                             <td>{{ $promotion->description ?? 'Không có mô tả' }}</td>
                         </tr>
 
                         <tr>
-                            <th>Trạng thái (gốc):</th>
+                            <th>Trạng thái:</th>
                             <td>
                                 @if ($promotion->status)
                                     <span class="badge bg-success">Đang bật</span>
