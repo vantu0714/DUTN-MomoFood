@@ -348,18 +348,19 @@ class ProductVariantController extends Controller
         }
     }
     // thêm biến thể cho sản phẩm có sẳn
-    public function createMultiple()
-    {
-        $products = Product::where('status', 1)
-            ->with(['variants.attributeValues.attribute'])
-            ->orderByDesc('id')
-            ->get();
+   public function createMultiple()
+{
+    $products = Product::where('status', 1)
+        ->with(['variants.attributeValues.attribute'])
+        ->withCount('variants') 
+        ->orderByDesc('id')
+        ->get();
 
-        // Đổi tên truy vấn 'Size' thành 'Khối lượng'
-        $sizeValues = Attribute::where('name', 'Khối lượng')->first()?->values ?? collect();
+    $sizeValues = Attribute::where('name', 'Khối lượng')->first()?->values ?? collect();
 
-        return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
-    }
+    return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
+}
+
 
     public function storeMultiple(Request $request)
     {
@@ -409,14 +410,19 @@ class ProductVariantController extends Controller
 
                         // Kiểm tra trùng biến thể (theo vị + khối lượng)
                         $exists = ProductVariant::where('product_id', $productId)
-                            ->whereHas('attributeValues', fn($q) => $q->where('attribute_value_id', $mainAttrValue->id))
-                            ->whereHas('attributeValues', fn($q) => $q->where('attribute_value_id', $sizeAttrValueId))
-                            ->withCount([
-                                'attributeValues as match_count' => fn($q) =>
-                                $q->whereIn('attribute_value_id', [$mainAttrValue->id, $sizeAttrValueId])
-                            ])
-                            ->having('match_count', 2)
-                            ->exists();
+                            ->whereHas('attributeValues', function ($q) use ($mainAttrValue, $sizeAttrValueId) {
+                                $q->whereIn('attribute_value_id', [$mainAttrValue->id, $sizeAttrValueId]);
+                            })
+                            ->with(['attributeValues' => function ($q) use ($mainAttrValue, $sizeAttrValueId) {
+                                $q->whereIn('attribute_value_id', [$mainAttrValue->id, $sizeAttrValueId]);
+                            }])
+                            ->get()
+                            ->filter(function ($variant) use ($mainAttrValue, $sizeAttrValueId) {
+                                $ids = $variant->attributeValues->pluck('id')->toArray();
+                                return in_array($mainAttrValue->id, $ids) && in_array($sizeAttrValueId, $ids);
+                            })
+                            ->isNotEmpty();
+
 
                         if ($exists) {
                             DB::rollBack();
