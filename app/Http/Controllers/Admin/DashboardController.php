@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -42,12 +43,23 @@ class DashboardController extends Controller
         $totalSold = OrderDetail::whereIn('order_id', $orderIds)->sum('quantity');
 
         // Sản phẩm bán chạy
-        $bestSellers = Product::withSum(['orderDetails as total_sold' => function ($q) use ($orderIds) {
-            $q->whereIn('order_id', $orderIds);
-        }], 'quantity')
-            ->orderByDesc('total_sold')
-            ->take(5)
+        $orderIds = Order::where('status', 3)->pluck('id');
+
+        $bestSellingProducts = DB::table('order_details')
+            ->join('products', 'order_details.product_id', '=', 'products.id')
+            ->whereIn('order_details.order_id', $orderIds)
+            ->select(
+                'products.id as product_id',
+                'products.product_name',
+                'products.image',
+                DB::raw('SUM(order_details.quantity) as total_quantity'),
+                DB::raw('MAX(order_details.price) as latest_price') // giá gần đây nhất để hiển thị
+            )
+            ->groupBy('products.id', 'products.product_name', 'products.image')
+            ->orderByDesc('total_quantity')
+            ->take(10)
             ->get();
+
 
         $filteredOrders = clone $orderQuery;
 
@@ -80,34 +92,62 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Tổng tồn kho
-        $totalStock = Product::sum('quantity');
-        // Lấy chi tiết đơn hàng để tính lợi nhuận
-        $orderDetails = OrderDetail::whereIn('order_id', $orderIds)
-            ->join('products', 'order_details.product_id', '=', 'products.id')
-            ->selectRaw('SUM((order_details.price - products.original_price) * order_details.quantity) as total_profit')
-            ->first();
+        // Tính tổng lợi nhuận
+        // Tính tổng lợi nhuận
+        $profits = DB::table('order_details as od')
+            ->join('orders as o', 'o.id', '=', 'od.order_id')
+            ->leftJoin('products as p', 'p.id', '=', 'od.product_id')
+            ->leftJoin('product_variants as pv', 'pv.id', '=', 'od.product_variant_id')
+            ->select(
+                DB::raw("COALESCE(p.product_name, 'Không xác định') as product_name"),
+                DB::raw("SUM(od.quantity) as total_sold"),
+                DB::raw("SUM(od.quantity * od.price) as total_revenue"),
+                DB::raw("
+            SUM(
+                od.quantity * 
+                CASE 
+                    WHEN od.product_variant_id IS NULL THEN p.original_price 
+                    ELSE pv.price 
+                END
+            ) as total_cost
+        "),
+                DB::raw("
+            SUM(
+                od.quantity * (
+                    od.price - 
+                    CASE 
+                        WHEN od.product_variant_id IS NULL THEN p.original_price 
+                        ELSE pv.price 
+                    END
+                )
+            ) as total_profit
+        ")
+            )
+            ->where('o.status', 3)
+            ->groupBy('od.product_id', 'od.product_variant_id')
+            ->get();
 
-        $totalProfit = $orderDetails->total_profit ?? 0;
+        // ⚠️ Bắt buộc phải có dòng này trước khi dùng compact
+        $totalCost = $profits->sum('total_cost');
+        $totalProfit = $profits->sum('total_profit');
 
 
         return view('admin.dashboard', compact(
+            'profits',
             'totalRevenue',
             'totalOrders',
             'totalSold',
-            'bestSellers',
-            'filterType',
+            'bestSellingProducts',
             'chartLabels',
             'chartData',
+            'filterType',
             'fromDate',
             'toDate',
             'month',
             'year',
             'topCustomers',
-            'totalStock',
-            'totalProfit',
-
+            'totalCost',
+            'totalProfit' // cái này bạn đã có rồi
         ));
     }
-    
 }
