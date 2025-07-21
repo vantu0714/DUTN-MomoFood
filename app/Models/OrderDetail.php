@@ -11,7 +11,7 @@ class OrderDetail extends Model
 
     protected $fillable = [
         'order_id',
-        'product_id', 
+        'product_id',
         'product_variant_id',
         'quantity',
         'price',
@@ -47,5 +47,10 @@ class OrderDetail extends Model
         return $this->product_variant_id && $this->productVariant
             ? $this->productVariant->name
             : 'Không có biến thể';
+    }
+
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class);
     }
 }
