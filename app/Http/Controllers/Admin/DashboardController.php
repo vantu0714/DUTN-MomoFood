@@ -132,6 +132,8 @@ class DashboardController extends Controller
         $totalProfit = $profits->sum('total_profit');
 
 
+        $totalStock = Product::sum('quantity_in_stock');
+
         return view('admin.dashboard', compact(
             'profits',
             'totalRevenue',

@@ -78,7 +78,7 @@ class OrderSeeder extends Seeder
             'payment_status' => 'unpaid',
             'status' => 1,
             'note' => 'Giao giờ hành chính',
-            'cancellation_reason' => null,
+            'reason' => null,
             'created_at' => $now,
             'updated_at' => $now,
         ]);
