@@ -460,11 +460,9 @@ class OrderController extends Controller
 
             // Validate dữ liệu đầu vào
             $validator = Validator::make($request->all(), [
-                'return_reason' => 'required|string|min:10|max:1000'
+                'return_reason' => 'required|string',
             ], [
                 'return_reason.required' => 'Vui lòng nhập lý do hoàn hàng',
-                'return_reason.min' => 'Lý do hoàn hàng phải có ít nhất 10 ký tự',
-                'return_reason.max' => 'Lý do hoàn hàng không được vượt quá 1000 ký tự'
             ]);
 
             if ($validator->fails()) {
@@ -494,8 +492,6 @@ class OrderController extends Controller
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                \Log::error('Return request error: ' . $e->getMessage());
-
                 return response()->json([
                     'success' => false,
                     'message' => 'Có lỗi xảy ra khi xử lý yêu cầu'
@@ -503,8 +499,6 @@ class OrderController extends Controller
             }
 
         } catch (\Exception $e) {
-            \Log::error('Return request outer error: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi xử lý yêu cầu hoàn hàng'
