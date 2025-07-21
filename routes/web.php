@@ -89,6 +89,8 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/create-payment', [ClientsOrderController::class, 'createPayment'])->name('create-payment');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
+        Route::post('/orders/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
+            ->name('request_return');
     });
 
     // Cart Management
@@ -158,7 +160,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Product Variants
     Route::prefix('product-variants')->name('product_variants.')->group(function () {
-       
+
         Route::get('/cancel', [ProductVariantController::class, 'cancel'])->name('cancel');
 
         Route::get('/', [ProductVariantController::class, 'index'])->name('index');
@@ -185,6 +187,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/{id}', [OrderController::class, 'update'])->name('update');
         Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
         Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+        Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])
+            ->name('approve_return');
+        Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])
+            ->name('reject_return');
     });
 
     // Promotion Management

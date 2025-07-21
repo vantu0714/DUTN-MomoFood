@@ -241,6 +241,7 @@ class OrderController extends Controller
         // Nếu chuyển sang trạng thái Hoàn thành (4) → auto paid
         if ($newStatus == 4) {
             $order->status = 4;
+            $order->completed_at = now();
             $order->payment_status = 'paid';
 
             foreach ($order->orderDetails as $detail) {
@@ -282,5 +283,60 @@ class OrderController extends Controller
         $order->save();
 
         return redirect()->route('admin.orders.index')->with('success', 'Đã hủy đơn hàng.');
+    }
+
+    public function approveReturn($id)
+    {
+        $order = Order::findOrFail($id);
+
+        // Kiểm tra trạng thái hiện tại phải là "Chờ xử lý hoàn hàng" (7)
+        if ($order->status != 7) {
+            return back()->with('error', 'Đơn hàng không ở trạng thái chờ xử lý hoàn hàng.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $order->update([
+                'status' => 5, // Hoàn hàng
+                'return_approved' => true,
+                'return_processed_at' => now(),
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Đã chấp nhận yêu cầu hoàn hàng.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    public function rejectReturn(Request $request, $id)
+    {
+        $request->validate([
+            'return_rejection_reason' => 'required|string|min:10|max:1000',
+        ]);
+
+        $order = Order::findOrFail($id);
+
+        // Kiểm tra trạng thái hiện tại phải là "Chờ xử lý hoàn hàng" (7)
+        if ($order->status != 7) {
+            return back()->with('error', 'Đơn hàng không ở trạng thái chờ xử lý hoàn hàng.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $order->update([
+                'status' => 8,
+                'return_approved' => false,
+                'return_rejection_reason' => $request->return_rejection_reason,
+                'return_processed_at' => now(),
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Đã từ chối yêu cầu hoàn hàng.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 }

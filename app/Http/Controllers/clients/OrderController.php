@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -298,17 +299,22 @@ class OrderController extends Controller
 
     public function orderDetail($id)
     {
-        $order = Order::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        if (session()->has('order')) {
+            $order = session('order');
+        } else {
+            $order = Order::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->firstOrFail();
+        }
 
-        $items = DB::table('order_details')
-            ->join('products', 'order_details.product_id', '=', 'products.id')
-            ->where('order_id', $id)
-            ->select('order_details.*', 'products.product_name as product_name')
-            ->get();
+        // Thêm logic kiểm tra thời gian hoàn hàng
+        $canReturn = false;
+        if ($order->status == 4 && $order->completed_at) {
+            $returnDeadline = Carbon::parse($order->completed_at)->addHours(24);
+            $canReturn = now()->lte($returnDeadline);
+        }
 
-        return view('clients.user.show-order', compact('order', 'items'));
+        return view('clients.user.show-order', compact('order', 'canReturn'));
     }
 
     public function cancel(Request $request, $id)
@@ -400,5 +406,144 @@ class OrderController extends Controller
     {
         session()->forget(['promotion', 'discount', 'promotion_name']);
         return redirect()->route('carts.index')->with('success', 'Đã hủy mã giảm giá.');
+    }
+
+    public function requestReturn(Request $request, $id)
+    {
+        $isAjax = $request->ajax() || $request->wantsJson();
+
+        try {
+            // Tìm đơn hàng
+            $order = Order::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy đơn hàng'
+                ], 404);
+            }
+
+            // Kiểm tra điều kiện hoàn hàng
+            if ($order->status == 5) {
+                $message = 'Đơn hàng đã được hoàn trả';
+                return $isAjax
+                    ? response()->json(['success' => false, 'message' => $message], 400)
+                    : redirect()->back()->with('error', $message);
+            }
+
+            if ($order->status == 7) {
+                $message = 'Yêu cầu hoàn hàng đang chờ xử lý';
+                return $isAjax
+                    ? response()->json(['success' => false, 'message' => $message], 400)
+                    : redirect()->back()->with('info', $message);
+            }
+
+            if ($order->status != 4) {
+                $message = 'Chỉ có thể yêu cầu hoàn hàng cho đơn hàng đã hoàn thành';
+                return $isAjax
+                    ? response()->json(['success' => false, 'message' => $message], 400)
+                    : redirect()->back()->with('error', $message);
+            }
+
+            // Kiểm tra thời gian hoàn hàng
+            if ($order->completed_at) {
+                $returnDeadline = Carbon::parse($order->completed_at)->addHours(24);
+                if (now()->gt($returnDeadline)) {
+                    $message = 'Đã quá 24 giờ kể từ khi hoàn thành đơn hàng';
+                    return $isAjax
+                        ? response()->json(['success' => false, 'message' => $message], 400)
+                        : redirect()->back()->with('error', $message);
+                }
+            }
+
+            // Validate dữ liệu đầu vào
+            $validator = Validator::make($request->all(), [
+                'return_reason' => 'required|string|min:10|max:1000'
+            ], [
+                'return_reason.required' => 'Vui lòng nhập lý do hoàn hàng',
+                'return_reason.min' => 'Lý do hoàn hàng phải có ít nhất 10 ký tự',
+                'return_reason.max' => 'Lý do hoàn hàng không được vượt quá 1000 ký tự'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            try {
+                $order->update([
+                    'status' => 7,
+                    'return_reason' => $request->return_reason,
+                    'return_requested_at' => now()
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Yêu cầu hoàn hàng đã được gửi thành công!',
+                    'redirect' => route('clients.orderdetail', $order->id)
+                ]);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error('Return request error: ' . $e->getMessage());
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Có lỗi xảy ra khi xử lý yêu cầu'
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Return request outer error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi xử lý yêu cầu hoàn hàng'
+            ], 500);
+        }
+    }
+
+    private function canReturnOrder($order)
+    {
+        // Kiểm tra trạng thái
+        if ($order->status != 4) {
+            return [
+                'can_return' => false,
+                'reason' => 'Chỉ có thể hoàn hàng đơn hàng đã hoàn thành'
+            ];
+        }
+
+        // Kiểm tra đã hoàn hàng
+        if (in_array($order->status, [5, 7])) {
+            return [
+                'can_return' => false,
+                'reason' => 'Đơn hàng đã được/đang được hoàn hàng'
+            ];
+        }
+
+        // Kiểm tra thời gian
+        if ($order->completed_at) {
+            $returnDeadline = Carbon::parse($order->completed_at)->addHours(24);
+            if (now()->gt($returnDeadline)) {
+                return [
+                    'can_return' => false,
+                    'reason' => 'Đã quá thời hạn hoàn hàng (24 giờ)'
+                ];
+            }
+        }
+
+        return [
+            'can_return' => true,
+            'reason' => null
+        ];
     }
 }

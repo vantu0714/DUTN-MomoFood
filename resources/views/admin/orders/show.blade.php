@@ -93,6 +93,8 @@
                         4 => ['label' => 'Hoàn thành', 'class' => 'success'],
                         5 => ['label' => 'Hoàn hàng', 'class' => 'dark'],
                         6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
+                        7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
+                        8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
                     ];
                     $status = $statusLabels[$order->status] ?? ['label' => 'Không rõ', 'class' => 'light'];
 
@@ -139,6 +141,8 @@
                                     4 => ['label' => 'Hoàn thành', 'class' => 'success'],
                                     5 => ['label' => 'Hoàn hàng', 'class' => 'dark'],
                                     6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
+                                    7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
+                                    8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
                                 ];
                             @endphp
 
@@ -222,6 +226,64 @@
                 </div>
             </div>
         </div>
+
+        @if ($order->status == 7)
+            {{-- Chờ xử lý hoàn hàng --}}
+            <div class="card mt-4 border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">Yêu cầu hoàn hàng</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Lý do khách hàng:</strong> {{ $order->return_reason }}</p>
+                    <p><strong>Thời gian yêu cầu:</strong> {{ $order->return_requested_at }}</p>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <form action="{{ route('admin.orders.approve_return', $order->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i> Chấp nhận
+                            </button>
+                        </form>
+
+                        <button class="btn btn-danger"
+                            onclick="document.getElementById('reject-form').classList.toggle('d-none')">
+                            <i class="fas fa-times me-2"></i> Từ chối
+                        </button>
+
+                        <form id="reject-form" class="d-none mt-3"
+                            action="{{ route('admin.orders.reject_return', $order->id) }}" method="POST">
+                            @csrf
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Lý do từ chối</label>
+                                <textarea name="return_rejection_reason" class="form-control" rows="3" placeholder="Nhập lý do từ chối..."
+                                    required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-paper-plane me-2"></i> Gửi
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if ($order->status == 5)
+            <div class="card mt-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">Thông tin hoàn hàng</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Lý do:</strong> {{ $order->return_reason }}</p>
+                    <p><strong>Thời gian xử lý:</strong> {{ $order->return_processed_at }}</p>
+
+                    @if ($order->return_rejection_reason)
+                        <div class="alert alert-danger">
+                            <strong>Lý do từ chối:</strong> {{ $order->return_rejection_reason }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
 
         {{-- Quay lại --}}
         <div class="text-end">
