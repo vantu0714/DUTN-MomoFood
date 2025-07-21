@@ -77,9 +77,8 @@ class DashboardController extends Controller
             ->orderByDesc('orders_count')
             ->take(5)
             ->get();
-
-        // Tổng tồn kho
-        $totalStock = Product::sum('quantity');
+      
+        $totalStock = Product::sum('quantity_in_stock');
 
         return view('admin.dashboard', compact(
             'totalRevenue',

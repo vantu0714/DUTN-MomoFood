@@ -22,6 +22,7 @@ class Promotion extends Model
         'used_count',
         'min_total_spent',
         'vip_only',
+        'code'
     ];
 
     protected $casts = [

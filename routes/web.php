@@ -162,6 +162,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('product-variants')->name('product_variants.')->group(function () {
 
         Route::get('/cancel', [ProductVariantController::class, 'cancel'])->name('cancel');
+        Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
+        Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
 
         Route::get('/', [ProductVariantController::class, 'index'])->name('index');
         Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
@@ -170,12 +172,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
         Route::get('/{product_variant}', [ProductVariantController::class, 'show'])->name('show');
-
-        Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
-        Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
     });
-
-
 
     // Order Management
     Route::prefix('orders')->name('orders.')->group(function () {
