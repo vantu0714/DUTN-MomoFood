@@ -320,7 +320,7 @@ class OrderController extends Controller
     public function cancel(Request $request, $id)
     {
         $request->validate([
-            'cancellation_reason' => 'required|string|max:1000',
+            'reason' => 'required|string|max:1000',
         ]);
 
         $order = Order::findOrFail($id);
@@ -330,7 +330,7 @@ class OrderController extends Controller
         }
 
         $order->status = 6; // hủy đơn
-        $order->cancellation_reason = $request->cancellation_reason;
+        $order->cancellation_reason = $request->reason;
         $order->save();
 
         return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy.');

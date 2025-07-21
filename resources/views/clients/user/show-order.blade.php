@@ -225,193 +225,6 @@
                     </div>
                 </div>
 
-                {{-- Phần yêu cầu hoàn hàng --}}
-                @if ($order->status == 4)
-                    @php
-                        $returnDeadline = \Carbon\Carbon::parse($order->completed_at)->addHours(24);
-                        $canReturn = $order->completed_at && now()->lte($returnDeadline);
-                    @endphp
-
-                    <div class="mt-4">
-                        @if ($canReturn)
-                            <button class="btn btn-warning" id="show-return-form-btn">
-                                <i class="fas fa-undo me-2"></i> Yêu cầu hoàn hàng
-                            </button>
-
-                            <div id="return-form" class="mt-3" style="display: none;">
-                                <div class="card border-warning">
-                                    <div class="card-header bg-warning text-white">
-                                        <h6 class="mb-0">Yêu cầu hoàn hàng</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="return-alerts"></div>
-                                        <form id="return-request-form"
-                                            action="{{ route('clients.request_return', $order->id) }}" method="POST">
-                                            @csrf
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Lý do hoàn hàng <span
-                                                        class="text-danger">*</span></label>
-                                                <textarea name="return_reason" id="return_reason" class="form-control" rows="4" required minlength="10"
-                                                    maxlength="1000" placeholder="Vui lòng nhập lý do hoàn hàng chi tiết (tối thiểu 10 ký tự)..."></textarea>
-                                                <div class="form-text">
-                                                    <span id="char-count">0</span>/1000 ký tự
-                                                </div>
-                                            </div>
-                                            <div class="d-flex justify-content-between">
-                                                <button type="button" class="btn btn-secondary" id="cancel-return-btn">
-                                                    Hủy
-                                                </button>
-                                                <button type="submit" class="btn btn-warning text-white"
-                                                    id="submit-return-btn">
-                                                    <i class="fas fa-paper-plane me-2"></i> Gửi yêu cầu
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        @else
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                @if (!$order->completed_at)
-                                    Chưa xác định được thời gian hoàn thành đơn hàng
-                                @else
-                                    Thời gian hoàn hàng (24h sau khi nhận hàng) đã kết thúc vào
-                                    {{ $returnDeadline->format('d/m/Y H:i') }}
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            // Kiểm tra xem nút hiển thị form có tồn tại không
-                            const showFormBtn = document.getElementById('show-return-form-btn');
-                            if (!showFormBtn) return;
-
-                            const returnForm = document.getElementById('return-form');
-                            const cancelBtn = document.getElementById('cancel-return-btn');
-                            const form = document.getElementById('return-request-form');
-                            const textarea = document.getElementById('return_reason');
-                            const charCount = document.getElementById('char-count');
-                            const alertsContainer = document.getElementById('return-alerts');
-
-                            // 1. Xử lý hiển thị form
-                            showFormBtn.addEventListener('click', function() {
-                                if (returnForm) {
-                                    returnForm.style.display = 'block';
-                                    this.style.display = 'none';
-                                }
-                                if (textarea) {
-                                    textarea.focus();
-                                }
-                            });
-
-                            // 2. Xử lý hủy form
-                            if (cancelBtn) {
-                                cancelBtn.addEventListener('click', function() {
-                                    if (returnForm) returnForm.style.display = 'none';
-                                    if (showFormBtn) showFormBtn.style.display = 'inline-block';
-                                    if (form) form.reset();
-                                    if (charCount) charCount.textContent = '0';
-                                    if (alertsContainer) alertsContainer.innerHTML = '';
-                                });
-                            }
-
-                            // 3. Xử lý đếm ký tự
-                            if (textarea && charCount) {
-                                textarea.addEventListener('input', function() {
-                                    const count = this.value.length;
-                                    charCount.textContent = count;
-                                    charCount.style.color = count < 10 ? 'red' : (count > 950 ? 'orange' : 'green');
-                                });
-                            }
-
-                            // 4. Xử lý submit form
-                            if (form) {
-                                form.addEventListener('submit', function(e) {
-                                    e.preventDefault();
-
-                                    const submitBtn = document.getElementById('submit-return-btn');
-                                    if (!submitBtn) return;
-
-                                    const originalText = submitBtn.innerHTML;
-                                    const returnReason = textarea ? textarea.value.trim() : '';
-
-                                    // Validate
-                                    if (!returnReason || returnReason.length < 10 || returnReason.length > 1000) {
-                                        if (alertsContainer) {
-                                            alertsContainer.innerHTML = `
-                                            <div class="alert alert-danger">
-                                                Vui lòng nhập lý do hoàn hàng hợp lệ (10-1000 ký tự)
-                                            </div>`;
-                                        }
-                                        return;
-                                    }
-
-                                    // Disable button và hiển thị loading
-                                    submitBtn.disabled = true;
-                                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang xử lý...';
-
-                                    // Tạo FormData
-                                    const formData = new FormData(form);
-
-                                    // Thêm CSRF token nếu chưa có
-                                    formData.append('_token', '{{ csrf_token() }}');
-
-                                    // Gửi request với async/await để xử lý lỗi tốt hơn
-                                    (async () => {
-                                        try {
-                                            const response = await fetch(form.action, {
-                                                method: 'POST',
-                                                body: formData,
-                                                headers: {
-                                                    'Accept': 'application/json',
-                                                    'X-Requested-With': 'XMLHttpRequest'
-                                                }
-                                            });
-
-                                            // Kiểm tra response.ok thay vì status code
-                                            if (response.ok) {
-                                                const data = await response.json();
-
-                                                if (data.success) {
-                                                    // Hiển thị thông báo thành công
-                                                    if (alertsContainer) {
-                                                        alertsContainer.innerHTML = `
-                                                        <div class="alert alert-success">
-                                                            <i class="fas fa-check-circle me-2"></i>${data.message}
-                                                        </div>`;
-                                                    }
-
-                                                    // Reload trang sau 1 giây
-                                                    setTimeout(() => {
-                                                        window.location.reload();
-                                                    }, 1000);
-                                                } else {
-                                                    throw new Error(data.message || 'Request failed');
-                                                }
-                                            } else {
-                                                throw new Error(`HTTP error! status: ${response.status}`);
-                                            }
-                                        } catch (error) {
-                                            console.error('Error:', error);
-                                            if (alertsContainer) {
-                                                alertsContainer.innerHTML = `
-                                                <div class="alert alert-danger">
-                                                    <i class="fas fa-exclamation-circle me-2"></i> ${error.message || 'Có lỗi xảy ra khi gửi yêu cầu'}
-                                                </div>`;
-                                            }
-                                        } finally {
-                                            submitBtn.disabled = false;
-                                            submitBtn.innerHTML = originalText;
-                                        }
-                                    })();
-                                });
-                            }
-                        });
-                    </script>
-                @endif
-
                 {{-- Phần hiển thị trạng thái hoàn hàng --}}
                 @if (in_array($order->status, [5, 7, 8]))
                     <div class="mt-4" id="existing-return-status">
@@ -471,19 +284,94 @@
                     </div>
                 @endif
 
-                <div class="d-flex justify-content-between">
-                    <a href="{{ route('clients.orders') }}" class="btn btn-secondary">Quay lại</a>
+                {{-- Phần các nút hành động --}}
+                <div class="d-flex justify-content-between mt-4">
+                    {{-- Nút Quay lại --}}
+                    <a href="{{ route('clients.orders') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại
+                    </a>
 
-                    @if (in_array($order->status, [1]))
-                        <button type="button" class="btn btn-danger"
-                            onclick="document.getElementById('cancel-form').classList.toggle('d-none')">
-                            <i class="fas fa-trash-alt me-2"></i>Hủy đơn hàng
-                        </button>
-                    @endif
+                    <div>
+                        {{-- Nút Yêu cầu hoàn hàng --}}
+                        @if ($order->status == 4)
+                            @php
+                                $returnDeadline = \Carbon\Carbon::parse($order->completed_at)->addHours(24);
+                                $canReturn = $order->completed_at && now()->lte($returnDeadline);
+                            @endphp
+
+                            @if ($canReturn)
+                                <button type="button" class="btn btn-warning ms-2" id="show-return-form-btn">
+                                    <i class="fas fa-undo me-2"></i> Yêu cầu hoàn hàng
+                                </button>
+                            @endif
+                        @endif
+
+                        {{-- Nút Hủy đơn hàng --}}
+                        @if (in_array($order->status, [1]))
+                            <button type="button" class="btn btn-danger ms-2"
+                                onclick="document.getElementById('cancel-form').classList.toggle('d-none')">
+                                <i class="fas fa-trash-alt me-2"></i>Hủy đơn hàng
+                            </button>
+                        @endif
+                    </div>
                 </div>
 
+                {{-- Form yêu cầu hoàn hàng --}}
+                @if ($order->status == 4)
+                    @php
+                        $returnDeadline = \Carbon\Carbon::parse($order->completed_at)->addHours(24);
+                        $canReturn = $order->completed_at && now()->lte($returnDeadline);
+                    @endphp
+
+                    @if ($canReturn)
+                        <div id="return-form" class="mt-3 d-none">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-white">
+                                    <h6 class="mb-0">Yêu cầu hoàn hàng</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="return-alerts"></div>
+                                    <form id="return-request-form"
+                                        action="{{ route('clients.request_return', $order->id) }}" method="POST">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Lý do hoàn hàng <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea name="return_reason" id="return_reason" class="form-control" rows="4" required minlength="10"
+                                                maxlength="1000" placeholder="Vui lòng nhập lý do hoàn hàng chi tiết (tối thiểu 10 ký tự)..."></textarea>
+                                            <div class="form-text">
+                                                <span id="char-count">0</span>/1000 ký tự
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <button type="button" class="btn btn-secondary" id="cancel-return-btn">
+                                                Hủy
+                                            </button>
+                                            <button type="submit" class="btn btn-warning text-white"
+                                                id="submit-return-btn">
+                                                <i class="fas fa-paper-plane me-2"></i> Gửi yêu cầu
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            @if (!$order->completed_at)
+                                Chưa xác định được thời gian hoàn thành đơn hàng
+                            @else
+                                Thời gian hoàn hàng (24h sau khi nhận hàng) đã kết thúc vào
+                                {{ $returnDeadline->format('d/m/Y H:i') }}
+                            @endif
+                        </div>
+                    @endif
+                @endif
+
+                {{-- Form hủy đơn hàng --}}
                 @if (in_array($order->status, [1]))
-                    <div id="cancel-form" class="d-none mt-3">
+                    <div id="cancel-form" class="mt-3 d-none">
                         <div class="card border-danger">
                             <div class="card-header bg-danger">
                                 <h6 class="mb-0 text-white">Hủy đơn hàng</h6>
@@ -605,4 +493,131 @@
             }
         </style>
     @endpush
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kiểm tra xem nút hiển thị form có tồn tại không
+            const showFormBtn = document.getElementById('show-return-form-btn');
+            if (!showFormBtn) return;
+
+            const returnForm = document.getElementById('return-form');
+            const cancelBtn = document.getElementById('cancel-return-btn');
+            const form = document.getElementById('return-request-form');
+            const textarea = document.getElementById('return_reason');
+            const charCount = document.getElementById('char-count');
+            const alertsContainer = document.getElementById('return-alerts');
+
+            // 1. Xử lý hiển thị form
+            showFormBtn.addEventListener('click', function() {
+                if (returnForm) {
+                    returnForm.classList.toggle('d-none');
+                }
+                if (textarea) {
+                    textarea.focus();
+                }
+            });
+
+            // 2. Xử lý hủy form
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    if (returnForm) returnForm.classList.add('d-none');
+                    if (form) form.reset();
+                    if (charCount) charCount.textContent = '0';
+                    if (alertsContainer) alertsContainer.innerHTML = '';
+                });
+            }
+
+            // 3. Xử lý đếm ký tự
+            if (textarea && charCount) {
+                textarea.addEventListener('input', function() {
+                    const count = this.value.length;
+                    charCount.textContent = count;
+                    charCount.style.color = count < 10 ? 'red' : (count > 950 ? 'orange' : 'green');
+                });
+            }
+
+            // 4. Xử lý submit form
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const submitBtn = document.getElementById('submit-return-btn');
+                    if (!submitBtn) return;
+
+                    const originalText = submitBtn.innerHTML;
+                    const returnReason = textarea ? textarea.value.trim() : '';
+
+                    // Validate
+                    if (!returnReason || returnReason.length < 10 || returnReason.length > 1000) {
+                        if (alertsContainer) {
+                            alertsContainer.innerHTML = `
+                                <div class="alert alert-danger">
+                                    Vui lòng nhập lý do hoàn hàng hợp lệ (10-1000 ký tự)
+                                </div>`;
+                        }
+                        return;
+                    }
+
+                    // Disable button và hiển thị loading
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang xử lý...';
+
+                    // Tạo FormData
+                    const formData = new FormData(form);
+
+                    // Thêm CSRF token nếu chưa có
+                    formData.append('_token', '{{ csrf_token() }}');
+
+                    // Gửi request với async/await để xử lý lỗi tốt hơn
+                    (async () => {
+                        try {
+                            const response = await fetch(form.action, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
+
+                            // Kiểm tra response.ok thay vì status code
+                            if (response.ok) {
+                                const data = await response.json();
+
+                                if (data.success) {
+                                    // Hiển thị thông báo thành công
+                                    if (alertsContainer) {
+                                        alertsContainer.innerHTML = `
+                                            <div class="alert alert-success">
+                                                <i class="fas fa-check-circle me-2"></i>${data.message}
+                                            </div>`;
+                                    }
+
+                                    // Reload trang sau 1 giây
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 1000);
+                                } else {
+                                    throw new Error(data.message || 'Request failed');
+                                }
+                            } else {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            if (alertsContainer) {
+                                alertsContainer.innerHTML = `
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-exclamation-circle me-2"></i> ${error.message || 'Có lỗi xảy ra khi gửi yêu cầu'}
+                                    </div>`;
+                            }
+                        } finally {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }
+                    })();
+                });
+            }
+        });
+    </script>
 @endsection
