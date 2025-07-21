@@ -16,6 +16,7 @@
         $paymentStatusLabels = [
             'unpaid' => 'Chưa thanh toán',
             'paid' => 'Đã thanh toán',
+            'refunded' => 'Hoàn tiền',
         ];
 
         $currentStatus = request()->get('status', 'all');
@@ -138,7 +139,11 @@
                                             toán</span>
                                         <span
                                             class="badge rounded-pill px-3 py-2
-                                            {{ $order->payment_status == 'paid' ? 'bg-success' : 'bg-warning' }}">
+                                            {{ $order->payment_status == 'paid'
+                                                ? 'bg-success'
+                                                : ($order->payment_status == 'refunded'
+                                                    ? 'bg-info'
+                                                    : 'bg-warning') }}">
                                             {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
                                         </span>
                                     </div>

@@ -119,6 +119,8 @@
                         <strong>Trạng thái thanh toán:</strong>
                         @if ($order->payment_status === 'paid')
                             <span class="badge bg-success">Đã thanh toán</span>
+                        @elseif($order->payment_status === 'refunded')
+                            <span class="badge bg-info">Hoàn tiền</span>
                         @else
                             <span class="badge bg-warning text-dark">Chưa thanh toán</span>
                         @endif

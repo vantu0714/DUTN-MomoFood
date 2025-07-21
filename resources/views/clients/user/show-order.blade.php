@@ -16,6 +16,7 @@
         $paymentStatusLabels = [
             'unpaid' => 'Chưa thanh toán',
             'paid' => 'Đã thanh toán',
+            'refunded' => 'Hoàn tiền',
         ];
 
         $statusClasses = [
@@ -32,6 +33,7 @@
         $paymentStatusClasses = [
             'unpaid' => 'bg-warning text-dark',
             'paid' => 'bg-success',
+            'refunded' => 'bg-info text-white',
         ];
 
         $subtotal = $order->orderDetails->sum(function ($item) {

@@ -297,13 +297,14 @@ class OrderController extends Controller
         DB::beginTransaction();
         try {
             $order->update([
-                'status' => 5, // Hoàn hàng
+                'status' => 5,
+                'payment_status' => 'refunded',
                 'return_approved' => true,
                 'return_processed_at' => now(),
             ]);
 
             DB::commit();
-            return back()->with('success', 'Đã chấp nhận yêu cầu hoàn hàng.');
+            return back()->with('success', 'Đã chấp nhận yêu cầu hoàn hàng và cập nhật trạng thái hoàn tiền.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());

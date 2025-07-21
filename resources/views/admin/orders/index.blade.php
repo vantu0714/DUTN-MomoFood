@@ -32,6 +32,8 @@
                                     toán</option>
                                 <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>Chưa
                                     thanh toán</option>
+                                <option value="refunded" {{ request('payment_status') == 'refunded' ? 'selected' : '' }}>
+                                    Hoàn tiền</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -114,9 +116,17 @@
                                         </td>
                                         <td>{{ number_format($order->total_price, 0, ',', '.') }}đ</td>
                                         <td>
-                                            <span class="badge bg-info">
+                                            <span
+                                                class="badge
+                                                {{ $order->payment_method == 'cod' ? 'bg-primary' : 'bg-success' }}">
                                                 {{ $order->payment_method == 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VnPay' }}
                                             </span>
+
+                                            @if ($order->payment_status == 'refunded')
+                                                <div class="mt-1 small">
+                                                    <i class="fas fa-undo me-1"></i> Đã hoàn tiền
+                                                </div>
+                                            @endif
                                         </td>
                                         <td>
                                             @php
@@ -135,7 +145,6 @@
                                             <span class="badge bg-{{ $statusLabels[$order->status]['class'] }}">
                                                 {{ $statusLabels[$order->status]['label'] }}
                                             </span>
-
                                         </td>
 
                                         <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
