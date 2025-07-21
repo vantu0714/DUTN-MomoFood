@@ -315,10 +315,11 @@
                                 </div>
                             @endforeach
                             <div class="text-center mt-4" id="submit-section">
-                                <button type="submit" class="btn btn-primary btn-lg px-5" id="submit-btn">
+                                <button type="submit" class="btn btn-primary btn-lg px-5" id="save-variants">
                                     <i class="fas fa-save me-2"></i>
                                     Lưu tất cả biến thể
                                 </button>
+
                             </div>
                         </form>
                     </div>

@@ -1,34 +1,31 @@
 @extends('admin.layouts.app')
 @push('styles')
+    <link rel="stylesheet" href="{{ asset('admins/assets/css/variants.css') }}">
 @endpush
 @php
     $pendingProduct = session('pending_product');
 @endphp
 @section('content')
-    <div class="product-variants-container container-fluid px-0">
-
-        <div class="main-content">
+    <div class="product-variants-container container-fluid ">
+        <div class="container-fluid px-4" style="max-width: 100vw;">
             <!-- Enhanced Header Section -->
-            <div class="page-header-enhanced fade-in mb-4">
+            <div class="page-header-enhanced">
                 <div class="header-content">
                     <div class="title-section">
                         <div class="icon-wrapper">
                             <i class="fas fa-boxes"></i>
                         </div>
                         <div>
-                            <h1 class="page-title-enhanced" style="font-size: 2.2rem;">
-                                Thêm biến thể sản phẩm
-                            </h1>
+                            <h2 class="page-title-enhanced">Thêm biến thể sản phẩm</h2>
                             @if ($pendingProduct)
-                                <p class="page-subtitle-enhanced" style="font-size: 1.3rem;">
+                                <p class="page-subtitle-enhanced">
                                     Sản phẩm: <strong>{{ $pendingProduct['product_name'] }}</strong>
                                 </p>
                             @endif
                         </div>
                     </div>
                     <div class="d-flex justify-content-end">
-                        <a href="{{ route('admin.product_variants.index') }}" class="btn btn-outline-secondary btn-lg"
-                            style="font-size: 1rem;">
+                        <a href="{{ route('admin.product_variants.index') }}" class="btn btn-outline-secondary btn-lg">
                             <i class="fas fa-arrow-left me-2"></i> Quay lại
                         </a>
                     </div>
@@ -44,10 +41,10 @@
                 </div>
             @endif
             <!-- Enhanced Preview Section -->
-            <div class="fade-in mb-4">
+            <div class="fade-in">
                 <div class="product-card">
-                    <div class="card-header bg-gradient-success text-white py-4">
-                        <h1 class="mb-0 fw-bold" style="font-size: 2rem; letter-spacing: 1px;">
+                    <div class="card-header bg-gradient-success  ">
+                        <h1 class="mb-0 fw-bold" style="font-size: 1.5rem; ">
                             <i class="fas fa-table me-3" style="font-size: 1rem;"></i>
                             XEM TRƯỚC BIẾN THỂ SẢN PHẨM
                         </h1>
@@ -90,12 +87,13 @@
             <!-- Enhanced Form Section -->
             <div class="fade-in">
                 <div class="product-card">
-                    <div class="card-header bg-gradient-primary text-white py-3">
+                    <div class="card-header text-white py-3" style="background-color: #ffffff;">
                         <h5 class="mb-0" style="font-size: 1.4rem;">
-                            <i class="fas fa-cogs me-2"></i>
+                            <i class="fas fa-cogs"></i>
                             Thông tin biến thể sản phẩm
                         </h5>
                     </div>
+
                     <div class="card-body p-5">
                         <form method="POST" action="{{ route('admin.product_variants.store') }}"
                             enctype="multipart/form-data">
@@ -114,7 +112,7 @@
                                 <div class="variant-item mb-5">
                                     <div class="card border-0 shadow-lg">
                                         <div class="card-header bg-light d-flex justify-content-between align-items-center py-3"
-                                            style="border-left: 5px solid #28a745;">
+                                            style="border-left: 5px solid #f2f2f2;">
                                             <h5 class="mb-0 text-success fw-bold" style="font-size: 1.3rem;">
                                                 <i class="fas fa-cube me-2"></i>
                                                 Biến thể #1
@@ -148,41 +146,42 @@
 
                                             <!-- Sub Attributes -->
                                             <div class="sub-attributes-group">
-                                                <label class="form-label fw-bold text-dark mb-3"
-                                                    style="font-size: 1.2rem;">
+                                                <label class="form-label fw-bold text-dark" style="font-size: 1.2rem;">
                                                     <i class="fas fa-list-ul me-2"></i>
                                                     Các lựa chọn chi tiết
                                                 </label>
                                                 <div class="table-responsive">
-                                                    <table class="table table-bordered table-hover shadow-sm">
+                                                    <table class="table table-bordered"
+                                                        style="table-layout: fixed; width: 100%;">
                                                         <thead class="table-primary">
-                                                            <tr style="height: 55px;">
-                                                                <th class="text-center py-3 fw-bold"
-                                                                    style="font-size: 1.1rem;">
-                                                                    <i class="fas fa-expand-arrows-alt me-1"></i>Khối lượng
+                                                            <tr style="height: 10px;">
+                                                                <th class="text-center"
+                                                                    style="width: 15%; font-size: 1.1rem;">
+                                                                    <i class="fas fa-expand-arrows-alt"></i> Khối lượng
                                                                 </th>
-                                                                <th class="text-center py-3 fw-bold"
-                                                                    style="font-size: 1.1rem;">
-                                                                    <i class="fas fa-money-bill-wave me-1"></i>Giá (VND)
+                                                                <th class="text-center"
+                                                                    style="width: 17%; font-size: 1.1rem;">
+                                                                    <i class="fas fa-money-bill-wave me-1"></i> Giá (VND)
                                                                 </th>
-                                                                <th class="text-center py-3 fw-bold"
-                                                                    style="font-size: 1.1rem;">
-                                                                    <i class="fas fa-boxes me-1"></i>Số lượng
+                                                                <th class="text-center"
+                                                                    style="width: 13%; font-size: 1.1rem;">
+                                                                    <i class="fas fa-boxes me-1"></i> Số lượng
                                                                 </th>
-                                                                <th class="text-center py-3 fw-bold"
-                                                                    style="font-size: 1.1rem;">
-                                                                    <i class="fas fa-camera me-1"></i>Hình ảnh
+                                                                <th class="text-center"
+                                                                    style="width: 20%; font-size: 1.1rem;">
+                                                                    <i class="fas fa-camera me-1"></i> Hình ảnh
                                                                 </th>
-                                                                <th class="text-center py-3 fw-bold"
-                                                                    style="font-size: 1.1rem;">
-                                                                    <i class="fas fa-barcode me-1"></i>Mã SKU
+                                                                <th class="text-center"
+                                                                    style="width: 20%; font-size: 1.1rem;">
+                                                                    <i class="fas fa-barcode me-1"></i> Mã SKU
                                                                 </th>
-                                                                <th class="text-center py-3 fw-bold"
-                                                                    style="font-size: 1.1rem;">
-                                                                    <i class="fas fa-tools me-1"></i>Thao tác
+                                                                <th class="text-center"
+                                                                    style="width: 15%; font-size: 1rem;">
+                                                                    <i class="fas fa-tools me-1"></i> Thao tác
                                                                 </th>
                                                             </tr>
                                                         </thead>
+
                                                         <tbody class="sub-attributes-table">
                                                             <tr class="sub-attribute-row" style="height: 65px;">
                                                                 <td class="py-3">
@@ -198,15 +197,13 @@
                                                                     </select>
                                                                 </td>
                                                                 <td class="py-3">
-                                                                    <div class="input-group" style="height: 45px;">
-                                                                        <input type="number"
-                                                                            name="variants[0][sub_attributes][0][price]"
-                                                                            class="form-control text-end price-input"
-                                                                            placeholder="0" min="0" step="1000"
-                                                                            style="padding: 0.75rem; font-size: 1.4rem; font-weight: 500;">
-                                                                        <span class="input-group-text fw-bold px-2"
-                                                                            style="font-size: 1.4rem;">VND</span>
-                                                                    </div>
+
+                                                                    <input type="number"
+                                                                        name="variants[0][sub_attributes][0][price]"
+                                                                        class="form-control text-end price-input"
+                                                                        placeholder="0" min="0" step="1000"
+                                                                        style="padding: 0.75rem; font-size: 1.4rem; font-weight: 500;">
+
                                                                 </td>
                                                                 <td class="py-3">
                                                                     <input type="number"
@@ -238,7 +235,6 @@
                                                         </tbody>
                                                     </table>
                                                 </div>
-
                                                 <div class="mt-3">
                                                     <button type="button"
                                                         class="btn btn-success btn-sm add-sub-attribute"
@@ -281,25 +277,83 @@
     </div>
 @endsection
 <style>
-    /* Bỏ khoảng trắng trái/phải của vùng nội dung */
-.product-variants-container,
-.main-content,
-.card,
-.card-body {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
+    <style>
+    .product-card {
+        width: 100%;
+        max-width: 100%;
+    }
 
-/* Tùy chỉnh table responsive nếu cần full */
-.table-responsive {
-    width: 100%;
-    overflow-x: auto;
-}
+
+
+
+
+
+    .product-variants-container .sub-attributes-group .table td .form-control,
+    .product-variants-container .sub-attributes-group .table td .form-select,
+    .product-variants-container .sub-attributes-group .table td .input-group-text,
+    .product-variants-container .sub-attributes-group .table td .btn {
+        height: 38px !important;
+        padding: 0.4rem 0.6rem !important;
+        font-size: 1.1rem !important;
+        min-width: 120px;
+    }
+
+    .product-variants-container .sub-attributes-group .table td input[type="number"],
+    .product-variants-container .sub-attributes-group .table td input[type="text"],
+    .product-variants-container .sub-attributes-group .table td input[type="file"] {
+        width: 100% !important;
+    }
+
+    .product-variants-container .sub-attributes-group .table td .input-group .form-control {
+        flex: 1 1 auto;
+        width: 1%;
+    }
+
+    .product-variants-container .sub-attributes-group .table {
+        border-collapse: collapse;
+    }
+
+    .product-variants-container .sub-attributes-group .table thead th {
+        background: none !important;
+        color: #333 !important;
+        font-weight: 600;
+        border: 1px solid #ccc !important;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .product-variants-container .sub-attributes-group .table tbody td {
+        border: 1px solid #ccc !important;
+        background-color: #fff !important;
+        vertical-align: middle;
+    }
+
+    .product-variants-container .sub-attributes-group .table .form-control,
+    .product-variants-container .sub-attributes-group .table .input-group-text,
+    .product-variants-container .sub-attributes-group .table .btn {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Bỏ khoảng trắng trái/phải của vùng nội dung */
+    .product-variants-container .main-content,
+    .product-variants-container .card,
+    .product-variants-container .card-body {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Tùy chỉnh table responsive nếu cần full */
+    .product-variants-container .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
 </style>
+
 @push('scripts')
     <script>
         window.productName = @json($product->product_name);

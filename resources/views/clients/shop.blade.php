@@ -227,111 +227,125 @@
                     </div>
                     <div class="col-lg-9">
                         <div class="row g-4">
-    @foreach ($products as $product)
-        @php
-            $firstVariant = null;
-            $price = null;
-            $originalPrice = null;
+                            @foreach ($products as $product)
+                                @php
+                                    $firstVariant = null;
+                                    $price = null;
+                                    $originalPrice = null;
 
-            if ($product->product_type === 'variant') {
-                $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
-                $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
-                $originalPrice = $firstVariant?->price ?? 0;
-            } else {
-                $price = $product->discounted_price ?? $product->original_price;
-                $originalPrice = $product->original_price;
-            }
+                                    if ($product->product_type === 'variant') {
+                                        $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                                        $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
+                                        $originalPrice = $firstVariant?->price ?? 0;
+                                    } else {
+                                        $price = $product->discounted_price ?? $product->original_price;
+                                        $originalPrice = $product->original_price;
+                                    }
 
-            $variants = $product->product_type === 'variant'
-                ? $product->variants->map(fn($v) => [
-                    'id' => $v->id,
-                    'flavor' => $v->flavor,
-                    'size' => $v->size,
-                    'price' => $v->price,
-                    'discounted_price' => $v->discounted_price,
-                    'quantity' => $v->quantity_in_stock,
-                ])
-                : [];
-        @endphp
+                                    $variants =
+                                        $product->product_type === 'variant'
+                                            ? $product->variants->map(
+                                                fn($v) => [
+                                                    'id' => $v->id,
+                                                    'flavor' => $v->flavor,
+                                                    'size' => $v->size,
+                                                    'price' => $v->price,
+                                                    'discounted_price' => $v->discounted_price,
+                                                    'quantity' => $v->quantity_in_stock,
+                                                ],
+                                            )
+                                            : [];
+                                @endphp
 
-        <div class="col-md-6 col-lg-4 d-flex">
-            <div class="product-card w-100 d-flex flex-column position-relative">
-                <div class="product-image">
-                    <a href="{{ route('product-detail.show', $product->id) }}">
-                        <img src="{{ asset('storage/' . $product->image) }}"
-                            onerror="this.onerror=null;this.src='{{ asset('clients/img/default.jpg') }}';"
-                            class="img-fluid w-100 rounded-top"
-                            alt="{{ $product->product_name }}">
-                    </a>
-                </div>
+                                <div class="col-md-6 col-lg-4 d-flex">
+                                    <div class="product-card w-100 d-flex flex-column position-relative">
+                                        <div class="product-image">
+                                            <a href="{{ route('product-detail.show', $product->id) }}">
+                                                <img src="{{ asset('storage/' . $product->image) }}"
+                                                    onerror="this.onerror=null;this.src='{{ asset('clients/img/default.jpg') }}';"
+                                                    class="img-fluid w-100 rounded-top"
+                                                    alt="{{ $product->product_name }}">
+                                            </a>
+                                        </div>
 
-                <div class="badge bg-secondary text-white position-absolute px-3 py-1" style="top: 10px; left: 10px;">
-                    {{ $product->category?->category_name ?? 'Không có danh mục' }}
-                </div>
+                                        <div class="badge bg-secondary text-white position-absolute px-3 py-1"
+                                            style="top: 10px; left: 10px;">
+                                            {{ $product->category?->category_name ?? 'Không có danh mục' }}
+                                        </div>
 
-                <div class="product-body p-3 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
-                    <div>
-                        <h5 class="product-title">{{ $product->product_name }}</h5>
-                        <p class="product-description">
-                            {{ $product->description ?? 'No description available.' }}
-                        </p>
-                    </div>
+                                        <div
+                                            class="product-body p-3 border border-secondary border-top-0 rounded-bottom d-flex flex-column justify-content-between flex-grow-1">
+                                            <div>
+                                                <h5 class="product-title">{{ $product->product_name }}</h5>
+                                                <p class="product-description">
+                                                    {{ $product->description ?? 'No description available.' }}
+                                                </p>
+                                            </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-auto">
-                        <div class="product-price-wrapper">
-                            @if ($price && $originalPrice && $price < $originalPrice)
-                                <div class="product-price-sale">
-                                    {{ number_format($price, 0, ',', '.') }} <span class="currency">VND</span>
+                                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                                <div class="product-price-wrapper">
+                                                    @if ($price && $originalPrice && $price < $originalPrice)
+                                                        <div class="product-price-sale">
+                                                            {{ number_format($price, 0, ',', '.') }} <span
+                                                                class="currency">VND</span>
+                                                        </div>
+                                                        <div class="product-price-original">
+                                                            {{ number_format($originalPrice, 0, ',', '.') }} VND
+                                                        </div>
+                                                    @elseif ($price)
+                                                        <div class="product-price-sale">
+                                                            {{ number_format($price, 0, ',', '.') }} <span
+                                                                class="currency">VND</span>
+                                                        </div>
+                                                    @else
+                                                        <div class="text-muted">Liên hệ để biết giá</div>
+                                                    @endif
+                                                </div>
+
+                                                <form class="add-to-cart-form">
+                                                    @csrf
+                                                    <input type="hidden" name="product_id"
+                                                        value="{{ $product->id }}">
+
+                                                    @php
+                                                        $firstAvailableVariant =
+                                                            $product->product_type === 'variant'
+                                                                ? $product->variants->firstWhere(
+                                                                    'quantity_in_stock',
+                                                                    '>',
+                                                                    0,
+                                                                )
+                                                                : null;
+                                                    @endphp
+
+                                                    @if ($firstAvailableVariant)
+                                                        <input type="hidden" name="product_variant_id"
+                                                            value="{{ $firstAvailableVariant->id }}">
+                                                    @endif
+
+                                                    <input type="hidden" name="quantity" value="1">
+
+                                                    <div class="d-flex justify-content-end mt-auto">
+                                                        <button type="button" class="btn btn-white open-cart-modal"
+                                                            data-product-id="{{ $product->id }}"
+                                                            data-product-name="{{ $product->product_name }}"
+                                                            data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                            data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
+                                                            data-product-price="{{ $price ?? 0 }}"
+                                                            data-product-original-price="{{ $originalPrice ?? 0 }}"
+                                                            data-product-description="{{ $product->description }}"
+                                                            data-variants='@json($variants)'
+                                                            data-bs-toggle="modal" data-bs-target="#cartModal">
+                                                            <i class="bi bi-cart3 fa-2x text-danger"></i>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="product-price-original">
-                                    {{ number_format($originalPrice, 0, ',', '.') }} VND
-                                </div>
-                            @elseif ($price)
-                                <div class="product-price-sale">
-                                    {{ number_format($price, 0, ',', '.') }} <span class="currency">VND</span>
-                                </div>
-                            @else
-                                <div class="text-muted">Liên hệ để biết giá</div>
-                            @endif
+                            @endforeach
                         </div>
-
-                        <form class="add-to-cart-form">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-
-                            @php
-                                $firstAvailableVariant = $product->product_type === 'variant'
-                                    ? $product->variants->firstWhere('quantity_in_stock', '>', 0)
-                                    : null;
-                            @endphp
-
-                            @if ($firstAvailableVariant)
-                                <input type="hidden" name="product_variant_id" value="{{ $firstAvailableVariant->id }}">
-                            @endif
-
-                            <input type="hidden" name="quantity" value="1">
-
-                            <div class="d-flex justify-content-end mt-auto">
-                                <button type="button" class="btn btn-white open-cart-modal"
-                                    data-product-id="{{ $product->id }}"
-                                    data-product-name="{{ $product->product_name }}"
-                                    data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                    data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                    data-product-price="{{ $price ?? 0 }}"
-                                    data-product-original-price="{{ $originalPrice ?? 0 }}"
-                                    data-product-description="{{ $product->description }}"
-                                    data-variants='@json($variants)'
-                                    data-bs-toggle="modal" data-bs-target="#cartModal">
-                                    <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endforeach
-</div>
 
 
                         <div class="pagination-wrapper d-flex justify-content-center mt-4">
@@ -593,4 +607,4 @@
     </script>
 
     @include('clients.layouts.footer')
-<!-- Fruits Shop End-->
+    <!-- Fruits Shop End-->
