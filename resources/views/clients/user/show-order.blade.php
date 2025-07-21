@@ -39,6 +39,10 @@
         });
 
         $calculatedDiscount = max(0, $subtotal + $order->shipping_fee - $order->total_price);
+
+        // Tính toán một lần cho form hoàn hàng
+        $returnDeadline = $order->completed_at ? \Carbon\Carbon::parse($order->completed_at)->addHours(24) : null;
+        $canReturn = $order->status == 4 && $returnDeadline && now()->lte($returnDeadline);
     @endphp
 
     <div class="container mb-5" style="margin-top: 150px">
@@ -74,6 +78,16 @@
             </div>
 
             <div class="card-body">
+                <!-- Thông báo -->
+                @foreach (['info', 'success', 'error'] as $type)
+                    @if (session($type))
+                        <div class="alert alert-{{ $type }} alert-dismissible fade show">
+                            {{ session($type) }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+                @endforeach
+
                 <!-- Thông tin nhận hàng -->
                 <div class="card mb-4">
                     <div class="card-header bg-light">
@@ -149,12 +163,12 @@
                                             <ul class="list-unstyled">
                                                 <li class="mb-2">
                                                     <span class="fw-bold">Ngày yêu cầu:</span>
-                                                    {{ $order->return_requested_at ? $order->return_requested_at : 'N/A' }}
+                                                    {{ $order->return_requested_at ?: 'N/A' }}
                                                 </li>
                                                 @if ($order->status == 5)
                                                     <li class="mb-2">
                                                         <span class="fw-bold">Ngày hoàn thành:</span>
-                                                        {{ $order->completed_at ? $order->completed_at : 'N/A' }}
+                                                        {{ $order->completed_at ?: 'N/A' }}
                                                     </li>
                                                 @elseif($order->status == 8)
                                                     <li class="mb-2">
@@ -202,9 +216,7 @@
                                         $variant = $item->productVariant;
                                         $variantAttributes = $variant
                                             ? $variant->attributeValues
-                                                ->map(function ($value) {
-                                                    return $value->attribute->name . ': ' . $value->value;
-                                                })
+                                                ->map(fn($value) => $value->attribute->name . ': ' . $value->value)
                                                 ->toArray()
                                             : [];
                                     @endphp
@@ -228,11 +240,13 @@
                                                 <span class="badge bg-info text-white me-1 mb-1">{{ $attribute }}</span>
                                             @endforeach
                                         </td>
-                                        <td class="text-center"><span
-                                                class="badge bg-orange text-white">{{ $item->quantity }}</span></td>
+                                        <td class="text-center">
+                                            <span class="badge bg-orange text-white">{{ $item->quantity }}</span>
+                                        </td>
                                         <td class="text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
                                         <td class="text-end fw-bold text-orange">
-                                            {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫</td>
+                                            {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -270,17 +284,6 @@
                     </div>
                 </div>
 
-                <!-- Thông báo -->
-                @foreach (['info', 'success', 'error'] as $type)
-                    @if (session($type))
-                        <div class="alert alert-{{ $type }} alert-dismissible fade show">
-                            {{ session($type) }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                aria-label="Close"></button>
-                        </div>
-                    @endif
-                @endforeach
-
                 <!-- Các nút hành động -->
                 <div class="d-flex justify-content-between mt-4">
                     <a href="{{ route('clients.orders') }}" class="btn btn-secondary">
@@ -288,22 +291,13 @@
                     </a>
 
                     <div>
-                        <!-- Nút yêu cầu hoàn hàng -->
-                        @if ($order->status == 4)
-                            @php
-                                $returnDeadline = \Carbon\Carbon::parse($order->completed_at)->addHours(24);
-                                $canReturn = $order->completed_at && now()->lte($returnDeadline);
-                            @endphp
-
-                            @if ($canReturn)
-                                <button type="button" class="btn btn-warning ms-2" data-toggle-form="return-form">
-                                    <i class="fas fa-undo me-2"></i> Yêu cầu hoàn hàng
-                                </button>
-                            @endif
+                        @if ($canReturn)
+                            <button type="button" class="btn btn-warning ms-2" data-toggle-form="return-form">
+                                <i class="fas fa-undo me-2"></i> Yêu cầu hoàn hàng
+                            </button>
                         @endif
 
-                        <!-- Nút hủy đơn hàng -->
-                        @if (in_array($order->status, [1]))
+                        @if ($order->status == 1)
                             <button type="button" class="btn btn-danger ms-2" data-toggle-form="cancel-form">
                                 <i class="fas fa-trash-alt me-2"></i>Hủy đơn hàng
                             </button>
@@ -312,38 +306,41 @@
                 </div>
 
                 <!-- Form yêu cầu hoàn hàng -->
-                @if ($order->status == 4 && $canReturn)
+                @if ($canReturn)
                     <div id="return-form" class="mt-3" style="display: none;">
                         <div class="card border-warning">
                             <div class="card-header bg-warning text-white">
                                 <h6 class="mb-0">Yêu cầu hoàn hàng</h6>
                             </div>
                             <div class="card-body">
-                                <div id="return-alerts"></div>
-                                <form action="{{ route('clients.request_return', $order->id) }}" method="POST">
+                                @if (session('return_error'))
+                                    <div class="alert alert-danger alert-dismissible fade show">
+                                        {{ session('return_error') }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                            aria-label="Close"></button>
+                                    </div>
+                                @endif
+
+                                <form action="{{ route('clients.request_return', $order->id) }}" method="POST"
+                                    data-confirm="Bạn chắc chắn muốn yêu cầu hoàn hàng này?">
                                     @csrf
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold">Lý do hoàn hàng <span
-                                                class="text-danger">*</span></label>
-                                        <textarea name="return_reason" class="form-control" rows="4" required
-                                            placeholder="Vui lòng nhập lý do hoàn hàng..."></textarea>
+                                        <label class="form-label fw-bold text-warning">Lý do hoàn hàng <span
+                                                class="text-danger">*</span>:</label>
+                                        <textarea name="return_reason" class="form-control" rows="3" required
+                                            placeholder="Vui lòng nhập lý do hoàn hàng...">{{ old('return_reason') }}</textarea>
                                     </div>
-                                    <div class="d-flex justify-content-between">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-toggle-form="return-form">Hủy</button>
-                                        <button type="submit" class="btn btn-warning text-white">
-                                            <i class="fas fa-paper-plane me-2"></i> Gửi yêu cầu
-                                        </button>
-                                    </div>
+                                    <button type="submit" class="btn btn-warning text-white w-100">
+                                        <i class="fas fa-paper-plane me-2"></i>Xác nhận yêu cầu hoàn hàng
+                                    </button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 @endif
 
-
                 <!-- Form hủy đơn hàng -->
-                @if (in_array($order->status, [1]))
+                @if ($order->status == 1)
                     <div id="cancel-form" class="mt-3" style="display: none;">
                         <div class="card border-danger">
                             <div class="card-header bg-danger text-white">
@@ -418,71 +415,15 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Xử lý toggle form
-            document.querySelectorAll('[data-toggle-form]').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const formId = this.dataset.toggleForm;
+            document.querySelectorAll('[data-toggle-form]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const formId = this.getAttribute('data-toggle-form');
                     const form = document.getElementById(formId);
-                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-
-                    // Focus vào textarea nếu là form hoàn hàng
-                    if (formId === 'return-form') {
-                        form.querySelector('textarea')?.focus();
+                    if (form) {
+                        form.style.display = form.style.display === 'none' ? 'block' : 'none';
                     }
                 });
             });
-
-            // Xử lý confirm trước khi submit form hủy đơn
-            document.querySelectorAll('form[data-confirm]').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    if (!confirm(this.dataset.confirm)) {
-                        e.preventDefault();
-                    }
-                });
-            });
-
-            // Xử lý submit form hoàn hàng bằng AJAX
-            document.getElementById('return-form')?.querySelector('form')?.addEventListener('submit',
-                async function(e) {
-                    e.preventDefault();
-                    const form = this;
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-                    const alertsContainer = document.getElementById('return-alerts');
-
-                    try {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang xử lý...';
-
-                        const response = await fetch(form.action, {
-                            method: 'POST',
-                            body: new FormData(form),
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok) throw new Error(data.message || 'Yêu cầu thất bại');
-
-                        alertsContainer.innerHTML = `
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle me-2"></i>${data.message}
-                        </div>`;
-
-                        setTimeout(() => window.location.reload(), 1500);
-                    } catch (error) {
-                        alertsContainer.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle me-2"></i>${error.message}
-                        </div>`;
-                    } finally {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalText;
-                    }
-                });
         });
     </script>
 @endsection

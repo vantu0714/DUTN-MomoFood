@@ -410,134 +410,46 @@ class OrderController extends Controller
 
     public function requestReturn(Request $request, $id)
     {
-        $isAjax = $request->ajax() || $request->wantsJson();
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        // Kiểm tra điều kiện hoàn hàng
+        if ($order->status == 5) {
+            return back()->with('error', 'Đơn hàng đã được hoàn trả');
+        }
+
+        if ($order->status == 7) {
+            return back()->with('info', 'Yêu cầu hoàn hàng đang chờ xử lý');
+        }
+
+        if ($order->status != 4 || ($order->completed_at && now()->gt(Carbon::parse($order->completed_at)->addHours(24)))) {
+            return back()->with('error', 'Không đủ điều kiện hoàn hàng');
+        }
+
+        $request->validate([
+            'return_reason' => 'required|string'
+        ], [
+            'return_reason.required' => 'Vui lòng nhập lý do hoàn hàng'
+        ]);
+
+        DB::beginTransaction();
 
         try {
-            // Tìm đơn hàng
-            $order = Order::where('id', $id)
-                ->where('user_id', auth()->id())
-                ->first();
-
-            if (!$order) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không tìm thấy đơn hàng'
-                ], 404);
-            }
-
-            // Kiểm tra điều kiện hoàn hàng
-            if ($order->status == 5) {
-                $message = 'Đơn hàng đã được hoàn trả';
-                return $isAjax
-                    ? response()->json(['success' => false, 'message' => $message], 400)
-                    : redirect()->back()->with('error', $message);
-            }
-
-            if ($order->status == 7) {
-                $message = 'Yêu cầu hoàn hàng đang chờ xử lý';
-                return $isAjax
-                    ? response()->json(['success' => false, 'message' => $message], 400)
-                    : redirect()->back()->with('info', $message);
-            }
-
-            if ($order->status != 4) {
-                $message = 'Chỉ có thể yêu cầu hoàn hàng cho đơn hàng đã hoàn thành';
-                return $isAjax
-                    ? response()->json(['success' => false, 'message' => $message], 400)
-                    : redirect()->back()->with('error', $message);
-            }
-
-            // Kiểm tra thời gian hoàn hàng
-            if ($order->completed_at) {
-                $returnDeadline = Carbon::parse($order->completed_at)->addHours(24);
-                if (now()->gt($returnDeadline)) {
-                    $message = 'Đã quá 24 giờ kể từ khi hoàn thành đơn hàng';
-                    return $isAjax
-                        ? response()->json(['success' => false, 'message' => $message], 400)
-                        : redirect()->back()->with('error', $message);
-                }
-            }
-
-            // Validate dữ liệu đầu vào
-            $validator = Validator::make($request->all(), [
-                'return_reason' => 'required|string',
-            ], [
-                'return_reason.required' => 'Vui lòng nhập lý do hoàn hàng',
+            $order->update([
+                'status' => 7,
+                'return_reason' => $request->return_reason,
+                'return_requested_at' => now()
             ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $validator->errors()->first(),
-                    'errors' => $validator->errors()
-                ], 422);
-            }
+            DB::commit();
 
-            DB::beginTransaction();
-
-            try {
-                $order->update([
-                    'status' => 7,
-                    'return_reason' => $request->return_reason,
-                    'return_requested_at' => now()
-                ]);
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Yêu cầu hoàn hàng đã được gửi thành công!',
-                    'redirect' => route('clients.orderdetail', $order->id)
-                ]);
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Có lỗi xảy ra khi xử lý yêu cầu'
-                ], 500);
-            }
+            return redirect()->route('clients.orderdetail', $order->id)
+                ->with('success', 'Yêu cầu hoàn hàng đã được gửi thành công!');
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Có lỗi xảy ra khi xử lý yêu cầu hoàn hàng'
-            ], 500);
+            DB::rollBack();
+            return back()->with('error', 'Xử lý yêu cầu thất bại: ' . $e->getMessage());
         }
-    }
-
-    private function canReturnOrder($order)
-    {
-        // Kiểm tra trạng thái
-        if ($order->status != 4) {
-            return [
-                'can_return' => false,
-                'reason' => 'Chỉ có thể hoàn hàng đơn hàng đã hoàn thành'
-            ];
-        }
-
-        // Kiểm tra đã hoàn hàng
-        if (in_array($order->status, [5, 7])) {
-            return [
-                'can_return' => false,
-                'reason' => 'Đơn hàng đã được/đang được hoàn hàng'
-            ];
-        }
-
-        // Kiểm tra thời gian
-        if ($order->completed_at) {
-            $returnDeadline = Carbon::parse($order->completed_at)->addHours(24);
-            if (now()->gt($returnDeadline)) {
-                return [
-                    'can_return' => false,
-                    'reason' => 'Đã quá thời hạn hoàn hàng (24 giờ)'
-                ];
-            }
-        }
-
-        return [
-            'can_return' => true,
-            'reason' => null
-        ];
     }
 }
