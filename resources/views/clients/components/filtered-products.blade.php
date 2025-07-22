@@ -60,7 +60,7 @@
                                 <h6 class="fw-bold text-dark text-truncate" title="{{ $product->product_name }}">
                                     {{ $product->product_name }}
                                 </h6>
-                                <p class="text-muted small mb-2">Mã: {{ $product->product_code }}</p>
+                                <p class="text-muted small mb-2 product-description">{{ $product->description }}</p>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
@@ -128,11 +128,16 @@
 
                     if (newContent) {
                         productContainer.innerHTML = newContent;
+
+                        // 🔁 Gán lại sự kiện cho nút giỏ hàng mới được load
+                        rebindOpenCartModal();
+
                         window.scrollTo({
                             top: productContainer.offsetTop - 100,
                             behavior: 'smooth'
                         });
                     }
+
                 })
                 .catch(err => console.error('Lỗi khi phân trang:', err));
         }
