@@ -18,7 +18,8 @@ class HomeController extends Controller
             return redirect('/admin/dashboard')->with('error', 'Admin không được phép truy cập trang chủ.');
         }
 
-        $query = Product::with(['category', 'variants'])
+        $query = Product::with(['category', 'variants.attributeValues.attribute'])
+
             ->where(function ($q) {
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
@@ -129,15 +130,15 @@ class HomeController extends Controller
                 // Sản phẩm đơn còn hàng
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
-                        ->where('quantity', '>', 0); // Sửa lại đúng tên cột
+                        ->where('quantity_in_stock', '>', 0);
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
-                    $q2->where('product_type', 'variant')
-                        ->whereHas('variants', function ($q3) {
-                            $q3->where('quantity_in_stock', '>', 0);
-                        });
-                });
+                        $q2->where('product_type', 'variant')
+                            ->whereHas('variants', function ($q3) {
+                                $q3->where('quantity_in_stock', '>', 0);
+                            });
+                    });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()
