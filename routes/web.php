@@ -36,6 +36,7 @@ Route::get('/search-ajax', [HomeController::class, 'searchAjax'])->name('clients
 Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
 Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
 Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
+Route::get('/tin-tuc/{id}', [NewsController::class, 'detail'])->name('news.detail');
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 Route::get('/gioi-thieu', [GioithieuController::class, 'index'])->name('gioithieu.index');
 
