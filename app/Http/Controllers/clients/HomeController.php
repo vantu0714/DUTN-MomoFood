@@ -49,12 +49,17 @@ class HomeController extends Controller
             ->get();
 
         //  Thêm sản phẩm có đánh giá >= 4 sao
-        $highRatedProducts = Product::with(['comments'])
-    ->withAvg('comments', 'rating')
-    ->having('comments_avg_rating', '>=', 4)
-    ->orderByDesc('comments_avg_rating')
-    ->take(6)
-    ->get();
+        $highRatedProducts = Product::with([
+            'comments',
+            'category',
+            'variants.attributeValues.attribute' //  
+        ])
+            ->withAvg('comments', 'rating')
+            ->having('comments_avg_rating', '>=', 4)
+            ->orderByDesc('comments_avg_rating')
+            ->take(6)
+            ->get();
+
 
 
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();

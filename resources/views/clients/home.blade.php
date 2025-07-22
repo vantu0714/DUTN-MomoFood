@@ -342,8 +342,6 @@
 </div>
 <!-- Vesitable Shop End -->
 
-
-
 <!-- Banner Section Start-->
 <div class="container-fluid banner bg-secondary my-5">
     <div class="container py-5">
@@ -373,8 +371,6 @@
         </div>
     </div>
 </div>
-<!-- Banner Section End -->
-
 <!-- Bestsaler Product Start -->
 <div class="container-fluid py-5">
     <div class="container py-5">
@@ -388,12 +384,31 @@
                 Đồ ăn vặt được đánh giá cao – vị ngon khó tìm thấy. Mỗi món đều được tuyển chọn kỹ lưỡng từ nguyên liệu
                 chất lượng, chế biến hợp vệ sinh và đóng gói cẩn thận. Được yêu thích bởi hàng ngàn khách hàng trên khắp
                 cả nước.
-                
+
             </p>
         </div>
 
+
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
+                @php
+                    $variantsArray = collect($product->variants ?? [])->map(function ($variant) {
+                        $flavor = optional($variant->attributeValues->firstWhere('attribute.name', 'Vị'))->value ?? '';
+                        $weight =
+                            optional($variant->attributeValues->firstWhere('attribute.name', 'Khối lượng'))->value ??
+                            (optional($variant->attributeValues->firstWhere('attribute.name', 'Size'))->value ?? '');
+                        return [
+                            'id' => $variant->id,
+                            'price' => $variant->price,
+                            'discounted_price' => $variant->discounted_price,
+                            'image' => $variant->image
+                                ? asset('storage/' . $variant->image)
+                                : asset('images/no-image.png'),
+                            'flavor' => $flavor ?: 'Không rõ',
+                            'weight' => $weight ?: 'Không rõ',
+                        ];
+                    });
+                @endphp
                 <div class="col-lg-6 col-xl-4">
                     <div class="p-4 rounded bg-light h-100">
                         <div class="row align-items-center">
@@ -421,10 +436,18 @@
                                     {{ number_format($product->display_price ?? 0, 0, ',', '.') }} đ
                                 </h4>
 
-                                <a href="{{ route('carts.add', $product->id) }}"
-                                    class="btn border border-secondary rounded-pill px-3 text-primary">
+                                <button type="button"
+                                    class="btn border border-secondary rounded-pill px-3 text-primary open-cart-modal d-flex align-items-center"
+                                    data-product-id="{{ $product->id }}"
+                                    data-product-name="{{ $product->product_name }}"
+                                    data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
+                                    data-product-price="{{ $product->display_price ?? 0 }}"
+                                    data-product-original-price="{{ $product->original_price ?? 0 }}"
+                                    data-product-description="{{ $product->description }}"
+                                    data-variants='@json($variantsArray, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-bs-target="#cartModal">
                                     <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -434,8 +457,6 @@
 
     </div>
 </div>
-<!-- Bestsaler Product End -->
-
 <!-- Fact Start -->
 <div class="container-fluid py-5">
     <div class="container">
@@ -547,11 +568,11 @@
                             Danh mục: <span id="modal-product-category" class="fw-medium text-dark"></span>
                         </p>
 
-                        <p class="h5 text-danger fw-bold mb-3">
-                            <span id="modal-product-price">0</span>
-                            <span class="text-muted fs-6">VND</span>
-                            <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
-                        </p>
+                        <p class="h5 text-danger fw-bold mb-3 tabular-numbers">
+    <span id="modal-product-price">0</span>
+    <span class="text-muted fs-6">VND</span>
+    <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
+</p>
 
                         <div class="mb-3" id="modal-rating">
                             <!-- Đánh giá (nếu cần) -->
@@ -782,6 +803,18 @@
 @include('clients.layouts.footer')
 
 <style>
+    .tabular-numbers,
+.tabular-numbers span,
+.tabular-numbers del {
+    font-family: 'Roboto', sans-serif !important;
+    font-variant-numeric: tabular-nums !important;
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+    vertical-align: middle !important;
+    display: inline-block !important;
+}
+
+
     .hero-banner-full {
         width: 100vw;
         height: 100vh;
