@@ -15,141 +15,130 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $filterType = $request->filter_type;
-
         $fromDate = $request->from_date;
         $toDate = $request->to_date;
         $month = $request->month;
         $year = $request->year ?? now()->year;
 
-        // Query cơ bản cho đơn hàng đã hoàn thành
-        $orderQuery = Order::query()->where('status', 3);
-
-        // Áp dụng bộ lọc nếu người dùng đã chọn
+        // Query lọc theo trạng thái đơn hàng
+        $baseOrderQuery = Order::query();
         if ($filterType === 'date' && $fromDate && $toDate) {
-            $orderQuery->whereBetween('created_at', ["$fromDate 00:00:00", "$toDate 23:59:59"]);
+            $baseOrderQuery->whereBetween('created_at', ["$fromDate 00:00:00", "$toDate 23:59:59"]);
         } elseif ($filterType === 'month' && $month && $year) {
-            $orderQuery->whereMonth('created_at', $month)
-                ->whereYear('created_at', $year);
+            $baseOrderQuery->whereMonth('created_at', $month)->whereYear('created_at', $year);
         } elseif ($filterType === 'year' && $year) {
-            $orderQuery->whereYear('created_at', $year);
+            $baseOrderQuery->whereYear('created_at', $year);
         }
 
-        // Tổng quan
-        $totalRevenue = $orderQuery->sum('total_price');
-        $totalOrders = $orderQuery->count();
+        // Tổng đơn hàng và doanh thu từ tất cả đơn
+        $totalOrders = (clone $baseOrderQuery)->count();
+        $totalRevenue = (clone $baseOrderQuery)->where('status', 4)->sum('total_price');
+        $totalProductsSold = OrderDetail::whereIn('order_id', (clone $baseOrderQuery)->where('status', 4)->pluck('id'))->sum('quantity');
 
-        $orderIds = $orderQuery->pluck('id');
+        // Đơn hàng hoàn thành
+        $completedOrderCount = (clone $baseOrderQuery)->where('status', 4)->count();
 
-        $totalSold = OrderDetail::whereIn('order_id', $orderIds)->sum('quantity');
+        // Đơn hàng đã hủy
+        $cancelledOrderCount = (clone $baseOrderQuery)->where('status', 6)->count();
 
-        // Sản phẩm bán chạy
-        $orderIds = Order::where('status', 3)->pluck('id');
+        // Lợi nhuận từ đơn hoàn thành
+        $completedOrderIds = (clone $baseOrderQuery)->where('status', 4)->pluck('id');
 
-        $bestSellingProducts = DB::table('order_details')
-            ->join('products', 'order_details.product_id', '=', 'products.id')
-            ->whereIn('order_details.order_id', $orderIds)
-            ->select(
-                'products.id as product_id',
-                'products.product_name',
-                'products.image',
-                DB::raw('SUM(order_details.quantity) as total_quantity'),
-                DB::raw('MAX(order_details.price) as latest_price') // giá gần đây nhất để hiển thị
-            )
-            ->groupBy('products.id', 'products.product_name', 'products.image')
-            ->orderByDesc('total_quantity')
-            ->take(10)
-            ->get();
+        $profits = DB::table('order_details as od')
+            ->join('orders as o', 'o.id', '=', 'od.order_id')
+            ->leftJoin('products as p', 'p.id', '=', 'od.product_id')
+            ->leftJoin('product_variants as pv', 'pv.id', '=', 'od.product_variant_id')
+            ->whereIn('od.order_id', $completedOrderIds)
+            ->selectRaw("
+                SUM(od.quantity * od.price) as total_revenue,
+                SUM(od.quantity * 
+                    CASE 
+                        WHEN od.product_variant_id IS NULL THEN p.original_price
+                        ELSE pv.price
+                    END
+                ) as total_cost,
+                SUM(od.quantity * (
+                    od.price -
+                    CASE 
+                        WHEN od.product_variant_id IS NULL THEN p.original_price
+                        ELSE pv.price
+                    END
+                )) as total_profit
+            ")
+            ->first();
 
+        $completedTotalProfit = $profits->total_profit ?? 0;
 
-        $filteredOrders = clone $orderQuery;
-
-        $monthlyData = $filteredOrders
+        // Biểu đồ doanh thu theo tháng
+        $monthlyRevenue = (clone $baseOrderQuery)
+            ->where('status', 4)
             ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
             ->groupBy('month')
-            ->orderBy('month')
             ->pluck('total', 'month')
             ->toArray();
-
 
         $chartLabels = [];
         $chartData = [];
         for ($i = 1; $i <= 12; $i++) {
             $chartLabels[] = 'Tháng ' . $i;
-            $chartData[] = $monthlyData[$i] ?? 0;
+            $chartData[] = $monthlyRevenue[$i] ?? 0;
         }
 
-        // Khách hàng mua nhiều nhất
-        $topCustomers = User::whereHas('orders', function ($q) {
-            $q->where('status', 3);
-        })
-            ->withCount(['orders' => function ($q) {
-                $q->where('status', 3);
-            }])
-            ->withSum(['orders' => function ($q) {
-                $q->where('status', 3);
-            }], 'total_price')
-            ->orderByDesc('orders_count')
-            ->take(5)
-            ->get();
-
-        // Tính tổng lợi nhuận
-        // Tính tổng lợi nhuận
-        $profits = DB::table('order_details as od')
-            ->join('orders as o', 'o.id', '=', 'od.order_id')
-            ->leftJoin('products as p', 'p.id', '=', 'od.product_id')
+        // Sản phẩm bán chạy (tính theo biến thể nếu có)
+        $bestSellingProducts = DB::table('order_details as od')
+            ->join('products as p', 'p.id', '=', 'od.product_id')
             ->leftJoin('product_variants as pv', 'pv.id', '=', 'od.product_variant_id')
+            ->leftJoin('product_variant_values as pvav', 'pvav.product_variant_id', '=', 'pv.id')
+            ->leftJoin('attribute_values as av', 'av.id', '=', 'pvav.attribute_value_id')
+            ->leftJoin('attributes as a', 'a.id', '=', 'av.attribute_id')
+            ->whereIn('od.order_id', $completedOrderIds)
             ->select(
-                DB::raw("COALESCE(p.product_name, 'Không xác định') as product_name"),
-                DB::raw("SUM(od.quantity) as total_sold"),
-                DB::raw("SUM(od.quantity * od.price) as total_revenue"),
-                DB::raw("
-            SUM(
-                od.quantity * 
-                CASE 
-                    WHEN od.product_variant_id IS NULL THEN p.original_price 
-                    ELSE pv.price 
-                END
-            ) as total_cost
-        "),
-                DB::raw("
-            SUM(
-                od.quantity * (
-                    od.price - 
-                    CASE 
-                        WHEN od.product_variant_id IS NULL THEN p.original_price 
-                        ELSE pv.price 
-                    END
-                )
-            ) as total_profit
-        ")
+                'p.id as product_id',
+                'p.product_name',
+                'p.image',
+                'pv.sku as variant_name',
+                DB::raw("GROUP_CONCAT(DISTINCT CONCAT(a.name, ': ', av.value) ORDER BY a.name SEPARATOR ', ') as variant_attributes"),
+                DB::raw('SUM(od.quantity) as total_quantity'),
+                DB::raw('MAX(od.price) as latest_price')
             )
-            ->where('o.status', 3)
-            ->groupBy('od.product_id', 'od.product_variant_id')
+            ->groupBy('p.id', 'p.product_name', 'p.image', 'pv.sku')
+            ->orderByDesc('total_quantity')
+            ->limit(10)
             ->get();
 
-        // ⚠️ Bắt buộc phải có dòng này trước khi dùng compact
-        $totalCost = $profits->sum('total_cost');
-        $totalProfit = $profits->sum('total_profit');
 
 
-        $totalStock = Product::sum('quantity_in_stock');
+
+        // Khách hàng mua nhiều nhất
+        $topCustomers = User::whereHas('orders', function ($q) use ($completedOrderIds) {
+            $q->whereIn('id', $completedOrderIds);
+        })
+            ->withCount(['orders' => function ($q) use ($completedOrderIds) {
+                $q->whereIn('id', $completedOrderIds);
+            }])
+            ->withSum(['orders' => function ($q) use ($completedOrderIds) {
+                $q->whereIn('id', $completedOrderIds);
+            }], 'total_price')
+            ->orderByDesc('orders_sum_total_price')
+            ->limit(5)
+            ->get();
 
         return view('admin.dashboard', compact(
-            'profits',
-            'totalRevenue',
             'totalOrders',
-            'totalSold',
+            'totalRevenue',
+            'totalProductsSold',
+            'completedOrderCount',
+            'cancelledOrderCount',
+            'completedTotalProfit',
             'bestSellingProducts',
+            'topCustomers',
             'chartLabels',
             'chartData',
             'filterType',
             'fromDate',
             'toDate',
             'month',
-            'year',
-            'topCustomers',
-            'totalCost',
-            'totalProfit' // cái này bạn đã có rồi
+            'year'
         ));
     }
 }
