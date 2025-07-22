@@ -1,7 +1,7 @@
 @extends('clients.layouts.app')
 
 @section('content')
-    <div class="container-xl px-4" style="margin-top: 150px">
+    <div class="container-xl px-4" style="margin-top: 50px">
         <nav class="nav nav-borders">
             <a class="nav-link" href="{{ route('clients.info') }}">Thông tin</a>
             <a class="nav-link active ms-0"
@@ -17,8 +17,8 @@
 
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-bottom-0 py-3">
+                <div class="card">
+                    <div class="card-header">
                         <h5 class="mb-0 fw-bold">
                             <i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu
                         </h5>
@@ -31,52 +31,60 @@
                                     <i class="bi bi-key me-2"></i>Thông tin mật khẩu
                                 </h6>
 
-                                <div class="form-group mb-3 position-relative">
-                                    <label class="small mb-1">Mật khẩu hiện tại</label>
+                                <div class="form-group mb-4">
+                                    <label class="mb-2">Mật khẩu hiện tại</label>
                                     <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 border-orange rounded-start-3">
+                                            <i class="bi bi-lock text-orange"></i>
+                                        </span>
                                         <input id="currentPassword" name="currentPassword" type="password"
-                                            class="form-control p-3 bg-light rounded border-0"
+                                            class="form-control border-start-0 border-end-0 border-orange ps-0"
                                             placeholder="Nhập mật khẩu hiện tại">
-                                        <span class="input-group-text bg-light border-0 position-absolute end-0 h-100"
-                                            style="cursor: pointer; z-index: 10;"
-                                            onclick="togglePassword('currentPassword', 'currentPasswordIcon')">
-                                            <i id="currentPasswordIcon" class="bi bi-eye-slash"></i>
+                                        <span class="input-group-text bg-light border-start-0 border-orange rounded-end-3"
+                                            onclick="togglePassword('currentPassword', 'currentPasswordIcon')"
+                                            style="cursor: pointer;">
+                                            <i id="currentPasswordIcon" class="bi bi-eye-slash text-orange"></i>
                                         </span>
                                     </div>
                                 </div>
 
-                                <div class="form-group mb-3 position-relative">
-                                    <label class="small mb-1">Mật khẩu mới</label>
+                                <div class="form-group mb-4">
+                                    <label class="mb-2">Mật khẩu mới</label>
                                     <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 border-orange rounded-start-3">
+                                            <i class="bi bi-lock text-orange"></i>
+                                        </span>
                                         <input id="newPassword" name="newPassword" type="password"
-                                            class="form-control p-3 bg-light rounded border-0"
+                                            class="form-control border-start-0 border-end-0 border-orange ps-0"
                                             placeholder="Nhập mật khẩu mới">
-                                        <span class="input-group-text bg-light border-0 position-absolute end-0 h-100"
-                                            style="cursor: pointer; z-index: 10;"
-                                            onclick="togglePassword('newPassword', 'newPasswordIcon')">
-                                            <i id="newPasswordIcon" class="bi bi-eye-slash"></i>
+                                        <span class="input-group-text bg-light border-start-0 border-orange rounded-end-3"
+                                            onclick="togglePassword('newPassword', 'newPasswordIcon')"
+                                            style="cursor: pointer;">
+                                            <i id="newPasswordIcon" class="bi bi-eye-slash text-orange"></i>
                                         </span>
                                     </div>
                                 </div>
 
-                                <div class="form-group mb-3 position-relative">
-                                    <label class="small mb-1">Xác nhận mật khẩu mới</label>
+                                <div class="form-group mb-4">
+                                    <label class="mb-2">Xác nhận mật khẩu mới</label>
                                     <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 border-orange rounded-start-3">
+                                            <i class="bi bi-shield-lock text-orange"></i>
+                                        </span>
                                         <input id="confirmPassword" name="confirmPassword" type="password"
-                                            class="form-control p-3 bg-light rounded border-0"
+                                            class="form-control border-start-0 border-end-0 border-orange ps-0"
                                             placeholder="Xác nhận mật khẩu mới">
-                                        <span class="input-group-text bg-light border-0 position-absolute end-0 h-100"
-                                            style="cursor: pointer; z-index: 10;"
-                                            onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')">
-                                            <i id="confirmPasswordIcon" class="bi bi-eye-slash"></i>
+                                        <span class="input-group-text bg-light border-start-0 border-orange rounded-end-3"
+                                            onclick="togglePassword('confirmPassword', 'confirmPasswordIcon')"
+                                            style="cursor: pointer;">
+                                            <i id="confirmPasswordIcon" class="bi bi-eye-slash text-orange"></i>
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="text-end mt-4">
-                                <button class="btn px-4" type="submit"
-                                    style="background-color: rgb(219, 115, 91); border-color: rgb(219, 115, 91); color: white">
+                                <button class="btn btn-orange px-4 fw-semibold rounded-3" type="submit">
                                     <i class="bi bi-check-circle me-2"></i>Cập nhật mật khẩu
                                 </button>
                             </div>
@@ -121,6 +129,7 @@
     @endif
 
     @if ($errors->any())
+        )
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             Swal.fire({
@@ -132,34 +141,116 @@
         </script>
     @endif
 
-    <style>
-        .nav-borders .nav-link {
-            padding: 0.5rem 1rem;
-            color: #495057;
-        }
+    @push('styles')
+        <style>
+            /* Style chung giống các trang trước */
+            .nav-borders .nav-link {
+                padding: 0.5rem 1rem;
+                color: #495057;
+            }
 
-        .nav-borders .nav-link.active {
-            color: rgb(219, 115, 91);
-            border-bottom: 2px solid;
-            font-weight: 600;
-        }
+            .nav-borders .nav-link.active {
+                color: rgb(219, 115, 91);
+                border-bottom: 2px solid;
+                font-weight: 600;
+            }
 
-        .card {
-            border-radius: 0.5rem;
-        }
+            .card {
+                border-radius: 0;
+                border: none;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            }
 
-        .form-control {
-            border: 1px solid #ced4da !important;
-        }
+            .card-header {
+                background-color: white;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+                padding: 1.5rem;
+            }
 
-        .form-control:focus {
-            border-color: #ced4da !important;
-            box-shadow: 0 0 0 0.25rem rgba(219, 115, 91, 0.25) !important;
-        }
+            /* Input group style giống trang register */
+            .input-group {
+                display: flex;
+                align-items: stretch !important;
+            }
 
-        .input-group-text {
-            background-color: #f8f9fa !important;
-            border: 1px solid #ced4da !important;
-        }
-    </style>
+            .input-group-text {
+                height: 48px !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 48px;
+                background-color: #f8f9fa !important;
+                margin: 0;
+                padding: 0 12px;
+                border-color: rgb(219, 115, 91) !important;
+            }
+
+            .form-control {
+                height: 48px !important;
+                padding: 0 16px;
+                font-size: 16px;
+                line-height: 48px !important;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                border-color: rgb(219, 115, 91) !important;
+            }
+
+            .input-group-text i {
+                font-size: 18px;
+                line-height: 1;
+                color: rgb(219, 115, 91);
+            }
+
+            .form-control:focus {
+                border-color: rgb(219, 115, 91) !important;
+                box-shadow: 0 0 0 0.2rem rgba(219, 115, 91, 0.25) !important;
+            }
+
+            /* Xử lý border cho input group */
+            .input-group .form-control {
+                border-left: 0 !important;
+                border-right: 0 !important;
+            }
+
+            .input-group .input-group-text:first-child {
+                border-right: 0 !important;
+            }
+
+            .input-group .input-group-text:last-child {
+                border-left: 0 !important;
+            }
+
+            /* Button style */
+            .btn-orange {
+                background-color: rgb(219, 115, 91);
+                border-color: rgb(219, 115, 91);
+                color: white;
+                transition: all 0.3s ease;
+                padding: 0.5rem 1.5rem;
+            }
+
+            .btn-orange:hover {
+                background-color: rgb(199, 95, 71);
+                border-color: rgb(199, 95, 71);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+            /* Layout adjustments */
+            .container-xl {
+                padding-top: 100px;
+                padding-bottom: 50px;
+            }
+
+            .form-group label {
+                font-weight: 500;
+                margin-bottom: 0.5rem;
+            }
+
+            .card-body {
+                padding: 2rem;
+            }
+        </style>
+    @endpush
 @endsection
