@@ -9,11 +9,14 @@
             4 => 'Hoàn thành',
             5 => 'Hoàn hàng',
             6 => 'Hủy đơn',
+            7 => 'Chờ xử lý hoàn hàng',
+            8 => 'Hoàn hàng thất bại',
         ];
 
         $paymentStatusLabels = [
             'unpaid' => 'Chưa thanh toán',
             'paid' => 'Đã thanh toán',
+            'refunded' => 'Hoàn tiền',
         ];
 
         $currentStatus = request()->get('status', 'all');
@@ -115,11 +118,14 @@
                                     <div class="ms-4">
                                         <span
                                             class="badge rounded-pill px-3 py-2 fs-6
-                                                    @if ($order->status == 1) bg-warning text-dark
-                                                    @elseif($order->status == 2) bg-primary text-white
-                                                    @elseif($order->status == 3) bg-success text-white
-                                                    @elseif($order->status == 4) bg-info text-white
-                                                    @elseif(in_array($order->status, [5, 6])) bg-danger text-white @endif">
+                                                @if ($order->status == 1) bg-warning text-dark
+                                                @elseif($order->status == 2) bg-primary text-white
+                                                @elseif($order->status == 3) bg-success text-white
+                                                @elseif($order->status == 4) bg-info text-white
+                                                @elseif($order->status == 5) bg-secondary text-white
+                                                @elseif($order->status == 6) bg-danger text-white
+                                                @elseif($order->status == 7) bg-purple text-white
+                                                @elseif($order->status == 8) bg-dark text-white @endif">
                                             {{ $statusLabels[$order->status] ?? 'Không xác định' }}
                                         </span>
                                     </div>
@@ -133,7 +139,11 @@
                                             toán</span>
                                         <span
                                             class="badge rounded-pill px-3 py-2
-                                            {{ $order->payment_status == 'paid' ? 'bg-success' : 'bg-warning' }}">
+                                            {{ $order->payment_status == 'paid'
+                                                ? 'bg-success'
+                                                : ($order->payment_status == 'refunded'
+                                                    ? 'bg-info'
+                                                    : 'bg-warning') }}">
                                             {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
                                         </span>
                                     </div>
@@ -247,6 +257,14 @@
 
             .btn-outline-primary:focus {
                 box-shadow: 0 0 0 0.2rem rgba(219, 115, 91, 0.25) !important;
+            }
+
+            .bg-purple {
+                background-color: #6f42c1 !important;
+            }
+
+            .bg-dark {
+                background-color: #343a40 !important;
             }
         </style>
     @endpush

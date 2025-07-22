@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -298,23 +299,28 @@ class OrderController extends Controller
 
     public function orderDetail($id)
     {
-        $order = Order::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        if (session()->has('order')) {
+            $order = session('order');
+        } else {
+            $order = Order::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->firstOrFail();
+        }
 
-        $items = DB::table('order_details')
-            ->join('products', 'order_details.product_id', '=', 'products.id')
-            ->where('order_id', $id)
-            ->select('order_details.*', 'products.product_name as product_name')
-            ->get();
+        // Thêm logic kiểm tra thời gian hoàn hàng
+        $canReturn = false;
+        if ($order->status == 4 && $order->completed_at) {
+            $returnDeadline = Carbon::parse($order->completed_at)->addHours(24);
+            $canReturn = now()->lte($returnDeadline);
+        }
 
-        return view('clients.user.show-order', compact('order', 'items'));
+        return view('clients.user.show-order', compact('order', 'canReturn'));
     }
 
     public function cancel(Request $request, $id)
     {
         $request->validate([
-            'cancellation_reason' => 'required|string|max:1000',
+            'reason' => 'required|string|max:1000',
         ]);
 
         $order = Order::findOrFail($id);
@@ -324,7 +330,7 @@ class OrderController extends Controller
         }
 
         $order->status = 6; // hủy đơn
-        $order->cancellation_reason = $request->cancellation_reason;
+        $order->cancellation_reason = $request->reason;
         $order->save();
 
         return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy.');
@@ -400,5 +406,50 @@ class OrderController extends Controller
     {
         session()->forget(['promotion', 'discount', 'promotion_name']);
         return redirect()->route('carts.index')->with('success', 'Đã hủy mã giảm giá.');
+    }
+
+    public function requestReturn(Request $request, $id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        // Kiểm tra điều kiện hoàn hàng
+        if ($order->status == 5) {
+            return back()->with('error', 'Đơn hàng đã được hoàn trả');
+        }
+
+        if ($order->status == 7) {
+            return back()->with('info', 'Yêu cầu hoàn hàng đang chờ xử lý');
+        }
+
+        if ($order->status != 4 || ($order->completed_at && now()->gt(Carbon::parse($order->completed_at)->addHours(24)))) {
+            return back()->with('error', 'Không đủ điều kiện hoàn hàng');
+        }
+
+        $request->validate([
+            'return_reason' => 'required|string'
+        ], [
+            'return_reason.required' => 'Vui lòng nhập lý do hoàn hàng'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $order->update([
+                'status' => 7,
+                'return_reason' => $request->return_reason,
+                'return_requested_at' => now()
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('clients.orderdetail', $order->id)
+                ->with('success', 'Yêu cầu hoàn hàng đã được gửi thành công!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Xử lý yêu cầu thất bại: ' . $e->getMessage());
+        }
     }
 }

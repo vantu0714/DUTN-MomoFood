@@ -90,6 +90,8 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/create-payment', [ClientsOrderController::class, 'createPayment'])->name('create-payment');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
+        Route::post('/orders/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
+            ->name('request_return');
     });
 
     // Cart Management
@@ -158,23 +160,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 
     // Product Variants
- Route::prefix('product-variants')->name('product_variants.')->group(function () {
+    Route::prefix('product-variants')->name('product_variants.')->group(function () {
 
-    Route::get('/cancel', [ProductVariantController::class, 'cancel'])->name('cancel');
-    Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple'); 
-    Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
+        Route::get('/cancel', [ProductVariantController::class, 'cancel'])->name('cancel');
+        Route::get('/multi-create', [ProductVariantController::class, 'createMultiple'])->name('createMultiple');
+        Route::post('/multi-store', [ProductVariantController::class, 'storeMultiple'])->name('storeMultiple');
 
-    Route::get('/', [ProductVariantController::class, 'index'])->name('index');
-    Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
-    Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
-    Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
-    Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
-    Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
-    Route::get('/{product_variant}', [ProductVariantController::class, 'show'])->name('show');
-});
-
-
-
+        Route::get('/', [ProductVariantController::class, 'index'])->name('index');
+        Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
+        Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
+        Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
+        Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
+        Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
+        Route::get('/{product_variant}', [ProductVariantController::class, 'show'])->name('show');
+    });
 
     // Order Management
     Route::prefix('orders')->name('orders.')->group(function () {
@@ -186,6 +185,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/{id}', [OrderController::class, 'update'])->name('update');
         Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
         Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+        Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])
+            ->name('approve_return');
+        Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])
+            ->name('reject_return');
     });
 
     // Promotion Management

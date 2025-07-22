@@ -118,4 +118,5 @@ class Product extends Model
     return $this->belongsTo(ProductOrigin::class, 'origin_id');
 }
 
+
 }

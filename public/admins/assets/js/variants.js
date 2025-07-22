@@ -435,100 +435,95 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add variant button
 
     const addVariantBtn = document.getElementById('add-variant');
-    if (addVariantBtn) {
-        addVariantBtn.addEventListener('click', function (e) {
-            e.preventDefault();
+if (addVariantBtn) {
+    addVariantBtn.addEventListener('click', function (e) {
+        e.preventDefault();
 
-            const template = document.querySelector('.variant-item');
-            if (!template) return;
+        const template = document.querySelector('.variant-item');
+        if (!template) return;
 
-            const clone = template.cloneNode(true);
+        const clone = template.cloneNode(true);
 
-            // Update variant title
-            clone.querySelector('h5').innerHTML = `<i class="fas fa-cube me-2"></i>Biến thể #${variantIndex + 1}`;
+        // Tính lại số lượng biến thể hiện tại để đặt chỉ số mới
+        const currentVariantCount = document.querySelectorAll('.variant-item').length;
 
-            // Clear & update input/select values
-            clone.querySelectorAll('input, select').forEach(el => {
-                if (el.type !== 'file' && el.type !== 'hidden') {
-                    el.value = '';
-                    el.selectedIndex = 0;
-                }
+        // Cập nhật tiêu đề biến thể
+        clone.querySelector('h5').innerHTML = `<i class="fas fa-cube me-2"></i>Biến thể #${currentVariantCount + 1}`;
 
-                el.classList.remove('is-invalid');
-
-                // Update name với variantIndex mới
-                if (el.name) {
-                    el.name = el.name.replace(/variants\[\d+\]/g, `variants[${variantIndex}]`);
-                    el.name = el.name.replace(/sub_attributes\[\d+\]/g, 'sub_attributes[0]');
-                }
-            });
-
-            // 🔧 Reset input vị (main_attribute[value]) và thêm lại input hidden "Vị"
-            const flavorInput = clone.querySelector('input[name*="[main_attribute][value]"]');
-            if (flavorInput) {
-                flavorInput.value = '';
-                flavorInput.classList.remove('is-invalid');
-
-                //  Cập nhật lại name đúng theo variantIndex
-                flavorInput.name = `variants[${variantIndex}][main_attribute][value]`;
-
-                // Gán lại giá trị từ biến thể trước nếu có
-                const previousVariant = document.querySelectorAll('.variant-item')[variantIndex - 1];
-                const previousFlavorInput = previousVariant?.querySelector('input[name*="[main_attribute][value]"]');
-                if (previousFlavorInput) {
-                    flavorInput.value = previousFlavorInput.value;
-                }
-
-                const oldError = flavorInput.parentNode.querySelector('.flavor-error');
-                if (oldError) oldError.remove();
-
-                const oldHidden = clone.querySelector('input[name*="[main_attribute][name]"]');
-                if (oldHidden) oldHidden.remove();
-
-                const attrNameInput = document.createElement('input');
-                attrNameInput.type = 'hidden';
-                attrNameInput.name = `variants[${variantIndex}][main_attribute][name]`;
-                attrNameInput.value = 'Vị';
-                flavorInput.insertAdjacentElement('afterend', attrNameInput);
+        // Clear & cập nhật input/select
+        clone.querySelectorAll('input, select').forEach(el => {
+            if (el.type !== 'file' && el.type !== 'hidden') {
+                el.value = '';
+                el.selectedIndex = 0;
             }
 
+            el.classList.remove('is-invalid');
 
-            // Remove lỗi cũ nếu có
-            clone.querySelectorAll('.size-error, .price-error, .invalid-feedback').forEach(el => el.remove());
-
-            // Xóa các dòng size phụ dư thừa, chỉ giữ lại 1 dòng
-            const subRows = clone.querySelectorAll('.sub-attribute-row');
-            for (let i = 1; i < subRows.length; i++) {
-                subRows[i].remove();
+            // Cập nhật lại name theo chỉ số mới
+            if (el.name) {
+                el.name = el.name.replace(/variants\[\d+\]/g, `variants[${currentVariantCount}]`);
+                el.name = el.name.replace(/sub_attributes\[\d+\]/g, 'sub_attributes[0]');
             }
-
-            // Reset dropdown size
-            const sizeSelects = clone.querySelectorAll('select[name*="[attribute_value_id]"]');
-            sizeSelects.forEach(select => {
-                select.selectedIndex = 0;
-                if (select.options[0].value !== '') {
-                    const defaultOption = document.createElement('option');
-                    defaultOption.value = '';
-                    defaultOption.textContent = 'Chọn khối lượng';
-                    defaultOption.selected = true;
-                    select.insertBefore(defaultOption, select.firstChild);
-                } else {
-                    select.options[0].textContent = 'Chọn khối lượng';
-                }
-            });
-
-            // Add vào giao diện
-            variantsContainer.appendChild(clone);
-
-            // Kích hoạt lại các sự kiện
-            attachEvents(clone);
-            updateSizeOptions(clone);
-            updateSKUs(clone);
-            updatePreviewTable();
-
-            variantIndex++;
         });
-    }
+
+        // Xử lý input vị (main_attribute[value])
+        const flavorInput = clone.querySelector('input[name*="[main_attribute][value]"]');
+        if (flavorInput) {
+            flavorInput.value = '';
+            flavorInput.classList.remove('is-invalid');
+
+            flavorInput.name = `variants[${currentVariantCount}][main_attribute][value]`;
+
+            // Xoá lỗi cũ nếu có
+            const oldError = flavorInput.parentNode.querySelector('.flavor-error');
+            if (oldError) oldError.remove();
+
+            // Xóa input hidden cũ và thêm mới
+            const oldHidden = clone.querySelector('input[name*="[main_attribute][name]"]');
+            if (oldHidden) oldHidden.remove();
+
+            const attrNameInput = document.createElement('input');
+            attrNameInput.type = 'hidden';
+            attrNameInput.name = `variants[${currentVariantCount}][main_attribute][name]`;
+            attrNameInput.value = 'Vị';
+            flavorInput.insertAdjacentElement('afterend', attrNameInput);
+        }
+
+        // Xoá lỗi hiển thị cũ
+        clone.querySelectorAll('.size-error, .price-error, .invalid-feedback').forEach(el => el.remove());
+
+        // Chỉ giữ lại dòng size đầu tiên
+        const subRows = clone.querySelectorAll('.sub-attribute-row');
+        for (let i = 1; i < subRows.length; i++) {
+            subRows[i].remove();
+        }
+
+        // Reset dropdown size
+        const sizeSelects = clone.querySelectorAll('select[name*="[attribute_value_id]"]');
+        sizeSelects.forEach(select => {
+            select.selectedIndex = 0;
+            if (select.options[0].value !== '') {
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Chọn khối lượng';
+                defaultOption.selected = true;
+                select.insertBefore(defaultOption, select.firstChild);
+            } else {
+                select.options[0].textContent = 'Chọn khối lượng';
+            }
+        });
+
+        // Thêm vào DOM
+        variantsContainer.appendChild(clone);
+
+        // Kích hoạt các sự kiện
+        attachEvents(clone);
+        updateSizeOptions(clone);
+        updateSKUs(clone);
+        updatePreviewTable();
+    });
+}
+
 
 
 
@@ -666,8 +661,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-
 /*......edit....*/
 document.addEventListener('DOMContentLoaded', function () {
     // Enhanced delete confirmation
@@ -1162,366 +1155,366 @@ document.addEventListener('DOMContentLoaded', function () {
 
 //create-multiple.blade
 
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
-        // === Tiện ích ===
-        const normalize = str => (str || '').toString().trim().toLowerCase().replace(/\s+/g, '-');
-        const buildSku = (code, flavor, weight) =>
-            `${code}-${normalize(flavor)}-${normalize(weight)}`.toUpperCase();
+    // === Tiện ích ===
+    const normalize = str => (str || '').toString().trim().toLowerCase().replace(/\s+/g, '-');
+    const buildSku = (code, flavor, weight) =>
+        `${code}-${normalize(flavor)}-${normalize(weight)}`.toUpperCase();
 
-        // === Hiển thị nhóm biến thể theo sản phẩm ===
-        function handleProductSelection() {
-            const selector = document.getElementById('productSelector');
-            const groups = document.querySelectorAll('.product-variant-group');
-            const submitSection = document.getElementById('submit-section');
+    // === Hiển thị nhóm biến thể theo sản phẩm ===
+    function handleProductSelection() {
+        const selector = document.getElementById('productSelector');
+        const groups = document.querySelectorAll('.product-variant-group');
+        const submitSection = document.getElementById('submit-section');
 
-            selector?.addEventListener('change', function() {
-                const selectedId = this.value;
-                groups.forEach(group => {
-                    if (group.dataset.productId === selectedId) {
-                        group.style.display = 'block';
-                        submitSection.style.display = 'block';
-                    } else {
-                        group.style.display = 'none';
-                    }
+        selector?.addEventListener('change', function () {
+            const selectedId = this.value;
+            groups.forEach(group => {
+                if (group.dataset.productId === selectedId) {
+                    group.style.display = 'block';
+                    submitSection.style.display = 'block';
+                } else {
+                    group.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // === Tự động sinh SKU ===
+    function handleSkuAutoGenerate() {
+        document.body.addEventListener('change', function (e) {
+            if (
+                e.target.matches('.weight-select, .size-select') ||
+                e.target.matches('.main-attribute-input')
+            ) {
+                const row = e.target.closest('.sub-attribute-row');
+                const variantItem = e.target.closest('.variant-item');
+                const group = e.target.closest('.product-variant-group');
+
+                const flavorInput = variantItem.querySelector('.main-attribute-input');
+                const weightSelect = row.querySelector('.weight-select, .size-select');
+                const skuInput = row.querySelector('.sku-input');
+                const productCode = group.querySelector('.product-code')?.value;
+
+                const flavor = flavorInput?.value.trim();
+                const weight = weightSelect?.selectedOptions[0]?.text.trim();
+
+                if (productCode && flavor && weight) {
+                    skuInput.value = buildSku(productCode, flavor, weight);
+                }
+            }
+        });
+    }
+
+    // === Thêm biến thể ===
+    function handleAddVariant() {
+        document.body.addEventListener('click', function (e) {
+            const btn = e.target.closest('.add-variant-btn');
+            if (!btn) return;
+
+            const group = btn.closest('.product-variant-group');
+            if (!group) return;
+
+            const container = group.querySelector('.variants-container');
+            const productId = group.dataset.productId;
+            const variantItems = container.querySelectorAll('.variant-item');
+            const newIndex = variantItems.length;
+            const firstVariant = variantItems[0];
+            if (!firstVariant) return;
+
+            const newVariant = firstVariant.cloneNode(true);
+            newVariant.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = false;
+                } else {
+                    el.value = '';
+                }
+                el.classList.remove('is-invalid');
+            });
+
+            newVariant.querySelectorAll('[name]').forEach(el => {
+                const oldName = el.name;
+                const updatedName = oldName
+                    .replace(/products\[\d+]\[variants]\[\d+]/,
+                        `products[${productId}][variants][${newIndex}]`)
+                    .replace(/\[sub_attributes]\[\d+]/g, `[sub_attributes][0]`);
+                el.name = updatedName;
+            });
+
+            const header = newVariant.querySelector('.card-header h6');
+            if (header) {
+                header.innerHTML = `<i class="fas fa-cube me-2"></i> Biến thể #${newIndex + 1}`;
+            }
+
+            container.appendChild(newVariant);
+            updateDisabledWeights(group);
+        });
+    }
+
+    // === Xoá biến thể ===
+    function handleRemoveVariant() {
+        document.body.addEventListener('click', function (e) {
+            const btn = e.target.closest('.remove-variant');
+            if (!btn) return;
+
+            const item = btn.closest('.variant-item');
+            const container = item.closest('.variants-container');
+
+            if (container.querySelectorAll('.variant-item').length > 1) {
+                item.remove();
+                updateDisabledWeights(container.closest('.product-variant-group'));
+            } else {
+                alert('Phải có ít nhất 1 biến thể.');
+            }
+        });
+    }
+
+    // === Thêm khối lượng ===
+    function handleAddSubAttribute() {
+        document.body.addEventListener('click', function (e) {
+            const btn = e.target.closest('.add-sub-attribute');
+            if (!btn) return;
+
+            const variantItem = btn.closest('.variant-item');
+            const subAttrGroup = variantItem.querySelector('.sub-attributes-group');
+            const subAttrRows = subAttrGroup.querySelectorAll('.sub-attribute-row');
+            const newIndex = subAttrRows.length;
+            const firstRow = subAttrRows[0];
+            const newRow = firstRow.cloneNode(true);
+
+            newRow.querySelectorAll('input, select').forEach(input => {
+                input.value = '';
+                input.classList.remove('is-invalid');
+            });
+
+            newRow.querySelectorAll('[name]').forEach(el => {
+                el.name = el.name.replace(/\[sub_attributes]\[\d+]/g,
+                    `[sub_attributes][${newIndex}]`);
+            });
+
+            subAttrGroup.appendChild(newRow);
+            updateDisabledWeights(variantItem.closest('.product-variant-group'));
+        });
+    }
+
+    // === Xoá khối lượng ===
+    function handleRemoveSubAttribute() {
+        document.body.addEventListener('click', function (e) {
+            const btn = e.target.closest('.remove-sub-attribute');
+            if (!btn) return;
+
+            const row = btn.closest('.sub-attribute-row');
+            const group = row.closest('.sub-attributes-group');
+
+            if (group.querySelectorAll('.sub-attribute-row').length > 1) {
+                row.remove();
+                updateDisabledWeights(group.closest('.product-variant-group'));
+            } else {
+                alert('Phải có ít nhất 1 khối lượng cho mỗi biến thể.');
+            }
+        });
+    }
+
+    // === Cập nhật khối lượng đã chọn để ẩn option ===
+    function updateDisabledWeights(group) {
+        group.querySelectorAll('.variant-item').forEach(variant => {
+            const usedWeights = new Set();
+            const rows = variant.querySelectorAll('.sub-attribute-row');
+
+            // Thu thập các weight đã chọn trong cùng 1 biến thể
+            rows.forEach(row => {
+                const select = row.querySelector('.weight-select, .size-select');
+                if (select?.value) {
+                    usedWeights.add(select.value);
+                }
+            });
+
+            // Disable trong cùng biến thể nếu trùng
+            rows.forEach(row => {
+                const select = row.querySelector('.weight-select, .size-select');
+                const currentValue = select?.value;
+                const options = select?.querySelectorAll('option') || [];
+                options.forEach(option => {
+                    if (option.value === '') return;
+                    option.disabled = usedWeights.has(option.value) && option
+                        .value !== currentValue;
                 });
             });
-        }
+        });
+    }
 
-        // === Tự động sinh SKU ===
-        function handleSkuAutoGenerate() {
-            document.body.addEventListener('change', function(e) {
-                if (
-                    e.target.matches('.weight-select, .size-select') ||
-                    e.target.matches('.main-attribute-input')
-                ) {
-                    const row = e.target.closest('.sub-attribute-row');
-                    const variantItem = e.target.closest('.variant-item');
-                    const group = e.target.closest('.product-variant-group');
 
-                    const flavorInput = variantItem.querySelector('.main-attribute-input');
+    // === Validate trước khi submit ===
+    function handleFormValidation() {
+        const submitBtn = document.getElementById('save-variants');
+        if (!submitBtn) return;
+
+        submitBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const selectedGroup = document.querySelector(
+                '.product-variant-group:not([style*="display: none"])');
+            if (!selectedGroup) return;
+
+            const variantItems = selectedGroup.querySelectorAll('.variant-item');
+
+            const flavorMap = new Map();
+
+            for (let i = 0; i < variantItems.length; i++) {
+                const variant = variantItems[i];
+                const flavorInput = variant.querySelector('.main-attribute-input');
+                const flavor = normalize(flavorInput?.value);
+
+                // Kiểm tra ô vị
+                if (!flavor) {
+                    flavorInput?.classList.add('is-invalid');
+                    alert(`Vui lòng nhập vị cho biến thể thứ ${i + 1}`);
+                    return;
+                }
+
+                if (flavorMap.has(flavor)) {
+                    flavorInput?.classList.add('is-invalid');
+                    alert(`Vị "${flavorInput.value}" bị trùng!`);
+                    return;
+                } else {
+                    flavorMap.set(flavor, true);
+                    flavorInput?.classList.remove('is-invalid');
+                }
+
+                const subRows = variant.querySelectorAll('.sub-attribute-row');
+                const weightSet = new Set();
+                const existingVariants = JSON.parse(selectedGroup.querySelector(
+                    '.existing-variants')?.value || '[]');
+
+                for (let row of subRows) {
                     const weightSelect = row.querySelector('.weight-select, .size-select');
-                    const skuInput = row.querySelector('.sku-input');
-                    const productCode = group.querySelector('.product-code')?.value;
+                    const selectedWeight = normalize(weightSelect?.selectedOptions[0]?.text);
 
-                    const flavor = flavorInput?.value.trim();
-                    const weight = weightSelect?.selectedOptions[0]?.text.trim();
+                    const priceInput = row.querySelector('.price-input');
+                    const quantityInput = row.querySelector('.quantity-input');
 
-                    if (productCode && flavor && weight) {
-                        skuInput.value = buildSku(productCode, flavor, weight);
-                    }
-                }
-            });
-        }
-
-        // === Thêm biến thể ===
-        function handleAddVariant() {
-            document.body.addEventListener('click', function(e) {
-                const btn = e.target.closest('.add-variant-btn');
-                if (!btn) return;
-
-                const group = btn.closest('.product-variant-group');
-                if (!group) return;
-
-                const container = group.querySelector('.variants-container');
-                const productId = group.dataset.productId;
-                const variantItems = container.querySelectorAll('.variant-item');
-                const newIndex = variantItems.length;
-                const firstVariant = variantItems[0];
-                if (!firstVariant) return;
-
-                const newVariant = firstVariant.cloneNode(true);
-                newVariant.querySelectorAll('input, select, textarea').forEach(el => {
-                    if (el.type === 'checkbox' || el.type === 'radio') {
-                        el.checked = false;
-                    } else {
-                        el.value = '';
-                    }
-                    el.classList.remove('is-invalid');
-                });
-
-                newVariant.querySelectorAll('[name]').forEach(el => {
-                    const oldName = el.name;
-                    const updatedName = oldName
-                        .replace(/products\[\d+]\[variants]\[\d+]/,
-                            `products[${productId}][variants][${newIndex}]`)
-                        .replace(/\[sub_attributes]\[\d+]/g, `[sub_attributes][0]`);
-                    el.name = updatedName;
-                });
-
-                const header = newVariant.querySelector('.card-header h6');
-                if (header) {
-                    header.innerHTML = `<i class="fas fa-cube me-2"></i> Biến thể #${newIndex + 1}`;
-                }
-
-                container.appendChild(newVariant);
-                updateDisabledWeights(group);
-            });
-        }
-
-        // === Xoá biến thể ===
-        function handleRemoveVariant() {
-            document.body.addEventListener('click', function(e) {
-                const btn = e.target.closest('.remove-variant');
-                if (!btn) return;
-
-                const item = btn.closest('.variant-item');
-                const container = item.closest('.variants-container');
-
-                if (container.querySelectorAll('.variant-item').length > 1) {
-                    item.remove();
-                    updateDisabledWeights(container.closest('.product-variant-group'));
-                } else {
-                    alert('Phải có ít nhất 1 biến thể.');
-                }
-            });
-        }
-
-        // === Thêm khối lượng ===
-        function handleAddSubAttribute() {
-            document.body.addEventListener('click', function(e) {
-                const btn = e.target.closest('.add-sub-attribute');
-                if (!btn) return;
-
-                const variantItem = btn.closest('.variant-item');
-                const subAttrGroup = variantItem.querySelector('.sub-attributes-group');
-                const subAttrRows = subAttrGroup.querySelectorAll('.sub-attribute-row');
-                const newIndex = subAttrRows.length;
-                const firstRow = subAttrRows[0];
-                const newRow = firstRow.cloneNode(true);
-
-                newRow.querySelectorAll('input, select').forEach(input => {
-                    input.value = '';
-                    input.classList.remove('is-invalid');
-                });
-
-                newRow.querySelectorAll('[name]').forEach(el => {
-                    el.name = el.name.replace(/\[sub_attributes]\[\d+]/g,
-                        `[sub_attributes][${newIndex}]`);
-                });
-
-                subAttrGroup.appendChild(newRow);
-                updateDisabledWeights(variantItem.closest('.product-variant-group'));
-            });
-        }
-
-        // === Xoá khối lượng ===
-        function handleRemoveSubAttribute() {
-            document.body.addEventListener('click', function(e) {
-                const btn = e.target.closest('.remove-sub-attribute');
-                if (!btn) return;
-
-                const row = btn.closest('.sub-attribute-row');
-                const group = row.closest('.sub-attributes-group');
-
-                if (group.querySelectorAll('.sub-attribute-row').length > 1) {
-                    row.remove();
-                    updateDisabledWeights(group.closest('.product-variant-group'));
-                } else {
-                    alert('Phải có ít nhất 1 khối lượng cho mỗi biến thể.');
-                }
-            });
-        }
-
-        // === Cập nhật khối lượng đã chọn để ẩn option ===
-        function updateDisabledWeights(group) {
-            group.querySelectorAll('.variant-item').forEach(variant => {
-                const usedWeights = new Set();
-                const rows = variant.querySelectorAll('.sub-attribute-row');
-
-                // Thu thập các weight đã chọn trong cùng 1 biến thể
-                rows.forEach(row => {
-                    const select = row.querySelector('.weight-select, .size-select');
-                    if (select?.value) {
-                        usedWeights.add(select.value);
-                    }
-                });
-
-                // Disable trong cùng biến thể nếu trùng
-                rows.forEach(row => {
-                    const select = row.querySelector('.weight-select, .size-select');
-                    const currentValue = select?.value;
-                    const options = select?.querySelectorAll('option') || [];
-                    options.forEach(option => {
-                        if (option.value === '') return;
-                        option.disabled = usedWeights.has(option.value) && option
-                            .value !== currentValue;
-                    });
-                });
-            });
-        }
-
-
-        // === Validate trước khi submit ===
-        function handleFormValidation() {
-            const submitBtn = document.getElementById('save-variants');
-            if (!submitBtn) return;
-
-            submitBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-
-                const selectedGroup = document.querySelector(
-                    '.product-variant-group:not([style*="display: none"])');
-                if (!selectedGroup) return;
-
-                const variantItems = selectedGroup.querySelectorAll('.variant-item');
-
-                const flavorMap = new Map();
-
-                for (let i = 0; i < variantItems.length; i++) {
-                    const variant = variantItems[i];
-                    const flavorInput = variant.querySelector('.main-attribute-input');
-                    const flavor = normalize(flavorInput?.value);
-
-                    // Kiểm tra ô vị
-                    if (!flavor) {
-                        flavorInput?.classList.add('is-invalid');
-                        alert(`Vui lòng nhập vị cho biến thể thứ ${i + 1}`);
+                    // Kiểm tra đã chọn khối lượng chưa
+                    if (!selectedWeight) {
+                        weightSelect?.classList.add('is-invalid');
+                        alert(`Vui lòng chọn khối lượng cho vị "${flavorInput.value}"`);
                         return;
                     }
 
-                    if (flavorMap.has(flavor)) {
-                        flavorInput?.classList.add('is-invalid');
-                        alert(`Vị "${flavorInput.value}" bị trùng!`);
+                    // Trùng khối lượng trong cùng vị
+                    if (weightSet.has(selectedWeight)) {
+                        weightSelect?.classList.add('is-invalid');
+                        alert(
+                            `Khối lượng "${selectedWeight}" bị trùng trong cùng vị "${flavorInput.value}"`
+                        );
                         return;
                     } else {
-                        flavorMap.set(flavor, true);
-                        flavorInput?.classList.remove('is-invalid');
+                        weightSet.add(selectedWeight);
+                        weightSelect?.classList.remove('is-invalid');
                     }
 
-                    const subRows = variant.querySelectorAll('.sub-attribute-row');
-                    const weightSet = new Set();
-                    const existingVariants = JSON.parse(selectedGroup.querySelector(
-                        '.existing-variants')?.value || '[]');
+                    // Trùng với dữ liệu đã có
+                    if (existingVariants.some(item =>
+                        normalize(item.flavor) === flavor && normalize(item.size) ===
+                        selectedWeight)) {
+                        weightSelect?.classList.add('is-invalid');
+                        alert(
+                            `Khối lượng "${selectedWeight}" cho vị "${flavorInput.value}" đã tồn tại trong hệ thống!`
+                        );
+                        return;
+                    }
 
-                    for (let row of subRows) {
-                        const weightSelect = row.querySelector('.weight-select, .size-select');
-                        const selectedWeight = normalize(weightSelect?.selectedOptions[0]?.text);
+                    // Kiểm tra giá
+                    const price = parseFloat(priceInput?.value);
+                    if (!priceInput || isNaN(price) || price <= 0) {
+                        priceInput?.classList.add('is-invalid');
+                        alert(
+                            `Giá không hợp lệ cho vị "${flavorInput.value}" và khối lượng "${selectedWeight}"`
+                        );
+                        return;
+                    } else {
+                        priceInput?.classList.remove('is-invalid');
+                    }
 
-                        const priceInput = row.querySelector('.price-input');
-                        const quantityInput = row.querySelector('.quantity-input');
-
-                        // Kiểm tra đã chọn khối lượng chưa
-                        if (!selectedWeight) {
-                            weightSelect?.classList.add('is-invalid');
-                            alert(`Vui lòng chọn khối lượng cho vị "${flavorInput.value}"`);
-                            return;
-                        }
-
-                        // Trùng khối lượng trong cùng vị
-                        if (weightSet.has(selectedWeight)) {
-                            weightSelect?.classList.add('is-invalid');
-                            alert(
-                                `Khối lượng "${selectedWeight}" bị trùng trong cùng vị "${flavorInput.value}"`
-                                );
-                            return;
-                        } else {
-                            weightSet.add(selectedWeight);
-                            weightSelect?.classList.remove('is-invalid');
-                        }
-
-                        // Trùng với dữ liệu đã có
-                        if (existingVariants.some(item =>
-                                normalize(item.flavor) === flavor && normalize(item.size) ===
-                                selectedWeight)) {
-                            weightSelect?.classList.add('is-invalid');
-                            alert(
-                                `Khối lượng "${selectedWeight}" cho vị "${flavorInput.value}" đã tồn tại trong hệ thống!`
-                                );
-                            return;
-                        }
-
-                        // Kiểm tra giá
-                        const price = parseFloat(priceInput?.value);
-                        if (!priceInput || isNaN(price) || price <= 0) {
-                            priceInput?.classList.add('is-invalid');
-                            alert(
-                                `Giá không hợp lệ cho vị "${flavorInput.value}" và khối lượng "${selectedWeight}"`
-                                );
-                            return;
-                        } else {
-                            priceInput?.classList.remove('is-invalid');
-                        }
-
-                        // Kiểm tra số lượng
-                        const quantity = parseInt(quantityInput?.value);
-                        if (!quantityInput || isNaN(quantity) || quantity <= 0) {
-                            quantityInput?.classList.add('is-invalid');
-                            alert(
-                                `Số lượng không hợp lệ cho vị "${flavorInput.value}" và khối lượng "${selectedWeight}"`
-                                );
-                            return;
-                        } else {
-                            quantityInput?.classList.remove('is-invalid');
-                        }
+                    // Kiểm tra số lượng
+                    const quantity = parseInt(quantityInput?.value);
+                    if (!quantityInput || isNaN(quantity) || quantity <= 0) {
+                        quantityInput?.classList.add('is-invalid');
+                        alert(
+                            `Số lượng không hợp lệ cho vị "${flavorInput.value}" và khối lượng "${selectedWeight}"`
+                        );
+                        return;
+                    } else {
+                        quantityInput?.classList.remove('is-invalid');
                     }
                 }
+            }
 
-                // Nếu tất cả hợp lệ → Submit form
-                selectedGroup.closest('form').submit();
-            });
-        }
+            // Nếu tất cả hợp lệ → Submit form
+            selectedGroup.closest('form').submit();
+        });
+    }
 
-        function handleLiveFlavorDuplicateCheck() {
-            document.body.addEventListener('input', function(e) {
-                if (!e.target.classList.contains('main-attribute-input')) return;
+    function handleLiveFlavorDuplicateCheck() {
+        document.body.addEventListener('input', function (e) {
+            if (!e.target.classList.contains('main-attribute-input')) return;
 
-                const currentInput = e.target;
-                const currentValue = normalize(currentInput.value);
-                const allFlavorInputs = document.querySelectorAll('.main-attribute-input');
+            const currentInput = e.target;
+            const currentValue = normalize(currentInput.value);
+            const allFlavorInputs = document.querySelectorAll('.main-attribute-input');
 
-                let isDuplicate = false;
+            let isDuplicate = false;
 
-                allFlavorInputs.forEach(input => {
-                    const value = normalize(input.value);
+            allFlavorInputs.forEach(input => {
+                const value = normalize(input.value);
 
-                    if (
-                        value !== '' &&
-                        value === currentValue &&
-                        input !== currentInput
-                    ) {
-                        isDuplicate = true;
-                    }
-                });
-
-                // Xử lý hiển thị lỗi
-                if (isDuplicate) {
-                    currentInput.classList.add('is-invalid');
-                    // Nếu chưa có thông báo lỗi thì thêm
-                    if (!currentInput.nextElementSibling || !currentInput.nextElementSibling.classList
-                        .contains('invalid-feedback')) {
-                        const msg = document.createElement('div');
-                        msg.classList.add('invalid-feedback');
-                        msg.textContent = 'Vị này đã được thêm ở biến thể khác!';
-                        currentInput.insertAdjacentElement('afterend', msg);
-                    }
-                } else {
-                    currentInput.classList.remove('is-invalid');
-                    const next = currentInput.nextElementSibling;
-                    if (next && next.classList.contains('invalid-feedback')) {
-                        next.remove();
-                    }
+                if (
+                    value !== '' &&
+                    value === currentValue &&
+                    input !== currentInput
+                ) {
+                    isDuplicate = true;
                 }
             });
-        }
+
+            // Xử lý hiển thị lỗi
+            if (isDuplicate) {
+                currentInput.classList.add('is-invalid');
+                // Nếu chưa có thông báo lỗi thì thêm
+                if (!currentInput.nextElementSibling || !currentInput.nextElementSibling.classList
+                    .contains('invalid-feedback')) {
+                    const msg = document.createElement('div');
+                    msg.classList.add('invalid-feedback');
+                    msg.textContent = 'Vị này đã được thêm ở biến thể khác!';
+                    currentInput.insertAdjacentElement('afterend', msg);
+                }
+            } else {
+                currentInput.classList.remove('is-invalid');
+                const next = currentInput.nextElementSibling;
+                if (next && next.classList.contains('invalid-feedback')) {
+                    next.remove();
+                }
+            }
+        });
+    }
 
 
 
 
-        // === Khởi chạy toàn bộ ===
-        function init() {
-            handleProductSelection();
-            handleSkuAutoGenerate();
-            handleAddVariant();
-            handleRemoveVariant();
-            handleAddSubAttribute();
-            handleRemoveSubAttribute();
-            handleFormValidation();
-            handleLiveFlavorDuplicateCheck();
-        }
+    // === Khởi chạy toàn bộ ===
+    function init() {
+        handleProductSelection();
+        handleSkuAutoGenerate();
+        handleAddVariant();
+        handleRemoveVariant();
+        handleAddSubAttribute();
+        handleRemoveSubAttribute();
+        handleFormValidation();
+        handleLiveFlavorDuplicateCheck();
+    }
 
-        init(); // Bắt đầu
-    });
+    init(); // Bắt đầu
+});
 
 
 

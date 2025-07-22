@@ -65,59 +65,72 @@
 
 
         {{-- Tổng quan --}}
- <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 mb-4">
-    <!-- Tổng đơn hàng -->
-    <div class="col">
-        <div class="card shadow-sm border-0 bg-primary text-white rounded-4 h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h6 class="card-title mb-2">🧾 Tổng đơn hàng</h6>
-                <h3 class="fw-bold mb-0">{{ $totalOrders }}</h3>
+        <div class="container-fluid py-4">
+            <h2 class="mb-4 fw-bold">📊 Thống kê tổng quan</h2>
+
+            <div class="row g-4">
+                <!-- Tổng đơn hàng -->
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white shadow-sm rounded-4">
+                        <div class="card-body text-center">
+                            <h6 class="mb-2">📦 Tổng đơn hàng</h6>
+                            <h3 class="fw-bold">{{ $totalOrders }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tổng doanh thu -->
+                <div class="col-md-4">
+                    <div class="card bg-success text-white shadow-sm rounded-4">
+                        <div class="card-body text-center">
+                            <h6 class="mb-2">💰 Tổng doanh thu</h6>
+                            <h3 class="fw-bold">{{ number_format($totalRevenue, 0, ',', '.') }} ₫</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sản phẩm đã bán -->
+                <div class="col-md-4">
+                    <div class="card bg-info text-white shadow-sm rounded-4">
+                        <div class="card-body text-center">
+                            <h6 class="mb-2">🛒 Sản phẩm đã bán</h6>
+                            <h3 class="fw-bold">{{ $totalProductsSold }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Đơn hàng hoàn thành -->
+                <div class="col-md-4">
+                    <div class="card bg-success text-white shadow-sm rounded-4">
+                        <div class="card-body text-center">
+                            <h6 class="mb-2">✅ Đơn hàng hoàn thành</h6>
+                            <h3 class="fw-bold">{{ $completedOrderCount }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Đơn hàng đã huỷ -->
+                <div class="col-md-4">
+                    <div class="card bg-danger text-white shadow-sm rounded-4">
+                        <div class="card-body text-center">
+                            <h6 class="mb-2">❌ Đơn hàng đã huỷ</h6>
+                            <h3 class="fw-bold">{{ $cancelledOrderCount }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lợi nhuận -->
+                <div class="col-md-4">
+                    <div
+                        class="card {{ $completedTotalProfit >= 0 ? 'bg-warning' : 'bg-red' }} text-white shadow-sm rounded-4">
+                        <div class="card-body text-center">
+                            <h6 class="mb-2">📈 Lợi nhuận</h6>
+                            <h3 class="fw-bold">{{ number_format($completedTotalProfit, 0, ',', '.') }} ₫</h3>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- Tổng doanh thu -->
-    <div class="col">
-        <div class="card shadow-sm border-0 bg-success text-white rounded-4 h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h6 class="card-title mb-2">💰 Tổng doanh thu</h6>
-                <h3 class="fw-bold mb-0">{{ number_format($totalRevenue, 0, ',', '.') }} ₫</h3>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sản phẩm đã bán -->
-    <div class="col">
-        <div class="card shadow-sm border-0 bg-warning text-white rounded-4 h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h6 class="card-title mb-2">📦 Sản phẩm đã bán</h6>
-                <h3 class="fw-bold mb-0">{{ $totalSold }}</h3>
-            </div>
-        </div>
-    </div>
-
-    <!-- Giá vốn -->
-    <div class="col">
-        <div class="card shadow-sm border-0 bg-info text-white rounded-4 h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h6 class="card-title mb-2">🏷️ Giá vốn</h6>
-                <h3 class="fw-bold mb-0">{{ number_format($totalCost, 0, ',', '.') }} ₫</h3>
-            </div>
-        </div>
-    </div>
-
-    <!-- Lợi nhuận -->
-    <div class="col">
-        <div class="card shadow-sm border-0 {{ $totalProfit >= 0 ? 'bg-success' : 'bg-danger' }} text-white rounded-4 h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h6 class="card-title mb-2">📈 Lợi nhuận</h6>
-                <h3 class="fw-bold mb-0">{{ number_format($totalProfit, 0, ',', '.') }} ₫</h3>
-            </div>
-        </div>
-    </div>
-</div>
-
-
     </div>
 
     {{-- Biểu đồ doanh thu --}}
@@ -132,7 +145,7 @@
 
     {{-- Sản phẩm bán chạy --}}
     <div class="card shadow-sm rounded-4 mb-4">
-        <h4>🔥 Top 10 sản phẩm đã mua</h4>
+        <h4>🔥 Top 10 sản phẩm bán chạy</h4>
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -154,7 +167,12 @@
                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
                         </td>
 
-                        <td>{{ $product->product_name }}</td>
+                        <td>{{ $product->product_name }}
+                            @if ($product->variant_attributes)
+                                <br>
+                                <small class="text-primary">{{ $product->variant_attributes }}</small>
+                            @endif
+                        </td>
                         <td>{{ $product->total_quantity }}</td>
                         <td>{{ number_format($product->latest_price, 0, ',', '.') }}đ</td>
                     </tr>
