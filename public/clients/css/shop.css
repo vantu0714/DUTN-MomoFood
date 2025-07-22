@@ -29,6 +29,7 @@
 .product-description {
     display: -webkit-box;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;   /* Giới hạn 2 dòng */
     overflow: hidden;
     min-height: 48px;
     color: #555;
