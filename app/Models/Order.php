@@ -23,7 +23,17 @@ class Order extends Model
         'status',
         'note',
         'reason',
-        'recipient_id'
+        'recipient_id',
+        'return_reason',
+        'return_approved',
+        'return_rejection_reason',
+        'return_requested_at',
+        'return_processed_at'
+    ];
+
+    protected $dates = [
+        'completed_at',
+        'return_requested_at'
     ];
 
     public function user()
@@ -58,7 +68,7 @@ class Order extends Model
         return $code;
     }
     public function orders()
-{
-    return $this->hasMany(Order::class);
-}
+    {
+        return $this->hasMany(Order::class);
+    }
 }
