@@ -270,7 +270,7 @@
                                                                                         lượng</label>
                                                                                     <input type="number"
                                                                                         name="products[{{ $product->id }}][variants][0][sub_attributes][0][quantity_in_stock]"
-                                                                                        class="form-control"
+                                                                                        class="form-control quantity-input"
                                                                                         placeholder="0" min="0"
                                                                                         required>
                                                                                 </div>

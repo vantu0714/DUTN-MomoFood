@@ -16,7 +16,7 @@
                             <i class="fas fa-boxes"></i>
                         </div>
                         <div>
-                            <h2 class="page-title-enhanced">Thêm biến thể sản phẩm</h2>
+                            <h5 class="page-title-enhanced">Thêm biến thể sản phẩm</h5>
                             @if ($pendingProduct)
                                 <p class="page-subtitle-enhanced">
                                     Sản phẩm: <strong>{{ $pendingProduct['product_name'] }}</strong>
@@ -24,11 +24,8 @@
                             @endif
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end">
-                        <a href="{{ route('admin.product_variants.index') }}" class="btn btn-outline-secondary btn-lg">
-                            <i class="fas fa-arrow-left me-2"></i> Quay lại
-                        </a>
-                    </div>
+
+
                 </div>
             </div>
             @if ($errors->any())
@@ -261,33 +258,31 @@
                             <!-- Form Actions -->
                             <div class="d-flex justify-content-end gap-3">
                                 <a href="{{ route('admin.product_variants.cancel') }}"
-                                    class="btn btn-secondary btn-sm px-4 py-2">
+                                    class="btn btn-secondary btn-sm py-2">
                                     <i class="fas fa-times me-1"></i> Hủy bỏ
                                 </a>
                                 <button type="submit" class="btn btn-primary btn-sm px-4 py-2"
                                     style="font-size: 1.1rem;">
                                     <i class="fas fa-check me-1"></i> Lưu biến thể
                                 </button>
+                                <a href="{{ route('admin.product_variants.index') }}"
+                                    class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-arrow-left me-2"></i> Quay lại
+                                </a>
                             </div>
-                        </form>
                     </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+    </div>
 @endsection
 <style>
-    <style>
-    .product-card {
+    <style>.product-card {
         width: 100%;
         max-width: 100%;
     }
-
-
-
-
-
-
     .product-variants-container .sub-attributes-group .table td .form-control,
     .product-variants-container .sub-attributes-group .table td .form-select,
     .product-variants-container .sub-attributes-group .table td .input-group-text,
@@ -353,7 +348,6 @@
         overflow-x: auto;
     }
 </style>
-
 @push('scripts')
     <script>
         window.productName = @json($product->product_name);
