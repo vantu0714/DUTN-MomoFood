@@ -11,4 +11,15 @@ class NewsController extends Controller
     {
         return view('clients.news');
     }
+
+    public function detail($id)
+{
+    $viewPath = 'clients.news.news' . $id;
+
+    if (view()->exists($viewPath)) {
+        return view($viewPath);
+    }
+
+    abort(404);
+}
 }
