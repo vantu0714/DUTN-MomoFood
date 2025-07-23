@@ -119,149 +119,176 @@ class OrderController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $userId = Auth::id();
-        $cart = Cart::with('items')->where('user_id', $userId)->firstOrFail();
+{
+    $userId = Auth::id();
+    $cart = Cart::with('items')->where('user_id', $userId)->firstOrFail();
 
-        // Lấy selected_ids từ request hoặc session
-        $selectedIds = [];
+    // Lấy selected_ids từ request hoặc session
+    $selectedIds = [];
 
-        if ($request->filled('selected_items')) {
-            $selectedIds = is_array($request->selected_items)
-                ? $request->selected_items
-                : explode(',', $request->selected_items);
-        } elseif (session()->has('selected_items')) {
-            $selectedIds = session('selected_items');
-        }
+    if ($request->filled('selected_items')) {
+        $selectedIds = is_array($request->selected_items)
+            ? $request->selected_items
+            : explode(',', $request->selected_items);
+    } elseif (session()->has('selected_items')) {
+        $selectedIds = session('selected_items');
+    }
 
-        $cartItems = !empty($selectedIds)
-            ? $cart->items->whereIn('id', $selectedIds)
-            : $cart->items;
+    $cartItems = !empty($selectedIds)
+        ? $cart->items->whereIn('id', $selectedIds)
+        : $cart->items;
 
-        if ($cartItems->isEmpty()) {
-            return back()->with('error', 'Không có sản phẩm nào được chọn.');
-        }
+    if ($cartItems->isEmpty()) {
+        return back()->with('error', 'Không có sản phẩm nào được chọn.');
+    }
 
-        // Validate các trường cơ bản
+    // Validate các trường cơ bản
+    $request->validate([
+        'shipping_fee' => 'required|numeric|min:0',
+        'payment_method' => 'required|in:cod,vnpay',
+        'note' => 'nullable|string',
+        'promotion' => 'nullable|string',
+        'selected_items' => 'nullable',
+    ]);
+
+    // Kiểm tra địa chỉ nhận hàng
+    if ($request->filled('recipient_id')) {
+        $recipient = Recipient::where('user_id', $userId)->findOrFail($request->recipient_id);
+    } else {
         $request->validate([
-            'shipping_fee' => 'required|numeric|min:0',
-            'payment_method' => 'required|in:cod,vnpay',
-            'note' => 'nullable|string',
-            'promotion' => 'nullable|string',
-            'selected_items' => 'nullable',
+            'recipient_name' => 'required|string|max:255',
+            'recipient_phone' => 'required|string|max:15',
+            'recipient_address' => 'required|string|max:500',
         ]);
 
-        // Kiểm tra địa chỉ nhận hàng
-        if ($request->filled('recipient_id')) {
-            $recipient = Recipient::where('user_id', $userId)->findOrFail($request->recipient_id);
-        } else {
-            // Validate địa chỉ mới
-            $request->validate([
-                'recipient_name' => 'required|string|max:255',
-                'recipient_phone' => 'required|string|max:15',
-                'recipient_address' => 'required|string|max:500',
-            ]);
-
-            // Thêm địa chỉ mới
-            $recipient = Recipient::create([
-                'user_id' => $userId,
-                'recipient_name' => $request->recipient_name,
-                'recipient_phone' => $request->recipient_phone,
-                'recipient_address' => $request->recipient_address,
-                'note' => $request->note,
-                'is_default' => false,
-            ]);
-        }
-
-        DB::beginTransaction();
-
-        try {
-            // Tính tổng đơn hàng
-            $total = $cartItems->sum(function ($item) {
-                return $item->discounted_price * $item->quantity;
-            });
-
-            $discount = 0;
-            $promotionCode = null;
-
-            // Xử lý mã giảm giá
-            if ($request->filled('promotion')) {
-                $promotion = Promotion::where('promotion_name', trim($request->promotion))
-                    ->where('status', 1)
-                    ->where('start_date', '<=', now())
-                    ->where('end_date', '>=', now())
-                    ->first();
-
-                if ($promotion) {
-                    $discount = $promotion->discount_amount;
-                    $promotionCode = $promotion->promotion_name;
-
-                    // Cập nhật số lần dùng
-                    $promotion->increment('used_count');
-                    PromotionUser::updateOrCreate(
-                        ['promotion_id' => $promotion->id, 'user_id' => $userId],
-                        ['used_count' => DB::raw('used_count + 1')]
-                    );
-                }
-            }
-
-            $grandTotal = $total + $request->shipping_fee - $discount;
-
-            // Tạo đơn hàng
-            $order = Order::create([
-                'user_id' => $userId,
-                'recipient_id' => $recipient->id,
-                'recipient_name' => $recipient->recipient_name,
-                'recipient_phone' => $recipient->recipient_phone,
-                'recipient_address' => $recipient->recipient_address,
-                'note' => $request->note,
-                'promotion' => $promotionCode,
-                'shipping_fee' => $request->shipping_fee,
-                'total_price' => $grandTotal,
-                'payment_method' => $request->payment_method,
-                'payment_status' => 'unpaid',
-                'status' => 1,
-            ]);
-
-            // Thêm chi tiết đơn hàng
-            foreach ($cartItems as $item) {
-                OrderDetail::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item->product_id,
-                    'product_variant_id' => $item->product_variant_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->discounted_price,
-                ]);
-            }
-
-            // Cập nhật trạng thái VIP
-            $totalSpent = Order::where('user_id', $userId)
-                ->whereIn('status', [2, 3, 4])
-                ->sum('total_price');
-
-            if ($totalSpent >= 5000000) {
-                User::where('id', $userId)->update(['is_vip' => true]);
-            }
-
-            // Xóa sản phẩm đã đặt khỏi giỏ hàng
-            $cart->items()->whereIn('id', $cartItems->pluck('id'))->delete();
-            // Xóa session selected_items
-            session()->forget('selected_items');
-
-            DB::commit();
-
-            // Xử lý thanh toán
-            if ($request->payment_method === 'vnpay') {
-                $vnpay = new VNPayController();
-                return $vnpay->create($request, $order);
-            } else {
-                return redirect()->route('carts.index')->with('orderSuccess', $order->id);
-            }
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
-        }
+        $recipient = Recipient::create([
+            'user_id' => $userId,
+            'recipient_name' => $request->recipient_name,
+            'recipient_phone' => $request->recipient_phone,
+            'recipient_address' => $request->recipient_address,
+            'note' => $request->note,
+            'is_default' => false,
+        ]);
     }
+
+    DB::beginTransaction();
+
+    try {
+        // Tính tổng đơn hàng
+        $total = $cartItems->sum(function ($item) {
+            return $item->discounted_price * $item->quantity;
+        });
+
+        $discount = 0;
+        $promotionCode = null;
+
+        // Xử lý mã giảm giá từ request hoặc session
+        if ($request->filled('promotion') || session()->has('promotion_code')) {
+            $promotionCode = $request->filled('promotion')
+                ? trim($request->promotion)
+                : session('promotion_code');
+
+            $promotion = Promotion::where('code', $promotionCode)
+                ->where('status', 1)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->first();
+
+            if ($promotion && ($promotion->usage_limit === null || $promotion->used_count < $promotion->usage_limit)) {
+                if ($promotion->discount_type === 'percent') {
+                    $discount = $total * ($promotion->discount_value / 100);
+                    if ($promotion->max_discount_value !== null) {
+                        $discount = min($discount, $promotion->max_discount_value);
+                    }
+                } else { // fixed
+                    $discount = (float) $promotion->discount_value;
+                }
+
+                // Không cho giảm vượt quá tổng tiền
+                $discount = min($discount, $total);
+
+                // Cập nhật lại session
+                session()->put('promotion_code', $promotion->code);
+                session()->put('discount', $discount);
+
+                // Cập nhật số lần dùng
+                $promotion->increment('used_count');
+                PromotionUser::updateOrCreate(
+                    ['promotion_id' => $promotion->id, 'user_id' => $userId],
+                    ['used_count' => DB::raw('used_count + 1')]
+                );
+            }
+        }
+
+        $grandTotal = $total + $request->shipping_fee - $discount;
+
+        // Tạo đơn hàng
+        $order = Order::create([
+            'user_id' => $userId,
+            'recipient_id' => $recipient->id,
+            'recipient_name' => $recipient->recipient_name,
+            'recipient_phone' => $recipient->recipient_phone,
+            'recipient_address' => $recipient->recipient_address,
+            'note' => $request->note,
+            'promotion' => $promotionCode,
+            'discount_amount' => $discount,
+            'shipping_fee' => $request->shipping_fee,
+            'total_price' => $grandTotal,
+            'payment_method' => $request->payment_method,
+            'payment_status' => 'unpaid',
+            'status' => 1,
+        ]);
+
+        // DEBUG (bạn có thể xóa dòng này khi xong)
+        // dd([
+        //     'cart_total' => $total,
+        //     'shipping_fee' => $request->shipping_fee,
+        //     'discount_from_promotion' => $discount,
+        //     'grand_total' => $grandTotal,
+        // ]);
+
+        // Thêm chi tiết đơn hàng
+        foreach ($cartItems as $item) {
+            OrderDetail::create([
+                'order_id' => $order->id,
+                'product_id' => $item->product_id,
+                'product_variant_id' => $item->product_variant_id,
+                'quantity' => $item->quantity,
+                'price' => $item->discounted_price,
+            ]);
+        }
+
+        // Cập nhật trạng thái VIP
+        $totalSpent = Order::where('user_id', $userId)
+            ->whereIn('status', [2, 3, 4])
+            ->sum('total_price');
+
+        if ($totalSpent >= 5000000) {
+            User::where('id', $userId)->update(['is_vip' => true]);
+        }
+
+        // Xóa sản phẩm đã đặt khỏi giỏ hàng
+        $cart->items()->whereIn('id', $cartItems->pluck('id'))->delete();
+
+        // Xóa session tạm
+        session()->forget(['selected_items', 'promotion', 'promotion_code', 'discount']);
+
+        DB::commit();
+
+        // Xử lý thanh toán
+        if ($request->payment_method === 'vnpay') {
+            $vnpay = new VNPayController();
+            return $vnpay->create($request, $order);
+        } else {
+            return redirect()->route('carts.index')->with('orderSuccess', $order->id);
+        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
+    }
+}
+
+
 
     public function orderList(Request $request)
     {
@@ -332,26 +359,27 @@ class OrderController extends Controller
 
     public function applyCoupon(Request $request)
     {
-        $code = $request->input('promotion');
-        $now = Carbon::now();
+        $code = trim($request->input('promotion'));
+        $now = now();
         $userId = Auth::id();
 
-        $promotion = Promotion::where('promotion_name', $code)
+        // Tìm mã giảm giá theo code (không phải promotion_name)
+        $promotion = Promotion::where('code', $code)
             ->where('status', 1)
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
             ->first();
 
         if (!$promotion) {
-            return back()->with('error', 'Mã giảm giá không hợp lệ!');
+            return back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết hạn!');
         }
 
-        // Kiểm tra lượt dùng tổng
-        if ($promotion->usage_limit !== null && $promotion->used_count >= $promotion->usage_limit) {
+        // Kiểm tra giới hạn lượt dùng tổng
+        if (!is_null($promotion->usage_limit) && $promotion->used_count >= $promotion->usage_limit) {
             return back()->with('error', 'Mã giảm giá đã hết lượt sử dụng!');
         }
 
-        // Kiểm tra lượt dùng của user
+        // Kiểm tra lượt dùng của người dùng hiện tại
         $userUsage = DB::table('promotion_user')
             ->where('promotion_id', $promotion->id)
             ->where('user_id', $userId)
@@ -361,16 +389,28 @@ class OrderController extends Controller
             return back()->with('error', 'Bạn đã sử dụng mã này rồi!');
         }
 
-        // Tính giảm giá
+        // Lấy giỏ hàng và tính tổng tiền
         $cart = Cart::with('items')->where('user_id', $userId)->first();
-        $subtotal = $cart ? $cart->items->sum('total_price') : 0;
-        $discount = 0;
-
-        //Kiểm tra min_total_spent
-        if ($promotion->min_total_spent && $subtotal < $promotion->min_total_spent) {
-            return back()->with('error', 'Đơn hàng chưa đạt tối thiểu ' . number_format($promotion->min_total_spent) . 'đ để áp dụng mã.');
+        if (!$cart || $cart->items->isEmpty()) {
+            return back()->with('error', 'Giỏ hàng của bạn đang trống!');
         }
 
+        $subtotal = $cart->items->sum(function ($item) {
+            return $item->discounted_price * $item->quantity;
+        });
+
+        // Kiểm tra đơn hàng tối thiểu
+        if ($promotion->min_total_spent && $subtotal < $promotion->min_total_spent) {
+            return back()->with('error', 'Đơn hàng cần đạt tối thiểu ' . number_format($promotion->min_total_spent) . 'đ để áp dụng mã.');
+        }
+
+        // Kiểm tra điều kiện VIP
+        if ($promotion->vip_only && !Auth::user()->is_vip) {
+            return back()->with('error', 'Mã giảm giá này chỉ dành cho thành viên VIP.');
+        }
+
+        // Tính số tiền giảm
+        $discount = 0;
         if ($promotion->discount_type === 'percent') {
             $discount = round($subtotal * ($promotion->discount_value / 100));
             if ($promotion->max_discount_value && $discount > $promotion->max_discount_value) {
@@ -380,17 +420,20 @@ class OrderController extends Controller
             $discount = $promotion->discount_value;
         }
 
-        // Lưu vào session
-        session()->put('promotion', [
-            'id' => $promotion->id,
-            'name' => $promotion->promotion_name,
-            'type' => $promotion->discount_type,
-            'value' => $promotion->discount_value,
-            'max' => $promotion->max_discount_value,
-            'discount' => $discount
+        // Lưu thông tin mã giảm giá vào session
+        session([
+            'promotion' => [
+                'id' => $promotion->id,
+                'code' => $promotion->code,
+                'name' => $promotion->promotion_name,
+                'type' => $promotion->discount_type,
+                'value' => $promotion->discount_value,
+                'max' => $promotion->max_discount_value,
+                'discount' => $discount
+            ],
+            'discount' => $discount,
+            'promotion_code' => $promotion->code
         ]);
-        session()->put('discount', $discount);
-        session()->put('promotion_name', $promotion->promotion_name);
 
         return back()->with('success', 'Áp dụng mã giảm giá thành công!');
     }
@@ -398,7 +441,7 @@ class OrderController extends Controller
 
     public function removeCoupon()
     {
-        session()->forget(['promotion', 'discount', 'promotion_name']);
+        session()->forget(['promotion', 'discount', 'promotion_code']);
         return redirect()->route('carts.index')->with('success', 'Đã hủy mã giảm giá.');
     }
 }

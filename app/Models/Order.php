@@ -17,6 +17,7 @@ class Order extends Model
         'recipient_address',
         'promotion',
         'shipping_fee',
+        'discount_amount',
         'total_price',
         'payment_method',
         'payment_status',
@@ -46,7 +47,7 @@ class Order extends Model
 
     public static function generateOrderCode()
     {
-        $prefix = 'MOMO'; // Tiền tố cho mã đơn hàng
+        $prefix = 'MMF'; // Tiền tố cho mã đơn hàng
         $datePart = now()->format('Ymd'); // Ngày tháng năm (ví dụ: 20230626)
         $randomPart = strtoupper(substr(uniqid(), -5)); // 5 ký tự ngẫu nhiên
 
