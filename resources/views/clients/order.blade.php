@@ -172,6 +172,7 @@
                                     $discount = session('discount', 0);
                                     $subtotal = $total ?? 0; // hoặc bạn lấy lại từ $cart nếu có
                                     $grandTotal = max(0, $subtotal + $shippingFee - $discount);
+                                    $promotion = session('promotion');
                                 @endphp
 
                                 {{-- Phương thức thanh toán --}}
@@ -199,10 +200,16 @@
                                     <span>₫{{ number_format($shippingFee, 0, ',', '.') }}</span>
                                 </div>
 
-                                @if (session('promotion_name'))
+                                @if (session('discount') > 0)
                                     <div class="d-flex justify-content-between mb-2 text-success">
-                                        <span>Mã giảm giá ({{ session('promotion_name') }}):</span>
-                                        <span>-₫{{ number_format($discount, 0, ',', '.') }}</span>
+                                        <span>
+                                            Mã giảm giá
+                                            @if (session('promotion.code'))
+                                                ({{ session('promotion.code') }})
+                                            @endif
+                                            :
+                                        </span>
+                                        <span>-₫{{ number_format(session('discount'), 0, ',', '.') }}</span>
                                     </div>
                                 @endif
 
@@ -272,7 +279,7 @@
                                 </div>
                                 <form method="POST" action="{{ route('order.applyCoupon') }}">
                                     @csrf
-                                    <input type="hidden" name="promotion" value="{{ $voucher->promotion_name }}">
+                                    <input type="hidden" name="promotion" value="{{ $voucher->code }}">
                                     <button class="btn btn-outline-danger">Lưu</button>
                                 </form>
                             </div>

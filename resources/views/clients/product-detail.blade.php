@@ -4,13 +4,13 @@
 <link rel="stylesheet" href="{{ asset('clients/css/shop-detail.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <!-- Single Page Header start -->
-<div class="container-fluid page-header py-5">
+{{-- <div class="container-fluid page-header py-5">
     <h1 class="text-center text-white display-6">Chi Tiết Sản Phẩm</h1>
-</div>
-
+</div> --}}
+<div class="page-header "></div>
 <!-- Single Product Start -->
-<div class="container-fluid  ">
-    <div class="container py-3">
+<div class="container-fluid">
+    <div class="container py-1">
         <div class="row g-4 mb-5 justify-content-center">
             <div class="col-lg-8 col-xl-9">
                 <nav aria-label="breadcrumb" class="mb-4">
@@ -194,16 +194,29 @@
                             $maxPrice = $prices->max();
                         @endphp
 
-                        <h3 class="product-price mb-4 d-flex align-items-center" id="productPriceDisplay">
+                        <h3 class="product-price mb-4 d-flex align-items-center gap-2" id="productPriceDisplay">
                             @if ($product->variants && $product->variants->count())
-                                <span id="variantPrice" class="fw-bold text-danger" style="font-size: 2rem;">
+                                @php $isDiscounted = false; @endphp
+
+                                {{-- Giá chính --}}
+                                <span id="variantPrice" class="price-amount fw-bold text-danger"
+                                    style="font-size: 2rem; line-height: 1;">
                                     đ{{ number_format($minPrice, 0, ',', '.') }}
                                     @if ($minPrice != $maxPrice)
                                         - đ{{ number_format($maxPrice, 0, ',', '.') }}
                                     @endif
                                 </span>
 
-                                {{-- Các giá trị mặc định để JS reset --}}
+                                {{-- Giá gạch ngang và giảm giá ẩn đi nhưng vẫn giữ không gian --}}
+                                <span class="original-price text-muted text-decoration-line-through"
+                                    style="font-size: 1.5rem; line-height: 1; visibility: hidden;">
+                                    đ0
+                                </span>
+                                <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
+                                    style="font-size: 1.5rem; line-height: 1; visibility: hidden;">
+                                    -0%
+                                </span>
+
                                 <input type="hidden" id="minPrice" value="{{ $minPrice }}">
                                 <input type="hidden" id="maxPrice" value="{{ $maxPrice }}">
                             @else
@@ -215,22 +228,25 @@
                                         ? round((1 - $product->discounted_price / $product->original_price) * 100)
                                         : 0;
                                 @endphp
-                                {{-- Với sản phẩm đơn --}}
-                                <span
-                                    class="price-amount fw-bold me-2 {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
-                                    style="font-size: 2rem;" id="variantPrice">
+
+                                {{-- Giá chính --}}
+                                <span id="variantPrice"
+                                    class="price-amount fw-bold {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
+                                    style="font-size: 2rem; line-height: 1;">
                                     đ{{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
                                 </span>
 
-                                <span class="original-price text-muted text-decoration-line-through me-2"
+                                {{-- Giá gạch ngang nếu có --}}
+                                <span class="original-price text-muted text-decoration-line-through"
                                     id="originalPrice"
-                                    style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
+                                    style="font-size: 1.5rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
                                     đ{{ number_format($product->original_price, 0, ',', '.') }}
                                 </span>
 
+                                {{-- Badge giảm giá nếu có --}}
                                 <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
                                     id="discountPercent"
-                                    style="font-size: 1.5rem; {{ !$isDiscounted ? 'display: none;' : '' }}">
+                                    style="font-size: 1.5rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
                                     -{{ $discountPercent }}%
                                 </span>
                             @endif
@@ -619,6 +635,17 @@
 
         // Init
         resetToDefault();
+        const addToCartBtn = document.querySelector('.add-to-cart-btn');
+        const productType = "{{ $product->product_type }}"; // Laravel blade
+
+        addToCartBtn?.addEventListener('click', function(e) {
+            if (productType === 'variant') {
+                if (!selectedVariant || !selectedVariantIdInput.value) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+                }
+            }
+        });
     });
 </script>
 <!-- Footer Start -->

@@ -170,110 +170,12 @@
 
                     <div id="filtered-products">
                         @include('clients.components.filtered-products')
-                    <div class="tab-content">
-                        <div id="tab-1" class="tab-pane fade show active p-0">
-                            <div class="row g-4">
-                                @foreach ($products as $product)
-                                    @php
-                                        $firstVariant = null;
-                                        $price = null;
-                                        $original = null;
-
-                                        if ($product->product_type === 'variant') {
-                                            $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
-                                            $price = $firstVariant?->discounted_price ?? $firstVariant?->price;
-                                            $original = $firstVariant?->price ?? 0;
-                                        } else {
-                                            $price = $product->discounted_price ?? $product->original_price;
-                                            $original = $product->original_price;
-                                        }
-
-                                        $variants =
-                                            $product->product_type === 'variant'
-                                                ? $product->variants->map(
-                                                    fn($v) => [
-                                                        'id' => $v->id,
-                                                        'flavor' => $v->flavor,
-                                                        'size' => $v->size,
-                                                        'price' => $v->price,
-                                                        'discounted_price' => $v->discounted_price,
-                                                        'quantity' => $v->quantity_in_stock,
-                                                    ],
-                                                )
-                                                : [];
-                                    @endphp
-
-                                    <div class="col-12 col-md-6 col-lg-4 col-xl-3">
-                                        <div
-                                            class="card h-100 shadow-sm border border-secondary rounded-4 d-flex flex-column">
-                                            <a href="{{ route('product-detail.show', $product->id) }}">
-                                                <div class="product-img-wrapper">
-                                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                        alt="{{ $product->product_name }}"
-                                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                                        class="img-fluid w-100">
-                                                </div>
-                                            </a>
-
-                                            <div
-                                                class="badge bg-secondary text-white position-absolute top-0 start-0 m-2 rounded-pill px-3 py-1">
-                                                {{ $product->category?->category_name ?? 'Không rõ' }}
-                                            </div>
-
-                                            <div class="card-body d-flex flex-column justify-content-between">
-                                                <div>
-                                                    <h6 class="fw-bold text-dark text-truncate"
-                                                        title="{{ $product->product_name }}">
-                                                        {{ $product->product_name }}
-                                                    </h6>
-                                                    <p class="text-muted small mb-2">Mã: {{ $product->product_code }}
-                                                    </p>
-                                                </div>
-
-                                                <div class="mb-2">
-                                                    @if ($price && $original && $price < $original)
-                                                        <div class="text-danger fw-bold fs-5">
-                                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                                        </div>
-                                                        <div class="text-muted text-decoration-line-through small">
-                                                            {{ number_format($original, 0, ',', '.') }} VND
-                                                        </div>
-                                                    @elseif ($price)
-                                                        <div class="text-danger fw-bold fs-5">
-                                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                                        </div>
-                                                    @else
-                                                        <div class="text-muted">Liên hệ để biết giá</div>
-                                                    @endif
-                                                </div>
-
-                                                <div class="d-flex justify-content-end mt-auto">
-                                                    <button type="button" class="btn btn-white open-cart-modal"
-                                                        data-product-id="{{ $product->id }}"
-                                                        data-product-name="{{ $product->product_name }}"
-                                                        data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                        data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                                        data-product-price="{{ $price ?? 0 }}"
-                                                        data-product-original-price="{{ $original ?? 0 }}"
-                                                        data-product-description="{{ $product->description }}"
-                                                        data-variants='@json($variants)'
-                                                        data-bs-toggle="modal" data-bs-target="#cartModal">
-                                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div> {{-- row --}}
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 <!-- Fruits Shop End -->
 
 
@@ -333,6 +235,7 @@
                     $firstVariant = null;
                     $price = 0;
                     $original = 0;
+                    $variants = [];
 
                     if ($product->product_type === 'variant') {
                         $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
@@ -340,6 +243,22 @@
                             $price = $firstVariant->discounted_price ?? $firstVariant->price;
                             $original = $firstVariant->price;
                         }
+
+                        $variants = $product->variants->map(function ($v) {
+                            return [
+                                'id' => $v->id,
+                                'price' => $v->price,
+                                'discounted_price' => $v->discounted_price,
+                                'quantity' => $v->quantity,
+                                'image' => $v->image,
+                                'attribute_values' => $v->attributeValues->map(function ($attrValue) {
+                                    return [
+                                        'attribute_name' => $attrValue->attribute->name,
+                                        'value' => $attrValue->value,
+                                    ];
+                                }),
+                            ];
+                        });
                     } else {
                         $price = $product->discounted_price ?? $product->original_price;
                         $original = $product->original_price;
@@ -357,16 +276,35 @@
                                         class="img-fluid w-100">
                                 </div>
                             </a>
-
                             <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
                                 {{ $product->category->category_name ?? 'Sản phẩm' }}
                             </span>
-
                         </div>
 
                         <div class="card-body d-flex flex-column">
                             <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
                             <p class="text-muted small mb-3">{{ Str::limit($product->description, 60) }}</p>
+
+                            {{-- 👉 Nếu có biến thể, hiển thị flavor & weight --}}
+                            @if ($product->product_type === 'variant')
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    @foreach ($product->variants as $variant)
+                                        @php
+                                            $flavor = $variant->attributeValues->firstWhere('attribute.name', 'Vị');
+                                            $weight = $variant->attributeValues->firstWhere(
+                                                'attribute.name',
+                                                'Khối lượng',
+                                            );
+                                        @endphp
+                                        <span class="badge bg-info text-white">
+                                            {{ $flavor ? 'Vị: ' . $flavor->value : '' }}
+                                        </span>
+                                        <span class="badge bg-info text-white">
+                                            {{ $weight ? 'Khối lượng: ' . $weight->value : '' }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
 
                             <div class="mt-auto d-flex justify-content-between align-items-center">
                                 <div>
@@ -377,23 +315,6 @@
                                         <div class="text-muted text-decoration-line-through small">
                                             {{ number_format($original, 0, ',', '.') }} VND
                                         </div>
-                                    @endif
-                                </div>
-
-                                <div class="mb-2">
-                                    @if ($price && $original && $price < $original)
-                                        <div class="text-danger fw-bold fs-5">
-                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                        </div>
-                                        <div class="text-muted text-decoration-line-through small">
-                                            {{ number_format($original, 0, ',', '.') }} VND
-                                        </div>
-                                    @elseif ($price)
-                                        <div class="text-danger fw-bold fs-5">
-                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                        </div>
-                                    @else
-                                        <div class="text-muted">Liên hệ để biết giá</div>
                                     @endif
                                 </div>
 
@@ -416,10 +337,11 @@
                     </div>
                 </div>
             @endforeach
-        </div> {{-- row --}}
+        </div>
     </div>
 </div>
 <!-- Vesitable Shop End -->
+
 
 
 <!-- Banner Section Start-->
@@ -780,6 +702,7 @@
         </div>
     </div>
 </div>
+
 <!-- Modal chi tiết sản phẩm -->
 <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -798,25 +721,38 @@
                     <!-- Hình ảnh -->
                     <div class="col-md-6 text-center">
                         <img id="modal-product-image" src="" alt="Hình sản phẩm"
-                            class="img-fluid rounded shadow-sm" style="max-height: 300px;">
+                            class="img-fluid rounded shadow-sm"
+                            style="max-height: 500px; object-fit: cover; width: 100%;">
                     </div>
 
-                    <!-- Thông tin -->
+                    <!-- Thông tin sản phẩm -->
                     <div class="col-md-6">
                         <h4 id="modal-product-name" class="fw-bold mb-2 text-dark"></h4>
-                        <p class="text-muted mb-2">Danh mục: <span id="modal-product-category"
-                                class="fw-medium text-dark"></span></p>
+                        <p class="text-muted mb-2">
+                            Danh mục: <span id="modal-product-category" class="fw-medium text-dark"></span>
+                        </p>
+
                         <p class="h5 text-danger fw-bold mb-3">
-                            <span id="modal-product-price">0</span> <span class="text-muted fs-6">VND</span>
+                            <span id="modal-product-price">0</span>
+                            <span class="text-muted fs-6">VND</span>
                             <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
                         </p>
-                        <div class="mb-3" id="modal-rating"></div>
+
+                        <div class="mb-3" id="modal-rating">
+                            <!-- Đánh giá (nếu cần) -->
+                        </div>
+
                         <p id="modal-product-description" class="text-muted mb-3" style="min-height: 60px;"></p>
 
+
                         <!-- Biến thể -->
-                        <div class="mb-3" id="variant-options">
-                            <!-- JS sẽ chèn radio các biến thể vào đây -->
+                        <div class="mb-3" id="variant-section">
+                            <label class="form-label fw-semibold">🍃 Chọn biến thể:</label>
+                            <div id="variant-options" class="d-flex flex-wrap gap-2">
+                                <!-- JS sẽ render radio button biến thể -->
+                            </div>
                         </div>
+
 
                         <!-- Số lượng -->
                         <div class="mb-3">
@@ -844,7 +780,9 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+
         const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+
         const productNameEl = document.getElementById('modal-product-name');
         const productImageEl = document.getElementById('modal-product-image');
         const productCategoryEl = document.getElementById('modal-product-category');
@@ -854,81 +792,468 @@
         const variantOptionsEl = document.getElementById('variant-options');
         const productIdInput = document.getElementById('modal-product-id');
         const productVariantIdInput = document.getElementById('modal-variant-id');
-
-        // Quantity buttons
         const quantityInput = document.getElementById('modal-quantity');
-        document.getElementById('increase-qty').onclick = () => quantityInput.stepUp();
-        document.getElementById('decrease-qty').onclick = () => quantityInput.stepDown();
 
-        // Xử lý click vào nút giỏ hàng
+        // Ẩn luôn phần khối lượng
+        const weightGroup = document.getElementById('modal-weight-group');
+        if (weightGroup) weightGroup.style.display = 'none';
+
+        // Quantity +/- buttons
+        document.getElementById('increase-qty').addEventListener('click', () => quantityInput.stepUp());
+        document.getElementById('decrease-qty').addEventListener('click', () => {
+            if (quantityInput.value > 1) quantityInput.stepDown();
+        });
+
+        // Mở modal khi nhấn nút
         document.querySelectorAll('.open-cart-modal').forEach(button => {
             button.addEventListener('click', function() {
                 const productId = this.dataset.productId;
                 const productName = this.dataset.productName;
                 const productImage = this.dataset.productImage;
                 const productCategory = this.dataset.productCategory;
-                const productPrice = this.dataset.productPrice;
-                const productOriginalPrice = this.dataset.productOriginalPrice;
-                const productDescription = this.dataset.productDescription;
+                const productPrice = parseInt(this.dataset.productPrice || 0);
+                const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
+                const productDescription = this.dataset.productDescription || '';
                 const variants = JSON.parse(this.dataset.variants || '[]');
 
-                // Set thông tin vào modal
+                // Reset form
                 productIdInput.value = productId;
                 productNameEl.textContent = productName;
                 productImageEl.src = productImage;
                 productCategoryEl.textContent = productCategory;
-                productPriceEl.textContent = parseInt(productPrice).toLocaleString();
-                productOriginalPriceEl.textContent = productOriginalPrice ? parseInt(
-                    productOriginalPrice).toLocaleString() + ' VND' : '';
-                productDescEl.textContent = productDescription || '';
+                productDescEl.textContent = productDescription;
+                quantityInput.value = 1;
+                variantOptionsEl.innerHTML = '';
+                productVariantIdInput.value = '';
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice) ?
+                    productOriginalPrice.toLocaleString() + ' VND' :
+                    '';
+                productOriginalPriceEl.style.display = (productOriginalPrice > productPrice) ?
+                    'inline' :
+                    'none';
+
+                // Không cần hiển thị khối lượng riêng
+                if (weightGroup) weightGroup.style.display = 'none';
 
                 // Render biến thể
-                variantOptionsEl.innerHTML = '';
                 if (variants.length > 0) {
-                    variants.forEach(variant => {
-                        const option = document.createElement('div');
-                        option.className = 'form-check';
-                        option.innerHTML = `
-                            <input class="form-check-input" type="radio" name="product_variant_id" value="${variant.id}" id="variant-${variant.id}">
-                            <label class="form-check-label" for="variant-${variant.id}">
-                                Vị: ${variant.flavor || 'N/A'}, Size: ${variant.size || 'N/A'}
-                            </label>
-                        `;
-                        variantOptionsEl.appendChild(option);
+                    variants.forEach((variant, index) => {
+                        const imageUrl = variant.image || productImage;
+                        const flavorText = variant.flavor || '';
+                        const weightText = variant.weight || variant.mass || variant
+                            .size || '';
+
+                        const html = `
+                        <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
+                            style="cursor: pointer; transition: 0.3s;"
+                            data-variant-id="${variant.id}"
+                            data-variant-price="${variant.discounted_price || variant.price}"
+                            data-variant-original="${variant.price}"
+                            data-variant-weight="${weightText}"
+                            data-variant-image="${imageUrl}">
+                            <img src="${imageUrl}" alt="variant-image"
+                                class="rounded me-3"
+                                style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
+                            </div>
+                        </div>`;
+                        variantOptionsEl.insertAdjacentHTML('beforeend', html);
                     });
 
-                    // Không tự chọn biến thể
-                    productVariantIdInput.value = '';
+                    // Gán sự kiện click cho mỗi biến thể
+                    variantOptionsEl.querySelectorAll('.variant-card').forEach((card,
+                        index) => {
+                        card.addEventListener('click', () => {
+                            variantOptionsEl.querySelectorAll('.variant-card')
+                                .forEach(c => {
+                                    c.classList.remove('border-primary',
+                                        'shadow');
+                                });
+                            card.classList.add('border-primary', 'shadow');
 
-                    // Khi chọn biến thể, cập nhật hidden input
-                    variantOptionsEl.querySelectorAll('input[name="product_variant_id"]')
-                        .forEach(input => {
-                            input.addEventListener('change', () => {
-                                productVariantIdInput.value = input.value;
-                            });
+                            const id = card.dataset.variantId;
+                            const price = parseInt(card.dataset.variantPrice);
+                            const original = parseInt(card.dataset
+                                .variantOriginal);
+                            const imageUrl = card.dataset.variantImage;
+
+                            productVariantIdInput.value = id;
+                            productPriceEl.textContent = price.toLocaleString();
+                            productOriginalPriceEl.textContent = (original >
+                                    price) ?
+                                original.toLocaleString() + ' VND' :
+                                '';
+                            productOriginalPriceEl.style.display = (original >
+                                    price) ?
+                                'inline' :
+                                'none';
+                            productImageEl.src = imageUrl;
                         });
-                } else {
-                    productVariantIdInput.value = '';
+                    });
                 }
 
-                // Reset số lượng
-                quantityInput.value = 1;
-
-                // Hiển thị modal
                 modal.show();
             });
         });
 
-        // Bắt buộc chọn biến thể trước khi submit
+        // Validate biến thể trước khi submit
         document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
-            const selectedVariant = document.querySelector('input[name="product_variant_id"]:checked');
-            if (!selectedVariant && variantOptionsEl.innerHTML !== '') {
+            if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
                 e.preventDefault();
                 alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
             }
         });
     });
 </script>
+
+
+{{-- <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+
+        // Modal elements
+        const productNameEl = document.getElementById('modal-product-name');
+        const productImageEl = document.getElementById('modal-product-image');
+        const productCategoryEl = document.getElementById('modal-product-category');
+        const productPriceEl = document.getElementById('modal-product-price');
+        const productOriginalPriceEl = document.getElementById('modal-product-original-price');
+        const productDescEl = document.getElementById('modal-product-description');
+        const variantOptionsEl = document.getElementById('variant-options');
+        const productIdInput = document.getElementById('modal-product-id');
+        const productVariantIdInput = document.getElementById('modal-variant-id');
+        const quantityInput = document.getElementById('modal-quantity');
+
+        const weightGroup = document.getElementById('modal-weight-group');
+        const weightEl = document.getElementById('modal-weight');
+
+        // Quantity stepper
+        document.getElementById('increase-qty').addEventListener('click', () => quantityInput.stepUp());
+        document.getElementById('decrease-qty').addEventListener('click', () => {
+            if (quantityInput.value > 1) quantityInput.stepDown();
+        });
+
+        // Open modal
+        document.querySelectorAll('.open-cart-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productImage = this.dataset.productImage;
+                const productCategory = this.dataset.productCategory;
+                const productPrice = parseInt(this.dataset.productPrice || 0);
+                const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
+                const productDescription = this.dataset.productDescription || '';
+                const variants = JSON.parse(this.dataset.variants || '[]');
+
+                // Reset form
+                productIdInput.value = productId;
+                productNameEl.textContent = productName;
+                productImageEl.src = productImage;
+                productCategoryEl.textContent = productCategory;
+                productDescEl.textContent = productDescription;
+                quantityInput.value = 1;
+                variantOptionsEl.innerHTML = '';
+                productVariantIdInput.value = '';
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice) ?
+                    productOriginalPrice.toLocaleString() + ' VND' : '';
+                productOriginalPriceEl.style.display = (productOriginalPrice > productPrice) ?
+                    'inline' : 'none';
+                weightGroup.style.display = 'none';
+                weightEl.textContent = '--';
+
+                // Render variants
+                if (variants.length > 0) {
+                    variants.forEach((variant, index) => {
+                        const imageUrl = variant.image_url || productImage;
+                        const flavorText = variant.flavor || '';
+                        const weightText = variant.weight || variant.mass || variant
+                            .size || '';
+
+                        const html = `
+                        <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
+                            style="cursor: pointer; transition: 0.3s;"
+                            data-variant-id="${variant.id}"
+                            data-variant-price="${variant.discounted_price || variant.price}"
+                            data-variant-original="${variant.price}"
+                            data-variant-weight="${weightText}"
+                            data-variant-image="${imageUrl}">
+                            <img src="${imageUrl}" alt="variant-image"
+                                class="rounded me-3"
+                                style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <div class="fw-semibold text-dark">Vị: ${flavorText}</div>
+                                <div class="text-muted">Khối lượng: ${weightText}</div>
+                            </div>
+                        </div>`;
+                        variantOptionsEl.insertAdjacentHTML('beforeend', html);
+                    });
+
+                    // Gán sự kiện cho từng biến thể
+                    variantOptionsEl.querySelectorAll('.variant-card').forEach((card,
+                        index) => {
+                        card.addEventListener('click', () => {
+                            variantOptionsEl.querySelectorAll('.variant-card')
+                                .forEach(c => {
+                                    c.classList.remove('border-primary',
+                                        'shadow');
+                                });
+                            card.classList.add('border-primary', 'shadow');
+
+                            const id = card.dataset.variantId;
+                            const price = parseInt(card.dataset.variantPrice);
+                            const original = parseInt(card.dataset
+                                .variantOriginal);
+                            const weight = card.dataset.variantWeight;
+                            const imageUrl = card.dataset.variantImage;
+
+                            productVariantIdInput.value = id;
+                            productPriceEl.textContent = price.toLocaleString();
+                            productOriginalPriceEl.textContent = (original >
+                                    price) ?
+                                original.toLocaleString() + ' VND' : '';
+                            productOriginalPriceEl.style.display = (original >
+                                price) ? 'inline' : 'none';
+                            productImageEl.src = imageUrl;
+
+                            if (weight) {
+                                weightEl.textContent = weight;
+                                weightGroup.style.display = 'block';
+                            } else {
+                                weightGroup.style.display = 'none';
+                                weightEl.textContent = '--';
+                            }
+                        });
+
+                        // Tự động chọn biến thể đầu tiên
+                        if (index === 0) card.click();
+                    });
+                }
+
+                // Show modal
+                modal.show();
+            });
+        });
+
+        // Validate biến thể trước khi submit
+        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
+            if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
+                e.preventDefault();
+                alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+            }
+        });
+    });
+</script> --}}
+
+{{-- <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+        const variantSection = document.getElementById('variant-section');
+
+        const productNameEl = document.getElementById('modal-product-name');
+        const productImageEl = document.getElementById('modal-product-image');
+        const productCategoryEl = document.getElementById('modal-product-category');
+        const productPriceEl = document.getElementById('modal-product-price');
+        const productOriginalPriceEl = document.getElementById('modal-product-original-price');
+        const productDescEl = document.getElementById('modal-product-description');
+        const variantOptionsEl = document.getElementById('variant-options');
+        const productIdInput = document.getElementById('modal-product-id');
+        const productVariantIdInput = document.getElementById('modal-variant-id');
+        const quantityInput = document.getElementById('modal-quantity');
+
+        // Ẩn luôn phần khối lượng
+        const weightGroup = document.getElementById('modal-weight-group');
+        if (weightGroup) weightGroup.style.display = 'none';
+
+        // Quantity +/- buttons
+        document.getElementById('increase-qty').addEventListener('click', () => quantityInput.stepUp());
+        document.getElementById('decrease-qty').addEventListener('click', () => {
+            if (quantityInput.value > 1) quantityInput.stepDown();
+        });
+
+        // Mở modal khi nhấn nút
+        document.querySelectorAll('.open-cart-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                // Lấy dữ liệu từ data attributes
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productImage = this.dataset.productImage;
+                const productCategory = this.dataset.productCategory;
+                const productPrice = parseInt(this.dataset.productPrice || 0);
+                const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
+                const productDescription = this.dataset.productDescription || '';
+                const variants = JSON.parse(this.dataset.variants || '[]');
+
+                // Reset form
+                productIdInput.value = productId;
+                productNameEl.textContent = productName;
+                productImageEl.src = productImage;
+                productCategoryEl.textContent = productCategory;
+
+
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice) ?
+                    productOriginalPrice.toLocaleString() + ' VND' :
+                    '';
+
+                productDescEl.textContent = productDescription;
+                quantityInput.value = 1;
+                variantOptionsEl.innerHTML = '';
+                productVariantIdInput.value = '';
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice) ?
+                    productOriginalPrice.toLocaleString() + ' VND' :
+                    '';
+                productOriginalPriceEl.style.display = (productOriginalPrice > productPrice) ?
+                    'inline' :
+                    'none';
+
+                // Không cần hiển thị khối lượng riêng
+                if (weightGroup) weightGroup.style.display = 'none';
+
+                // Render biến thể
+                // Render biến thể
+                if (variants.length > 0) {
+
+                    variantSection.style.display = 'block'; // hiện phần chọn biến thể
+
+                    variants.forEach((variant, index) => {
+                        const imageUrl = variant.image || productImage;
+                        const flavorText = variant.flavor || '';
+                        const weightText = variant.weight || variant.mass || variant
+                            .size || '';
+
+                        const html = `
+                            <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
+                                style="cursor: pointer; transition: 0.3s;"
+                                data-variant-id="${variant.id}"
+                                data-variant-price="${variant.discounted_price || variant.price}"
+                                data-variant-original="${variant.price}"
+                                data-variant-weight="${weightText}"
+                                data-variant-image="${imageUrl}">
+                                <img src="${imageUrl}" alt="variant-image"
+                                    class="rounded me-3"
+                                    style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
+                                </div>
+                            </div>`;
+                        variantOptionsEl.insertAdjacentHTML('beforeend', html);
+                    });
+
+                    // Gán sự kiện click cho mỗi biến thể
+                    variantOptionsEl.querySelectorAll('.variant-card').forEach((card,
+                        index) => {
+                        card.addEventListener('click', () => {
+                            variantOptionsEl.querySelectorAll('.variant-card')
+                                .forEach(c => {
+                                    c.classList.remove('border-primary',
+                                        'shadow');
+                                });
+
+                    variants.forEach(variant => {
+                        const imageUrl = variant.image_url ||
+                        productImage; // ưu tiên ảnh biến thể
+                        const flavorText = variant.flavor || '';
+                        const weightText = variant.weight || variant.mass || variant.size || ''; 
+
+
+                        const html = `
+    <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
+        style="cursor: pointer; transition: 0.3s;"
+        data-variant-id="${variant.id}"
+        data-variant-price="${variant.discounted_price || variant.price}"
+        data-variant-original="${variant.price}">
+        
+        <img src="${imageUrl}" alt="variant-image"
+            class="rounded me-3"
+            style="width: 60px; height: 60px; object-fit: cover;">
+
+        <div>
+            <div class="fw-semibold text-dark">Vị: ${flavorText}</div>
+            <div class="text-muted">Khối lượng: ${weightText}</div>
+        </div>
+    </div>`;
+
+                        variantOptionsEl.insertAdjacentHTML('beforeend', html);
+                    });
+
+
+                    // Add event listeners to each card
+                    variantOptionsEl.querySelectorAll('.variant-card').forEach(card => {
+                        card.addEventListener('click', () => {
+                            // Remove active state
+                            variantOptionsEl.querySelectorAll('.variant-card')
+                                .forEach(c =>
+                                    c.classList.remove('border-primary',
+                                        'shadow')
+                                );
+
+                            // Add active state
+
+                            card.classList.add('border-primary', 'shadow');
+
+                            const id = card.dataset.variantId;
+                            const price = parseInt(card.dataset.variantPrice);
+                            const original = parseInt(card.dataset
+                                .variantOriginal);
+
+                            const imageUrl = card.dataset.variantImage;
+
+                            productVariantIdInput.value = id;
+                            productPriceEl.textContent = price.toLocaleString();
+                            productOriginalPriceEl.textContent = (original >
+                                    price) ?
+                                original.toLocaleString() + ' VND' :
+                                '';
+                            productOriginalPriceEl.style.display = (original >
+                                price) ? 'inline' : 'none';
+
+                            productVariantIdInput.value = id;
+
+                            productPriceEl.textContent = price.toLocaleString();
+                            if (original > price) {
+                                productOriginalPriceEl.textContent = original
+                                    .toLocaleString() + ' VND';
+                                productOriginalPriceEl.style.display = 'inline';
+                            } else {
+                                productOriginalPriceEl.textContent = '';
+                                productOriginalPriceEl.style.display = 'none';
+                            }
+
+                            // 👉 THÊM DÒNG NÀY: Cập nhật ảnh biến thể
+                            const imageUrl = card.querySelector('img').src;
+
+                            productImageEl.src = imageUrl;
+                        });
+
+                    });
+                } else {
+                    // Ẩn phần chọn biến thể nếu không có
+                    variantSection.style.display = 'none';
+                    variantOptionsEl.innerHTML = '';
+                    productVariantIdInput.value = '';
+                }
+
+
+                modal.show();
+            });
+        });
+
+        // Validate biến thể trước khi submit
+
+        // Ngăn submit nếu chưa chọn biến thể (nếu có)
+
+        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
+            if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
+                e.preventDefault();
+                alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+            }
+        });
+    });
+</script> --}}
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1071,13 +1396,13 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const categoryTabs = document.querySelectorAll('.category-tab');
         const filteredProducts = document.querySelector('#filtered-products');
 
         // Bắt sự kiện click vào danh mục
         categoryTabs.forEach(tab => {
-            tab.addEventListener('click', function (e) {
+            tab.addEventListener('click', function(e) {
                 e.preventDefault(); // Ngăn nhảy trang (nếu là thẻ <a>)
                 categoryTabs.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
@@ -1088,6 +1413,7 @@
                     .then(res => res.text())
                     .then(data => {
                         filteredProducts.innerHTML = data;
+                        rebindOpenCartModal();
                         // Đã loại bỏ scroll nhảy lên
                     })
                     .catch(err => console.error('Lỗi lọc danh mục:', err));
@@ -1095,7 +1421,7 @@
         });
 
         // Bắt sự kiện phân trang (AJAX)
-        document.addEventListener('click', function (e) {
+        document.addEventListener('click', function(e) {
             const link = e.target.closest('.pagination a');
             if (link) {
                 e.preventDefault();
@@ -1104,6 +1430,7 @@
                     .then(res => res.text())
                     .then(data => {
                         filteredProducts.innerHTML = data;
+                        rebindOpenCartModal();
                         // Không scroll, giữ nguyên vị trí
                     })
                     .catch(err => console.error('Lỗi phân trang:', err));
@@ -1138,3 +1465,133 @@
         border-color: #dc3545;
     }
 </style>
+
+
+<style>
+    #variant-options {
+        gap: 10px;
+    }
+
+    .variant-card {
+        flex: 0 0 auto;
+        width: 180px;
+        transition: all 0.3s ease;
+    }
+
+    .variant-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .variant-card.border-primary {
+        border-width: 2px;
+        background-color: #eaf4ff;
+    }
+
+    .variant-card img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+    }
+</style>
+
+
+<script>
+    function rebindOpenCartModal() {
+        const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+        const variantSection = document.getElementById('variant-section');
+        const productNameEl = document.getElementById('modal-product-name');
+        const productImageEl = document.getElementById('modal-product-image');
+        const productCategoryEl = document.getElementById('modal-product-category');
+        const productPriceEl = document.getElementById('modal-product-price');
+        const productOriginalPriceEl = document.getElementById('modal-product-original-price');
+        const productDescEl = document.getElementById('modal-product-description');
+        const variantOptionsEl = document.getElementById('variant-options');
+        const productIdInput = document.getElementById('modal-product-id');
+        const productVariantIdInput = document.getElementById('modal-variant-id');
+        const quantityInput = document.getElementById('modal-quantity');
+
+        document.querySelectorAll('.open-cart-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productImage = this.dataset.productImage;
+                const productCategory = this.dataset.productCategory;
+                const productPrice = parseInt(this.dataset.productPrice || 0);
+                const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
+                const productDescription = this.dataset.productDescription || '';
+                const variants = JSON.parse(this.dataset.variants || '[]');
+
+                // Reset
+                productIdInput.value = productId;
+                productNameEl.textContent = productName;
+                productImageEl.src = productImage;
+                productCategoryEl.textContent = productCategory;
+                productDescEl.textContent = productDescription;
+                quantityInput.value = 1;
+                variantOptionsEl.innerHTML = '';
+                productVariantIdInput.value = '';
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice) ?
+                    productOriginalPrice.toLocaleString() + ' VND' : '';
+                productOriginalPriceEl.style.display = (productOriginalPrice > productPrice) ?
+                    'inline' : 'none';
+
+                if (variants.length > 0) {
+                    variantSection.style.display = 'block';
+                    variants.forEach(variant => {
+                        const imageUrl = variant.image || productImage;
+                        const flavorText = variant.flavor || '';
+                        const weightText = variant.weight || variant.mass || variant.size || '';
+
+                        const html = `
+                        <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
+                            style="cursor: pointer; transition: 0.3s;"
+                            data-variant-id="${variant.id}"
+                            data-variant-price="${variant.discounted_price || variant.price}"
+                            data-variant-original="${variant.price}"
+                            data-variant-weight="${weightText}"
+                            data-variant-image="${imageUrl}">
+                            <img src="${imageUrl}" alt="variant-image"
+                                class="rounded me-3"
+                                style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
+                            </div>
+                        </div>`;
+                        variantOptionsEl.insertAdjacentHTML('beforeend', html);
+                    });
+
+                    // Gán click biến thể
+                    variantOptionsEl.querySelectorAll('.variant-card').forEach(card => {
+                        card.addEventListener('click', () => {
+                            variantOptionsEl.querySelectorAll('.variant-card').forEach(
+                                c => c.classList.remove('border-primary', 'shadow'));
+                            card.classList.add('border-primary', 'shadow');
+
+                            const id = card.dataset.variantId;
+                            const price = parseInt(card.dataset.variantPrice);
+                            const original = parseInt(card.dataset.variantOriginal);
+                            const imageUrl = card.dataset.variantImage;
+
+                            productVariantIdInput.value = id;
+                            productPriceEl.textContent = price.toLocaleString();
+                            productOriginalPriceEl.textContent = (original > price) ?
+                                original.toLocaleString() + ' VND' : '';
+                            productOriginalPriceEl.style.display = (original > price) ?
+                                'inline' : 'none';
+                            productImageEl.src = imageUrl;
+                        });
+                    });
+                } else {
+                    variantSection.style.display = 'none';
+                    variantOptionsEl.innerHTML = '';
+                    productVariantIdInput.value = '';
+                }
+
+                modal.show();
+            });
+        });
+    }
+</script>
+

@@ -348,17 +348,20 @@ class ProductVariantController extends Controller
         }
     }
     // thêm biến thể cho sản phẩm có sẳn
-    public function createMultiple()
-    {
-        $products = Product::where('status', 1)
-            ->with(['variants.attributeValues.attribute'])
-            ->orderByDesc('id') // sản phẩm mới nhất đầu tiên
-            ->get();
+   public function createMultiple()
+{
+    $products = Product::where('status', 1)
+        ->with(['variants.attributeValues.attribute'])
+        ->withCount('variants') 
+        ->orderByDesc('id')
+        ->get();
 
-        $sizeValues = Attribute::where('name', 'Size')->first()?->values ?? collect();
+    $sizeValues = Attribute::where('name', 'Khối lượng')->first()?->values ?? collect();
 
-        return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
-    }
+    return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
+}
+
+
     public function storeMultiple(Request $request)
     {
         DB::beginTransaction();
@@ -371,15 +374,17 @@ class ProductVariantController extends Controller
                 $originalPrice = (float) $product->original_price;
                 $productCode = $product->product_code;
 
+                $createdFirstVariant = false;
+
                 foreach ($productData['variants'] ?? [] as $variantIndex => $variantData) {
                     $mainAttr = $variantData['main_attribute'] ?? null;
                     $subAttrs = $variantData['sub_attributes'] ?? [];
 
-                    if (empty($mainAttr['value']) || empty($mainAttr['name'])) {
+                    if (empty($mainAttr['name']) || empty($mainAttr['value'])) {
                         continue;
                     }
 
-                    // Tạo hoặc lấy thuộc tính chính (vị)
+                    // Tạo hoặc lấy thuộc tính chính (VD: Vị)
                     $mainAttrModel = Attribute::firstOrCreate(['name' => trim($mainAttr['name'])]);
                     $mainAttrValue = AttributeValue::firstOrCreate([
                         'attribute_id' => $mainAttrModel->id,
@@ -397,28 +402,34 @@ class ProductVariantController extends Controller
                             continue;
                         }
 
+                        // Không cho phép giá thấp hơn giá gốc
                         if ($cleanPrice < $originalPrice) {
                             DB::rollBack();
                             return back()->withInput()->with('error', "Giá biến thể không được thấp hơn giá gốc (ID SP: {$productId})");
                         }
 
-                        // Kiểm tra trùng (vị + size)
+                        // Kiểm tra trùng biến thể (theo vị + khối lượng)
                         $exists = ProductVariant::where('product_id', $productId)
-                            ->whereHas('attributeValues', fn($q) => $q->where('attribute_value_id', $mainAttrValue->id))
-                            ->whereHas('attributeValues', fn($q) => $q->where('attribute_value_id', $sizeAttrValueId))
-                            ->withCount([
-                                'attributeValues as match_count' => fn($q) =>
-                                $q->whereIn('attribute_value_id', [$mainAttrValue->id, $sizeAttrValueId])
-                            ])
-                            ->having('match_count', 2)
-                            ->exists();
+                            ->whereHas('attributeValues', function ($q) use ($mainAttrValue, $sizeAttrValueId) {
+                                $q->whereIn('attribute_value_id', [$mainAttrValue->id, $sizeAttrValueId]);
+                            })
+                            ->with(['attributeValues' => function ($q) use ($mainAttrValue, $sizeAttrValueId) {
+                                $q->whereIn('attribute_value_id', [$mainAttrValue->id, $sizeAttrValueId]);
+                            }])
+                            ->get()
+                            ->filter(function ($variant) use ($mainAttrValue, $sizeAttrValueId) {
+                                $ids = $variant->attributeValues->pluck('id')->toArray();
+                                return in_array($mainAttrValue->id, $ids) && in_array($sizeAttrValueId, $ids);
+                            })
+                            ->isNotEmpty();
+
 
                         if ($exists) {
                             DB::rollBack();
-                            return back()->withInput()->with('error', "Biến thể với vị '{$mainAttrValue->value}' và size đã tồn tại (ID SP: {$productId})");
+                            return back()->withInput()->with('error', "Biến thể với vị '{$mainAttrValue->value}' và khối lượng đã tồn tại (ID SP: {$productId})");
                         }
 
-                        // Lấy file ảnh đúng cách
+                        // Upload ảnh nếu có
                         $imagePath = null;
                         $imageInput = "products.{$productId}.variants.{$variantIndex}.sub_attributes.{$subIndex}.image";
                         $uploadedImage = $request->file($imageInput);
@@ -441,22 +452,37 @@ class ProductVariantController extends Controller
                             'status' => 1,
                         ]);
 
-                        // Gắn thuộc tính vị
+                        // Gắn thuộc tính chính (Vị)
                         ProductVariantValue::create([
                             'product_variant_id' => $variant->id,
                             'attribute_value_id' => $mainAttrValue->id,
                             'price_adjustment' => 0,
                         ]);
 
-                        // Gắn thuộc tính size
+                        // Gắn thuộc tính phụ (Khối lượng)
                         ProductVariantValue::create([
                             'product_variant_id' => $variant->id,
                             'attribute_value_id' => $sizeAttrValueId,
                             'price_adjustment' => 0,
                         ]);
+
+                        // Nếu là sản phẩm đơn → chuyển sang có biến thể
+                        if (!$createdFirstVariant && $product->product_type === 'simple') {
+                            $product->original_price = null;
+                            $product->product_type = 'variant';
+                            $product->save();
+                        }
+
+                        $createdFirstVariant = true;
                     }
                 }
 
+                //  Cập nhật tổng số lượng từ các biến thể sau khi thêm xong
+                $totalQuantity = ProductVariant::where('product_id', $product->id)->sum('quantity_in_stock');
+                $product->quantity_in_stock = $totalQuantity;
+                $product->save();
+
+                // Cập nhật trạng thái sản phẩm nếu có
                 $this->updateProductStatus($productId);
             }
 
@@ -467,6 +493,8 @@ class ProductVariantController extends Controller
             return back()->withInput()->with('error', 'Lỗi khi thêm biến thể: ' . $e->getMessage());
         }
     }
+
+
 
     public function cancel()
     {

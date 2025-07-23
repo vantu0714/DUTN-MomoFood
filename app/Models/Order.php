@@ -17,13 +17,24 @@ class Order extends Model
         'recipient_address',
         'promotion',
         'shipping_fee',
+        'discount_amount',
         'total_price',
         'payment_method',
         'payment_status',
         'status',
         'note',
         'reason',
-        'recipient_id'
+        'recipient_id',
+        'return_reason',
+        'return_approved',
+        'return_rejection_reason',
+        'return_requested_at',
+        'return_processed_at'
+    ];
+
+    protected $dates = [
+        'completed_at',
+        'return_requested_at'
     ];
 
     public function user()
@@ -46,7 +57,7 @@ class Order extends Model
 
     public static function generateOrderCode()
     {
-        $prefix = 'MOMO'; // Tiền tố cho mã đơn hàng
+        $prefix = 'MMF'; // Tiền tố cho mã đơn hàng
         $datePart = now()->format('Ymd'); // Ngày tháng năm (ví dụ: 20230626)
         $randomPart = strtoupper(substr(uniqid(), -5)); // 5 ký tự ngẫu nhiên
 
@@ -58,7 +69,7 @@ class Order extends Model
         return $code;
     }
     public function orders()
-{
-    return $this->hasMany(Order::class);
-}
+    {
+        return $this->hasMany(Order::class);
+    }
 }
