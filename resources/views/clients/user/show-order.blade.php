@@ -109,7 +109,7 @@
                                 </p>
                             </div>
                             <div class="col-md-3">
-                                <p><strong>Thanh toán:</strong><br>
+                                <p><strong>Thanh toán test:</strong><br>
                                     <span
                                         class="badge {{ $paymentStatusClasses[$order->payment_status] ?? 'bg-secondary' }}">
                                         {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
