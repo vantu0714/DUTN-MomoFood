@@ -20,34 +20,28 @@
     </div>
 </div>
 <!-- Modal Search End -->
+
 <!-- Single Page Header start -->
 <div class="container-fluid page-header mb-5"
     style="
-    background: url('https://inan2h.vn/wp-content/uploads/2022/12/in-banner-quang-cao-do-an-7-1.jpg') center center / cover no-repeat;
+    background: url('https://ipos.vn/wp-content/uploads/2022/02/kinh-doanh-do-an-vat-online.jpg') center center / cover no-repeat;
     position: relative;
-    height: 400px; /* Tăng chiều cao cho ảnh to hơn */">
+    height: 500px;">
     <div class="overlay"
         style="
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.2); /* mờ nhẹ cho chữ dễ đọc */
+            background: rgba(0, 0, 0, 0.2);
         ">
     </div>
-
-    <!-- Nội dung căn giữa -->
-    <div class="container h-100 position-relative" style="z-index: 2;">
-        <div class="d-flex justify-content-center align-items-center h-100">
-            <h1 class="text-white display-3 fw-bold" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.8);">
-                Cửa hàng
-            </h1>
-        </div>
-    </div>
 </div>
+
 <!-- Single Page Header End -->
+
 <!-- Fruits Shop Start-->
 <div class="container-fluid fruite py-5">
-    <div class="container py-5">
-        <h1 class="mb-4">Cửa hàng đồ ăn vặt</h1>
+    <div class="container py-0">
+        <h1 class="mb-4">CỬA HÀNG ĐỒ ĂN VẶT</h1>
         <div class="row g-4">
             <div class="col-lg-12">
                 <div class="row g-4">
@@ -356,8 +350,9 @@
             </div>
         </div>
     </div>
-    <!-- Fruits Shop End-->
-    <!-- Modal chi tiết sản phẩm -->
+<!-- Fruits Shop End-->
+
+<!-- Modal chi tiết sản phẩm -->
     <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <form method="POST" action="{{ route('carts.add') }}" id="modal-add-to-cart-form"
@@ -605,6 +600,5 @@
                         @endif
                     });
     </script>
+@include('clients.layouts.footer')
 
-    @include('clients.layouts.footer')
-    <!-- Fruits Shop End-->
