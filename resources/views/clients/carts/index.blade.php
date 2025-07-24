@@ -307,7 +307,9 @@
                                     {{ number_format($order->orderDetails->sum(fn($i) => $i->price * $i->quantity)) }}₫
                                 </p>
                                 <p><strong>Phí vận chuyển:</strong> {{ number_format($order->shipping_fee) }}₫</p>
-                                <p><strong>Voucher:</strong> {{ $order->promotion ?? 'Không áp dụng' }}</p>
+                                @if ($order->discount_amount > 0)
+                                    <p><strong>Giảm giá:</strong> -{{ number_format($order->discount_amount) }}₫</p>
+                                @endif
                             </div>
                             <div class="col-md-6 text-right">
                                 <h5><strong>Tổng cộng: <span
