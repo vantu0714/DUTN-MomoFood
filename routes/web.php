@@ -40,6 +40,7 @@ Route::get('/tin-tuc/{id}', [NewsController::class, 'detail'])->name('news.detai
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 Route::get('/gioi-thieu', [GioithieuController::class, 'index'])->name('gioithieu.index');
 
+
 // Authentication
 Route::controller(AuthController::class)->group(function () {
     // Login/Logout
