@@ -124,14 +124,17 @@
                                             @endphp
 
                                             @foreach ($categories as $index => $cat)
-                                                <a
-                                                    href="{{ route('shop.category', $cat->id) }}">{{ $cat->category_name }}</a>
+                                                <a href="{{ route('shop.category', $cat->id) }}"
+                                                    style="color: #d67054; text-decoration: none;">
+                                                    {{ $cat->category_name }}
+                                                </a>
                                                 @if ($index < count($categories) - 1)
                                                     &nbsp;&gt;&nbsp;
                                                 @endif
                                             @endforeach
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th class="text-muted">Kho</th>
                                         <td>{{ $product->quantity_in_stock ?? 'Không rõ' }}</td>
