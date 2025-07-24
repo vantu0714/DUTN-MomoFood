@@ -367,8 +367,9 @@
                             </div>
                             <div class="tab-pane fade" id="nav-mission" role="tabpanel"
                                 aria-labelledby="nav-mission-tab">
-                                <h4 class="mb-4 fw-bold text-uppercase text-primary section-title">Đánh giá của người
-                                    dùng</h4>
+                                <h4 class="mb-4 fw-bold text-uppercase section-title" style="color: #1a202c;">
+                                    Đánh giá của người dùng
+                                </h4>
                                 @forelse($product->comments as $comment)
                                     <div class="d-flex mb-4 border rounded shadow-sm p-4 bg-white">
                                         <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
@@ -448,7 +449,8 @@
                     @else
                         <div class="text-center py-4">
                             <p class="mb-3">Bạn cần đăng nhập để có thể đánh giá sản phẩm</p>
-                            <a href="{{ route('login') }}" class="btn btn-primary rounded-pill px-4">
+                            <a href="{{ route('login') }}" class="btn rounded-pill px-4"
+                                style="background-color: #d67054; border: none; color: #fff;">
                                 <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
                             </a>
                         </div>
