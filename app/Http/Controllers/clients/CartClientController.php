@@ -43,13 +43,6 @@ class CartClientController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', '⚠️ Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.');
         }
-        if (Auth::user()->status == 0) {
-            if ($request->ajax()) {
-                Auth::logout();
-                session()->flash('error', 'Tài khoản của bạn đã bị khóa.Vui lòng liên hệ quản trị viên để kiểm tra.');
-                return response()->json(['status' => 'blocked'], 403);
-            }
-        }
 
         $userId = Auth::id();
 
