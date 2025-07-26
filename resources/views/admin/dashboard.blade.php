@@ -70,7 +70,7 @@
 
             <div class="row g-4">
                 <!-- Tổng đơn hàng -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card bg-primary text-white shadow-sm rounded-4">
                         <div class="card-body text-center">
                             <h6 class="mb-2">📦 Tổng đơn hàng</h6>
@@ -80,8 +80,8 @@
                 </div>
 
                 <!-- Tổng doanh thu -->
-                <div class="col-md-4">
-                    <div class="card bg-success text-white shadow-sm rounded-4">
+                <div class="col-md-3">
+                    <div class="card bg-info text-white shadow-sm rounded-4">
                         <div class="card-body text-center">
                             <h6 class="mb-2">💰 Tổng doanh thu</h6>
                             <h3 class="fw-bold">{{ number_format($totalRevenue, 0, ',', '.') }} ₫</h3>
@@ -90,17 +90,10 @@
                 </div>
 
                 <!-- Sản phẩm đã bán -->
-                <div class="col-md-4">
-                    <div class="card bg-info text-white shadow-sm rounded-4">
-                        <div class="card-body text-center">
-                            <h6 class="mb-2">🛒 Sản phẩm đã bán</h6>
-                            <h3 class="fw-bold">{{ $totalProductsSold }}</h3>
-                        </div>
-                    </div>
-                </div>
+              
 
                 <!-- Đơn hàng hoàn thành -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card bg-success text-white shadow-sm rounded-4">
                         <div class="card-body text-center">
                             <h6 class="mb-2">✅ Đơn hàng hoàn thành</h6>
@@ -110,7 +103,7 @@
                 </div>
 
                 <!-- Đơn hàng đã huỷ -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card bg-danger text-white shadow-sm rounded-4">
                         <div class="card-body text-center">
                             <h6 class="mb-2">❌ Đơn hàng đã huỷ</h6>
@@ -120,15 +113,6 @@
                 </div>
 
                 <!-- Lợi nhuận -->
-                <div class="col-md-4">
-                    <div
-                        class="card {{ $completedTotalProfit >= 0 ? 'bg-warning' : 'bg-red' }} text-white shadow-sm rounded-4">
-                        <div class="card-body text-center">
-                            <h6 class="mb-2">📈 Lợi nhuận</h6>
-                            <h3 class="fw-bold">{{ number_format($completedTotalProfit, 0, ',', '.') }} ₫</h3>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
