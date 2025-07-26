@@ -19,7 +19,6 @@ class HomeController extends Controller
         }
 
         $query = Product::with(['category', 'variants.attributeValues.attribute'])
-
             ->where(function ($q) {
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
@@ -38,7 +37,6 @@ class HomeController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
-
         $products = $query->paginate(12);
         $categories = Category::withCount('products')->get();
 
@@ -50,11 +48,31 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
+        //  Thêm sản phẩm có đánh giá >= 4 sao
+        $highRatedProducts = Product::with([
+            'comments',
+            'category',
+            'variants.attributeValues.attribute' //  
+        ])
+            ->withAvg('comments', 'rating')
+            ->having('comments_avg_rating', '>=', 4)
+            ->orderByDesc('comments_avg_rating')
+            ->take(6)
+            ->get();
+
+
 
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
 
-        return view('clients.home', compact('products', 'categories', 'bestSellingProducts', 'comments'));
+        return view('clients.home', compact(
+            'products',
+            'categories',
+            'bestSellingProducts',
+            'comments',
+            'highRatedProducts'
+        ));
     }
+
 
     public function search(Request $request)
     {

@@ -342,8 +342,6 @@
 </div>
 <!-- Vesitable Shop End -->
 
-
-
 <!-- Banner Section Start-->
 <div class="container-fluid banner bg-secondary my-5">
     <div class="container py-5">
@@ -373,254 +371,93 @@
         </div>
     </div>
 </div>
-<!-- Banner Section End -->
-
 <!-- Bestsaler Product Start -->
 <div class="container-fluid py-5">
     <div class="container py-5">
         <div class="text-center mx-auto mb-5" style="max-width: 700px;">
-            <h1 class="display-4">Bestseller Products</h1>
-            <p>Latin words, combined with a handful of model sentence structures, to generate Lorem Ipsum which looks
-                reasonable.</p>
+            <h1 class="display-4"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700;">
+                Siêu Phẩm Ăn Vặt 5 ⭐
+            </h1>
+            <p
+                style="font-size: 18px; line-height: 1.6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                Đồ ăn vặt được đánh giá cao – vị ngon khó tìm thấy. Mỗi món đều được tuyển chọn kỹ lưỡng từ nguyên liệu
+                chất lượng, chế biến hợp vệ sinh và đóng gói cẩn thận. Được yêu thích bởi hàng ngàn khách hàng trên khắp
+                cả nước.
+
+            </p>
         </div>
+
+
         <div class="row g-4">
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
+            @foreach ($highRatedProducts as $product)
+                @php
+                    $variantsArray = collect($product->variants ?? [])->map(function ($variant) {
+                        $flavor = optional($variant->attributeValues->firstWhere('attribute.name', 'Vị'))->value ?? '';
+                        $weight =
+                            optional($variant->attributeValues->firstWhere('attribute.name', 'Khối lượng'))->value ??
+                            (optional($variant->attributeValues->firstWhere('attribute.name', 'Size'))->value ?? '');
+                        return [
+                            'id' => $variant->id,
+                            'price' => $variant->price,
+                            'discounted_price' => $variant->discounted_price,
+                            'image' => $variant->image
+                                ? asset('storage/' . $variant->image)
+                                : asset('images/no-image.png'),
+                            'flavor' => $flavor ?: 'Không rõ',
+                            'weight' => $weight ?: 'Không rõ',
+                            'quantity_in_stock' => $variant->quantity_in_stock ?? ($variant->quantity ?? 0),
+                        ];
+                    });
+                @endphp
+                <div class="col-lg-6 col-xl-4">
+                    <div class="p-4 rounded bg-light h-100">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/no-image.png') }}"
+                                    class="img-fluid rounded-circle w-100" alt="{{ $product->product_name }}">
                             </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
+                            <div class="col-6">
+                                <a href="{{ route('product-detail.show', $product->id) }}" class="h5 d-block mb-2">
+                                    {{ $product->product_name }}
+                                </a>
 
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
+                                @php
+                                    $avgRating = round($product->comments->avg('rating') ?? 0);
+                                @endphp
+                                <div class="d-flex align-items-center mb-2">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i
+                                            class="fas fa-star{{ $i <= $avgRating ? ' text-warning' : ' text-muted' }}"></i>
+                                    @endfor
+                                    <small class="ms-2 text-muted">({{ number_format($avgRating, 1) }}/5)</small>
+                                </div>
 
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
+                                <h4 class="mb-3 text-danger fw-bold">
+                                    {{ number_format($product->display_price ?? 0, 0, ',', '.') }} đ
+                                </h4>
+
+                                <button type="button"
+                                    class="btn border border-secondary rounded-pill px-3 text-primary open-cart-modal d-flex align-items-center"
+                                    data-product-id="{{ $product->id }}"
+                                    data-product-name="{{ $product->product_name }}"
+                                    data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
+                                    data-product-price="{{ $product->display_price ?? 0 }}"
+                                    data-product-original-price="{{ $product->original_price ?? 0 }}"
+                                    data-product-description="{{ $product->description }}"
+                                    data-variants='@json($variantsArray, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-bs-target="#cartModal">
+                                    <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ
+                                </button>
                             </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-6 col-xl-3">
-                <div class="text-center">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
-                        alt="">
-
-                    <div class="py-4">
-                        <a href="#" class="h5">Organic Tomato</a>
-                        <div class="d-flex my-3 justify-content-center">
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h4 class="mb-3">3.12 $</h4>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-6 col-xl-3">
-                <div class="text-center">
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
-                        alt="">
-
-                    <div class="py-4">
-                        <a href="#" class="h5">Organic Tomato</a>
-                        <div class="d-flex my-3 justify-content-center">
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h4 class="mb-3">3.12 $</h4>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-6 col-xl-3">
-                <div class="text-center">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
-                        alt="">
-
-                    <div class="py-4">
-                        <a href="#" class="h5">Organic Tomato</a>
-                        <div class="d-flex my-3 justify-content-center">
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h4 class="mb-3">3.12 $</h4>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-6 col-xl-3">
-                <div class="text-center">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
-                        alt="">
-                    <div class="py-2">
-                        <a href="#" class="h5">Organic Tomato</a>
-                        <div class="d-flex my-3 justify-content-center">
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h4 class="mb-3">3.12 $</h4>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
+
     </div>
 </div>
-<!-- Bestsaler Product End -->
-
 <!-- Fact Start -->
 <div class="container-fluid py-5">
     <div class="container">
@@ -732,7 +569,7 @@
                             Danh mục: <span id="modal-product-category" class="fw-medium text-dark"></span>
                         </p>
 
-                        <p class="h5 text-danger fw-bold mb-3">
+                        <p class="h5 text-danger fw-bold mb-3 tabular-numbers">
                             <span id="modal-product-price">0</span>
                             <span class="text-muted fs-6">VND</span>
                             <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
@@ -762,7 +599,10 @@
                                 <input type="number" class="form-control text-center" id="modal-quantity"
                                     name="quantity" value="1" min="1">
                                 <button type="button" class="btn btn-outline-secondary" id="increase-qty">+</button>
+                                <br>
+
                             </div>
+                            <small id="stock-info" class="text-muted mt-1 d-block">Kho: --</small>
                         </div>
                     </div>
                 </div>
@@ -776,8 +616,6 @@
         </form>
     </div>
 </div>
-
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const modal = new bootstrap.Modal(document.getElementById('cartModal'));
@@ -789,21 +627,28 @@
         const productOriginalPriceEl = document.getElementById('modal-product-original-price');
         const productDescEl = document.getElementById('modal-product-description');
         const variantOptionsEl = document.getElementById('variant-options');
-        const variantSection = document.getElementById('variant-section');
         const productIdInput = document.getElementById('modal-product-id');
         const productVariantIdInput = document.getElementById('modal-variant-id');
         const quantityInput = document.getElementById('modal-quantity');
+        const stockInfoEl = document.getElementById('stock-info');
 
         const weightGroup = document.getElementById('modal-weight-group');
         if (weightGroup) weightGroup.style.display = 'none';
 
-        document.getElementById('increase-qty').addEventListener('click', () => quantityInput.stepUp());
+        // Nút +/-
+        document.getElementById('increase-qty').addEventListener('click', () => {
+            const max = parseInt(quantityInput.max) || 9999;
+            let current = parseInt(quantityInput.value);
+            if (current < max) quantityInput.value = current + 1;
+        });
+
         document.getElementById('decrease-qty').addEventListener('click', () => {
             if (quantityInput.value > 1) quantityInput.stepDown();
         });
 
+        // Mở modal
         document.querySelectorAll('.open-cart-modal').forEach(button => {
-            button.addEventListener('click', function () {
+            button.addEventListener('click', function() {
                 const productId = this.dataset.productId;
                 const productName = this.dataset.productName;
                 const productImage = this.dataset.productImage;
@@ -820,76 +665,94 @@
                 productCategoryEl.textContent = productCategory;
                 productDescEl.textContent = productDescription;
                 quantityInput.value = 1;
-                productPriceEl.textContent = productPrice.toLocaleString();
-                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice)
-                    ? productOriginalPrice.toLocaleString() + ' VND'
-                    : '';
-                productOriginalPriceEl.style.display = (productOriginalPrice > productPrice) ? 'inline' : 'none';
+                quantityInput.removeAttribute('max');
                 variantOptionsEl.innerHTML = '';
                 productVariantIdInput.value = '';
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice) ?
+                    productOriginalPrice.toLocaleString() + ' VND' : '';
+                productOriginalPriceEl.style.display = (productOriginalPrice > productPrice) ?
+                    'inline' : 'none';
+                if (stockInfoEl) stockInfoEl.textContent = 'Kho: --';
 
-                // Ẩn khối lượng riêng
                 if (weightGroup) weightGroup.style.display = 'none';
 
-                // Xử lý biến thể
+                // Hiển thị biến thể
                 if (variants.length > 0) {
-                    variantSection.style.display = 'block';
-                    variants.forEach((variant) => {
+                    variants.forEach(variant => {
+                        console.log(variant);
                         const imageUrl = variant.image || productImage;
                         const flavorText = variant.flavor || '';
-                        const weightText = variant.weight || variant.mass || variant.size || '';
+                        const weightText = variant.weight || variant.mass || variant
+                            .size || '';
+                        const stock = variant.quantity_in_stock ?? variant.quantity ??
+                            variant.stock ?? 0;
+
                         const html = `
-                            <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
-                                style="cursor: pointer; transition: 0.3s;"
-                                data-variant-id="${variant.id}"
-                                data-variant-price="${variant.discounted_price || variant.price}"
-                                data-variant-original="${variant.price}"
-                                data-variant-weight="${weightText}"
-                                data-variant-image="${imageUrl}">
-                                <img src="${imageUrl}" alt="variant-image"
-                                    class="rounded me-3"
-                                    style="width: 60px; height: 60px; object-fit: cover;">
-                                <div>
-                                    <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
-                                </div>
-                            </div>`;
+                        <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
+                            style="cursor: pointer; transition: 0.3s;"
+                            data-variant-id="${variant.id}"
+                            data-variant-price="${variant.discounted_price || variant.price}"
+                            data-variant-original="${variant.price}"
+                            data-variant-weight="${weightText}"
+                            data-variant-stock="${stock}"
+                            data-variant-image="${imageUrl}">
+                            <img src="${imageUrl}" alt="variant-image"
+                                class="rounded me-3"
+                                style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
+                            </div>
+                        </div>`;
                         variantOptionsEl.insertAdjacentHTML('beforeend', html);
                     });
 
-                    // Click chọn biến thể
+                    // Gán sự kiện click biến thể
                     variantOptionsEl.querySelectorAll('.variant-card').forEach(card => {
                         card.addEventListener('click', () => {
                             variantOptionsEl.querySelectorAll('.variant-card')
-                                .forEach(c => c.classList.remove('border-primary', 'shadow'));
+                                .forEach(c => {
+                                    c.classList.remove('border-primary',
+                                        'shadow');
+                                });
                             card.classList.add('border-primary', 'shadow');
 
                             const id = card.dataset.variantId;
                             const price = parseInt(card.dataset.variantPrice);
-                            const original = parseInt(card.dataset.variantOriginal);
+                            const original = parseInt(card.dataset
+                                .variantOriginal);
                             const imageUrl = card.dataset.variantImage;
+                            const stock = parseInt(card.dataset.variantStock ||
+                                0);
 
                             productVariantIdInput.value = id;
                             productPriceEl.textContent = price.toLocaleString();
-                            productOriginalPriceEl.textContent = (original > price)
-                                ? original.toLocaleString() + ' VND'
-                                : '';
-                            productOriginalPriceEl.style.display = (original > price) ? 'inline' : 'none';
+                            productOriginalPriceEl.textContent = (original >
+                                    price) ? original.toLocaleString() +
+                                ' VND' : '';
+                            productOriginalPriceEl.style.display = (original >
+                                price) ? 'inline' : 'none';
                             productImageEl.src = imageUrl;
+
+                            // Hiển thị kho + giới hạn số lượng
+                            if (stockInfoEl) {
+                                stockInfoEl.textContent =
+                                    `Kho: ${stock} sản phẩm`;
+                            }
+                            quantityInput.max = stock;
+                            if (parseInt(quantityInput.value) > stock) {
+                                quantityInput.value = stock;
+                            }
                         });
                     });
-                } else {
-                    // Không có biến thể → ẩn section
-                    variantSection.style.display = 'none';
-                    variantOptionsEl.innerHTML = '';
-                    productVariantIdInput.value = '';
                 }
 
                 modal.show();
             });
         });
 
-        // Validate biến thể
-        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function (e) {
+        // Validate chọn biến thể trước khi thêm giỏ hàng
+        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
             if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
                 e.preventDefault();
                 alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
@@ -959,8 +822,24 @@
 
 @include('clients.layouts.footer')
 
-
 <style>
+    .owl-carousel .owl-item {
+    margin-right: 1px !important;
+    margin-left: 10px !important;
+}
+    
+    .tabular-numbers,
+    .tabular-numbers span,
+    .tabular-numbers del {
+        font-family: 'Roboto', sans-serif !important;
+        font-variant-numeric: tabular-nums !important;
+        font-size: 1.5rem !important;
+        line-height: 1.2 !important;
+        vertical-align: middle !important;
+        display: inline-block !important;
+    }
+
+
     .hero-banner-full {
         width: 100vw;
         height: 100vh;
