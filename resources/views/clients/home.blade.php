@@ -58,8 +58,9 @@
 
 
 <!-- Hero Banner Fullscreen Start -->
-<div class="hero-banner-full">
-    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood">
+<div class="hero-banner-full" style="height: 700px; overflow: hidden;">
+    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood"
+        style="width: 100%; height: 100%; object-fit: cover;">
 </div>
 <!-- Hero Banner Fullscreen End -->
 
@@ -67,7 +68,7 @@
 
 <!-- Featurs Section Start -->
 <div class="container-fluid featurs py-5">
-    <div class="container py-5">
+    <div class="container py-2">
         <div class="row g-4">
             <div class="col-md-6 col-lg-3">
                 <div class="featurs-item text-center rounded bg-light p-4">
@@ -136,12 +137,12 @@
 
 <!-- Fruits Shop Start -->
 <div class="container-fluid fruite py-5">
-    <div class="container py-5">
+    <div class="container py-2">
         <!-- DANH MỤC NGANG -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="bg-light p-3 rounded shadow-sm">
-                    <h5 class="mb-3 text-primary"><i class="bi bi-list-ul me-2"></i>Danh mục sản phẩm</h5>
+                    <h3 class="mb-3 text-primary"><i class="bi bi-list-ul me-2"></i>DANH MỤC SẢN PHẨM</h3>
                     <ul class="nav nav-pills flex-wrap gap-2" id="category-list">
                         <li class="nav-item">
                             <a class="nav-link active category-tab" href="#" data-category="">Tất cả</a>
@@ -182,7 +183,7 @@
 
 <!-- Featurs Start -->
 <div class="container-fluid service py-5">
-    <div class="container py-5">
+    <div class="container py-2">
         <div class="row g-4 justify-content-center">
             <div class="row">
                 <div class="col-md-6 col-lg-4 mb-4">
@@ -226,7 +227,7 @@
 
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
-    <div class="container py-5">
+    <div class="container py-1">
         <h1 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h1>
 
         <div class="row g-4">
@@ -822,11 +823,12 @@
 
 @include('clients.layouts.footer')
 
-<style>.owl-carousel .owl-item {
-    margin-right: 1px !important;
-    margin-left: 10px !important;
-}
-    
+<style>
+    .owl-carousel .owl-item {
+        margin-right: 1px !important;
+        margin-left: 10px !important;
+    }
+
     .tabular-numbers,
     .tabular-numbers span,
     .tabular-numbers del {

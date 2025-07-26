@@ -1,5 +1,7 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
+
 
         <!-- Modal Search Start -->
         <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
