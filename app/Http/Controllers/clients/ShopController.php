@@ -21,19 +21,36 @@ class ShopController extends Controller
             ->take(6)
             ->get();
 
-        $filtered = $products->filter(function ($product) {
+        $filtered = $products->filter(function ($product) use ($request) {
+            $min = null;
+            $max = null;
+
+            // Xử lý theo request price_range
+            if ($request->price_range && $request->price_range !== 'custom') {
+                [$min, $max] = explode('-', $request->price_range);
+            } elseif ($request->price_range === 'custom') {
+                $min = $request->min_price;
+                $max = $request->max_price;
+            }
+
+            $price = null;
+
             if ($product->product_type === 'variant') {
-                return $product->variants->contains(function ($variant) {
-                    return $variant->quantity_in_stock > 0;
-                });
+                $variant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                if (!$variant) return false;
+                $price = $variant->discounted_price ?? $variant->price;
+            } elseif ($product->product_type === 'simple') {
+                if ($product->quantity_in_stock <= 0) return false;
+                $price = $product->discounted_price ?? $product->original_price;
             }
 
-            if ($product->product_type === 'simple') {
-                return $product->quantity_in_stock > 0;
+            if ($min !== null && $max !== null) {
+                return $price >= $min && $price <= $max;
             }
 
-            return false;
+            return true;
         });
+
         $page = $request->get('page', 1);
         $perPage = 9;
         $paginated = new LengthAwarePaginator(
@@ -84,20 +101,36 @@ class ShopController extends Controller
             ->get();
 
         // Lọc tồn kho & lọc giá theo từng biến thể
-        $filtered = $products->filter(function ($product) {
+        $filtered = $products->filter(function ($product) use ($request) {
+            $min = null;
+            $max = null;
+
+            // Xử lý theo request price_range
+            if ($request->price_range && $request->price_range !== 'custom') {
+                [$min, $max] = explode('-', $request->price_range);
+            } elseif ($request->price_range === 'custom') {
+                $min = $request->min_price;
+                $max = $request->max_price;
+            }
+
+            $price = null;
+
             if ($product->product_type === 'variant') {
-                return $product->variants->contains(function ($variant) {
-                    return $variant->quantity_in_stock > 0;
-                });
+                $variant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                if (!$variant) return false;
+                $price = $variant->discounted_price ?? $variant->price;
+            } elseif ($product->product_type === 'simple') {
+                if ($product->quantity_in_stock <= 0) return false;
+                $price = $product->discounted_price ?? $product->original_price;
             }
 
-            if ($product->product_type === 'simple') {
-                return $product->quantity_in_stock > 0;
+            if ($min !== null && $max !== null) {
+                return $price >= $min && $price <= $max;
             }
 
-
-            return false;
+            return true;
         });
+
         // Phân trang
         $page = $request->get('page', 1);
         $perPage = 9;

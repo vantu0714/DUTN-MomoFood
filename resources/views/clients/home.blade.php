@@ -59,7 +59,8 @@
 
 <!-- Hero Banner Fullscreen Start -->
 <div class="hero-banner-full" style="height: 700px; overflow: hidden;">
-    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood" style="width: 100%; height: 100%; object-fit: cover;">
+    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood"
+        style="width: 100%; height: 100%; object-fit: cover;">
 </div>
 <!-- Hero Banner Fullscreen End -->
 
@@ -617,7 +618,7 @@
     </div>
 </div>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         const modal = new bootstrap.Modal(document.getElementById('cartModal'));
 
         const productNameEl = document.getElementById('modal-product-name');
@@ -824,10 +825,10 @@
 
 <style>
     .owl-carousel .owl-item {
-    margin-right: 1px !important;
-    margin-left: 10px !important;
-}
-    
+        margin-right: 1px !important;
+        margin-left: 10px !important;
+    }
+
     .tabular-numbers,
     .tabular-numbers span,
     .tabular-numbers del {
