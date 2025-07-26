@@ -8,6 +8,18 @@ use App\Models\Recipient;
 
 class RecipientController extends Controller
 {
+
+    public function index()
+    {
+        $userId = auth()->id();
+        $recipients = Recipient::where('user_id', $userId)
+            ->orderByDesc('is_default') // Hiển thị địa chỉ mặc định lên đầu
+            ->latest()
+            ->get();
+
+        return view('clients.index', compact('recipients'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -98,7 +110,7 @@ class RecipientController extends Controller
         }
 
         $recipient->delete();
-       
+
 
         return redirect()->back()->with('success', 'Xoá địa chỉ thành công!');
     }
