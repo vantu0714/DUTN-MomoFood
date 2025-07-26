@@ -84,7 +84,13 @@ class HomeController extends Controller
             ->orWhere('ingredients', 'like', "%$keyword%")
             ->get();
 
-        return view('clients.search', compact('products', 'keyword'));
+        $categories = Category::withCount([
+            'products as available_products_count' => function ($query) {
+                $query->where('quantity_in_stock', '>', 0);
+            }
+        ])->get();
+
+        return view('clients.search', compact('products', 'keyword', 'categories'));
     }
 
     public function searchAjax(Request $request)
@@ -152,11 +158,11 @@ class HomeController extends Controller
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
-                        $q2->where('product_type', 'variant')
-                            ->whereHas('variants', function ($q3) {
-                                $q3->where('quantity_in_stock', '>', 0);
-                            });
-                    });
+                    $q2->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q3) {
+                            $q3->where('quantity_in_stock', '>', 0);
+                        });
+                });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()
