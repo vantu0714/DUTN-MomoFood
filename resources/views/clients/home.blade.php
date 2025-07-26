@@ -462,35 +462,59 @@
 <div class="container-fluid py-5">
     <div class="container">
         <div class="bg-light p-5 rounded">
-            <div class="row g-4 justify-content-center">
-                <div class="col-md-6 col-lg-6 col-xl-3">
-                    <div class="counter bg-white rounded p-5">
-                        <i class="fa fa-users text-secondary"></i>
-                        <h4>satisfied customers</h4>
-                        <h1>1963</h1>
+            <h1 class="display-4"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700; text-align: center">
+                Tin tức 📰
+            </h1>
+            <br>
+            <div class="news-grid">
+                <!-- Card 4 -->
+                <div class="news-card">
+                    <img src="{{ asset('clients/img/anhtintuc4.png') }}" alt="Tin 4">
+                    <div class="news-card-body">
+                        <h2 class="news-card-title">Deal Sốc "Nửa Giá": Thưởng Thức Mì Ý Ngon Mê Ly</h2>
+                        <p class="news-card-desc">Bạn là fan của mì Ý và luôn tìm kiếm những ưu đãi hấp dẫn? Vậy thì
+                            đây chính là tin vui dành cho bạn! ...</p>
+                        <div class="news-meta">
+                            <span><i class="bi bi-calendar3"></i> 10/06/2025</span>
+                            <a href="{{ route('news.detail', ['id' => 4]) }}" class="btn-read-more">Xem chi tiết</a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-6 col-xl-3">
-                    <div class="counter bg-white rounded p-5">
-                        <i class="fa fa-users text-secondary"></i>
-                        <h4>quality of service</h4>
-                        <h1>99%</h1>
+
+                <!-- Card 5 -->
+                <div class="news-card">
+                    <img src="{{ asset('clients/img/anhtintuc5.png') }}" alt="Tin 5">
+                    <div class="news-card-body">
+                        <h2 class="news-card-title">Cuối Tuần "Cháy Phố": Khuyến Mãi Combo Gia Đình Cực Hấp Dẫn</h2>
+                        <p class="news-card-desc">Cuối tuần là thời điểm tuyệt vời để cùng gia đình quây quần bên nhau,
+                            tận hưởng những khoảnh khắc thư giãn và thưởng...</p>
+                        <div class="news-meta">
+                            <span><i class="bi bi-calendar3"></i> 08/06/2025</span>
+                            <a href="{{ route('news.detail', parameters: ['id' => 5]) }}" class="btn-read-more">Xem
+                                chi tiết</a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-6 col-xl-3">
-                    <div class="counter bg-white rounded p-5">
-                        <i class="fa fa-users text-secondary"></i>
-                        <h4>quality certificates</h4>
-                        <h1>33</h1>
+
+                <!-- Card 6 -->
+                <div class="news-card">
+                    <img src="{{ asset('clients/img/anhtintuc6.png') }}" alt="Tin 6">
+                    <div class="news-card-body">
+                        <h2 class="news-card-title">Thứ 4 'vàng': Ưu đãi đặc biệt cho tín đồ gà rán</h2>
+                        <p class="news-card-desc">Hội những người mê gà rán đâu rồi? Thứ 4 này đừng bỏ lỡ cơ hội tận
+                            hưởng ưu đãi siêu hấp dẫn dành riêng...</p>
+                        <div class="news-meta">
+                            <span><i class="bi bi-calendar3"></i> 05/06/2025</span>
+                            <a href="{{ route('news.detail', parameters: ['id' => 6]) }}" class="btn-read-more">Xem
+                                chi tiết</a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-6 col-xl-3">
-                    <div class="counter bg-white rounded p-5">
-                        <i class="fa fa-users text-secondary"></i>
-                        <h4>Available Products</h4>
-                        <h1>789</h1>
-                    </div>
-                </div>
+                <a href=""></a>
+                <a class="xemtatca" href="{{ route('news.index') }}" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400; ">
+                Xem tất cả > 
+                </a>
             </div>
         </div>
     </div>
@@ -822,11 +846,12 @@
 
 @include('clients.layouts.footer')
 
-<style>.owl-carousel .owl-item {
-    margin-right: 1px !important;
-    margin-left: 10px !important;
-}
-    
+<style>
+    .owl-carousel .owl-item {
+        margin-right: 1px !important;
+        margin-left: 10px !important;
+    }
+
     .tabular-numbers,
     .tabular-numbers span,
     .tabular-numbers del {
@@ -1116,3 +1141,97 @@
         });
     }
 </script>
+
+
+<style>
+    .xemtatca {
+        text-align: center;
+        margin-top: 20px;
+        color: #9ca3af;
+        font-size: 24px;
+    }
+    .news-section {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 32px;
+        font-weight: bold;
+        color: #ef4444;
+        margin-bottom: 40px;
+    }
+
+    .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+    }
+
+    .news-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease;
+    }
+
+    .news-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .news-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .news-card-body {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .news-card-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #f97316;
+        margin-bottom: 10px;
+    }
+
+    .news-card-desc {
+        color: #4b5563;
+        font-size: 14px;
+        flex: 1;
+    }
+
+    .news-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        margin-top: 15px;
+        color: #9ca3af;
+    }
+
+    .btn-read-more {
+        padding: 6px 12px;
+        background-color: transparent;
+        border: 1px solid #f97316;
+        color: #f97316;
+        border-radius: 6px;
+        font-size: 13px;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+    .btn-read-more:hover {
+        background-color: #f97316;
+        color: white;
+    }
+</style>
