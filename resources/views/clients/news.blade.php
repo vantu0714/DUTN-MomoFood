@@ -1,5 +1,7 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
+
 
 <br><br><br><br><br>
 
