@@ -238,28 +238,37 @@
                     $original = 0;
                     $variants = [];
 
-                    if ($product->product_type === 'variant') {
-                        $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
+                    $isVariant = $product->product_type === 'variant';
+
+                    if ($isVariant) {
+                        $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+
                         if ($firstVariant) {
                             $price = $firstVariant->discounted_price ?? $firstVariant->price;
                             $original = $firstVariant->price;
                         }
 
-                        $variants = $product->variants->map(function ($v) {
-                            return [
-                                'id' => $v->id,
-                                'price' => $v->price,
-                                'discounted_price' => $v->discounted_price,
-                                'quantity' => $v->quantity,
-                                'image' => $v->image,
-                                'attribute_values' => $v->attributeValues->map(function ($attrValue) {
-                                    return [
-                                        'attribute_name' => $attrValue->attribute->name,
-                                        'value' => $attrValue->value,
-                                    ];
-                                }),
-                            ];
-                        });
+                        $variants = $product->variants
+                            ->where('quantity_in_stock', '>', 0)
+                            ->sortBy(function ($v) {
+                                return $v->discounted_price ?? $v->price;
+                            })
+                            ->map(function ($v) {
+                                return [
+                                    'id' => $v->id,
+                                    'price' => $v->price,
+                                    'discounted_price' => $v->discounted_price,
+                                    'quantity' => $v->quantity,
+                                    'quantity_in_stock' => $v->quantity_in_stock,
+                                    'image' => $v->image,
+                                    'attribute_values' => $v->attributeValues->map(function ($attrValue) {
+                                        return [
+                                            'attribute_name' => $attrValue->attribute->name,
+                                            'value' => $attrValue->value,
+                                        ];
+                                    }),
+                                ];
+                            });
                     } else {
                         $price = $product->discounted_price ?? $product->original_price;
                         $original = $product->original_price;
@@ -286,7 +295,7 @@
                             <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
                             <p class="text-muted small mb-3">{{ Str::limit($product->description, 60) }}</p>
 
-                            {{-- 👉 Nếu có biến thể, hiển thị flavor & weight --}}
+                            {{-- Nếu có biến thể, hiển thị flavor & weight --}}
                             @if ($product->product_type === 'variant')
                                 <div class="d-flex flex-wrap gap-2 mb-2">
                                     @foreach ($product->variants as $variant)
@@ -341,8 +350,6 @@
         </div>
     </div>
 </div>
-<!-- Vesitable Shop End -->
-
 <!-- Banner Section Start-->
 <div class="container-fluid banner bg-secondary my-5">
     <div class="container py-5">
@@ -372,7 +379,7 @@
         </div>
     </div>
 </div>
-<!-- Bestsaler Product Start -->
+<!--  5 sao -->
 <div class="container-fluid py-5">
     <div class="container py-5">
         <div class="text-center mx-auto mb-5" style="max-width: 700px;">
@@ -380,16 +387,7 @@
                 style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700;">
                 Siêu Phẩm Ăn Vặt 5 ⭐
             </h1>
-            <p
-                style="font-size: 18px; line-height: 1.6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-                Đồ ăn vặt được đánh giá cao – vị ngon khó tìm thấy. Mỗi món đều được tuyển chọn kỹ lưỡng từ nguyên liệu
-                chất lượng, chế biến hợp vệ sinh và đóng gói cẩn thận. Được yêu thích bởi hàng ngàn khách hàng trên khắp
-                cả nước.
-
-            </p>
         </div>
-
-
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
                 @php
@@ -520,48 +518,58 @@
         </div>
     </div>
 </div>
-<!-- Fact Start -->
+<!-- đánh giá -->
+<div class="container py-5 testimonial-container">
+    <!-- Header -->
+    <div class="testimonial-header text-center mb-5">
+        <h4 class="text-primary">Đánh giá từ khách hàng</h4>
+        <h2 class="display-5 text-dark">Khách hàng nói gì về chúng tôi</h2>
+    </div>
+    <!-- Comment Carousel -->
+    <div class="row" id="commentSlider">
+        @foreach ($comments as $comment)
+            <div class="col-md-6 mb-4 comment-item">
+                <a href="{{ route('product-detail.show', $comment->product->id) }}"
+                    class="text-decoration-none text-dark">
+                    <div class="bg-light rounded p-4 h-100 hover-shadow">
+                        <div class="d-flex align-items-start">
+                            <!-- Avatar -->
+                            <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                                class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;"
+                                alt="Avatar">
 
-<!-- Testimonial Start -->
-<div class="container-fluid testimonial py-5">
-    <div class="container py-5">
-        <div class="testimonial-header text-center mb-5">
-            <h4 class="text-primary">Đánh giá từ khách hàng</h4>
-            <h1 class="display-5 text-dark">Khách hàng nói gì về chúng tôi</h1>
-        </div>
-        <div class="owl-carousel testimonial-carousel">
-            @foreach ($comments as $comment)
-                <div class="testimonial-item img-border-radius bg-light rounded p-4">
-                    <div class="position-relative">
-                        <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
-                            style="bottom: 30px; right: 0;"></i>
-
-                        <div class="mb-4 pb-4 border-bottom border-secondary">
-                            <p class="mb-0 text-dark">{{ $comment->content }}</p>
-                        </div>
-
-                        <div class="d-flex align-items-center flex-nowrap">
-                            <div class="bg-secondary rounded">
-                                <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-                                    class="img-fluid rounded" style="width: 100px; height: 100px;" alt="Avatar">
-                            </div>
-
-                            <div class="ms-4 d-block">
-                                <h5 class="text-dark mb-1">{{ $comment->user->name ?? 'Ẩn danh' }}</h5>
-                                <p class="text-muted mb-2">{{ $comment->user->profession ?? 'Khách hàng' }}</p>
-
-                                <div class="d-flex pe-5">
+                            <div>
+                                <!-- Stars -->
+                                <div class="mb-2">
                                     @for ($i = 1; $i <= 5; $i++)
                                         <i
-                                            class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
+                                            class="{{ $i <= $comment->rating ? 'fa-solid text-warning' : 'fa-regular text-secondary' }} fa-star"></i>
                                     @endfor
                                 </div>
+
+                                <!-- Name -->
+                                <p class="mb-1 fw-bold">{{ $comment->user->name ?? 'Ẩn danh' }}
+                                    <span class="fw-normal text-muted">.
+                                        {{ $comment->user->profession ?? 'Khách hàng' }}</span>
+                                </p>
+
+                                <!-- Content -->
+                                <p class="fst-italic mb-0 comment-content">{{ $comment->content }}</p>
                             </div>
                         </div>
                     </div>
-                </div>
-            @endforeach
-        </div>
+                </a>
+            </div>
+        @endforeach
+    </div>
+    <!-- Navigation Buttons -->
+    <div class="testimonial-nav">
+        <button class="btn rounded-circle" id="prevBtn">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="btn rounded-circle" id="nextBtn">
+            <i class="fas fa-chevron-right"></i>
+        </button>
     </div>
 </div>
 
@@ -641,6 +649,7 @@
         </form>
     </div>
 </div>
+<!--js modal-->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const modal = new bootstrap.Modal(document.getElementById('cartModal'));
@@ -704,6 +713,19 @@
 
                 // Hiển thị biến thể
                 if (variants.length > 0) {
+                    // Tính khoảng giá và hiển thị
+                    const prices = variants.map(v => parseInt(v.discounted_price || v.price ||
+                        0)).filter(p => p > 0);
+                    if (prices.length > 0) {
+                        const minPrice = Math.min(...prices);
+                        const maxPrice = Math.max(...prices);
+
+                        const priceText = (minPrice === maxPrice) ?
+                            minPrice.toLocaleString() :
+                            `${minPrice.toLocaleString()} – ${maxPrice.toLocaleString()}`;
+
+                        productPriceEl.textContent = priceText;
+                    }
                     variants.forEach(variant => {
                         console.log(variant);
                         const imageUrl = variant.image || productImage;
@@ -785,8 +807,45 @@
         });
     });
 </script>
+<!--js bình luận-->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const comments = document.querySelectorAll(".comment-item");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
 
+        let currentIndex = 0;
+        const itemsPerSlide = 2;
+        const totalSlides = Math.ceil(comments.length / itemsPerSlide);
 
+        function updateSlider() {
+            comments.forEach((comment, index) => {
+                comment.style.display = (index >= currentIndex && index < currentIndex +
+                    itemsPerSlide) ? "block" : "none";
+            });
+
+            // Update button states
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex + itemsPerSlide >= comments.length;
+        }
+
+        prevBtn.addEventListener("click", function() {
+            if (currentIndex - itemsPerSlide >= 0) {
+                currentIndex -= itemsPerSlide;
+                updateSlider();
+            }
+        });
+
+        nextBtn.addEventListener("click", function() {
+            if (currentIndex + itemsPerSlide < comments.length) {
+                currentIndex += itemsPerSlide;
+                updateSlider();
+            }
+        });
+
+        updateSlider(); // initial render
+    });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const rangeInput = document.getElementById('rangeInput');
@@ -848,6 +907,67 @@
 @include('clients.layouts.footer')
 
 <style>
+    .comment-content {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        /* Số dòng hiển thị */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-height: 3.2em;
+        /* Tùy thuộc vào font-size */
+    }
+
+    .testimonial-container {
+        position: relative;
+    }
+
+    /* Nút điều hướng */
+    .testimonial-nav {
+        position: absolute;
+        top: 240px;
+        /* Căn giữa theo chiều cao avatar */
+        left: 0;
+        right: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+        pointer-events: none;
+        /* Cho phép click vào nút mà không cản phần khác */
+        opacity: 0;
+        /* Mặc định ẩn */
+        transition: opacity 0.3s ease;
+        z-index: 10;
+    }
+
+    /* Khi hover vào container thì hiện nút */
+    .testimonial-container:hover .testimonial-nav {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Nút */
+    .testimonial-nav button {
+        width: 48px;
+        height: 48px;
+        background-color: #b3b3b3;
+        color: #fff;
+        border: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+        pointer-events: auto;
+        opacity: 0.6;
+        /* Làm mờ nhẹ lúc không hover nút */
+    }
+
+    /* Khi hover vào nút thì sáng lên */
+    .testimonial-nav button:hover {
+        background-color: #c82333;
+        opacity: 1;
+    }
+
+
     .owl-carousel .owl-item {
         margin-right: 1px !important;
         margin-left: 10px !important;
@@ -942,50 +1062,77 @@
     }
 </style>
 
-
+<!--js danh mục-->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const categoryTabs = document.querySelectorAll('.category-tab');
         const filteredProducts = document.querySelector('#filtered-products');
 
+        function handleFilterOrPagination(url) {
+            fetch(url)
+                .then(res => res.text())
+                .then(data => {
+                    filteredProducts.innerHTML = data;
+                    rebindOpenCartModal(); // Gọi lại để gán click vào nút giỏ hàng
+                    bindVariantChangeHandler(); // Gọi lại để gán sự kiện chọn biến thể
+                })
+                .catch(err => console.error('Lỗi khi tải sản phẩm:', err));
+        }
+
         // Bắt sự kiện click vào danh mục
         categoryTabs.forEach(tab => {
             tab.addEventListener('click', function(e) {
-                e.preventDefault(); // Ngăn nhảy trang (nếu là thẻ <a>)
+                e.preventDefault();
                 categoryTabs.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
 
-                const categoryId = this.dataset.category;
-
-                fetch(`/filter-category?category=${categoryId}`)
-                    .then(res => res.text())
-                    .then(data => {
-                        filteredProducts.innerHTML = data;
-                        rebindOpenCartModal();
-                        // Đã loại bỏ scroll nhảy lên
-                    })
-                    .catch(err => console.error('Lỗi lọc danh mục:', err));
+                const categoryId = this.dataset.category || '';
+                handleFilterOrPagination(`/filter-category?category=${categoryId}`);
             });
         });
 
-        // Bắt sự kiện phân trang (AJAX)
+        // Bắt sự kiện click phân trang
         document.addEventListener('click', function(e) {
             const link = e.target.closest('.pagination a');
             if (link) {
                 e.preventDefault();
-
-                fetch(link.href)
-                    .then(res => res.text())
-                    .then(data => {
-                        filteredProducts.innerHTML = data;
-                        rebindOpenCartModal();
-                        // Không scroll, giữ nguyên vị trí
-                    })
-                    .catch(err => console.error('Lỗi phân trang:', err));
+                handleFilterOrPagination(link.href);
             }
         });
     });
+
+    // Hàm gắn lại sự kiện chọn biến thể sau khi load lại HTML
+    function bindVariantChangeHandler() {
+        document.querySelectorAll('.variant-select').forEach(select => {
+            const variants = JSON.parse(select.dataset.variants || '[]');
+
+            select.addEventListener('change', function() {
+                const selectedId = this.value;
+                const selected = variants.find(v => v.id == selectedId);
+
+                if (selected) {
+                    const modal = document.querySelector(
+                    '#productModal'); // hoặc từ select.closest('.modal') nếu có nhiều modal
+                    if (!modal) return;
+
+                    modal.querySelector('.modal-price').innerText = formatVND(selected.price);
+                    modal.querySelector('.modal-quantity').innerText = selected.quantity_in_stock;
+                    modal.querySelector('.modal-image').src = selected.image_url || modal.querySelector(
+                        '.modal-image').src;
+                }
+            });
+        });
+    }
+
+    // Hàm định dạng giá tiền
+    function formatVND(number) {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(number);
+    }
 </script>
+
 
 <style>
     .sticky-sidebar {

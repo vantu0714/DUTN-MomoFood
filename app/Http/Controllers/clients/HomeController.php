@@ -148,7 +148,8 @@ class HomeController extends Controller
     {
         $categoryId = $request->get('category');
 
-        $products = Product::with(['category', 'variants'])
+        $products = Product::with(['category', 'variants.attributeValues.attribute']) // đủ thông tin
+
             ->where('status', 1)
             ->where(function ($q) {
                 // Sản phẩm đơn còn hàng
