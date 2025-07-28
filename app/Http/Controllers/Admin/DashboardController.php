@@ -106,8 +106,8 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-
-
+        // Tổng tồn kho
+        $totalStock = Product::sum('quantity_in_stock');
 
         // Khách hàng mua nhiều nhất
         $topCustomers = User::whereHas('orders', function ($q) use ($completedOrderIds) {
