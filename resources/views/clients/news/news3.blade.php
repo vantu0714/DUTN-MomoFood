@@ -17,7 +17,7 @@
             <li>Thời gian có hạn – Đừng bỏ lỡ!</li>
         </ol>
     </div>
-
+    <img src="{{ asset('clients/img/anhtintuc3.png') }}" alt="Tin 3">
     <div class="mb-4">
         <h4 class="fw-bold">Ưu đãi cực hấp dẫn dành riêng cho bạn</h4>
         <p>

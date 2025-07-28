@@ -26,6 +26,8 @@
         </p>
     </div>
 
+    <img src="{{ asset('clients/img/anhtintuc6.png') }}" alt="Tin 6">
+
     <div class="mb-4">
         <h4 class="fw-bold">Có gì hấp dẫn trong "Thứ 4 Vàng"?</h4>
         <p>Chương trình ưu đãi đặc biệt này được thiết kế để dành riêng cho những ai không thể cưỡng lại hương vị thơm ngon của gà rán. Chỉ trong ngày thứ 4 hàng tuần, bạn sẽ được hưởng những khuyến mãi hấp dẫn sau:</p>
