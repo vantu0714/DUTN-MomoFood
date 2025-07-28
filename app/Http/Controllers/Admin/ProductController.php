@@ -206,6 +206,11 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
+        // Tính ngày giới hạn: ngày cũ + 30 ngày
+        $oldExpirationDate = $product->expiration_date ? \Carbon\Carbon::parse($product->expiration_date) : null;
+        $minEditDate = $oldExpirationDate ? $oldExpirationDate->copy()->addDays(30) : null;
+
+        // Validate
         $validated = $request->validate([
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code,' . $product->id,
@@ -215,8 +220,16 @@ class ProductController extends Controller
             'original_price' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:99.99',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'quantity_in_stock' => 'nullable|integer|min:0', 
-            'expiration_date' => 'nullable|date|after:today',
+            'quantity_in_stock' => 'nullable|integer|min:0',
+            'expiration_date' => [
+                'nullable',
+                'date',
+                function ($attribute, $value, $fail) use ($minEditDate) {
+                    if ($minEditDate && \Carbon\Carbon::parse($value)->lt($minEditDate)) {
+                        $fail('Bạn chỉ được phép gia hạn ngày hết hạn từ ' . $minEditDate->format('d/m/Y') . ' trở đi.');
+                    }
+                },
+            ],
         ]);
 
         // Tính discounted_price
@@ -239,7 +252,7 @@ class ProductController extends Controller
 
         unset($validated['discount_percent']);
 
-        // Cập nhật sản phẩm lần đầu
+        // Cập nhật sản phẩm
         $product->update($validated);
 
         // Nếu có biến thể thì tính lại tồn kho
@@ -248,13 +261,14 @@ class ProductController extends Controller
             $product->update(['quantity_in_stock' => $totalVariantQty]);
         }
 
-        // Cập nhật trạng thái chính xác sau cùng
+        // Cập nhật trạng thái sản phẩm
         $product->update([
             'status' => $product->quantity_in_stock > 0 ? 1 : 0
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công');
     }
+
 
     public function destroy(Request $request, $id)
     {

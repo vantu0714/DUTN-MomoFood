@@ -11,7 +11,8 @@ class ProductOriginsSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-    {
+    {  // Xóa toàn bộ dữ liệu cũ trong bảng và reset ID tự tăng
+        DB::table('product_origins')->delete();
         $origins = [
             'Nhật Bản',
             'Úc',
@@ -20,7 +21,7 @@ class ProductOriginsSeeder extends Seeder
             'Châu Âu',
             'Indonesia',
             'Malaysia',
-            'Khác',
+            'Việt Nam',
         ];
 
         foreach ($origins as $origin) {
