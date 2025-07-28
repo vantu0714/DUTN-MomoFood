@@ -77,11 +77,23 @@ class PromotionController extends Controller
                 'vip_only'            => 'nullable|boolean',
             ],
             [
-                'code.unique' => 'Mã giảm giá này đã tồn tại.',
-                'discount_value.required' => 'Vui lòng nhập số tiền giảm.',
-                'discount_value.numeric'  => 'Số tiền giảm phải là số hợp lệ.',
-                'code.required' => 'Vui lòng nhập mã giảm giá.',
-                'start_date.after_or_equal' => 'Ngày bắt đầu phải sau thời điểm hiện tại (tối thiểu sau 2 phút).',
+                'discount_value.numeric'      => 'Số tiền giảm phải là số hợp lệ.',
+                'promotion_name.required'     => 'Vui lòng nhập tên chương trình khuyến mãi.',
+                'code.required'               => 'Vui lòng nhập mã khuyến mãi.',
+                'code.unique'                 => 'Mã khuyến mãi đã tồn tại.',
+                'discount_type.required'      => 'Vui lòng chọn loại giảm giá.',
+                'discount_value.required'     => 'Vui lòng nhập giá trị giảm.',
+                'discount_value.min'          => 'Giá trị giảm phải lớn hơn 0.',
+                'max_discount_value.min'      => 'Giá trị giảm tối đa phải lớn hơn hoặc bằng 0.',
+                'min_total_spent.required'    => 'Vui lòng nhập mức chi tiêu tối thiểu.',
+                'min_total_spent.min'         => 'Chi tiêu tối thiểu phải lớn hơn 1.000đ.',
+                'start_date.required'         => 'Vui lòng chọn ngày bắt đầu.',
+                'start_date.after_or_equal'   => 'Ngày bắt đầu phải từ hôm nay trở đi.',
+                'end_date.required'           => 'Vui lòng chọn ngày kết thúc.',
+                'start_date.after_or_equal'   => 'Ngày bắt đầu phải sau thời điểm hiện tại (tối thiểu sau 2 phút).',
+                'status.required'             => 'Vui lòng chọn trạng thái.',
+                'usage_limit.integer'         => 'Giới hạn lượt sử dụng phải là số nguyên.',
+                'usage_limit.min'             => 'Giới hạn lượt sử dụng phải lớn hơn 0.',
             ],
         );
 
@@ -136,19 +148,40 @@ class PromotionController extends Controller
             'discount_type' => $promotion->discount_type,
         ]);
 
-        $validated = $request->validate([
-            'promotion_name'      => 'required|string|max:255',
-            'code'                => 'required|string|max:50|unique:promotions,code,' . $promotion->id,
-            'discount_type'       => 'required|in:fixed,percent',
-            'discount_value'      => 'required|numeric|min:1',
-            'max_discount_value'  => 'nullable|numeric|min:1000',
-            'min_total_spent'     => 'required|numeric|min:1000',
-            'start_date'          => 'required|date|after_or_equal:' . now()->format('Y-m-d H:i'),
-            'end_date'            => 'required|date|after_or_equal:start_date',
-            'description'         => 'nullable|string',
-            'status'              => 'required|boolean',
-            'usage_limit'         => 'nullable|integer|min:1',
-        ]);
+        $validated = $request->validate(
+            [
+                'promotion_name'      => 'required|string|max:255',
+                'code'                => 'required|string|max:50|unique:promotions,code,' . $promotion->id,
+                'discount_type'       => 'required|in:fixed,percent',
+                'discount_value'      => 'required|numeric|min:1',
+                'max_discount_value'  => 'nullable|numeric|min:0',
+                'min_total_spent'     => 'nullable|numeric|min:1000',
+                'start_date'          => ['required', 'date', 'after_or_equal:' . now()->format('Y-m-d')],
+                'end_date'            => ['required', 'date', 'after_or_equal:start_date'],
+                'description'         => 'nullable|string',
+                'status'              => 'required|boolean',
+                'usage_limit'         => 'nullable|integer|min:1',
+            ],
+            [
+                'promotion_name.required'     => 'Vui lòng nhập tên chương trình khuyến mãi.',
+                'code.required'               => 'Vui lòng nhập mã khuyến mãi.',
+                'code.unique'                 => 'Mã khuyến mãi đã tồn tại.',
+                'discount_type.required'      => 'Vui lòng chọn loại giảm giá.',
+                'discount_value.required'     => 'Vui lòng nhập giá trị giảm.',
+                'discount_value.min'          => 'Giá trị giảm phải lớn hơn 0.',
+                'max_discount_value.min'      => 'Giá trị giảm tối đa phải lớn hơn hoặc bằng 0.',
+                'min_total_spent.required'    => 'Vui lòng nhập mức chi tiêu tối thiểu.',
+                'min_total_spent.min'         => 'Chi tiêu tối thiểu phải lớn hơn 1.000đ.',
+                'start_date.required'         => 'Vui lòng chọn ngày bắt đầu.',
+                'start_date.after_or_equal'   => 'Ngày bắt đầu phải từ hôm nay trở đi.',
+                'end_date.required'           => 'Vui lòng chọn ngày kết thúc.',
+                'end_date.after_or_equal'     => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+                'status.required'             => 'Vui lòng chọn trạng thái.',
+                'usage_limit.integer'         => 'Giới hạn lượt sử dụng phải là số nguyên.',
+                'usage_limit.min'             => 'Giới hạn lượt sử dụng phải lớn hơn 0.',
+            ]
+        );
+
 
         $minTotalSpent = $request->min_total_spent;
         $discountType = $request->discount_type;
@@ -181,7 +214,7 @@ class PromotionController extends Controller
             'description'        => $validated['description'],
             'status'             => $validated['status'],
             'usage_limit'        => $validated['usage_limit'],
-        ]);
+        ],);
 
         return redirect()->route('admin.promotions.index')->with('success', 'Cập nhật mã giảm giá thành công!');
     }
