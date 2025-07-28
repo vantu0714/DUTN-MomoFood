@@ -26,7 +26,7 @@
             <strong>Combo gia đình siêu tiết kiệm</strong>, giúp bạn vừa ăn ngon, vừa tiết kiệm chi phí.
         </p>
     </div>
-
+    <img src="{{ asset('clients/img/anhtintuc5.png') }}" alt="Tin 5">
     <div class="mb-4">
         <h4 class="fw-bold">Combo gia đình có gì hấp dẫn?</h4>
         <p>

@@ -25,7 +25,7 @@
             Hãy sẵn sàng để thưởng thức những món ăn ngon tuyệt mà không cần lo về giá!
         </p>
     </div>
-
+    <img src="{{ asset('clients/img/anhtintuc1.png') }}" alt="Tin 1">
     <div class="mb-4">
         <h4 class="fw-bold">Ưu đãi cực sốc dành riêng cho bạn</h4>
         <p>Chương trình khuyến mãi lần này mang đến hàng loạt ưu đãi cực hấp dẫn để bạn có thể thỏa sức tận hưởng các món chiên giòn yêu thích:</p>
