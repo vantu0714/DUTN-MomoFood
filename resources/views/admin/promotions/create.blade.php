@@ -15,16 +15,6 @@
             </a>
         </div>
 
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <div class="card shadow-sm border-0">
             <div class="card-body">
                 <form action="{{ route('admin.promotions.store') }}" method="POST">
@@ -52,30 +42,24 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Loại giảm giá</label>
                             <select name="discount_type" id="discount_type" class="form-select" required>
-                                <option value="fixed" {{ old('discount_type') == 'fixed' ? 'selected' : '' }}>Giảm theo số tiền</option>
-                                <option value="percent" {{ old('discount_type') == 'percent' ? 'selected' : '' }}>Giảm theo phần trăm</option>
+                                <option value="fixed" {{ old('discount_type') == 'fixed' ? 'selected' : '' }}>Giảm theo số
+                                    tiền</option>
+                                <option value="percent" {{ old('discount_type') == 'percent' ? 'selected' : '' }}>Giảm theo
+                                    phần trăm</option>
                             </select>
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Số tiền giảm</label>
+                            <label class="form-label fw-semibold">Số tiền giảm(Số phần trăm 1-100)</label>
                             <input type="number" step="1" name="discount_value" id="discount_value"
                                 class="form-control @error('discount_value') is-invalid @enderror" required
                                 value="{{ old('discount_value') }}">
                             @error('discount_value')
                                 <small class="text-danger d-block">{{ $message }}</small>
                             @enderror
-                            <small class="text-danger d-block client-error" id="discount-error" style="display: none;"></small>
+                            <small class="text-danger d-block client-error" id="discount-error"
+                                style="display: none;"></small>
                         </div>
-                    </div>
-
-                    {{-- Giảm tối đa nếu là phần trăm --}}
-                    <div class="mb-3" id="max_discount_container"
-                        style="{{ old('discount_type') === 'percent' ? '' : 'display: none;' }}">
-                        <label class="form-label fw-semibold">Số tiền giảm tối đa (nếu chọn phần trăm)</label>
-                        <input type="number" step="1" name="max_discount_value" class="form-control"
-                            value="{{ old('max_discount_value') }}">
-                        <small class="text-danger d-block client-error" id="max-discount-error" style="display: none;"></small>
                     </div>
 
                     {{-- Tổng chi tối thiểu --}}
@@ -89,6 +73,17 @@
                             <small class="text-danger d-block">{{ $message }}</small>
                         @enderror
                     </div>
+
+                    {{-- Giảm tối đa nếu là phần trăm --}}
+                    <div class="mb-3" id="max_discount_container"
+                        style="{{ old('discount_type') === 'percent' ? '' : 'display: none;' }}">
+                        <label class="form-label fw-semibold">Số tiền giảm tối đa (Áp dụng cho phần trăm)</label>
+                        <input type="number" step="1" name="max_discount_value" class="form-control"
+                            value="{{ old('max_discount_value') }}">
+                        <small class="text-danger d-block client-error" id="max-discount-error"
+                            style="display: none;"></small>
+                    </div>
+
 
                     {{-- Chỉ áp dụng cho VIP --}}
                     <div class="form-check mb-3">
@@ -205,7 +200,8 @@
             const maxAllowed = (discountValue / 100) * minTotalSpent;
             const currentMax = parseFloat(maxDiscountEl.value || 0);
             if (!isNaN(currentMax) && currentMax > maxAllowed) {
-                message = `Số tiền giảm tối đa không được vượt quá ${maxAllowed.toLocaleString()}đ (tương ứng ${discountValue}% của tổng đơn tối thiểu).`;
+                message =
+                    `Số tiền giảm tối đa không được vượt quá ${maxAllowed.toLocaleString()}đ (tương ứng ${discountValue}% của tổng đơn tối thiểu).`;
             }
         }
 

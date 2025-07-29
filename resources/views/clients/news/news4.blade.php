@@ -25,6 +25,8 @@
             Một cơ hội tuyệt vời để bạn tận hưởng hương vị chuẩn Ý với mức giá siêu tiết kiệm!
         </p>
     </div>
+    <img src="{{ asset('clients/img/anhtintuc4.png') }}" alt="Tin 4">
+    <br>
 
     <div class="mb-4">
         <h4 class="fw-bold">Thưởng thức mì Ý chuẩn vị với giá hời</h4>
