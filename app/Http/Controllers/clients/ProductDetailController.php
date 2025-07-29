@@ -20,12 +20,14 @@ class ProductDetailController extends Controller
             'comments.user'
         ])->findOrFail($id);
 
-        $relatedProducts = Product::where('category_id', $product->category_id)
+        $relatedProducts = Product::with('variants') // thêm dòng này
+            ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('status', 1)
             ->latest()
             ->take(8)
             ->get();
+
 
         // Tính trung bình rating
         $averageRating = round($product->comments->avg('rating'), 1) ?? 0;

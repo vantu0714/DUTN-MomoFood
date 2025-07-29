@@ -6,26 +6,39 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class ShopController extends Controller
 {
     public function index(Request $request)
     {
+        //  Lấy tất cả sản phẩm hợp lệ (chưa hết hạn + còn hàng + status = 1)
         $products = Product::with(['category', 'variants'])
             ->where('status', 1)
+            ->where(function ($query) {
+                $query->whereNull('expiration_date') // Không có hạn sử dụng
+                    ->orWhere('expiration_date', '>', Carbon::today()->addDays(5)); // Còn hạn > 5 ngày
+            })
             ->get();
+
+        //  Lấy sản phẩm nổi bật ngẫu nhiên (status=1, còn hạn)
         $featuredProducts = Product::with(['variants', 'category'])
             ->where('status', 1)
+            ->where(function ($query) {
+                $query->whereNull('expiration_date')
+                    ->orWhere('expiration_date', '>', Carbon::today()->addDays(5));
+            })
             ->inRandomOrder()
             ->take(6)
             ->get();
 
+        //  Lọc theo price range + tồn kho
         $filtered = $products->filter(function ($product) use ($request) {
             $min = null;
             $max = null;
 
-            // Xử lý theo request price_range
+            //  Parse price range
             if ($request->price_range && $request->price_range !== 'custom') {
                 [$min, $max] = explode('-', $request->price_range);
             } elseif ($request->price_range === 'custom') {
@@ -35,6 +48,7 @@ class ShopController extends Controller
 
             $price = null;
 
+            //  Kiểm tra tồn kho và giá
             if ($product->product_type === 'variant') {
                 $variant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
                 if (!$variant) return false;
@@ -44,6 +58,7 @@ class ShopController extends Controller
                 $price = $product->discounted_price ?? $product->original_price;
             }
 
+            // Lọc theo giá
             if ($min !== null && $max !== null) {
                 return $price >= $min && $price <= $max;
             }
@@ -51,6 +66,7 @@ class ShopController extends Controller
             return true;
         });
 
+        //  Phân trang thủ công
         $page = $request->get('page', 1);
         $perPage = 9;
         $paginated = new LengthAwarePaginator(
@@ -61,9 +77,14 @@ class ShopController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+        //  Lấy danh mục kèm theo số sản phẩm còn hạn và còn hàng
         $categories = Category::withCount([
             'products as available_products_count' => function ($query) {
                 $query->where('status', 1)
+                    ->where(function ($q) {
+                        $q->whereNull('expiration_date')
+                            ->orWhere('expiration_date', '>', Carbon::today()->addDays(5));
+                    })
                     ->where(function ($q) {
                         $q->where(function ($q1) {
                             $q1->where('product_type', 'simple')
@@ -77,7 +98,6 @@ class ShopController extends Controller
                     });
             }
         ])->get();
-
 
         return view('clients.shop', [
             'products' => $paginated,
