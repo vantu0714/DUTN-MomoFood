@@ -18,18 +18,25 @@
                         $original = $product->original_price;
                     }
 
-                    $variants = $product->product_type === 'variant'
-                        ? $product->variants->map(function ($v) {
-                            return [
-                                'id' => $v->id,
-                                'flavor' => $v->flavor,
-                                'size' => $v->size,
-                                'price' => $v->price,
-                                'discounted_price' => $v->discounted_price,
-                                'quantity' => $v->quantity_in_stock,
-                            ];
-                        })
-                        : [];
+                    $variants =
+                        $product->product_type === 'variant'
+                            ? $product->variants->map(function ($v) {
+                                $flavor = $v->attributeValues->firstWhere('attribute.name', 'Vị')?->value;
+                                $weight = $v->attributeValues->firstWhere('attribute.name', 'Khối lượng')?->value;
+
+                                return [
+                                    'id' => $v->id,
+                                    'flavor' => $flavor,
+                                    'weight' => $weight,
+                                    'price' => $v->price,
+                                    'discounted_price' => $v->discounted_price,
+                                    'quantity' => $v->quantity_in_stock,
+                                    'image' => $v->image
+                                        ? asset('storage/' . $v->image)
+                                        : asset('clients/img/default.jpg'),
+                                ];
+                            })
+                            : [];
                 @endphp
 
                 <div class="col-12 col-md-6 col-lg-4 col-xl-3">
@@ -43,7 +50,8 @@
                             </div>
                         </a>
 
-                        <div class="badge bg-secondary text-white position-absolute top-0 start-0 m-2 rounded-pill px-3 py-1">
+                        <div
+                            class="badge bg-secondary text-white position-absolute top-0 start-0 m-2 rounded-pill px-3 py-1">
                             {{ $product->category?->category_name ?? 'Không rõ' }}
                         </div>
 
@@ -52,27 +60,24 @@
                                 <h6 class="fw-bold text-dark text-truncate" title="{{ $product->product_name }}">
                                     {{ $product->product_name }}
                                 </h6>
-                                <p class="text-muted small mb-2">Mã: {{ $product->product_code }}</p>
+                                <p class="text-muted small mb-2 product-description">{{ $product->description }}</p>
                             </div>
 
-                            <div class="mb-2">
-                                @if ($price && $original && $price < $original)
-                                    <div class="text-danger fw-bold fs-5">
-                                        {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                    </div>
-                                    <div class="text-muted text-decoration-line-through small">
-                                        {{ number_format($original, 0, ',', '.') }} VND
-                                    </div>
-                                @elseif ($price)
-                                    <div class="text-danger fw-bold fs-5">
-                                        {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                    </div>
-                                @else
-                                    <div class="text-muted">Liên hệ để biết giá</div>
-                                @endif
-                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
+                                <div>
+                                    @if ($price && $original && $price < $original)
+                                        <div class="text-danger fw-bold fs-5 mb-0">
+                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                        </div>
+                                    @elseif ($price)
+                                        <div class="text-danger fw-bold fs-5 mb-0">
+                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                        </div>
+                                    @else
+                                        <div class="text-muted">Liên hệ để biết giá</div>
+                                    @endif
+                                </div>
 
-                            <div class="d-flex justify-content-end mt-auto">
                                 <button type="button" class="btn btn-white open-cart-modal"
                                     data-product-id="{{ $product->id }}"
                                     data-product-name="{{ $product->product_name }}"
@@ -81,11 +86,12 @@
                                     data-product-price="{{ $price ?? 0 }}"
                                     data-product-original-price="{{ $original ?? 0 }}"
                                     data-product-description="{{ $product->description }}"
-                                    data-variants='@json($variants)'
-                                    data-bs-toggle="modal" data-bs-target="#cartModal">
+                                    data-variants='@json($variants)' data-bs-toggle="modal"
+                                    data-bs-target="#cartModal">
                                     <i class="bi bi-cart3 fa-2x text-danger"></i>
                                 </button>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -105,7 +111,7 @@
 </div>
 
 <script>
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function(e) {
         const link = e.target.closest('.pagination a');
         if (link) {
             e.preventDefault();
@@ -122,13 +128,27 @@
 
                     if (newContent) {
                         productContainer.innerHTML = newContent;
+
+                        // 🔁 Gán lại sự kiện cho nút giỏ hàng mới được load
+                        rebindOpenCartModal();
+
                         window.scrollTo({
                             top: productContainer.offsetTop - 100,
                             behavior: 'smooth'
                         });
                     }
+
                 })
                 .catch(err => console.error('Lỗi khi phân trang:', err));
         }
     });
 </script>
+
+<style>
+    .card-body .btn {
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 6px 10px;
+        background-color: #fff;
+    }
+</style>

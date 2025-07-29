@@ -8,6 +8,8 @@ use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductOrigin;
+use App\Models\ProductVariant;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -18,6 +20,33 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        // --- 1. Cập nhật trạng thái hết hạn sử dụng ---
+
+        // Cho sản phẩm đơn
+        Product::where('product_type', 'simple')
+            ->whereNotNull('expiration_date')
+            ->where('expiration_date', '<=', now()->addDays(5))
+            ->where('status', '!=', 2)
+            ->update(['status' => 2]);
+
+        // Cho sản phẩm biến thể
+        Product::where('product_type', 'variant')
+            ->where('status', '!=', 2)
+            ->with('variants')
+            ->get()
+            ->each(function ($product) {
+                if ($product->variants->count() > 0) {
+                    $allExpired = $product->variants->every(function ($variant) {
+                        return $variant->expiration_date && $variant->expiration_date <= now()->addDays(5);
+                    });
+
+                    if ($allExpired) {
+                        $product->update(['status' => 2]);
+                    }
+                }
+            });
+
+        // --- 2. Query sản phẩm ---
         $query = Product::with(['category', 'variants'])
             ->withCount([
                 'variants as min_price' => function ($q) {
@@ -29,64 +58,140 @@ class ProductController extends Controller
             ])
             ->orderBy('created_at', 'desc');
 
-
+        // --- 3. Tìm kiếm ---
         if ($request->filled('search')) {
             $query->where('product_name', 'like', '%' . $request->search . '%');
         }
 
+        // --- 4. Lọc theo trạng thái ---
         if ($request->filled('status')) {
-            $statusFilter = $request->input('status');
-            $query->where(function ($q) use ($statusFilter) {
-                $q->where(function ($subQuery) use ($statusFilter) {
-                    $subQuery->where('product_type', 'simple');
-                    if ($statusFilter === 'Còn hàng') {
-                        $subQuery->where('quantity_in_stock', '>', 0);
-                    } elseif ($statusFilter === 'Hết hàng') {
-                        $subQuery->where('quantity_in_stock', '=', 0);
-                    }
-                })->orWhere(function ($subQuery) use ($statusFilter) {
-                    $subQuery->where('product_type', 'variant')->whereHas('variants', function ($variantQuery) use ($statusFilter) {
-                        if ($statusFilter === 'Còn hàng') {
-                            $variantQuery->where('quantity_in_stock', '>', 0);
-                        } elseif ($statusFilter === 'Hết hàng') {
-                            $variantQuery->where('quantity_in_stock', '=', 0);
-                        }
+            $status = $request->input('status');
+
+            if ($status === 'Hết hạn sử dụng') {
+                $query->where('status', 2);
+            } elseif ($status === 'Còn hàng') {
+                $query->where('status', 1)->where(function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('product_type', 'simple')
+                            ->where('quantity_in_stock', '>', 0)
+                            ->where(function ($q2) {
+                                $q2->whereNull('expiration_date')
+                                    ->orWhere('expiration_date', '>', now()->addDays(5));
+                            });
+                    })->orWhere(function ($sub) {
+                        $sub->where('product_type', 'variant')
+                            ->whereHas('variants', function ($v) {
+                                $v->where('quantity_in_stock', '>', 0)
+                                    ->where(function ($q2) {
+                                        $q2->whereNull('expiration_date')
+                                            ->orWhere('expiration_date', '>', now()->addDays(5));
+                                    });
+                            });
                     });
                 });
-            });
+            } elseif ($status === 'Hết hàng') {
+                $query->where('status', 1)->where(function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('product_type', 'simple')
+                            ->where('quantity_in_stock', '=', 0);
+                    })->orWhere(function ($sub) {
+                        $sub->where('product_type', 'variant')
+                            ->whereDoesntHave('variants', function ($v) {
+                                $v->where('quantity_in_stock', '>', 0);
+                            });
+                    });
+                });
+            }
+        } else {
+            $query->whereIn('status', [0, 1, 2]);
         }
 
+        // --- 5. Lọc theo danh mục ---
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->input('category_id'));
+            $query->where('category_id', $request->category_id);
         }
 
-        $availableProductsCount = Product::where(function ($query) {
-            $query->where(function ($q) {
-                $q->where('product_type', 'simple')->where('quantity_in_stock', '>', 0);
-            })->orWhere(function ($q) {
-                $q->where('product_type', 'variant')->whereHas('variants', function ($variantQuery) {
-                    $variantQuery->where('quantity_in_stock', '>', 0);
-                });
+        // --- 6. Thống kê số lượng ---
+        // Còn hàng
+        $availableProductsCount = Product::where(function ($q) {
+            $q->where(function ($sub) {
+                $sub->where('product_type', 'simple')
+                    ->where('quantity_in_stock', '>', 0)
+                    ->where(function ($q2) {
+                        $q2->whereNull('expiration_date')
+                            ->orWhere('expiration_date', '>', now()->addDays(5));
+                    });
+            })->orWhere(function ($sub) {
+                $sub->where('product_type', 'variant')
+                    ->whereHas('variants', function ($v) {
+                        $v->where('quantity_in_stock', '>', 0)
+                            ->where(function ($q2) {
+                                $q2->whereNull('expiration_date')
+                                    ->orWhere('expiration_date', '>', now()->addDays(5));
+                            });
+                    });
             });
         })->count();
 
-        $outOfStockProductsCount = Product::where(function ($query) {
-            $query->where(function ($q) {
-                $q->where('product_type', 'simple')->where('quantity_in_stock', '=', 0);
-            })->orWhere(function ($q) {
-                $q->where('product_type', 'variant')->whereDoesntHave('variants', function ($variantQuery) {
-                    $variantQuery->where('quantity_in_stock', '>', 0);
-                });
+
+        // Hết hàng
+        $outOfStockProductsCount = Product::where(function ($q) {
+            $q->where(function ($sub) {
+                $sub->where('product_type', 'simple')
+                    ->where('quantity_in_stock', '=', 0);
+            })->orWhere(function ($sub) {
+                $sub->where('product_type', 'variant')
+                    ->whereDoesntHave('variants', function ($v) {
+                        $v->where('quantity_in_stock', '>', 0);
+                    });
             });
         })->count();
 
-        $totalProducts = Product::count();
 
+        // Hết hạn sử dụng
+        $expiredProductsCount = Product::where(function ($q) {
+            // Sản phẩm đơn hết hạn
+            $q->where(function ($sub) {
+                $sub->where('product_type', 'simple')
+                    ->whereNotNull('expiration_date')
+                    ->where('expiration_date', '<=', now()->addDays(5));
+            })
+                ->orWhere(function ($sub) {
+                    // Sản phẩm biến thể có tất cả các biến thể hết hạn
+                    $sub->where('product_type', 'variant')
+                        ->whereHas('variants', function ($v) {
+                            $v->whereNotNull('expiration_date')
+                                ->where('expiration_date', '<=', now()->addDays(5));
+                        })
+                        ->whereDoesntHave('variants', function ($v) {
+                            $v->whereNull('expiration_date')
+                                ->orWhere('expiration_date', '>', now()->addDays(5));
+                        });
+                });
+        })->count();
+
+
+        // Tổng tồn kho
+        $totalStockQuantity = Product::where('product_type', 'simple')->sum('quantity_in_stock') +
+            ProductVariant::sum('quantity_in_stock');
+
+        // --- 7. Kết quả ---
         $products = $query->paginate(10);
         $categories = Category::all();
 
-        return view('admin.products.index', compact('products', 'categories', 'availableProductsCount', 'outOfStockProductsCount', 'totalProducts'));
+        return view('admin.products.index', compact(
+            'products',
+            'categories',
+            'availableProductsCount',
+            'outOfStockProductsCount',
+            'expiredProductsCount',
+            'totalStockQuantity'
+        ));
     }
+
+
+
+
 
     public function create()
     {
@@ -206,6 +311,11 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
+        // Tính ngày giới hạn: ngày cũ + 30 ngày
+        $oldExpirationDate = $product->expiration_date ? \Carbon\Carbon::parse($product->expiration_date) : null;
+        $minEditDate = $oldExpirationDate ? $oldExpirationDate->copy()->addDays(30) : null;
+
+        // Validate
         $validated = $request->validate([
             'product_name' => 'required|string|max:255',
             'product_code' => 'required|string|max:50|unique:products,product_code,' . $product->id,
@@ -215,8 +325,16 @@ class ProductController extends Controller
             'original_price' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:99.99',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'quantity_in_stock' => 'nullable|integer|min:0', 
-            'expiration_date' => 'nullable|date|after:today',
+            'quantity_in_stock' => 'nullable|integer|min:0',
+            'expiration_date' => [
+                'nullable',
+                'date',
+                function ($attribute, $value, $fail) use ($minEditDate) {
+                    if ($minEditDate && \Carbon\Carbon::parse($value)->lt($minEditDate)) {
+                        $fail('Bạn chỉ được phép gia hạn ngày hết hạn từ ' . $minEditDate->format('d/m/Y') . ' trở đi.');
+                    }
+                },
+            ],
         ]);
 
         // Tính discounted_price
@@ -239,7 +357,7 @@ class ProductController extends Controller
 
         unset($validated['discount_percent']);
 
-        // Cập nhật sản phẩm lần đầu
+        // Cập nhật sản phẩm
         $product->update($validated);
 
         // Nếu có biến thể thì tính lại tồn kho
@@ -248,13 +366,14 @@ class ProductController extends Controller
             $product->update(['quantity_in_stock' => $totalVariantQty]);
         }
 
-        // Cập nhật trạng thái chính xác sau cùng
+        // Cập nhật trạng thái sản phẩm
         $product->update([
             'status' => $product->quantity_in_stock > 0 ? 1 : 0
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công');
     }
+
 
     public function destroy(Request $request, $id)
     {

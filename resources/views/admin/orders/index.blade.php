@@ -28,24 +28,41 @@
                         <div class="col-md-3">
                             <select class="form-select" name="payment_status">
                                 <option value="">Danh mục</option>
-                                <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
-                                <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>Chưa thanh toán</option>
+                                <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Đã thanh
+                                    toán</option>
+                                <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>Chưa
+                                    thanh toán</option>
+                                <option value="refunded" {{ request('payment_status') == 'refunded' ? 'selected' : '' }}>
+                                    Hoàn tiền</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <select class="form-select" name="order_status">
                                 <option value="all">Trạng thái</option>
-                                <option value="1" {{ request('order_status') == '1' ? 'selected' : '' }}>Chưa xác nhận</option>
-                                <option value="2" {{ request('order_status') == '2' ? 'selected' : '' }}>Đã xác nhận</option>
-                                <option value="3" {{ request('order_status') == '3' ? 'selected' : '' }}>Đang giao</option>
-                                <option value="4" {{ request('order_status') == '4' ? 'selected' : '' }}>Hoàn thành</option>
-                                <option value="5" {{ request('order_status') == '5' ? 'selected' : '' }}>Hoàn hàng</option>
-                                <option value="6" {{ request('order_status') == '6' ? 'selected' : '' }}>Hủy đơn</option>
+                                <option value="1" {{ request('order_status') == '1' ? 'selected' : '' }}>Chưa xác nhận
+                                </option>
+                                <option value="2" {{ request('order_status') == '2' ? 'selected' : '' }}>Đã xác nhận
+                                </option>
+                                <option value="3" {{ request('order_status') == '3' ? 'selected' : '' }}>Đang giao
+                                </option>
+                                <option value="4" {{ request('order_status') == '4' ? 'selected' : '' }}>Hoàn thành
+                                </option>
+                                <option value="5" {{ request('order_status') == '5' ? 'selected' : '' }}>Hoàn hàng
+                                </option>
+                                <option value="6" {{ request('order_status') == '6' ? 'selected' : '' }}>Hủy đơn
+                                </option>
+                                <option value="7" {{ request('order_status') == '7' ? 'selected' : '' }}>Chờ xử lý
+                                    hoàn hàng
+                                </option>
+                                <option value="8" {{ request('order_status') == '8' ? 'selected' : '' }}>Hoàn hàng
+                                    thất bại
+                                </option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <div class="input-group">
-                                <input type="text" name="keyword" value="{{ request('keyword') }}" class="form-control" placeholder="Nhập tên người nhận, mã đơn hàng...">
+                                <input type="text" name="keyword" value="{{ request('keyword') }}" class="form-control"
+                                    placeholder="Nhập tên người nhận, mã đơn hàng...">
                                 <button class="btn btn-primary" type="submit">
                                     <i class="fas fa-filter me-1"></i>
                                     Lọc
@@ -54,7 +71,7 @@
                         </div>
                     </div>
                 </form>
-                
+
             </div>
         </div>
 
@@ -99,9 +116,17 @@
                                         </td>
                                         <td>{{ number_format($order->total_price, 0, ',', '.') }}đ</td>
                                         <td>
-                                            <span class="badge bg-info">
+                                            <span
+                                                class="badge
+                                                {{ $order->payment_method == 'cod' ? 'bg-primary' : 'bg-success' }}">
                                                 {{ $order->payment_method == 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VnPay' }}
                                             </span>
+
+                                            @if ($order->payment_status == 'refunded')
+                                                <div class="mt-1 small">
+                                                    <i class="fas fa-undo me-1"></i> Đã hoàn tiền
+                                                </div>
+                                            @endif
                                         </td>
                                         <td>
                                             @php
@@ -112,13 +137,14 @@
                                                     4 => ['label' => 'Hoàn thành', 'class' => 'success'],
                                                     5 => ['label' => 'Hoàn hàng', 'class' => 'secondary'],
                                                     6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
+                                                    7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
+                                                    8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
                                                 ];
                                             @endphp
 
                                             <span class="badge bg-{{ $statusLabels[$order->status]['class'] }}">
                                                 {{ $statusLabels[$order->status]['label'] }}
                                             </span>
-
                                         </td>
 
                                         <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>

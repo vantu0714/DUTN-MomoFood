@@ -36,8 +36,10 @@ Route::get('/search-ajax', [HomeController::class, 'searchAjax'])->name('clients
 Route::get('/shop/category/{id}', [ShopController::class, 'category'])->name('shop.category');
 Route::get('/product/{id}', [ProductDetailController::class, 'show'])->name('product-detail.show');
 Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
+Route::get('/tin-tuc/{id}', [NewsController::class, 'detail'])->name('news.detail');
 Route::get('/lien-he', [ContactsController::class, 'index'])->name('contacts.index');
 Route::get('/gioi-thieu', [GioithieuController::class, 'index'])->name('gioithieu.index');
+
 
 // Authentication
 Route::controller(AuthController::class)->group(function () {
@@ -72,8 +74,6 @@ Route::post('/comments', [ClientCommentController::class, 'store'])->name('comme
 Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.payment');
 Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.return');
 
-Route::post('carts/add', [CartClientController::class, 'addToCart'])->name('carts.add')->middleware('auth');
-
 // ==================== CLIENT AUTHENTICATED ROUTES ====================
 Route::middleware(['auth', 'client'])->group(function () {
     // Profile Management
@@ -89,11 +89,14 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/create-payment', [ClientsOrderController::class, 'createPayment'])->name('create-payment');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
+        Route::post('/orders/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
+            ->name('request_return');
     });
 
     // Cart Management
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
+        Route::post('carts/add', [CartClientController::class, 'addToCart'])->name('carts.add');
         Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
         Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
         Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
@@ -108,14 +111,11 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::post('/apply-coupon', [ClientsOrderController::class, 'applyCoupon'])->name('order.applyCoupon');
     Route::get('/remove-coupon', [ClientsOrderController::class, 'removeCoupon'])->name('order.removeCoupon');
 
+    //thong tin nguoi nhan
     Route::post('/recipients', [RecipientController::class, 'store'])->name('recipients.store');
-    // Route chọn địa chỉ
     Route::post('/recipients/select', [RecipientController::class, 'select'])->name('recipients.select');
-
-
-
-    //tt nguoi nhan
-    // Route::post('/store', [RecipientController::class, 'store'])->name('recipients.store');
+    Route::put('/recipients/{id}', [RecipientController::class, 'update'])->name('recipients.update');
+    Route::delete('/recipients/{id}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
 
 });
 
@@ -181,6 +181,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/{id}', [OrderController::class, 'update'])->name('update');
         Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
         Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+        Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])
+            ->name('approve_return');
+        Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])
+            ->name('reject_return');
     });
 
     // Promotion Management

@@ -58,8 +58,9 @@
 
 
 <!-- Hero Banner Fullscreen Start -->
-<div class="hero-banner-full">
-    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood">
+<div class="hero-banner-full" style="height: 700px; overflow: hidden;">
+    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood"
+        style="width: 100%; height: 100%; object-fit: cover;">
 </div>
 <!-- Hero Banner Fullscreen End -->
 
@@ -67,7 +68,7 @@
 
 <!-- Featurs Section Start -->
 <div class="container-fluid featurs py-5">
-    <div class="container py-5">
+    <div class="container py-2">
         <div class="row g-4">
             <div class="col-md-6 col-lg-3">
                 <div class="featurs-item text-center rounded bg-light p-4">
@@ -136,12 +137,12 @@
 
 <!-- Fruits Shop Start -->
 <div class="container-fluid fruite py-5">
-    <div class="container py-5">
+    <div class="container py-2">
         <!-- DANH MỤC NGANG -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="bg-light p-3 rounded shadow-sm">
-                    <h5 class="mb-3 text-primary"><i class="bi bi-list-ul me-2"></i>Danh mục sản phẩm</h5>
+                    <h3 class="mb-3 text-primary"><i class="bi bi-list-ul me-2"></i>DANH MỤC SẢN PHẨM</h3>
                     <ul class="nav nav-pills flex-wrap gap-2" id="category-list">
                         <li class="nav-item">
                             <a class="nav-link active category-tab" href="#" data-category="">Tất cả</a>
@@ -176,14 +177,13 @@
         </div>
     </div>
 </div>
-
 <!-- Fruits Shop End -->
 
 
 
 <!-- Featurs Start -->
 <div class="container-fluid service py-5">
-    <div class="container py-5">
+    <div class="container py-2">
         <div class="row g-4 justify-content-center">
             <div class="row">
                 <div class="col-md-6 col-lg-4 mb-4">
@@ -227,7 +227,7 @@
 
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
-    <div class="container py-5">
+    <div class="container py-1">
         <h1 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h1>
 
         <div class="row g-4">
@@ -238,29 +238,42 @@
                     $original = 0;
                     $variants = [];
 
-                    if ($product->product_type === 'variant') {
-                        $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
+                    $isVariant = $product->product_type === 'variant';
+
+                    if ($isVariant) {
+                        $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+
                         if ($firstVariant) {
                             $price = $firstVariant->discounted_price ?? $firstVariant->price;
                             $original = $firstVariant->price;
                         }
 
-                        $variants = $product->variants->map(function ($v) {
-                            return [
-                                'id' => $v->id,
-                                'flavor' => $v->flavor,
-                                'size' => $v->size,
-                                'price' => $v->price,
-                                'discounted_price' => $v->discounted_price,
-                                'quantity' => $v->quantity,
-                            ];
-                        });
+                        $variants = $product->variants
+                            ->where('quantity_in_stock', '>', 0)
+                            ->sortBy(function ($v) {
+                                return $v->discounted_price ?? $v->price;
+                            })
+                            ->map(function ($v) {
+                                return [
+                                    'id' => $v->id,
+                                    'price' => $v->price,
+                                    'discounted_price' => $v->discounted_price,
+                                    'quantity' => $v->quantity,
+                                    'quantity_in_stock' => $v->quantity_in_stock,
+                                    'image' => $v->image,
+                                    'attribute_values' => $v->attributeValues->map(function ($attrValue) {
+                                        return [
+                                            'attribute_name' => $attrValue->attribute->name,
+                                            'value' => $attrValue->value,
+                                        ];
+                                    }),
+                                ];
+                            });
                     } else {
                         $price = $product->discounted_price ?? $product->original_price;
                         $original = $product->original_price;
                     }
                 @endphp
-
 
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
@@ -273,16 +286,35 @@
                                         class="img-fluid w-100">
                                 </div>
                             </a>
-
                             <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
                                 {{ $product->category->category_name ?? 'Sản phẩm' }}
                             </span>
-
                         </div>
 
                         <div class="card-body d-flex flex-column">
                             <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
                             <p class="text-muted small mb-3">{{ Str::limit($product->description, 60) }}</p>
+
+                            {{-- Nếu có biến thể, hiển thị flavor & weight --}}
+                            @if ($product->product_type === 'variant')
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    @foreach ($product->variants as $variant)
+                                        @php
+                                            $flavor = $variant->attributeValues->firstWhere('attribute.name', 'Vị');
+                                            $weight = $variant->attributeValues->firstWhere(
+                                                'attribute.name',
+                                                'Khối lượng',
+                                            );
+                                        @endphp
+                                        <span class="badge bg-info text-white">
+                                            {{ $flavor ? 'Vị: ' . $flavor->value : '' }}
+                                        </span>
+                                        <span class="badge bg-info text-white">
+                                            {{ $weight ? 'Khối lượng: ' . $weight->value : '' }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
 
                             <div class="mt-auto d-flex justify-content-between align-items-center">
                                 <div>
@@ -293,18 +325,6 @@
                                         <div class="text-muted text-decoration-line-through small">
                                             {{ number_format($original, 0, ',', '.') }} VND
                                         </div>
-                                    @endif
-                                </div>
-
-                                <div class="mb-2">
-                                    @if ($price && $original && $price < $original)
-                                        <div class="text-danger fw-bold fs-5">
-                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                        </div>
-                                        <div class="text-muted text-decoration-line-through small">
-                                            {{ number_format($original, 0, ',', '.') }} VND
-                                        </div>
-                                        <div class="text-muted">Liên hệ để biết giá</div>
                                     @endif
                                 </div>
 
@@ -327,12 +347,9 @@
                     </div>
                 </div>
             @endforeach
-        </div> {{-- row --}}
+        </div>
     </div>
 </div>
-<!-- Vesitable Shop End -->
-
-
 <!-- Banner Section Start-->
 <div class="container-fluid banner bg-secondary my-5">
     <div class="container py-5">
@@ -362,335 +379,200 @@
         </div>
     </div>
 </div>
-<!-- Banner Section End -->
-
-<!-- Bestsaler Product Start -->
+<!--  5 sao -->
 <div class="container-fluid py-5">
     <div class="container py-5">
         <div class="text-center mx-auto mb-5" style="max-width: 700px;">
-            <h1 class="display-4">Bestseller Products</h1>
-            <p>Latin words, combined with a handful of model sentence structures, to generate Lorem Ipsum which looks
-                reasonable.</p>
+            <h1 class="display-4"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700;">
+                Siêu Phẩm Ăn Vặt 5 ⭐
+            </h1>
         </div>
         <div class="row g-4">
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
+            @foreach ($highRatedProducts as $product)
+                @php
+                    $variantsArray = collect($product->variants ?? [])->map(function ($variant) {
+                        $flavor = optional($variant->attributeValues->firstWhere('attribute.name', 'Vị'))->value ?? '';
+                        $weight =
+                            optional($variant->attributeValues->firstWhere('attribute.name', 'Khối lượng'))->value ??
+                            (optional($variant->attributeValues->firstWhere('attribute.name', 'Size'))->value ?? '');
+                        return [
+                            'id' => $variant->id,
+                            'price' => $variant->price,
+                            'discounted_price' => $variant->discounted_price,
+                            'image' => $variant->image
+                                ? asset('storage/' . $variant->image)
+                                : asset('images/no-image.png'),
+                            'flavor' => $flavor ?: 'Không rõ',
+                            'weight' => $weight ?: 'Không rõ',
+                            'quantity_in_stock' => $variant->quantity_in_stock ?? ($variant->quantity ?? 0),
+                        ];
+                    });
+                @endphp
+                <div class="col-lg-6 col-xl-4">
+                    <div class="p-4 rounded bg-light h-100">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/no-image.png') }}"
+                                    class="img-fluid rounded-circle w-100" alt="{{ $product->product_name }}">
                             </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
+                            <div class="col-6">
+                                <a href="{{ route('product-detail.show', $product->id) }}" class="h5 d-block mb-2">
+                                    {{ $product->product_name }}
+                                </a>
 
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-
-                            <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}"
-                                class="img-fluid rounded-circle w-100" alt="">
-
-                        </div>
-                        <div class="col-6">
-                            <a href="#" class="h5">Organic Tomato</a>
-                            <div class="d-flex my-3">
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star text-primary"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <h4 class="mb-3">3.12 $</h4>
-                            <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                    class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-6 col-xl-3">
-                <div class="text-center">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
-                        alt="">
-
-                    <div class="py-4">
-                        <a href="#" class="h5">Organic Tomato</a>
-                        <div class="d-flex my-3 justify-content-center">
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h4 class="mb-3">3.12 $</h4>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-6 col-xl-3">
-                <div class="text-center">
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
-                        alt="">
-
-                    <div class="py-4">
-                        <a href="#" class="h5">Organic Tomato</a>
-                        <div class="d-flex my-3 justify-content-center">
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h4 class="mb-3">3.12 $</h4>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-6 col-xl-3">
-                <div class="text-center">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
-                        alt="">
-
-                    <div class="py-4">
-                        <a href="#" class="h5">Organic Tomato</a>
-                        <div class="d-flex my-3 justify-content-center">
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h4 class="mb-3">3.12 $</h4>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-6 col-xl-3">
-                <div class="text-center">
-
-                    <img src="{{ asset('clients/img/vegetable-item-1.jpg') }}" class="img-fluid rounded"
-                        alt="">
-                    <div class="py-2">
-                        <a href="#" class="h5">Organic Tomato</a>
-                        <div class="d-flex my-3 justify-content-center">
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star text-primary"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h4 class="mb-3">3.12 $</h4>
-                        <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
-                                class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Bestsaler Product End -->
-
-<!-- Fact Start -->
-<div class="container-fluid py-5">
-    <div class="container">
-        <div class="bg-light p-5 rounded">
-            <div class="row g-4 justify-content-center">
-                <div class="col-md-6 col-lg-6 col-xl-3">
-                    <div class="counter bg-white rounded p-5">
-                        <i class="fa fa-users text-secondary"></i>
-                        <h4>satisfied customers</h4>
-                        <h1>1963</h1>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-6 col-xl-3">
-                    <div class="counter bg-white rounded p-5">
-                        <i class="fa fa-users text-secondary"></i>
-                        <h4>quality of service</h4>
-                        <h1>99%</h1>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-6 col-xl-3">
-                    <div class="counter bg-white rounded p-5">
-                        <i class="fa fa-users text-secondary"></i>
-                        <h4>quality certificates</h4>
-                        <h1>33</h1>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-6 col-xl-3">
-                    <div class="counter bg-white rounded p-5">
-                        <i class="fa fa-users text-secondary"></i>
-                        <h4>Available Products</h4>
-                        <h1>789</h1>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Fact Start -->
-
-<!-- Testimonial Start -->
-<div class="container-fluid testimonial py-5">
-    <div class="container py-5">
-        <div class="testimonial-header text-center mb-5">
-            <h4 class="text-primary">Đánh giá từ khách hàng</h4>
-            <h1 class="display-5 text-dark">Khách hàng nói gì về chúng tôi</h1>
-        </div>
-        <div class="owl-carousel testimonial-carousel">
-            @foreach ($comments as $comment)
-                <div class="testimonial-item img-border-radius bg-light rounded p-4">
-                    <div class="position-relative">
-                        <i class="fa fa-quote-right fa-2x text-secondary position-absolute"
-                            style="bottom: 30px; right: 0;"></i>
-
-                        <div class="mb-4 pb-4 border-bottom border-secondary">
-                            <p class="mb-0 text-dark">{{ $comment->content }}</p>
-                        </div>
-
-                        <div class="d-flex align-items-center flex-nowrap">
-                            <div class="bg-secondary rounded">
-                                <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-                                    class="img-fluid rounded" style="width: 100px; height: 100px;" alt="Avatar">
-                            </div>
-
-                            <div class="ms-4 d-block">
-                                <h5 class="text-dark mb-1">{{ $comment->user->name ?? 'Ẩn danh' }}</h5>
-                                <p class="text-muted mb-2">{{ $comment->user->profession ?? 'Khách hàng' }}</p>
-
-                                <div class="d-flex pe-5">
+                                @php
+                                    $avgRating = round($product->comments->avg('rating') ?? 0);
+                                @endphp
+                                <div class="d-flex align-items-center mb-2">
                                     @for ($i = 1; $i <= 5; $i++)
                                         <i
-                                            class="fas fa-star {{ $i <= $comment->rating ? 'text-primary' : 'text-secondary' }}"></i>
+                                            class="fas fa-star{{ $i <= $avgRating ? ' text-warning' : ' text-muted' }}"></i>
                                     @endfor
+                                    <small class="ms-2 text-muted">({{ number_format($avgRating, 1) }}/5)</small>
                                 </div>
+
+                                <h4 class="mb-3 text-danger fw-bold">
+                                    {{ number_format($product->display_price ?? 0, 0, ',', '.') }} đ
+                                </h4>
+
+                                <button type="button"
+                                    class="btn border border-secondary rounded-pill px-3 text-primary open-cart-modal d-flex align-items-center"
+                                    data-product-id="{{ $product->id }}"
+                                    data-product-name="{{ $product->product_name }}"
+                                    data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                    data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
+                                    data-product-price="{{ $product->display_price ?? 0 }}"
+                                    data-product-original-price="{{ $product->original_price ?? 0 }}"
+                                    data-product-description="{{ $product->description }}"
+                                    data-variants='@json($variantsArray, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-bs-target="#cartModal">
+                                    <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             @endforeach
         </div>
+
     </div>
 </div>
+<!-- Fact Start -->
+<div class="container-fluid py-5">
+    <div class="container">
+        <div class="bg-light p-5 rounded">
+            <h1 class="display-4"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700; text-align: center">
+                Tin tức 📰
+            </h1>
+            <br>
+            <div class="news-grid">
+                <!-- Card 4 -->
+                <div class="news-card">
+                    <img src="{{ asset('clients/img/anhtintuc4.png') }}" alt="Tin 4">
+                    <div class="news-card-body">
+                        <h2 class="news-card-title">Deal Sốc "Nửa Giá": Thưởng Thức Mì Ý Ngon Mê Ly</h2>
+                        <p class="news-card-desc">Bạn là fan của mì Ý và luôn tìm kiếm những ưu đãi hấp dẫn? Vậy thì
+                            đây chính là tin vui dành cho bạn! ...</p>
+                        <div class="news-meta">
+                            <span><i class="bi bi-calendar3"></i> 10/06/2025</span>
+                            <a href="{{ route('news.detail', ['id' => 4]) }}" class="btn-read-more">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="news-card">
+                    <img src="{{ asset('clients/img/anhtintuc5.png') }}" alt="Tin 5">
+                    <div class="news-card-body">
+                        <h2 class="news-card-title">Cuối Tuần "Cháy Phố": Khuyến Mãi Combo Gia Đình Cực Hấp Dẫn</h2>
+                        <p class="news-card-desc">Cuối tuần là thời điểm tuyệt vời để cùng gia đình quây quần bên nhau,
+                            tận hưởng những khoảnh khắc thư giãn và thưởng...</p>
+                        <div class="news-meta">
+                            <span><i class="bi bi-calendar3"></i> 08/06/2025</span>
+                            <a href="{{ route('news.detail', parameters: ['id' => 5]) }}" class="btn-read-more">Xem
+                                chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="news-card">
+                    <img src="{{ asset('clients/img/anhtintuc6.png') }}" alt="Tin 6">
+                    <div class="news-card-body">
+                        <h2 class="news-card-title">Thứ 4 'vàng': Ưu đãi đặc biệt cho tín đồ gà rán</h2>
+                        <p class="news-card-desc">Hội những người mê gà rán đâu rồi? Thứ 4 này đừng bỏ lỡ cơ hội tận
+                            hưởng ưu đãi siêu hấp dẫn dành riêng...</p>
+                        <div class="news-meta">
+                            <span><i class="bi bi-calendar3"></i> 05/06/2025</span>
+                            <a href="{{ route('news.detail', parameters: ['id' => 6]) }}" class="btn-read-more">Xem
+                                chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+                <a href=""></a>
+                <a class="xemtatca" href="{{ route('news.index') }}" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 400; ">
+                Xem tất cả > 
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- đánh giá -->
+<div class="container py-5 testimonial-container">
+    <!-- Header -->
+    <div class="testimonial-header text-center mb-5">
+        <h4 class="text-primary">Đánh giá từ khách hàng</h4>
+        <h2 class="display-5 text-dark">Khách hàng nói gì về chúng tôi</h2>
+    </div>
+    <!-- Comment Carousel -->
+    <div class="row" id="commentSlider">
+        @foreach ($comments as $comment)
+            <div class="col-md-6 mb-4 comment-item">
+                <a href="{{ route('product-detail.show', $comment->product->id) }}"
+                    class="text-decoration-none text-dark">
+                    <div class="bg-light rounded p-4 h-100 hover-shadow">
+                        <div class="d-flex align-items-start">
+                            <!-- Avatar -->
+                            <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                                class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;"
+                                alt="Avatar">
+
+                            <div>
+                                <!-- Stars -->
+                                <div class="mb-2">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i
+                                            class="{{ $i <= $comment->rating ? 'fa-solid text-warning' : 'fa-regular text-secondary' }} fa-star"></i>
+                                    @endfor
+                                </div>
+
+                                <!-- Name -->
+                                <p class="mb-1 fw-bold">{{ $comment->user->name ?? 'Ẩn danh' }}
+                                    <span class="fw-normal text-muted">.
+                                        {{ $comment->user->profession ?? 'Khách hàng' }}</span>
+                                </p>
+
+                                <!-- Content -->
+                                <p class="fst-italic mb-0 comment-content">{{ $comment->content }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        @endforeach
+    </div>
+    <!-- Navigation Buttons -->
+    <div class="testimonial-nav">
+        <button class="btn rounded-circle" id="prevBtn">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="btn rounded-circle" id="nextBtn">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
 <!-- Modal chi tiết sản phẩm -->
 <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -709,25 +591,38 @@
                     <!-- Hình ảnh -->
                     <div class="col-md-6 text-center">
                         <img id="modal-product-image" src="" alt="Hình sản phẩm"
-                            class="img-fluid rounded shadow-sm" style="max-height: 300px;">
+                            class="img-fluid rounded shadow-sm"
+                            style="max-height: 500px; object-fit: cover; width: 100%;">
                     </div>
 
-                    <!-- Thông tin -->
+                    <!-- Thông tin sản phẩm -->
                     <div class="col-md-6">
                         <h4 id="modal-product-name" class="fw-bold mb-2 text-dark"></h4>
-                        <p class="text-muted mb-2">Danh mục: <span id="modal-product-category"
-                                class="fw-medium text-dark"></span></p>
-                        <p class="h5 text-danger fw-bold mb-3">
-                            <span id="modal-product-price">0</span> <span class="text-muted fs-6">VND</span>
+                        <p class="text-muted mb-2">
+                            Danh mục: <span id="modal-product-category" class="fw-medium text-dark"></span>
+                        </p>
+
+                        <p class="h5 text-danger fw-bold mb-3 tabular-numbers">
+                            <span id="modal-product-price">0</span>
+                            <span class="text-muted fs-6">VND</span>
                             <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
                         </p>
-                        <div class="mb-3" id="modal-rating"></div>
+
+                        <div class="mb-3" id="modal-rating">
+                            <!-- Đánh giá (nếu cần) -->
+                        </div>
+
                         <p id="modal-product-description" class="text-muted mb-3" style="min-height: 60px;"></p>
 
+
                         <!-- Biến thể -->
-                        <div class="mb-3" id="variant-options">
-                            <!-- JS sẽ chèn radio các biến thể vào đây -->
+                        <div class="mb-3" id="variant-section">
+                            <label class="form-label fw-semibold">🍃 Chọn biến thể:</label>
+                            <div id="variant-options" class="d-flex flex-wrap gap-2">
+                                <!-- JS sẽ render radio button biến thể -->
+                            </div>
                         </div>
+
 
                         <!-- Số lượng -->
                         <div class="mb-3">
@@ -737,7 +632,10 @@
                                 <input type="number" class="form-control text-center" id="modal-quantity"
                                     name="quantity" value="1" min="1">
                                 <button type="button" class="btn btn-outline-secondary" id="increase-qty">+</button>
+                                <br>
+
                             </div>
+                            <small id="stock-info" class="text-muted mt-1 d-block">Kho: --</small>
                         </div>
                     </div>
                 </div>
@@ -751,15 +649,11 @@
         </form>
     </div>
 </div>
-
-
-
-
+<!--js modal-->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         const modal = new bootstrap.Modal(document.getElementById('cartModal'));
 
-        // Lấy các phần tử modal
         const productNameEl = document.getElementById('modal-product-name');
         const productImageEl = document.getElementById('modal-product-image');
         const productCategoryEl = document.getElementById('modal-product-category');
@@ -770,17 +664,25 @@
         const productIdInput = document.getElementById('modal-product-id');
         const productVariantIdInput = document.getElementById('modal-variant-id');
         const quantityInput = document.getElementById('modal-quantity');
+        const stockInfoEl = document.getElementById('stock-info');
 
-        // Nút tăng giảm số lượng
-        document.getElementById('increase-qty').addEventListener('click', () => quantityInput.stepUp());
+        const weightGroup = document.getElementById('modal-weight-group');
+        if (weightGroup) weightGroup.style.display = 'none';
+
+        // Nút +/-
+        document.getElementById('increase-qty').addEventListener('click', () => {
+            const max = parseInt(quantityInput.max) || 9999;
+            let current = parseInt(quantityInput.value);
+            if (current < max) quantityInput.value = current + 1;
+        });
+
         document.getElementById('decrease-qty').addEventListener('click', () => {
             if (quantityInput.value > 1) quantityInput.stepDown();
         });
 
-        // Bắt sự kiện click vào các nút mở modal
+        // Mở modal
         document.querySelectorAll('.open-cart-modal').forEach(button => {
-            button.addEventListener('click', function () {
-                // Lấy dữ liệu từ data attributes
+            button.addEventListener('click', function() {
                 const productId = this.dataset.productId;
                 const productName = this.dataset.productName;
                 const productImage = this.dataset.productImage;
@@ -790,54 +692,114 @@
                 const productDescription = this.dataset.productDescription || '';
                 const variants = JSON.parse(this.dataset.variants || '[]');
 
-                // Gán dữ liệu vào modal
+                // Reset modal
                 productIdInput.value = productId;
                 productNameEl.textContent = productName;
                 productImageEl.src = productImage;
                 productCategoryEl.textContent = productCategory;
-                productPriceEl.textContent = productPrice.toLocaleString();
-                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice)
-                    ? productOriginalPrice.toLocaleString() + ' VND'
-                    : '';
                 productDescEl.textContent = productDescription;
-
-                // Gán lại số lượng mặc định
                 quantityInput.value = 1;
-
-                // Hiển thị các biến thể (nếu có)
+                quantityInput.removeAttribute('max');
                 variantOptionsEl.innerHTML = '';
                 productVariantIdInput.value = '';
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice) ?
+                    productOriginalPrice.toLocaleString() + ' VND' : '';
+                productOriginalPriceEl.style.display = (productOriginalPrice > productPrice) ?
+                    'inline' : 'none';
+                if (stockInfoEl) stockInfoEl.textContent = 'Kho: --';
 
+                if (weightGroup) weightGroup.style.display = 'none';
+
+                // Hiển thị biến thể
                 if (variants.length > 0) {
+                    // Tính khoảng giá và hiển thị
+                    const prices = variants.map(v => parseInt(v.discounted_price || v.price ||
+                        0)).filter(p => p > 0);
+                    if (prices.length > 0) {
+                        const minPrice = Math.min(...prices);
+                        const maxPrice = Math.max(...prices);
+
+                        const priceText = (minPrice === maxPrice) ?
+                            minPrice.toLocaleString() :
+                            `${minPrice.toLocaleString()} – ${maxPrice.toLocaleString()}`;
+
+                        productPriceEl.textContent = priceText;
+                    }
                     variants.forEach(variant => {
-                        const radioHtml = `
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="product_variant_id"
-                                    value="${variant.id}" id="variant-${variant.id}">
-                                <label class="form-check-label" for="variant-${variant.id}">
-                                    Vị: ${variant.flavor || 'N/A'}, Size: ${variant.size || 'N/A'},
-                                    Giá: ${parseInt(variant.discounted_price || variant.price).toLocaleString()} VND
-                                </label>
+                        console.log(variant);
+                        const imageUrl = variant.image || productImage;
+                        const flavorText = variant.flavor || '';
+                        const weightText = variant.weight || variant.mass || variant
+                            .size || '';
+                        const stock = variant.quantity_in_stock ?? variant.quantity ??
+                            variant.stock ?? 0;
+
+                        const html = `
+                        <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
+                            style="cursor: pointer; transition: 0.3s;"
+                            data-variant-id="${variant.id}"
+                            data-variant-price="${variant.discounted_price || variant.price}"
+                            data-variant-original="${variant.price}"
+                            data-variant-weight="${weightText}"
+                            data-variant-stock="${stock}"
+                            data-variant-image="${imageUrl}">
+                            <img src="${imageUrl}" alt="variant-image"
+                                class="rounded me-3"
+                                style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
                             </div>
-                        `;
-                        variantOptionsEl.insertAdjacentHTML('beforeend', radioHtml);
+                        </div>`;
+                        variantOptionsEl.insertAdjacentHTML('beforeend', html);
                     });
 
-                    // Khi chọn biến thể → set vào input hidden
-                    variantOptionsEl.querySelectorAll('input[name="product_variant_id"]').forEach(input => {
-                        input.addEventListener('change', () => {
-                            productVariantIdInput.value = input.value;
+                    // Gán sự kiện click biến thể
+                    variantOptionsEl.querySelectorAll('.variant-card').forEach(card => {
+                        card.addEventListener('click', () => {
+                            variantOptionsEl.querySelectorAll('.variant-card')
+                                .forEach(c => {
+                                    c.classList.remove('border-primary',
+                                        'shadow');
+                                });
+                            card.classList.add('border-primary', 'shadow');
+
+                            const id = card.dataset.variantId;
+                            const price = parseInt(card.dataset.variantPrice);
+                            const original = parseInt(card.dataset
+                                .variantOriginal);
+                            const imageUrl = card.dataset.variantImage;
+                            const stock = parseInt(card.dataset.variantStock ||
+                                0);
+
+                            productVariantIdInput.value = id;
+                            productPriceEl.textContent = price.toLocaleString();
+                            productOriginalPriceEl.textContent = (original >
+                                    price) ? original.toLocaleString() +
+                                ' VND' : '';
+                            productOriginalPriceEl.style.display = (original >
+                                price) ? 'inline' : 'none';
+                            productImageEl.src = imageUrl;
+
+                            // Hiển thị kho + giới hạn số lượng
+                            if (stockInfoEl) {
+                                stockInfoEl.textContent =
+                                    `Kho: ${stock} sản phẩm`;
+                            }
+                            quantityInput.max = stock;
+                            if (parseInt(quantityInput.value) > stock) {
+                                quantityInput.value = stock;
+                            }
                         });
                     });
                 }
 
-                // Mở modal
                 modal.show();
             });
         });
 
-        // Ngăn submit nếu chưa chọn biến thể (nếu có)
-        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function (e) {
+        // Validate chọn biến thể trước khi thêm giỏ hàng
+        document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
             if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
                 e.preventDefault();
                 alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
@@ -845,8 +807,45 @@
         });
     });
 </script>
+<!--js bình luận-->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const comments = document.querySelectorAll(".comment-item");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
 
+        let currentIndex = 0;
+        const itemsPerSlide = 2;
+        const totalSlides = Math.ceil(comments.length / itemsPerSlide);
 
+        function updateSlider() {
+            comments.forEach((comment, index) => {
+                comment.style.display = (index >= currentIndex && index < currentIndex +
+                    itemsPerSlide) ? "block" : "none";
+            });
+
+            // Update button states
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex + itemsPerSlide >= comments.length;
+        }
+
+        prevBtn.addEventListener("click", function() {
+            if (currentIndex - itemsPerSlide >= 0) {
+                currentIndex -= itemsPerSlide;
+                updateSlider();
+            }
+        });
+
+        nextBtn.addEventListener("click", function() {
+            if (currentIndex + itemsPerSlide < comments.length) {
+                currentIndex += itemsPerSlide;
+                updateSlider();
+            }
+        });
+
+        updateSlider(); // initial render
+    });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const rangeInput = document.getElementById('rangeInput');
@@ -907,8 +906,85 @@
 
 @include('clients.layouts.footer')
 
-
 <style>
+    .comment-content {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        /* Số dòng hiển thị */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-height: 3.2em;
+        /* Tùy thuộc vào font-size */
+    }
+
+    .testimonial-container {
+        position: relative;
+    }
+
+    /* Nút điều hướng */
+    .testimonial-nav {
+        position: absolute;
+        top: 240px;
+        /* Căn giữa theo chiều cao avatar */
+        left: 0;
+        right: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+        pointer-events: none;
+        /* Cho phép click vào nút mà không cản phần khác */
+        opacity: 0;
+        /* Mặc định ẩn */
+        transition: opacity 0.3s ease;
+        z-index: 10;
+    }
+
+    /* Khi hover vào container thì hiện nút */
+    .testimonial-container:hover .testimonial-nav {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Nút */
+    .testimonial-nav button {
+        width: 48px;
+        height: 48px;
+        background-color: #b3b3b3;
+        color: #fff;
+        border: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+        pointer-events: auto;
+        opacity: 0.6;
+        /* Làm mờ nhẹ lúc không hover nút */
+    }
+
+    /* Khi hover vào nút thì sáng lên */
+    .testimonial-nav button:hover {
+        background-color: #c82333;
+        opacity: 1;
+    }
+
+
+    .owl-carousel .owl-item {
+        margin-right: 1px !important;
+        margin-left: 10px !important;
+    }
+
+    .tabular-numbers,
+    .tabular-numbers span,
+    .tabular-numbers del {
+        font-family: 'Roboto', sans-serif !important;
+        font-variant-numeric: tabular-nums !important;
+        font-size: 1.5rem !important;
+        line-height: 1.2 !important;
+        vertical-align: middle !important;
+        display: inline-block !important;
+    }
+
+
     .hero-banner-full {
         width: 100vw;
         height: 100vh;
@@ -986,48 +1062,77 @@
     }
 </style>
 
-
+<!--js danh mục-->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const categoryTabs = document.querySelectorAll('.category-tab');
         const filteredProducts = document.querySelector('#filtered-products');
 
+        function handleFilterOrPagination(url) {
+            fetch(url)
+                .then(res => res.text())
+                .then(data => {
+                    filteredProducts.innerHTML = data;
+                    rebindOpenCartModal(); // Gọi lại để gán click vào nút giỏ hàng
+                    bindVariantChangeHandler(); // Gọi lại để gán sự kiện chọn biến thể
+                })
+                .catch(err => console.error('Lỗi khi tải sản phẩm:', err));
+        }
+
         // Bắt sự kiện click vào danh mục
         categoryTabs.forEach(tab => {
             tab.addEventListener('click', function(e) {
-                e.preventDefault(); // Ngăn nhảy trang (nếu là thẻ <a>)
+                e.preventDefault();
                 categoryTabs.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
 
-                const categoryId = this.dataset.category;
-
-                fetch(`/filter-category?category=${categoryId}`)
-                    .then(res => res.text())
-                    .then(data => {
-                        filteredProducts.innerHTML = data;
-                        // Đã loại bỏ scroll nhảy lên
-                    })
-                    .catch(err => console.error('Lỗi lọc danh mục:', err));
+                const categoryId = this.dataset.category || '';
+                handleFilterOrPagination(`/filter-category?category=${categoryId}`);
             });
         });
 
-        // Bắt sự kiện phân trang (AJAX)
+        // Bắt sự kiện click phân trang
         document.addEventListener('click', function(e) {
             const link = e.target.closest('.pagination a');
             if (link) {
                 e.preventDefault();
-
-                fetch(link.href)
-                    .then(res => res.text())
-                    .then(data => {
-                        filteredProducts.innerHTML = data;
-                        // Không scroll, giữ nguyên vị trí
-                    })
-                    .catch(err => console.error('Lỗi phân trang:', err));
+                handleFilterOrPagination(link.href);
             }
         });
     });
+
+    // Hàm gắn lại sự kiện chọn biến thể sau khi load lại HTML
+    function bindVariantChangeHandler() {
+        document.querySelectorAll('.variant-select').forEach(select => {
+            const variants = JSON.parse(select.dataset.variants || '[]');
+
+            select.addEventListener('change', function() {
+                const selectedId = this.value;
+                const selected = variants.find(v => v.id == selectedId);
+
+                if (selected) {
+                    const modal = document.querySelector(
+                    '#productModal'); // hoặc từ select.closest('.modal') nếu có nhiều modal
+                    if (!modal) return;
+
+                    modal.querySelector('.modal-price').innerText = formatVND(selected.price);
+                    modal.querySelector('.modal-quantity').innerText = selected.quantity_in_stock;
+                    modal.querySelector('.modal-image').src = selected.image_url || modal.querySelector(
+                        '.modal-image').src;
+                }
+            });
+        });
+    }
+
+    // Hàm định dạng giá tiền
+    function formatVND(number) {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(number);
+    }
 </script>
+
 
 <style>
     .sticky-sidebar {
@@ -1057,3 +1162,224 @@
 </style>
 
 
+<style>
+    #variant-options {
+        gap: 10px;
+    }
+
+    .variant-card {
+        flex: 0 0 auto;
+        width: 180px;
+        transition: all 0.3s ease;
+    }
+
+    .variant-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .variant-card.border-primary {
+        border-width: 2px;
+        background-color: #eaf4ff;
+    }
+
+    .variant-card img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+    }
+</style>
+
+
+<script>
+    function rebindOpenCartModal() {
+        const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+        const variantSection = document.getElementById('variant-section');
+        const productNameEl = document.getElementById('modal-product-name');
+        const productImageEl = document.getElementById('modal-product-image');
+        const productCategoryEl = document.getElementById('modal-product-category');
+        const productPriceEl = document.getElementById('modal-product-price');
+        const productOriginalPriceEl = document.getElementById('modal-product-original-price');
+        const productDescEl = document.getElementById('modal-product-description');
+        const variantOptionsEl = document.getElementById('variant-options');
+        const productIdInput = document.getElementById('modal-product-id');
+        const productVariantIdInput = document.getElementById('modal-variant-id');
+        const quantityInput = document.getElementById('modal-quantity');
+
+        document.querySelectorAll('.open-cart-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productImage = this.dataset.productImage;
+                const productCategory = this.dataset.productCategory;
+                const productPrice = parseInt(this.dataset.productPrice || 0);
+                const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
+                const productDescription = this.dataset.productDescription || '';
+                const variants = JSON.parse(this.dataset.variants || '[]');
+
+                // Reset
+                productIdInput.value = productId;
+                productNameEl.textContent = productName;
+                productImageEl.src = productImage;
+                productCategoryEl.textContent = productCategory;
+                productDescEl.textContent = productDescription;
+                quantityInput.value = 1;
+                variantOptionsEl.innerHTML = '';
+                productVariantIdInput.value = '';
+                productPriceEl.textContent = productPrice.toLocaleString();
+                productOriginalPriceEl.textContent = (productOriginalPrice > productPrice) ?
+                    productOriginalPrice.toLocaleString() + ' VND' : '';
+                productOriginalPriceEl.style.display = (productOriginalPrice > productPrice) ?
+                    'inline' : 'none';
+
+                if (variants.length > 0) {
+                    variantSection.style.display = 'block';
+                    variants.forEach(variant => {
+                        const imageUrl = variant.image || productImage;
+                        const flavorText = variant.flavor || '';
+                        const weightText = variant.weight || variant.mass || variant.size || '';
+
+                        const html = `
+                        <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
+                            style="cursor: pointer; transition: 0.3s;"
+                            data-variant-id="${variant.id}"
+                            data-variant-price="${variant.discounted_price || variant.price}"
+                            data-variant-original="${variant.price}"
+                            data-variant-weight="${weightText}"
+                            data-variant-image="${imageUrl}">
+                            <img src="${imageUrl}" alt="variant-image"
+                                class="rounded me-3"
+                                style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
+                            </div>
+                        </div>`;
+                        variantOptionsEl.insertAdjacentHTML('beforeend', html);
+                    });
+
+                    // Gán click biến thể
+                    variantOptionsEl.querySelectorAll('.variant-card').forEach(card => {
+                        card.addEventListener('click', () => {
+                            variantOptionsEl.querySelectorAll('.variant-card').forEach(
+                                c => c.classList.remove('border-primary', 'shadow'));
+                            card.classList.add('border-primary', 'shadow');
+
+                            const id = card.dataset.variantId;
+                            const price = parseInt(card.dataset.variantPrice);
+                            const original = parseInt(card.dataset.variantOriginal);
+                            const imageUrl = card.dataset.variantImage;
+
+                            productVariantIdInput.value = id;
+                            productPriceEl.textContent = price.toLocaleString();
+                            productOriginalPriceEl.textContent = (original > price) ?
+                                original.toLocaleString() + ' VND' : '';
+                            productOriginalPriceEl.style.display = (original > price) ?
+                                'inline' : 'none';
+                            productImageEl.src = imageUrl;
+                        });
+                    });
+                } else {
+                    variantSection.style.display = 'none';
+                    variantOptionsEl.innerHTML = '';
+                    productVariantIdInput.value = '';
+                }
+
+                modal.show();
+            });
+        });
+    }
+</script>
+
+
+<style>
+    .xemtatca {
+        text-align: center;
+        margin-top: 20px;
+        color: #9ca3af;
+        font-size: 24px;
+    }
+    .news-section {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 32px;
+        font-weight: bold;
+        color: #ef4444;
+        margin-bottom: 40px;
+    }
+
+    .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+    }
+
+    .news-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease;
+    }
+
+    .news-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .news-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .news-card-body {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .news-card-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #f97316;
+        margin-bottom: 10px;
+    }
+
+    .news-card-desc {
+        color: #4b5563;
+        font-size: 14px;
+        flex: 1;
+    }
+
+    .news-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        margin-top: 15px;
+        color: #9ca3af;
+    }
+
+    .btn-read-more {
+        padding: 6px 12px;
+        background-color: transparent;
+        border: 1px solid #f97316;
+        color: #f97316;
+        border-radius: 6px;
+        font-size: 13px;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+    .btn-read-more:hover {
+        background-color: #f97316;
+        color: white;
+    }
+</style>

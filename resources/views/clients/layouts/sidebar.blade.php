@@ -35,28 +35,28 @@
                 <ul class="navbar-nav d-flex flex-row mx-auto">
                     <li class="nav-item">
                         <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                            Trang chủ
+                            TRANG CHỦ
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('shop.index') }}"
                             class="nav-link {{ request()->routeIs('shop.*') ? 'active' : '' }}">
-                            Cửa hàng
+                            CỬA HÀNG
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('news.index') }}"
                             class="nav-link {{ request()->routeIs('news.*') ? 'active' : '' }}">
-                            Tin tức
+                            TIN TỨC
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('gioithieu.index') }}" class="nav-link">Giới thiệu</a>
+                        <a href="{{ route('gioithieu.index') }}" class="nav-link"> GIỚI THIỆU </a>
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('contacts.index') }}"
                             class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}">
-                            Liên hệ
+                            LIÊN HỆ
                         </a>
                     </li>
                 </ul>
