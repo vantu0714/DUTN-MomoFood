@@ -1,57 +1,44 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container mt-4">
-    <h2 class="mb-4">Danh sách bình luận</h2>
+<div class="container mt-5">
+    <h2 class="mb-4 text-primary fw-bold">📦 Sản phẩm có bình luận</h2>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    <table class="table table-bordered table-hover" >
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Người dùng</th>
-                <th>Sản phẩm</th>
-                <th>Nội dung</th>
-                <th>Số sao</th>
-                <th>Thời gian</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($comments as $key => $comment)
+    <div class="table-responsive">
+        <table class="table table-hover align-middle shadow-sm rounded bg-white">
+            <thead class="table-primary text-center">
                 <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{ $comment->user->email ?? 'Ẩn danh' }}</td>
-                    <td>{{ $comment->product->product_name ?? 'Không tìm thấy' }}</td>
-                    <td>{{ $comment->content }}</td>
-                    <td>
-                        @for($i = 1; $i <= 5; $i++)
-                            <i class="fa fa-star {{ $i <= $comment->rating ? 'text-warning' : 'text-secondary' }}"></i>
-                        @endfor
-                    </td>
-                    <td>{{ $comment->created_at->format('d/m/Y H:i') }}</td>
-                    <td>
-                        <form action="{{ route('admin.comments.destroy', $comment->id) }}" method="POST"
-                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa bình luận này?')">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-danger">Xóa</button>
-                        </form>
-                    </td>
+                    <th>#</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Khối lượng</th>
+                    <th>Số bình luận</th>
+                    <th>Hành động</th>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="7" class="text-center">Chưa có bình luận nào.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="text-center">
+                @foreach($products as $key => $product)
+                    <tr>
+                        <td class="fw-semibold">{{ $key + 1 }}</td>
+                        <td class="text-start">{{ $product->product_name }}</td>
+                        <td>{{ $product->quantity_in_stock }} gram</td>
+                        <td>
+                            <span class="badge bg-info text-dark">{{ $product->comments_count }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ route('admin.comments.show', $product->id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-comments me-1"></i> Xem bình luận
+                            </a>
+                        </td>
+                    </tr>
+                @endforeach
 
-    <div class="d-flex justify-content-end">
-        {{ $comments->links() }}
+                @if($products->isEmpty())
+                    <tr>
+                        <td colspan="5" class="text-muted text-center">Không có sản phẩm nào có bình luận.</td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection
