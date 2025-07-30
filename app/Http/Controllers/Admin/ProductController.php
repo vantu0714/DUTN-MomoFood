@@ -313,8 +313,7 @@ class ProductController extends Controller
 
         // Tính ngày giới hạn: ngày cũ + 30 ngày
         $oldExpirationDate = $product->expiration_date ? \Carbon\Carbon::parse($product->expiration_date) : null;
-        $minEditDate = $oldExpirationDate ? $oldExpirationDate->copy()->addDays(30) : null;
-
+        $minEditDate = $oldExpirationDate ? $oldExpirationDate->copy()->addDays(1) : null;
         // Validate
         $validated = $request->validate([
             'product_name' => 'required|string|max:255',
@@ -329,9 +328,13 @@ class ProductController extends Controller
             'expiration_date' => [
                 'nullable',
                 'date',
-                function ($attribute, $value, $fail) use ($minEditDate) {
-                    if ($minEditDate && \Carbon\Carbon::parse($value)->lt($minEditDate)) {
-                        $fail('Bạn chỉ được phép gia hạn ngày hết hạn từ ' . $minEditDate->format('d/m/Y') . ' trở đi.');
+                function ($attribute, $value, $fail) use ($minEditDate, $oldExpirationDate) {
+                    if ($minEditDate) {
+                        $newDate = \Carbon\Carbon::parse($value);
+                        // Nếu ngày mới khác ngày cũ và nhỏ hơn giới hạn
+                        if (!$newDate->equalTo($oldExpirationDate) && $newDate->lt($minEditDate)) {
+                            $fail('Bạn chỉ được phép gia hạn ngày hết hạn từ ' . $minEditDate->format('d/m/Y') . ' trở đi.');
+                        }
                     }
                 },
             ],
