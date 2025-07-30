@@ -317,6 +317,13 @@
                             @endif
 
                             {{-- CHỌN SỐ LƯỢNG --}}
+                            @php
+                                $hasVariants = $product->variants->count() > 0;
+                                $totalStock = $hasVariants
+                                    ? $product->variants->sum('quantity_in_stock')
+                                    : $product->quantity_in_stock;
+                            @endphp
+
                             <div class="d-flex align-items-center gap-4">
                                 <label class="form-label fw-bold mb-0" style="font-size: 16px;">
                                     <i class="fas fa-sort-numeric-up me-2 text-success"></i>Số lượng:
@@ -326,23 +333,21 @@
                                         <i class="fa fa-minus"></i>
                                     </button>
                                     <input type="number" name="quantity" id="quantity" class="quantity-input"
-                                        value="1" min="1">
+                                        value="1" min="1" max="{{ $totalStock }}" readonly>
                                     <button type="button" class="quantity-btn btn-plus">
                                         <i class="fa fa-plus"></i>
                                     </button>
                                 </div>
-                                @php
-                                    $hasVariants = $product->variants->count() > 0;
-                                    $totalStock = $hasVariants
-                                        ? $product->variants->sum('quantity_in_stock')
-                                        : $product->quantity_in_stock;
-                                @endphp
+                                @if (!$hasVariants)
+                                    
+                                    <input type="hidden" id="totalStock" value="{{ $totalStock }}">
+                                @endif
 
                                 <div class="available-stock text-muted ms-3" id="availableStock">
                                     {{ $totalStock }} sản phẩm có sẵn
                                 </div>
-
                             </div>
+
                             <button type="submit" class="add-to-cart-btn w-100">
                                 <i class="fa fa-shopping-bag me-2"></i>
                                 Thêm vào giỏ hàng
@@ -475,16 +480,17 @@
         {{-- <pre>{{ dd($item->variants) }}</pre> --}}
         {{-- SẢN PHẨM LIÊN QUAN --}}
         <h2 class="fw-bold mb-4 section-title">SẢN PHẨM LIÊN QUAN</h2>
-        <div class="related-products-carousel"><button class="carousel-nav prev" id="prevBtn" onclick="moveCarousel(-1)">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="carousel-nav next" id="nextBtn" onclick="moveCarousel(1)">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+        <div class="related-products-carousel"><button class="carousel-nav prev" id="prevBtn"
+                onclick="moveCarousel(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="carousel-nav next" id="nextBtn" onclick="moveCarousel(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
 
             <div class="carousel-container">
                 {{-- Nút điều hướng --}}
-                
+
                 {{-- Container carousel --}}
                 <div class="carousel-wrapper" id="carouselWrapper">
                     @forelse ($relatedProducts as $item)
@@ -529,7 +535,7 @@
                                     </p>
                                     <h6 class="text-dark fw-bold mb-2">{{ $item->product_name }}</h6>
 
-                                    {{-- Phần giá cải tiến --}}
+                                    {{-- Phần giá --}}
                                     <div class="mb-2">
                                         @if ($hasVariants)
                                             <span class="text-danger fw-bold">
@@ -539,10 +545,17 @@
                                                 @endif
                                             </span>
                                         @else
+                                            @php
+                                                $hasDirectDiscount = $price > 0 && $price < $original;
+                                                $isCouponOnly = $price == 0 && $original > 0;
+                                            @endphp
+
                                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                <span
-                                                    class="text-danger fw-bold fs-6">{{ number_format($price, 0, ',', '.') }}đ</span>
-                                                @if ($hasDiscount)
+                                                @if ($hasDirectDiscount)
+                                                    {{-- Có giảm giá trực tiếp --}}
+                                                    <span class="text-danger fw-bold fs-6">
+                                                        {{ number_format($price, 0, ',', '.') }}đ
+                                                    </span>
                                                     <div class="d-flex align-items-center gap-1">
                                                         <del
                                                             class="text-muted small">{{ number_format($original, 0, ',', '.') }}đ</del>
@@ -552,10 +565,27 @@
                                                             -{{ $discountPercent }}%
                                                         </span>
                                                     </div>
+                                                @elseif ($isCouponOnly)
+                                                    {{-- Giá gốc có, nhưng đang khuyến mãi qua mã giảm giá --}}
+                                                    <span class="text-danger fw-bold fs-6">
+                                                        {{ number_format($original, 0, ',', '.') }}đ
+                                                    </span>
+                                                    <div class="text-muted small fst-italic">
+
+                                                    </div>
+                                                @elseif ($price > 0)
+                                                    {{-- Không giảm giá, hiển thị giá bình thường --}}
+                                                    <span class="text-danger fw-bold fs-6">
+                                                        {{ number_format($price, 0, ',', '.') }}đ
+                                                    </span>
+                                                @else
+                                                    {{-- Không có giá gì cả --}}
+                                                    <span class="text-danger fw-bold fs-6">Liên hệ</span>
                                                 @endif
                                             </div>
                                         @endif
                                     </div>
+
 
                                     {{-- Ảnh các biến thể ở dưới giá --}}
                                     @if ($hasVariants && $item->variants->count() > 1)
@@ -593,27 +623,26 @@
         const stars = document.querySelectorAll('.star');
         const ratingInput = document.getElementById('rating-value');
 
-        if (!stars.length || !ratingInput) return;
+        if (stars.length && ratingInput) {
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = this.getAttribute('data-rating');
+                    ratingInput.value = rating;
 
-        stars.forEach(star => {
-            star.addEventListener('click', function() {
-                const rating = this.getAttribute('data-rating');
-                ratingInput.value = rating;
-
-                stars.forEach(s => {
-                    const sRating = s.getAttribute('data-rating');
-                    if (parseInt(sRating) <= rating) {
-                        s.classList.remove('text-muted');
-                        s.classList.add('text-warning');
-                    } else {
-                        s.classList.remove('text-warning');
-                        s.classList.add('text-muted');
-                    }
+                    stars.forEach(s => {
+                        const sRating = s.getAttribute('data-rating');
+                        if (parseInt(sRating) <= rating) {
+                            s.classList.remove('text-muted');
+                            s.classList.add('text-warning');
+                        } else {
+                            s.classList.remove('text-warning');
+                            s.classList.add('text-muted');
+                        }
+                    });
                 });
             });
-        });
-    });
-    document.addEventListener('DOMContentLoaded', function() {
+        }
+
         const variantOptions = document.querySelectorAll('.variant-option');
         const mainImage = document.getElementById('mainProductImage');
         const priceElement = document.getElementById('variantPrice');
@@ -623,6 +652,8 @@
         const quantityInput = document.getElementById('quantity');
         const cancelButton = document.getElementById('cancelVariantSelection');
         const selectedVariantIdInput = document.getElementById('selectedVariantId');
+        const addToCartBtn = document.querySelector('.add-to-cart-btn');
+        const productType = "{{ $product->product_type }}";
 
         let selectedVariant = null;
 
@@ -682,7 +713,6 @@
                 stockElement.textContent = `${totalStock} sản phẩm có sẵn`;
             }
 
-
             if (quantityInput) quantityInput.value = 1;
         }
 
@@ -709,7 +739,6 @@
 
                 updatePriceDisplay(price, original);
                 updateMainImage(image);
-
                 if (stockElement) stockElement.textContent = `${stock} sản phẩm có sẵn`;
 
                 if (quantityInput && quantityInput.value > stock) {
@@ -722,6 +751,13 @@
             cancelButton.addEventListener('click', resetToDefault);
         }
 
+        // Disable manual input
+        if (quantityInput) {
+            quantityInput.setAttribute('readonly', 'readonly');
+            quantityInput.addEventListener('keydown', e => e.preventDefault());
+            quantityInput.addEventListener('paste', e => e.preventDefault());
+        }
+
         // Quantity buttons
         document.querySelector('.btn-minus')?.addEventListener('click', () => {
             let value = parseInt(quantityInput.value) || 1;
@@ -730,15 +766,12 @@
 
         document.querySelector('.btn-plus')?.addEventListener('click', () => {
             let value = parseInt(quantityInput.value) || 1;
-            const max = selectedVariant?.stock || 9999;
+            const max = selectedVariant?.stock || parseInt(document.getElementById('totalStock')
+                ?.value || 9999);
             if (value < max) quantityInput.value = value + 1;
         });
 
-        // Init
-        resetToDefault();
-        const addToCartBtn = document.querySelector('.add-to-cart-btn');
-        const productType = "{{ $product->product_type }}"; // Laravel blade
-
+        // Check variant selection before add to cart
         addToCartBtn?.addEventListener('click', function(e) {
             if (productType === 'variant') {
                 if (!selectedVariant || !selectedVariantIdInput.value) {
@@ -747,8 +780,12 @@
                 }
             }
         });
+
+        // Init
+        resetToDefault();
     });
 </script>
+
 {{-- JavaScript cho carousel liên quan --}}
 <script>
     let currentIndex = 0;
@@ -818,7 +855,8 @@
     .related-products-carousel {
         position: relative;
         margin: 20px 0;
-        padding: 0px; /* Thêm padding để có chỗ cho nút */
+        padding: 0px;
+        /* Thêm padding để có chỗ cho nút */
     }
 
     .carousel-container {
@@ -834,28 +872,32 @@
 
     .product-item {
         flex: 0 0 auto;
-        width: calc(25% - 11.25px); /* 4 items per view */
+        width: calc(25% - 11.25px);
+        /* 4 items per view */
     }
 
     @media (max-width: 992px) {
         .product-item {
-            width: calc(33.333% - 10px); /* 3 items per view */
+            width: calc(33.333% - 10px);
+            /* 3 items per view */
         }
     }
 
     @media (max-width: 768px) {
         .product-item {
-            width: calc(50% - 7.5px); /* 2 items per view */
+            width: calc(50% - 7.5px);
+            /* 2 items per view */
         }
-        
+
         .related-products-carousel {
-            padding: 0 50px; /* Giảm padding trên mobile */
+            padding: 0 50px;
+            /* Giảm padding trên mobile */
         }
-        
+
         .carousel-nav.prev {
             left: -40px;
         }
-        
+
         .carousel-nav.next {
             right: -40px;
         }
@@ -863,22 +905,24 @@
 
     @media (max-width: 576px) {
         .product-item {
-            width: calc(100% - 0px); /* 1 item per view */
+            width: calc(100% - 0px);
+            /* 1 item per view */
         }
-        
+
         .related-products-carousel {
-            padding: 0 30px; /* Padding nhỏ hơn trên mobile nhỏ */
+            padding: 0 30px;
+            /* Padding nhỏ hơn trên mobile nhỏ */
         }
-        
+
         .carousel-nav {
             width: 35px;
             height: 35px;
         }
-        
+
         .carousel-nav.prev {
             left: -25px;
         }
-        
+
         .carousel-nav.next {
             right: -25px;
         }
@@ -899,7 +943,7 @@
         cursor: pointer;
         transition: all 0.3s ease;
         z-index: 10;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .carousel-nav:hover {
