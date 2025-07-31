@@ -105,6 +105,7 @@ class Product extends Model
         return $this->hasMany(Comment::class);
     }
 
+
     public function orderItems()
     {
         return $this->hasMany(OrderDetail::class, 'product_id');
@@ -117,6 +118,7 @@ class Product extends Model
     {
         return $this->belongsTo(ProductOrigin::class, 'origin_id');
     }
+  
     public function getTotalVariantStockAttribute()
     {
         return $this->variants->sum(function ($v) {
