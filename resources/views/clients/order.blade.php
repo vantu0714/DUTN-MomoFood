@@ -42,15 +42,22 @@
 
                                 {{-- Hiển thị địa chỉ mặc định --}}
                                 <div id="address-display">
-                                    <strong>{{ $recipient['recipient_name'] ?? auth()->user()->name }} (+84)
-                                        {{ $recipient['recipient_phone'] ?? auth()->user()->phone }}</strong>
-                                    <div class="text-muted mt-1">
-                                        {{ $recipient['recipient_address'] ?? auth()->user()->address }}
-                                    </div>
-                                    <span class="badge bg-danger">Mặc Định</span>
+                                    @if (!empty($recipient))
+                                        <strong>{{ $recipient->recipient_name }} (+84
+                                            {{ $recipient->recipient_phone }})</strong>
+                                        <div class="text-muted mt-1">
+                                            {{ $recipient->recipient_address }}
+                                        </div>
+                                        @if ($recipient->is_default)
+                                            <span class="badge bg-danger mt-1">Địa Chỉ Mặc Định</span>
+                                        @endif
+                                    @else
+                                        <strong class="text-danger">Chưa chọn địa chỉ nhận hàng</strong>
+                                        @if ($errors->has('recipient_id'))
+                                            <div class="text-danger mt-1">{{ $errors->first('recipient_id') }}</div>
+                                        @endif
+                                    @endif
                                 </div>
-
-
                             </div>
                         </div>
 
@@ -170,6 +177,7 @@
                                     $discount = session('discount', 0);
                                     $subtotal = $total ?? 0; // hoặc bạn lấy lại từ $cart nếu có
                                     $grandTotal = max(0, $subtotal + $shippingFee - $discount);
+                                    $promotion = session('promotion');
                                 @endphp
 
                                 {{-- Phương thức thanh toán --}}
@@ -197,10 +205,16 @@
                                     <span>₫{{ number_format($shippingFee, 0, ',', '.') }}</span>
                                 </div>
 
-                                @if (session('promotion_name'))
+                                @if (session('discount') > 0)
                                     <div class="d-flex justify-content-between mb-2 text-success">
-                                        <span>Mã giảm giá ({{ session('promotion_name') }}):</span>
-                                        <span>-₫{{ number_format($discount, 0, ',', '.') }}</span>
+                                        <span>
+                                            Mã giảm giá
+                                            @if (session('promotion.code'))
+                                                ({{ session('promotion.code') }})
+                                            @endif
+                                            :
+                                        </span>
+                                        <span>-₫{{ number_format(session('discount'), 0, ',', '.') }}</span>
                                     </div>
                                 @endif
 
@@ -270,7 +284,7 @@
                                 </div>
                                 <form method="POST" action="{{ route('order.applyCoupon') }}">
                                     @csrf
-                                    <input type="hidden" name="promotion" value="{{ $voucher->promotion_name }}">
+                                    <input type="hidden" name="promotion" value="{{ $voucher->code }}">
                                     <button class="btn btn-outline-danger">Lưu</button>
                                 </form>
                             </div>
@@ -292,6 +306,8 @@
 
 
     <!-- Modal chọn địa chỉ giao hàng -->
+
+    <!-- Modal chọn địa chỉ giao hàng -->
     <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -305,7 +321,7 @@
                 <!-- Nội dung Modal -->
                 <div class="modal-body">
                     <!-- Danh sách địa chỉ đã lưu -->
-                    <form action="{{ route('recipients.select') }}" method="POST">
+                    <form action="{{ route('clients.order') }}" method="GET">
                         @csrf
                         @foreach ($savedRecipients as $recipientItem)
                             <div class="form-check mb-3">
@@ -406,8 +422,176 @@
         </div>
     </div>
 
-   
+
 @endsection
+{{-- <script>
+    // ✅ Hàm toàn cục: Ẩn/hiện form thêm địa chỉ mới
+    function toggleAddressForm() {
+        const form = document.getElementById('address-form');
+        if (form) {
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+
+        -- -- -- -- -- -- -- -- -- -- -- -- -- --
+        // 1. VALIDATE FORM CHỌN ĐỊA CHỈ
+        // ----------------------------
+        const form = document.getElementById('select-recipient-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const selected = form.querySelector('input[name="recipient_id"]:checked');
+                if (!selected) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn một địa chỉ trước khi tiếp tục.');
+                }
+            });
+
+            // ✅ Đảm bảo chỉ chọn được một radio (tránh lỗi chọn nhiều radio nếu dùng custom UI)
+            document.querySelectorAll('input[name="recipient_id"]').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    document.querySelectorAll('input[name="recipient_id"]').forEach(function(
+                        r) {
+                        if (r !== radio) r.checked = false;
+                    });
+                });
+            });
+
+        }
+        // ----------------------------
+        // 2. FORM THÊM ĐỊA CHỈ MỚI
+        // ----------------------------
+
+        const nameInput = document.querySelector('[name="recipient_name"]');
+        const phoneInput = document.querySelector('[name="recipient_phone"]');
+        const addressInput = document.querySelector('[name="recipient_address"]');
+
+        function showError(input, message) {
+            let errorEl = input.parentElement.querySelector('.error-message');
+            if (!errorEl) {
+                errorEl = document.createElement('div');
+                errorEl.classList.add('text-danger', 'small', 'error-message');
+                input.parentElement.appendChild(errorEl);
+            }
+            errorEl.textContent = message;
+        }
+
+        function clearError(input) {
+            const errorEl = input.parentElement.querySelector('.error-message');
+            if (errorEl) errorEl.remove();
+        }
+
+        if (nameInput) {
+            nameInput.addEventListener('blur', () => {
+                if (nameInput.value.trim() === '') {
+                    showError(nameInput, 'Vui lòng nhập họ và tên.');
+                } else {
+                    clearError(nameInput);
+                }
+            });
+        }
+
+        if (phoneInput) {
+            phoneInput.addEventListener('blur', () => {
+                const phoneRegex = /^0[0-9]{9}$/;
+                if (phoneInput.value.trim() === '') {
+                    showError(phoneInput, 'Vui lòng nhập số điện thoại.');
+                } else if (!phoneRegex.test(phoneInput.value.trim())) {
+                    showError(phoneInput, 'Số điện thoại không đúng định dạng.');
+                } else {
+                    clearError(phoneInput);
+                }
+            });
+        }
+
+        if (addressInput) {
+            addressInput.addEventListener('blur', () => {
+                if (addressInput.value.trim() === '') {
+                    showError(addressInput, 'Vui lòng nhập địa chỉ chi tiết.');
+                } else {
+                    clearError(addressInput);
+                }
+            });
+        }
+
+        // ----------------------------
+        // 3. LOGIC TỈNH / QUẬN / XÃ
+        // ----------------------------
+        const locations = @json($locations);
+        const provinceSelect = document.getElementById('province');
+        const districtSelect = document.getElementById('district');
+        const wardSelect = document.getElementById('ward');
+        const detailInput = document.getElementById('detail_address');
+        const fullAddressInput = document.getElementById('recipient_address');
+
+        let currentProvince = '',
+            currentDistrict = '',
+            currentWard = '';
+
+        if (provinceSelect && districtSelect && wardSelect && detailInput && fullAddressInput) {
+
+            provinceSelect.addEventListener('change', function() {
+                const provinceCode = this.value;
+                currentProvince = this.options[this.selectedIndex].text;
+                districtSelect.innerHTML = '<option value="">-- Chọn quận/huyện --</option>';
+                wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+                wardSelect.disabled = true;
+
+                const province = locations.find(p => p.code == provinceCode);
+                if (province?.districts) {
+                    province.districts.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.code;
+                        opt.textContent = d.name_with_type;
+                        districtSelect.appendChild(opt);
+                    });
+                    districtSelect.disabled = false;
+                }
+                updateFullAddress();
+            });
+
+            districtSelect.addEventListener('change', function() {
+                const districtCode = this.value;
+                currentDistrict = this.options[this.selectedIndex].text;
+                wardSelect.innerHTML = '<option value="">-- Chọn phường/xã --</option>';
+
+                const provinceCode = provinceSelect.value;
+                const province = locations.find(p => p.code == provinceCode);
+                const district = province?.districts?.find(d => d.code == districtCode);
+
+                if (district?.wards) {
+                    district.wards.forEach(w => {
+                        const opt = document.createElement('option');
+                        opt.value = w.code;
+                        opt.textContent = w.name_with_type;
+                        wardSelect.appendChild(opt);
+                    });
+                    wardSelect.disabled = false;
+                }
+                updateFullAddress();
+            });
+
+            wardSelect.addEventListener('change', function() {
+                currentWard = this.options[this.selectedIndex].text;
+                updateFullAddress();
+            });
+
+            detailInput.addEventListener('input', updateFullAddress);
+
+            function updateFullAddress() {
+                const detail = detailInput.value.trim();
+                const parts = [detail, currentWard, currentDistrict, currentProvince].filter(Boolean);
+                fullAddressInput.value = parts.join(', ');
+            }
+
+            // Nếu đã có sẵn tỉnh → tự động load lại quận/huyện (khi validation lỗi)
+            if (provinceSelect.value) {
+                provinceSelect.dispatchEvent(new Event('change'));
+            }
+        }
+
+    });
+</script> --}}
 <script>
     document.querySelectorAll('input[name="recipient_id"]').forEach(item => {
         item.addEventListener('change', () => {
@@ -466,7 +650,6 @@
                 clearError(addressInput);
             }
         });
-
         const locations = @json($locations);
 
         const provinceSelect = document.getElementById('province');

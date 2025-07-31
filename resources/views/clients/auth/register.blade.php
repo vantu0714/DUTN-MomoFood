@@ -39,9 +39,59 @@
             border-color: rgb(219, 115, 91) !important;
         }
 
+        /* FIX CHÍNH: Căn chỉnh input group */
+        .input-group {
+            display: flex;
+            align-items: stretch !important;
+            /* Quan trọng nhất */
+        }
+
+        .input-group-text {
+            height: 48px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0 12px;
+        }
+
+        .form-control {
+            height: 48px !important;
+            padding: 0 16px;
+            /* Chỉ padding horizontal */
+            font-size: 16px;
+            line-height: 48px !important;
+            /* Line-height = height để center text */
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group-text i {
+            font-size: 18px;
+            line-height: 1;
+            color: rgb(219, 115, 91);
+        }
+
         .form-control:focus {
             border-color: rgb(219, 115, 91);
             box-shadow: 0 0 0 0.2rem rgba(219, 115, 91, 0.25);
+        }
+
+        /* Xử lý border cho input có 2 addon */
+        .input-group .form-control {
+            border-left: 0 !important;
+            border-right: 0 !important;
+        }
+
+        .input-group .input-group-text:first-child {
+            border-right: 0 !important;
+        }
+
+        .input-group .input-group-text:last-child {
+            border-left: 0 !important;
         }
 
         .avatar-preview {
@@ -61,10 +111,6 @@
 
         input[type="file"] {
             display: none;
-        }
-
-        .input-group-text {
-            background-color: #f8f9fa;
         }
     </style>
 @endpush

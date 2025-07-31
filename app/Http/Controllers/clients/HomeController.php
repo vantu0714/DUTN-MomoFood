@@ -19,7 +19,6 @@ class HomeController extends Controller
         }
 
         $query = Product::with(['category', 'variants.attributeValues.attribute'])
-
             ->where(function ($q) {
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
@@ -38,7 +37,6 @@ class HomeController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
-
         $products = $query->paginate(12);
         $categories = Category::withCount('products')->get();
 
@@ -50,11 +48,31 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
+        //  Thêm sản phẩm có đánh giá >= 4 sao
+        $highRatedProducts = Product::with([
+            'comments',
+            'category',
+            'variants.attributeValues.attribute' //  
+        ])
+            ->withAvg('comments', 'rating')
+            ->having('comments_avg_rating', '>=', 4)
+            ->orderByDesc('comments_avg_rating')
+            ->take(6)
+            ->get();
+
+
 
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
 
-        return view('clients.home', compact('products', 'categories', 'bestSellingProducts', 'comments'));
+        return view('clients.home', compact(
+            'products',
+            'categories',
+            'bestSellingProducts',
+            'comments',
+            'highRatedProducts'
+        ));
     }
+
 
     public function search(Request $request)
     {
@@ -66,7 +84,13 @@ class HomeController extends Controller
             ->orWhere('ingredients', 'like', "%$keyword%")
             ->get();
 
-        return view('clients.search', compact('products', 'keyword'));
+        $categories = Category::withCount([
+            'products as available_products_count' => function ($query) {
+                $query->where('quantity_in_stock', '>', 0);
+            }
+        ])->get();
+
+        return view('clients.search', compact('products', 'keyword', 'categories'));
     }
 
     public function searchAjax(Request $request)
@@ -124,7 +148,8 @@ class HomeController extends Controller
     {
         $categoryId = $request->get('category');
 
-        $products = Product::with(['category', 'variants'])
+        $products = Product::with(['category', 'variants.attributeValues.attribute']) // đủ thông tin
+
             ->where('status', 1)
             ->where(function ($q) {
                 // Sản phẩm đơn còn hàng
@@ -134,11 +159,11 @@ class HomeController extends Controller
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
-                        $q2->where('product_type', 'variant')
-                            ->whereHas('variants', function ($q3) {
-                                $q3->where('quantity_in_stock', '>', 0);
-                            });
-                    });
+                    $q2->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q3) {
+                            $q3->where('quantity_in_stock', '>', 0);
+                        });
+                });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()

@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -56,18 +57,21 @@ class OrderController extends Controller
             }
         }
 
-        // Nếu có recipient_id từ form (người dùng chọn địa chỉ cụ thể)
-        $recipient = Recipient::where('user_id', $userId)
-            ->where('is_default', true)
-            ->first();
+        // ✅ Lấy danh sách tất cả địa chỉ của user
+        $savedRecipients = Recipient::where('user_id', $userId)
+            ->orderByDesc('is_default')
+            ->latest()
+            ->get();
 
-        if (session()->has('selected_recipient_id')) {
-            $recipient = Recipient::where('user_id', $userId)
-                ->where('id', session('selected_recipient_id'))
-                ->first();
+        // ✅ Không dùng session: lấy địa chỉ từ request (nếu có), không thì lấy mặc định
+        $recipient = null;
+        if ($request->has('recipient_id')) {
+            $recipient = $savedRecipients->where('id', $request->recipient_id)->first();
         }
-        // Lấy danh sách địa chỉ đã lưu
-        $savedRecipients = Recipient::where('user_id', $userId)->get();
+
+        if (!$recipient) {
+            $recipient = $savedRecipients->where('is_default', true)->first();
+        }
 
         // Lấy các voucher đang hoạt động
         $vouchers = Promotion::where('status', 1)
@@ -105,8 +109,6 @@ class OrderController extends Controller
                 'districts' => $districts,
             ];
         }
-
-        session()->forget('selected_recipient_id');
 
         return view('clients.order', compact(
             'cart',
@@ -153,16 +155,27 @@ class OrderController extends Controller
 
         // Kiểm tra địa chỉ nhận hàng
         if ($request->filled('recipient_id')) {
+
+            $request->validate([
+                'recipient_id' => 'required|exists:recipients,id',
+            ], [
+                'recipient_id.required' => 'Vui lòng chọn địa chỉ nhận hàng.',
+                'recipient_id.exists' => 'Địa chỉ nhận hàng không hợp lệ.',
+            ]);
             $recipient = Recipient::where('user_id', $userId)->findOrFail($request->recipient_id);
         } else {
-            // Validate địa chỉ mới
-            $request->validate([
-                'recipient_name' => 'required|string|max:255',
-                'recipient_phone' => 'required|string|max:15',
-                'recipient_address' => 'required|string|max:500',
-            ]);
-
-            // Thêm địa chỉ mới
+            $request->validate(
+                [
+                    'recipient_name' => 'required|string|max:255',
+                    'recipient_phone' => 'required|string|max:15',
+                    'recipient_address' => 'required|string|max:500',
+                ],
+                [
+                    'recipient_name.required' => 'Vui lòng nhập họ tên người nhận.',
+                    'recipient_phone.required' => 'Vui lòng nhập số điện thoại.',
+                    'recipient_address.required' => 'Vui lòng nhập địa chỉ nhận hàng.',
+                ]
+            );
             $recipient = Recipient::create([
                 'user_id' => $userId,
                 'recipient_name' => $request->recipient_name,
@@ -184,17 +197,34 @@ class OrderController extends Controller
             $discount = 0;
             $promotionCode = null;
 
-            // Xử lý mã giảm giá
-            if ($request->filled('promotion')) {
-                $promotion = Promotion::where('promotion_name', trim($request->promotion))
+            // Xử lý mã giảm giá từ request hoặc session
+            if ($request->filled('promotion') || session()->has('promotion_code')) {
+                $promotionCode = $request->filled('promotion')
+                    ? trim($request->promotion)
+                    : session('promotion_code');
+
+                $promotion = Promotion::where('code', $promotionCode)
                     ->where('status', 1)
                     ->where('start_date', '<=', now())
                     ->where('end_date', '>=', now())
                     ->first();
 
-                if ($promotion) {
-                    $discount = $promotion->discount_amount;
-                    $promotionCode = $promotion->promotion_name;
+                if ($promotion && ($promotion->usage_limit === null || $promotion->used_count < $promotion->usage_limit)) {
+                    if ($promotion->discount_type === 'percent') {
+                        $discount = $total * ($promotion->discount_value / 100);
+                        if ($promotion->max_discount_value !== null) {
+                            $discount = min($discount, $promotion->max_discount_value);
+                        }
+                    } else { // fixed
+                        $discount = (float) $promotion->discount_value;
+                    }
+
+                    // Không cho giảm vượt quá tổng tiền
+                    $discount = min($discount, $total);
+
+                    // Cập nhật lại session
+                    session()->put('promotion_code', $promotion->code);
+                    session()->put('discount', $discount);
 
                     // Cập nhật số lần dùng
                     $promotion->increment('used_count');
@@ -216,12 +246,21 @@ class OrderController extends Controller
                 'recipient_address' => $recipient->recipient_address,
                 'note' => $request->note,
                 'promotion' => $promotionCode,
+                'discount_amount' => $discount,
                 'shipping_fee' => $request->shipping_fee,
                 'total_price' => $grandTotal,
                 'payment_method' => $request->payment_method,
                 'payment_status' => 'unpaid',
                 'status' => 1,
             ]);
+
+            // DEBUG (bạn có thể xóa dòng này khi xong)
+            // dd([
+            //     'cart_total' => $total,
+            //     'shipping_fee' => $request->shipping_fee,
+            //     'discount_from_promotion' => $discount,
+            //     'grand_total' => $grandTotal,
+            // ]);
 
             // Thêm chi tiết đơn hàng
             foreach ($cartItems as $item) {
@@ -245,8 +284,9 @@ class OrderController extends Controller
 
             // Xóa sản phẩm đã đặt khỏi giỏ hàng
             $cart->items()->whereIn('id', $cartItems->pluck('id'))->delete();
-            // Xóa session selected_items
-            session()->forget('selected_items');
+
+            // Xóa session tạm
+            session()->forget(['selected_items', 'promotion', 'promotion_code', 'discount']);
 
             DB::commit();
 
@@ -262,6 +302,8 @@ class OrderController extends Controller
             return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
     }
+
+
 
     public function orderList(Request $request)
     {
@@ -298,23 +340,28 @@ class OrderController extends Controller
 
     public function orderDetail($id)
     {
-        $order = Order::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
+        if (session()->has('order')) {
+            $order = session('order');
+        } else {
+            $order = Order::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->firstOrFail();
+        }
 
-        $items = DB::table('order_details')
-            ->join('products', 'order_details.product_id', '=', 'products.id')
-            ->where('order_id', $id)
-            ->select('order_details.*', 'products.product_name as product_name')
-            ->get();
+        // Thêm logic kiểm tra thời gian hoàn hàng
+        $canReturn = false;
+        if ($order->status == 4 && $order->completed_at) {
+            $returnDeadline = Carbon::parse($order->completed_at)->addHours(24);
+            $canReturn = now()->lte($returnDeadline);
+        }
 
-        return view('clients.user.show-order', compact('order', 'items'));
+        return view('clients.user.show-order', compact('order', 'canReturn'));
     }
 
     public function cancel(Request $request, $id)
     {
         $request->validate([
-            'cancellation_reason' => 'required|string|max:1000',
+            'reason' => 'required|string|max:1000',
         ]);
 
         $order = Order::findOrFail($id);
@@ -324,7 +371,7 @@ class OrderController extends Controller
         }
 
         $order->status = 6; // hủy đơn
-        $order->cancellation_reason = $request->cancellation_reason;
+        $order->cancellation_reason = $request->reason;
         $order->save();
 
         return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy.');
@@ -332,26 +379,27 @@ class OrderController extends Controller
 
     public function applyCoupon(Request $request)
     {
-        $code = $request->input('promotion');
-        $now = Carbon::now();
+        $code = trim($request->input('promotion'));
+        $now = now();
         $userId = Auth::id();
 
-        $promotion = Promotion::where('promotion_name', $code)
+        // Tìm mã giảm giá theo code (không phải promotion_name)
+        $promotion = Promotion::where('code', $code)
             ->where('status', 1)
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
             ->first();
 
         if (!$promotion) {
-            return back()->with('error', 'Mã giảm giá không hợp lệ!');
+            return back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết hạn!');
         }
 
-        // Kiểm tra lượt dùng tổng
-        if ($promotion->usage_limit !== null && $promotion->used_count >= $promotion->usage_limit) {
+        // Kiểm tra giới hạn lượt dùng tổng
+        if (!is_null($promotion->usage_limit) && $promotion->used_count >= $promotion->usage_limit) {
             return back()->with('error', 'Mã giảm giá đã hết lượt sử dụng!');
         }
 
-        // Kiểm tra lượt dùng của user
+        // Kiểm tra lượt dùng của người dùng hiện tại
         $userUsage = DB::table('promotion_user')
             ->where('promotion_id', $promotion->id)
             ->where('user_id', $userId)
@@ -361,16 +409,28 @@ class OrderController extends Controller
             return back()->with('error', 'Bạn đã sử dụng mã này rồi!');
         }
 
-        // Tính giảm giá
+        // Lấy giỏ hàng và tính tổng tiền
         $cart = Cart::with('items')->where('user_id', $userId)->first();
-        $subtotal = $cart ? $cart->items->sum('total_price') : 0;
-        $discount = 0;
-
-        //Kiểm tra min_total_spent
-        if ($promotion->min_total_spent && $subtotal < $promotion->min_total_spent) {
-            return back()->with('error', 'Đơn hàng chưa đạt tối thiểu ' . number_format($promotion->min_total_spent) . 'đ để áp dụng mã.');
+        if (!$cart || $cart->items->isEmpty()) {
+            return back()->with('error', 'Giỏ hàng của bạn đang trống!');
         }
 
+        $subtotal = $cart->items->sum(function ($item) {
+            return $item->discounted_price * $item->quantity;
+        });
+
+        // Kiểm tra đơn hàng tối thiểu
+        if ($promotion->min_total_spent && $subtotal < $promotion->min_total_spent) {
+            return back()->with('error', 'Đơn hàng cần đạt tối thiểu ' . number_format($promotion->min_total_spent) . 'đ để áp dụng mã.');
+        }
+
+        // Kiểm tra điều kiện VIP
+        if ($promotion->vip_only && !Auth::user()->is_vip) {
+            return back()->with('error', 'Mã giảm giá này chỉ dành cho thành viên VIP.');
+        }
+
+        // Tính số tiền giảm
+        $discount = 0;
         if ($promotion->discount_type === 'percent') {
             $discount = round($subtotal * ($promotion->discount_value / 100));
             if ($promotion->max_discount_value && $discount > $promotion->max_discount_value) {
@@ -380,17 +440,20 @@ class OrderController extends Controller
             $discount = $promotion->discount_value;
         }
 
-        // Lưu vào session
-        session()->put('promotion', [
-            'id' => $promotion->id,
-            'name' => $promotion->promotion_name,
-            'type' => $promotion->discount_type,
-            'value' => $promotion->discount_value,
-            'max' => $promotion->max_discount_value,
-            'discount' => $discount
+        // Lưu thông tin mã giảm giá vào session
+        session([
+            'promotion' => [
+                'id' => $promotion->id,
+                'code' => $promotion->code,
+                'name' => $promotion->promotion_name,
+                'type' => $promotion->discount_type,
+                'value' => $promotion->discount_value,
+                'max' => $promotion->max_discount_value,
+                'discount' => $discount
+            ],
+            'discount' => $discount,
+            'promotion_code' => $promotion->code
         ]);
-        session()->put('discount', $discount);
-        session()->put('promotion_name', $promotion->promotion_name);
 
         return back()->with('success', 'Áp dụng mã giảm giá thành công!');
     }
@@ -398,7 +461,51 @@ class OrderController extends Controller
 
     public function removeCoupon()
     {
-        session()->forget(['promotion', 'discount', 'promotion_name']);
+        session()->forget(['promotion', 'discount', 'promotion_code']);
         return redirect()->route('carts.index')->with('success', 'Đã hủy mã giảm giá.');
+    }
+
+    public function requestReturn(Request $request, $id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        // Kiểm tra điều kiện hoàn hàng
+        if ($order->status == 5) {
+            return back()->with('error', 'Đơn hàng đã được hoàn trả');
+        }
+
+        if ($order->status == 7) {
+            return back()->with('info', 'Yêu cầu hoàn hàng đang chờ xử lý');
+        }
+
+        if ($order->status != 4 || ($order->completed_at && now()->gt(Carbon::parse($order->completed_at)->addHours(24)))) {
+            return back()->with('error', 'Không đủ điều kiện hoàn hàng');
+        }
+
+        $request->validate([
+            'return_reason' => 'required|string'
+        ], [
+            'return_reason.required' => 'Vui lòng nhập lý do hoàn hàng'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $order->update([
+                'status' => 7,
+                'return_reason' => $request->return_reason,
+                'return_requested_at' => now()
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('clients.orderdetail', $order->id)
+                ->with('success', 'Yêu cầu hoàn hàng đã được gửi thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Xử lý yêu cầu thất bại: ' . $e->getMessage());
+        }
     }
 }

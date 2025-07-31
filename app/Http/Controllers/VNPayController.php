@@ -169,7 +169,7 @@ class VNPayController extends Controller
 
             DB::commit();
 
-            return view('clients.vnpay_success');
+            return redirect()->route('carts.index')->with('orderSuccess', $order->id);
         } catch (\Throwable $th) {
             DB::rollBack();
 

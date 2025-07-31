@@ -15,16 +15,6 @@
             </a>
         </div>
 
-        @if ($errors->any())
-            <div class="alert alert-danger shadow-sm">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <div class="card shadow-sm border-0">
             <div class="card-body">
                 <form action="{{ route('admin.promotions.update', $promotion->id) }}" method="POST">
@@ -82,17 +72,17 @@
                         <input type="number" step="1" name="max_discount_value"
                             class="form-control @error('max_discount_value') is-invalid @enderror"
                             value="{{ old('max_discount_value', $promotion->max_discount_value) }}">
-                            <small class="text-danger client-error d-none"></small>
+                        <small class="text-danger client-error d-none"></small>
                         @error('max_discount_value')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Tổng giá trị đơn hàng tối thieeu</label>
+                        <label class="form-label fw-semibold">Tổng giá trị đơn hàng tối thiểu</label>
                         <input type="number" step="1000" min="1000" name="min_total_spent"
                             class="form-control @error('min_total_spent') is-invalid @enderror"
-                            value="{{ old('min_total_spent', $promotion->min_total_spent) }}" required>
+                            value="{{ old('min_total_spent', $promotion->min_total_spent) }}">
                         @error('min_total_spent')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -168,7 +158,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 
 {{-- Script hiển thị giảm tối đa khi chọn loại phần trăm + validate client-side --}}

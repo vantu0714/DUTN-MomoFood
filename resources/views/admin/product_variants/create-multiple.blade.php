@@ -270,7 +270,7 @@
                                                                                         lượng</label>
                                                                                     <input type="number"
                                                                                         name="products[{{ $product->id }}][variants][0][sub_attributes][0][quantity_in_stock]"
-                                                                                        class="form-control"
+                                                                                        class="form-control quantity-input"
                                                                                         placeholder="0" min="0"
                                                                                         required>
                                                                                 </div>
@@ -315,10 +315,11 @@
                                 </div>
                             @endforeach
                             <div class="text-center mt-4" id="submit-section">
-                                <button type="submit" class="btn btn-primary btn-lg px-5" id="submit-btn">
+                                <button type="submit" class="btn btn-primary btn-lg px-5" id="save-variants">
                                     <i class="fas fa-save me-2"></i>
                                     Lưu tất cả biến thể
                                 </button>
+
                             </div>
                         </form>
                     </div>
