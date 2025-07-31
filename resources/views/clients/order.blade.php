@@ -5,18 +5,27 @@
         <div class="container pt-5 mt-5">
             {{-- THÔNG BÁO --}}
             @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+                </div>
             @endif
+
             @if (session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+                </div>
             @endif
+
             @if ($errors->any())
-                <div class="alert alert-danger">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <ul class="mb-0">
                         @foreach ($errors->all() as $err)
                             <li>{{ $err }}</li>
                         @endforeach
                     </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                 </div>
             @endif
 
@@ -49,7 +58,7 @@
                                             {{ $recipient->recipient_address }}
                                         </div>
                                         @if ($recipient->is_default)
-                                            <span class="badge bg-danger mt-1">Địa Chỉ Mặc Định</span>
+                                            <span class="badge bg-danger mt-1">Mặc Định</span>
                                         @endif
                                     @else
                                         <strong class="text-danger">Chưa chọn địa chỉ nhận hàng</strong>
@@ -336,7 +345,7 @@
                                 <!-- Nút mở modal -->
                                 <button type="button" class="btn btn-outline-primary btn-sm mt-2 ms-2"
                                     data-bs-toggle="modal" data-bs-target="#editRecipientModal{{ $recipientItem->id }}">
-                                    Sửa địa chỉ
+                                    <i class="fas fa-edit"></i>
                                 </button>
                             </div>
                         @endforeach
@@ -482,18 +491,21 @@
 @endsection
 
 <script>
-    document.querySelectorAll('input[name="recipient_id"]').forEach(item => {
-        item.addEventListener('change', () => {
-            document.getElementById('recipient_id').value = item.value;
-        });
-    });
-
-    function toggleAddressForm() {
-        const form = document.getElementById('address-form');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
+        // Gán giá trị recipient_id từ radio
+        document.querySelectorAll('input[name="recipient_id"]').forEach(item => {
+            item.addEventListener('change', () => {
+                document.getElementById('recipient_id').value = item.value;
+            });
+        });
+
+        // Mở modal thêm địa chỉ dùng Bootstrap API
+        document.getElementById('open-address-modal')?.addEventListener('click', () => {
+            const modal = new bootstrap.Modal(document.getElementById('addressModal'));
+            modal.show();
+        });
+
+        // Validate đơn giản các input
         const nameInput = document.querySelector('[name="recipient_name"]');
         const phoneInput = document.querySelector('[name="recipient_phone"]');
         const addressInput = document.querySelector('[name="recipient_address"]');
@@ -513,7 +525,7 @@
             if (errorEl) errorEl.remove();
         }
 
-        nameInput.addEventListener('blur', () => {
+        nameInput?.addEventListener('blur', () => {
             if (nameInput.value.trim() === '') {
                 showError(nameInput, 'Vui lòng nhập họ và tên.');
             } else {
@@ -521,7 +533,7 @@
             }
         });
 
-        phoneInput.addEventListener('blur', () => {
+        phoneInput?.addEventListener('blur', () => {
             const phoneRegex = /^0[0-9]{9}$/;
             if (phoneInput.value.trim() === '') {
                 showError(phoneInput, 'Vui lòng nhập số điện thoại.');
@@ -532,13 +544,15 @@
             }
         });
 
-        addressInput.addEventListener('blur', () => {
+        addressInput?.addEventListener('blur', () => {
             if (addressInput.value.trim() === '') {
                 showError(addressInput, 'Vui lòng nhập địa chỉ chi tiết.');
             } else {
                 clearError(addressInput);
             }
         });
+
+        // Xử lý địa chỉ
         const locations = @json($locations);
 
         const provinceSelect = document.getElementById('province');
@@ -610,95 +624,21 @@
             fullAddressInput.value = addressParts.join(', ');
         }
 
-        // Nếu đã có tỉnh sẵn được chọn (ví dụ khi validation trả về lỗi)
+        // Tự động trigger lại nếu đã có dữ liệu (ví dụ sau validation)
         if (provinceSelect.value) {
             provinceSelect.dispatchEvent(new Event('change'));
         }
-
-        console.log(locations);
     });
 </script>
 
-<!-- Script xử lý AJAX -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.form-edit-recipient').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const formData = new FormData(this);
-                const recipientId = this.dataset.id;
-
-                fetch(this.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const name = formData.get('recipient_name');
-                            const phone = formData.get('recipient_phone');
-                            const address = formData.get('recipient_address');
-                            const isDefault = formData.get('is_default') === '1';
-
-                            // 1. Đóng modal
-                            const modalEl = document.getElementById('editRecipientModal' +
-                                recipientId);
-                            const modal = bootstrap.Modal.getInstance(modalEl);
-                            modal.hide();
-
-                            // 2. Cập nhật danh sách địa chỉ (radio group)
-                            document.querySelectorAll('input[name="recipient_id"]').forEach(
-                                input => {
-                                    const id = input.value;
-                                    const label = document.querySelector(
-                                        `label[for="recipient${id}"]`);
-
-                                    if (id == recipientId) {
-                                        // Cập nhật label của địa chỉ vừa chỉnh sửa
-                                        label.innerHTML = `
-                                    <strong>${name} (+84 ${phone})</strong><br>
-                                    <span class="text-muted">${address}</span>
-                                    ${isDefault ? '<span class="badge bg-danger ms-2">Mặc định</span>' : ''}
-                                `;
-                                    } else {
-                                        // Gỡ bỏ "Mặc định" nếu địa chỉ khác đang có badge
-                                        const badge = label.querySelector('.badge');
-                                        if (badge && isDefault) {
-                                            badge.remove();
-                                        }
-                                    }
-                                });
-
-                            // 3. Cập nhật nội dung ở khối hiển thị chính nếu đang chọn địa chỉ này
-                            const selectedRadio = document.querySelector(
-                                `input[name="recipient_id"]:checked`);
-                            if (selectedRadio && selectedRadio.value == recipientId) {
-                                const addressDisplay = document.getElementById(
-                                    'address-display');
-                                if (addressDisplay) {
-                                    addressDisplay.innerHTML = `
-                                    <strong>${name} (+84 ${phone})</strong>
-                                    <div class="text-muted mt-1">${address}</div>
-                                    ${isDefault ? '<span class="badge bg-danger mt-1">Địa Chỉ Mặc Định</span>' : ''}
-                                `;
-                                }
-                            }
-
-                        } else {
-                            alert('Có lỗi xảy ra khi cập nhật địa chỉ.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Đã xảy ra lỗi khi gửi yêu cầu.');
-                    });
-            });
+        const alerts = document.querySelectorAll('.alert-dismissible');
+        alerts.forEach(alertBox => {
+            setTimeout(() => {
+                const alert = new bootstrap.Alert(alertBox);
+                alert.close();
+            }, 5000);
         });
     });
 </script>
