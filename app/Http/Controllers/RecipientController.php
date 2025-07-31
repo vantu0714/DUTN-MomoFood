@@ -82,21 +82,31 @@ class RecipientController extends Controller
             'recipient_address.required' => 'Vui lòng nhập địa chỉ chi tiết.',
         ]);
 
-        // Nếu được chọn làm mặc định, bỏ mặc định các địa chỉ khác
-        if (!empty($validated['is_default'])) {
-            Recipient::where('user_id', auth()->id())->update(['is_default' => false]);
+        try {
+            // Nếu là địa chỉ mặc định, bỏ mặc định các địa chỉ khác
+            if (!empty($validated['is_default'])) {
+                Recipient::where('user_id', auth()->id())
+                    ->where('id', '!=', $recipient->id)
+                    ->update(['is_default' => false]);
+
+                $recipient->is_default = true;
+            } else {
+                $recipient->is_default = false;
+            }
+
+            // Cập nhật thông tin địa chỉ
+            $recipient->recipient_name = $validated['recipient_name'];
+            $recipient->recipient_phone = $validated['recipient_phone'];
+            $recipient->recipient_address = $validated['recipient_address'];
+            $recipient->save();
+
+            return redirect()->route('clients.order')->with('success', 'Cập nhật địa chỉ thành công!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Cập nhật thất bại. Vui lòng thử lại sau.');
         }
-
-        // Cập nhật địa chỉ
-        $recipient->update([
-            'recipient_name' => $validated['recipient_name'],
-            'recipient_phone' => $validated['recipient_phone'],
-            'recipient_address' => $validated['recipient_address'],
-            'is_default' => $validated['is_default'] ?? false,
-        ]);
-
-        return redirect()->back()->with('success', 'Cập nhật địa chỉ thành công!');
     }
+
+
 
     public function destroy($id)
     {
