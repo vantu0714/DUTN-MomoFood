@@ -25,7 +25,7 @@ class Product extends Model
         'category_id',
         'quantity_in_stock',
         'product_type',
-         'origin_id',
+        'origin_id',
     ];
     protected $casts = [
         'expiration_date' => 'date',
@@ -114,9 +114,19 @@ class Product extends Model
         return $this->original_price ?? $this->variants()->min('price');
     }
     public function origin()
-{
-    return $this->belongsTo(ProductOrigin::class, 'origin_id');
-}
-
-
+    {
+        return $this->belongsTo(ProductOrigin::class, 'origin_id');
+    }
+    public function getTotalVariantStockAttribute()
+    {
+        return $this->variants->sum(function ($v) {
+            return $v->quantity_in_stock ?? 0;
+        });
+    }
+    public function getTotalStockAttribute()
+    {
+        return $this->product_type === 'variant'
+            ? $this->variants->sum('quantity_in_stock')
+            : ($this->quantity_in_stock ?? $this->quantity ?? 0);
+    }
 }
