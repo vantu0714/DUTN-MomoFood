@@ -118,4 +118,17 @@ class Product extends Model
     {
         return $this->belongsTo(ProductOrigin::class, 'origin_id');
     }
+  
+    public function getTotalVariantStockAttribute()
+    {
+        return $this->variants->sum(function ($v) {
+            return $v->quantity_in_stock ?? 0;
+        });
+    }
+    public function getTotalStockAttribute()
+    {
+        return $this->product_type === 'variant'
+            ? $this->variants->sum('quantity_in_stock')
+            : ($this->quantity_in_stock ?? $this->quantity ?? 0);
+    }
 }
