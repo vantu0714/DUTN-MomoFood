@@ -11,18 +11,20 @@ class Comment extends Model
         'user_id',
         'product_id',
         'content',
-        'rating'
+        'rating',
+        'status', // Trạng thái bình luận: 1 - hiển thị, 0 - ẩn
     ];
     // Liên kết đến người dùng
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-    // Liên kết đến sản phẩm
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     // Scope để lọc những bình luận có rating (testimonials)
     public function scopeHasRating($query)
     {
