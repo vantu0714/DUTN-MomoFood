@@ -380,7 +380,7 @@
                                 <h4 class="mb-4 fw-bold text-uppercase section-title" style="color: #1a202c;">
                                     Đánh giá của người dùng
                                 </h4>
-                                @forelse($product->comments as $comment)
+                                @forelse($product->comments->where('status', 1) as $comment)
                                     <div class="d-flex mb-4 border rounded shadow-sm p-4 bg-white">
                                         <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
                                             class="img-fluid rounded-circle me-3" style="width: 60px; height: 60px;"
@@ -395,8 +395,6 @@
                                                 $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0;
                                             @endphp
                                             <div class="mb-2">
-
-
                                                 @for ($i = 1; $i <= 5; $i++)
                                                     <i class="fas fa-star"
                                                         style="color: {{ $i <= $rating ? '#ffc107' : '#ccc' }}"></i>
@@ -411,6 +409,7 @@
                                         <p class="text-muted">Chưa có bình luận nào cho sản phẩm này.</p>
                                     </div>
                                 @endforelse
+
                             </div>
                         </div>
                     </div>
@@ -475,16 +474,17 @@
         {{-- <pre>{{ dd($item->variants) }}</pre> --}}
         {{-- SẢN PHẨM LIÊN QUAN --}}
         <h2 class="fw-bold mb-4 section-title">SẢN PHẨM LIÊN QUAN</h2>
-        <div class="related-products-carousel"><button class="carousel-nav prev" id="prevBtn" onclick="moveCarousel(-1)">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="carousel-nav next" id="nextBtn" onclick="moveCarousel(1)">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+        <div class="related-products-carousel"><button class="carousel-nav prev" id="prevBtn"
+                onclick="moveCarousel(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="carousel-nav next" id="nextBtn" onclick="moveCarousel(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
 
             <div class="carousel-container">
                 {{-- Nút điều hướng --}}
-                
+
                 {{-- Container carousel --}}
                 <div class="carousel-wrapper" id="carouselWrapper">
                     @forelse ($relatedProducts as $item)
@@ -818,7 +818,8 @@
     .related-products-carousel {
         position: relative;
         margin: 20px 0;
-        padding: 0px; /* Thêm padding để có chỗ cho nút */
+        padding: 0px;
+        /* Thêm padding để có chỗ cho nút */
     }
 
     .carousel-container {
@@ -834,28 +835,32 @@
 
     .product-item {
         flex: 0 0 auto;
-        width: calc(25% - 11.25px); /* 4 items per view */
+        width: calc(25% - 11.25px);
+        /* 4 items per view */
     }
 
     @media (max-width: 992px) {
         .product-item {
-            width: calc(33.333% - 10px); /* 3 items per view */
+            width: calc(33.333% - 10px);
+            /* 3 items per view */
         }
     }
 
     @media (max-width: 768px) {
         .product-item {
-            width: calc(50% - 7.5px); /* 2 items per view */
+            width: calc(50% - 7.5px);
+            /* 2 items per view */
         }
-        
+
         .related-products-carousel {
-            padding: 0 50px; /* Giảm padding trên mobile */
+            padding: 0 50px;
+            /* Giảm padding trên mobile */
         }
-        
+
         .carousel-nav.prev {
             left: -40px;
         }
-        
+
         .carousel-nav.next {
             right: -40px;
         }
@@ -863,22 +868,24 @@
 
     @media (max-width: 576px) {
         .product-item {
-            width: calc(100% - 0px); /* 1 item per view */
+            width: calc(100% - 0px);
+            /* 1 item per view */
         }
-        
+
         .related-products-carousel {
-            padding: 0 30px; /* Padding nhỏ hơn trên mobile nhỏ */
+            padding: 0 30px;
+            /* Padding nhỏ hơn trên mobile nhỏ */
         }
-        
+
         .carousel-nav {
             width: 35px;
             height: 35px;
         }
-        
+
         .carousel-nav.prev {
             left: -25px;
         }
-        
+
         .carousel-nav.next {
             right: -25px;
         }
@@ -899,7 +906,7 @@
         cursor: pointer;
         transition: all 0.3s ease;
         z-index: 10;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .carousel-nav:hover {
