@@ -632,7 +632,6 @@
         }
     </script>
 
-@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const radios = document.querySelectorAll('input[name="price_range"]');
