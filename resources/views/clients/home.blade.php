@@ -219,7 +219,7 @@
 <!-- Featurs End -->
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
-    <div class="container py-1">
+    <div class="container py-0">
         <h1 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h1>
 
         <div class="row g-4">
@@ -375,12 +375,12 @@
 </div>
 <!--  5 sao -->
 <div class="container-fluid py-5">
-    <div class="container py-5">
+    <div class="container py-0">
         <div class="text-center mx-auto mb-5" style="max-width: 700px;">
-            <h1 class="display-4"
+            <h2 class="display-4"
                 style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700;">
-                Siêu Phẩm Ăn Vặt 5 ⭐
-            </h1>
+                SIÊU PHẨM ĂN VẶT 5 ⭐
+            </h2>
         </div>
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
@@ -461,10 +461,10 @@
 <!-- Fact Start -->
 <div class="container-fluid py-5">
     <div class="container">
-        <div class="bg-light p-5 rounded">
+        <div class="bg-light p-3 rounded">
             <h1 class="display-4"
                 style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700; text-align: center">
-                Tin tức 📰
+                TIN TỨC 📰
             </h1>
             <br>
             <div class="news-grid">
@@ -523,7 +523,7 @@
 <!-- đánh giá -->
 <div class="container py-5 testimonial-container">
     <!-- Header -->
-    <div class="testimonial-header text-center mb-5">
+    <div class="testimonial-header text-center mb-3">
         <h4 class="text-primary">Đánh giá từ khách hàng</h4>
         <h2 class="display-5 text-dark">Khách hàng nói gì về chúng tôi</h2>
     </div>

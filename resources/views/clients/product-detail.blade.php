@@ -1,6 +1,6 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-{{-- @vite('resources/css/shop.css') --}}
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 <link rel="stylesheet" href="{{ asset('clients/css/shop-detail.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <!-- Single Page Header start -->
@@ -384,7 +384,7 @@
                                 <h4 class="mb-4 fw-bold text-uppercase section-title" style="color: #1a202c;">
                                     Đánh giá của người dùng
                                 </h4>
-                                @forelse($product->comments as $comment)
+                                @forelse($product->comments->where('status', 1) as $comment)
                                     <div class="d-flex mb-4 border rounded shadow-sm p-4 bg-white">
                                         <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
                                             class="img-fluid rounded-circle me-3" style="width: 60px; height: 60px;"
@@ -399,8 +399,6 @@
                                                 $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0;
                                             @endphp
                                             <div class="mb-2">
-
-
                                                 @for ($i = 1; $i <= 5; $i++)
                                                     <i class="fas fa-star"
                                                         style="color: {{ $i <= $rating ? '#ffc107' : '#ccc' }}"></i>
@@ -415,6 +413,7 @@
                                         <p class="text-muted">Chưa có bình luận nào cho sản phẩm này.</p>
                                     </div>
                                 @endforelse
+
                             </div>
                         </div>
                     </div>
@@ -868,8 +867,7 @@
         updateCarousel();
     });
 </script>
-<!-- Footer Start -->
-@include('clients.layouts.footer')
+
 {{-- CSS cho  carousel liên quan --}}
 <style>
     .related-products-carousel {
@@ -1004,3 +1002,4 @@
         border-radius: 0 8px 8px 0;
     }
 </style>
+@include('clients.layouts.footer')

@@ -27,11 +27,17 @@ class RecipientController extends Controller
             'recipient_phone' => 'required|regex:/^0[0-9]{9}$/',
             'recipient_address' => 'required|string|max:500',
             'is_default' => 'nullable|boolean',
+            'province_code' => 'required',
+            'district_code' => 'required',
+            'ward_code' => 'required',
         ], [
             'recipient_name.required' => 'Vui lòng nhập họ và tên.',
             'recipient_phone.required' => 'Vui lòng nhập số điện thoại.',
             'recipient_phone.regex' => 'Số điện thoại không đúng định dạng (bắt đầu bằng số 0 và có 10 số).',
             'recipient_address.required' => 'Vui lòng nhập địa chỉ chi tiết.',
+            'province_code.required' => 'Vui lòng chọn tỉnh/thành phố.',
+            'district_code.required' => 'Vui lòng chọn quận/huyện.',
+            'ward_code.required' => 'Vui lòng chọn phường/xã.',
         ]);
 
         $userId = Auth::id();
@@ -41,6 +47,15 @@ class RecipientController extends Controller
             Recipient::where('user_id', $userId)->update(['is_default' => false]);
         }
 
+        $fullAddressParts = array_filter([
+            $request->input('recipient_address'),  // địa chỉ chi tiết
+            $request->input('ward'),
+            $request->input('district'),
+            $request->input('province'),
+        ]);
+
+        $fullAddress = implode(', ', $fullAddressParts);
+
         // Tạo địa chỉ mới
         $recipient = Recipient::create([
             'user_id' => $userId,
@@ -49,9 +64,6 @@ class RecipientController extends Controller
             'recipient_address' => $validated['recipient_address'],
             'is_default' => $validated['is_default'] ?? false,
         ]);
-
-        // dd($request->all());
-
 
         return redirect()->route('clients.order')->with('success', 'Thêm địa chỉ mới thành công!');
     }

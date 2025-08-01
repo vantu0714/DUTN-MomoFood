@@ -45,36 +45,11 @@
 <!-- Fruits Shop Start-->
 <div class="container-fluid fruite py-5">
     <div class="container py-0">
-        <h1 class="mb-4">CỬA HÀNG ĐỒ ĂN VẶT</h1>
+        <div class="section-title text-center">
+            <span class="title-text">CỬA HÀNG ĐỒ ĂN VẶT</span>
+        </div>
         <div class="row g-4">
             <div class="col-lg-12">
-                <div class="row g-4">
-                    <div class="col-xl-3">
-                        <form action="{{ route('clients.search') }}" method="GET"
-                            class="input-group w-100 mx-auto d-flex">
-                            <input type="search" class="form-control border-secondary" name="keyword"
-                                placeholder="Tìm kiếm sản phẩm" aria-describedby="search-icon-1">
-                            <button type="submit" id="search-icon-1" class="btn btn-outline-primary p-3"
-                                type="button">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </form>
-                    </div>
-
-                    <div class="col-6"></div>
-                    <div class="col-xl-3">
-                        <div class="bg-light ps-3 py-3 rounded d-flex justify-content-between mb-4">
-                            <label for="fruits">Sắp xếp mặc định:</label>
-                            <select id="fruits" name="fruitlist" class="border-0 form-select-sm bg-light me-3"
-                                form="fruitform">
-                                <option value="volvo">Sản phẩm đang cập nhật</option>
-                                <option value="saab">Được yêu thích</option>
-                                <option value="opel">Đồ ăn phổ biến</option>
-                                <option value="audi">Đồ uống siêu hot</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
                 <div class="row g-4">
                     <div class="col-lg-3">
                         <div class="row g-4">
@@ -147,14 +122,12 @@
                                     <div class="row g-2 mb-3" id="customPriceInputs"
                                         style="{{ request('price_range') == 'custom' ? '' : 'display:none;' }}">
                                         <div class="col-6">
-                                            <input type="number" name="min_price"
-                                                class="form-control form-control-sm" placeholder="Giá từ"
-                                                value="{{ request('min_price') }}">
+                                            <input type="number" name="min_price" class="form-control form-control-sm"
+                                                placeholder="Giá từ" value="{{ request('min_price') }}">
                                         </div>
                                         <div class="col-6">
-                                            <input type="number" name="max_price"
-                                                class="form-control form-control-sm" placeholder="Giá đến"
-                                                value="{{ request('max_price') }}">
+                                            <input type="number" name="max_price" class="form-control form-control-sm"
+                                                placeholder="Giá đến" value="{{ request('max_price') }}">
                                         </div>
                                     </div>
 

@@ -247,6 +247,20 @@ class OrderController extends Controller
             foreach ($order->orderDetails as $detail) {
                 Product::where('id', $detail->product_id)->increment('sold_count', $detail->quantity);
             }
+
+            $order->save();
+
+            // Chỉ tính đơn hàng Hoàn thành (4) để xét VIP
+            $userId = $order->user_id;
+            $totalSpent = Order::where('user_id', $userId)
+                ->where('status', 4) // chỉ tính đơn hoàn thành
+                ->sum('total_price');
+
+            if ($totalSpent >= 5000000) {
+                User::where('id', $userId)->update(['is_vip' => true]);
+            }
+
+            return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật và kiểm tra VIP.');
         }
         // Nếu chuyển sang trạng thái Hoàn hàng (5) → bắt buộc có lý do
         elseif ($newStatus == 5) {
