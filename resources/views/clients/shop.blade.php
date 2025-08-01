@@ -317,7 +317,7 @@
             </div>
         </div>
     </div>
-    <!-- Fruits Shop End-->
+<!-- Fruits Shop End-->
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -604,8 +604,6 @@
         });
     </script>
 
-
-
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -627,5 +625,27 @@
                 });
             });
         </script>
+
+         <style>
+            .section-title {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 12px;
+                /* khoảng cách giữa icon và chữ */
+                margin-bottom: 40px;
+                /* khoảng cách dưới */
+            }
+
+            .section-title .title-text {
+                color: #e86c4d;
+                /* màu cam giống hình */
+                font-weight: 700;
+                /* đậm */
+                font-size: 48px;
+                font-family: 'Arial', sans-serif;
+                text-transform: uppercase;
+            }
+        </style>
 
         @include('clients.layouts.footer')
