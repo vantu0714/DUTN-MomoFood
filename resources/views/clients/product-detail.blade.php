@@ -339,7 +339,6 @@
                                     </button>
                                 </div>
                                 @if (!$hasVariants)
-                                    
                                     <input type="hidden" id="totalStock" value="{{ $totalStock }}">
                                 @endif
 
@@ -435,6 +434,25 @@
                                 <textarea id="content" name="content" class="form-control rounded-3" rows="6"
                                     placeholder="Hãy chia sẻ trải nghiệm của bạn về sản phẩm này..." required></textarea>
                             </div>
+                            <style>
+                                /* Đè màu viền, text và focus của textarea */
+                                textarea.form-control {
+                                    border: 1.5px solid #100603 !important;
+                                    color: #333 !important;
+                                    font-size: 1rem !important;
+                                }
+
+                                textarea.form-control::placeholder {
+                                    color: #000000 !important;
+                                    opacity: 0.7 !important;
+                                }
+
+                                textarea.form-control:focus {
+                                    border-color: #d67054 !important;
+                                    box-shadow: 0 0 0 0.15rem rgba(214, 112, 84, 0.25) !important;
+                                }
+                            </style>
+
 
                             <div class="mb-4">
                                 <label class="form-label fw-semibold d-block">Chọn số sao:</label>
@@ -530,9 +548,10 @@
                                 </div>
 
                                 <div>
-                                    <p class="text-muted mb-1 small">
-                                        {{ strtoupper($item->category?->category_name ?? 'SẢN PHẨM') }}
+                                    <p class="text-muted mb-1 small text-capitalize">
+                                        {{ strtolower($item->category?->category_name ?? 'SẢn phẩm') }}
                                     </p>
+
                                     <h6 class="text-dark fw-bold mb-2">{{ $item->product_name }}</h6>
 
                                     {{-- Phần giá --}}
