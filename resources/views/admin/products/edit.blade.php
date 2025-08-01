@@ -306,21 +306,16 @@
                             $oldExpiration = $product->expiration_date
                                 ? Carbon::parse($product->expiration_date)
                                 : null;
-                            $minAllowedDate = $oldExpiration
-                                ? $oldExpiration->copy()->addDays(30)
-                                : Carbon::today()->addDays(30);
                         @endphp
 
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-7 mb-4">
                                     <label for="expiration_date" class="form-label fw-semibold">Ngày hết hạn</label>
-
                                     <input type="date"
                                         class="form-control @error('expiration_date') is-invalid @enderror"
                                         id="expiration_date" name="expiration_date"
-                                        value="{{ old('expiration_date', $oldExpiration ? $oldExpiration->format('Y-m-d') : '') }}"
-                                        min="{{ $minAllowedDate->format('Y-m-d') }}">
+                                        value="{{ old('expiration_date', $oldExpiration ? $oldExpiration->format('Y-m-d') : '') }}">
                                     @error('expiration_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -895,28 +890,42 @@
 </script>
 <!-- js HSD -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const expirationInput = document.getElementById('expiration_date');
         if (!expirationInput) return;
 
-        // Lấy ngày hết hạn hiện tại từ server
-        const oldExpirationDate = @json($product->expiration_date);
+        const oldExpirationDateStr = @json($product->expiration_date);
+        if (!oldExpirationDateStr) return;
 
-        if (oldExpirationDate) {
-            const oldDate = new Date(oldExpirationDate);
-            oldDate.setDate(oldDate.getDate() + 1); // +1 ngày so với hạn cũ
+        const oldDate = new Date(oldExpirationDateStr);
+        const defaultValue = expirationInput.value;
 
-            const minDate = formatDate(oldDate);
-            expirationInput.setAttribute('min', minDate);
+        expirationInput.addEventListener('input', function() {
+            const currentVal = expirationInput.value;
 
-            // Gợi ý cho người dùng
-            const hint = document.createElement('div');
-            hint.classList.add('form-text', 'text-muted', 'mt-1');
-            hint.innerText = `Ngày hết hạn mới phải sau ngày cũ ít nhất 1 ngày (tức từ ${formatDateDisplay(oldDate)} trở đi).`;
-            expirationInput.parentNode.appendChild(hint);
-        }
+            if (currentVal && currentVal !== defaultValue) {
+                const minDate = new Date(oldExpirationDateStr);
+                minDate.setDate(minDate.getDate() + 1);
 
-        // Hàm định dạng yyyy-mm-dd
+                expirationInput.setAttribute('min', formatDate(minDate));
+
+                // Gợi ý
+                if (!document.getElementById('expiration-hint')) {
+                    const hint = document.createElement('div');
+                    hint.id = 'expiration-hint';
+                    hint.classList.add('form-text', 'text-muted', 'mt-1');
+                    hint.innerText =
+                        `Ngày hết hạn mới phải sau ngày cũ ít nhất 1 ngày (tức từ ${formatDateDisplay(minDate)} trở đi).`;
+                    expirationInput.parentNode.appendChild(hint);
+                }
+            } else {
+                // Nếu người dùng giữ nguyên hoặc xóa ngày
+                expirationInput.removeAttribute('min');
+                const hint = document.getElementById('expiration-hint');
+                if (hint) hint.remove();
+            }
+        });
+
         function formatDate(date) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -924,7 +933,6 @@
             return `${year}-${month}-${day}`;
         }
 
-        // Hàm định dạng hiển thị dd/mm/yyyy
         function formatDateDisplay(date) {
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -933,5 +941,3 @@
         }
     });
 </script>
-
-

@@ -60,7 +60,7 @@
                                 <h6 class="fw-bold text-dark text-truncate" title="{{ $product->product_name }}">
                                     {{ $product->product_name }}
                                 </h6>
-                                <p class="text-muted small mb-2 product-description">{{ $product->description }}</p>
+                                <p class="text-muted small mb-2">{{ $product->description }}</p>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
@@ -86,12 +86,12 @@
                                     data-product-price="{{ $price ?? 0 }}"
                                     data-product-original-price="{{ $original ?? 0 }}"
                                     data-product-description="{{ $product->description }}"
-                                    data-variants='@json($variants)' data-bs-toggle="modal"
-                                    data-bs-target="#cartModal">
+                                    data-variants='@json($variants)'
+                                    data-total-stock="{{ $product->product_type === 'simple' ? $product->quantity_in_stock : $firstVariant?->quantity_in_stock ?? 0 }}"
+                                    data-bs-toggle="modal" data-bs-target="#cartModal">
                                     <i class="bi bi-cart3 fa-2x text-danger"></i>
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -110,7 +110,7 @@
     </div>
 </div>
 
-<script>
+{{-- <script>
     document.addEventListener('click', function(e) {
         const link = e.target.closest('.pagination a');
         if (link) {
@@ -142,7 +142,7 @@
                 .catch(err => console.error('Lỗi khi phân trang:', err));
         }
     });
-</script>
+</script> --}}
 
 <style>
     .card-body .btn {

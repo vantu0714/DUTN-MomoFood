@@ -118,4 +118,38 @@ class Product extends Model
     {
         return $this->belongsTo(ProductOrigin::class, 'origin_id');
     }
+  
+    public function getTotalVariantStockAttribute()
+    {
+        return $this->variants->sum(function ($v) {
+            return $v->quantity_in_stock ?? 0;
+        });
+    }
+    public function getTotalStockAttribute()
+    {
+        return $this->product_type === 'variant'
+            ? $this->variants->sum('quantity_in_stock')
+            : ($this->quantity_in_stock ?? $this->quantity ?? 0);
+    }
+    // app/Models/Product.php
+
+    public function scopeAvailable($query)
+    {
+        $query->where('status', 1)
+            ->where(function ($q) {
+                $q->whereNull('expiration_date')
+                    ->orWhere('expiration_date', '>', now());
+            })
+            ->where(function ($q) {
+                $q->where(function ($simple) {
+                    $simple->where('product_type', 'simple')
+                        ->where('quantity_in_stock', '>', 0);
+                })->orWhere(function ($variant) {
+                    $variant->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q) {
+                            $q->where('quantity_in_stock', '>', 0);
+                        });
+                });
+            });
+    }
 }

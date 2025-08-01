@@ -114,7 +114,7 @@ Route::middleware(['auth', 'client'])->group(function () {
     //thong tin nguoi nhan
     Route::post('/recipients', [RecipientController::class, 'store'])->name('recipients.store');
     Route::post('/recipients/select', [RecipientController::class, 'select'])->name('recipients.select');
-    Route::put('/recipients/{id}', [RecipientController::class, 'update'])->name('recipients.update');
+    Route::put('/recipients/{id}', [RecipientController::class, 'update'])->name('clients.recipients.update');
     Route::delete('/recipients/{id}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
 
 });
