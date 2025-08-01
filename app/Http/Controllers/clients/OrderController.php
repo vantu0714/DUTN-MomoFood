@@ -254,14 +254,6 @@ class OrderController extends Controller
                 'status' => 1,
             ]);
 
-            // DEBUG (bạn có thể xóa dòng này khi xong)
-            // dd([
-            //     'cart_total' => $total,
-            //     'shipping_fee' => $request->shipping_fee,
-            //     'discount_from_promotion' => $discount,
-            //     'grand_total' => $grandTotal,
-            // ]);
-
             // Thêm chi tiết đơn hàng
             foreach ($cartItems as $item) {
                 OrderDetail::create([
@@ -275,7 +267,7 @@ class OrderController extends Controller
 
             // Cập nhật trạng thái VIP
             $totalSpent = Order::where('user_id', $userId)
-                ->whereIn('status', [2, 3, 4])
+                ->whereIn('status', [3,4])
                 ->sum('total_price');
 
             if ($totalSpent >= 5000000) {
@@ -302,8 +294,6 @@ class OrderController extends Controller
             return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
     }
-
-
 
     public function orderList(Request $request)
     {
