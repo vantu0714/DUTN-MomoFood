@@ -1,4 +1,3 @@
-<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 <div class="tab-content">
     <div id="tab-1" class="tab-pane fade show active p-0">
@@ -112,7 +111,7 @@
     </div>
 </div>
 
-<script>
+{{-- <script>
     document.addEventListener('click', function(e) {
         const link = e.target.closest('.pagination a');
         if (link) {
@@ -144,7 +143,7 @@
                 .catch(err => console.error('Lỗi khi phân trang:', err));
         }
     });
-</script>
+</script> --}}
 
 <style>
     .card-body .btn {
