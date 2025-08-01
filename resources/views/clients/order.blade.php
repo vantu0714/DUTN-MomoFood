@@ -460,7 +460,7 @@
 
                             <div class="form-group">
                                 <label for="detail_address">Địa chỉ chi tiết</label>
-                                <input type="text" id="detail_address" class="form-control"
+                                <input type="text" id="detail_address" name="recipient_address" class="form-control"
                                     placeholder="Số nhà, tên đường...">
                             </div>
 
@@ -504,6 +504,15 @@
             const modal = new bootstrap.Modal(document.getElementById('addressModal'));
             modal.show();
         });
+
+        window.toggleAddressForm = function() {
+            const addressForm = document.getElementById('address-form');
+            if (addressForm.style.display === 'none' || addressForm.style.display === '') {
+                addressForm.style.display = 'block';
+            } else {
+                addressForm.style.display = 'none';
+            }
+        };
 
         // Validate đơn giản các input
         const nameInput = document.querySelector('[name="recipient_name"]');

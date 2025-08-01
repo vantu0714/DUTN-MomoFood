@@ -90,9 +90,7 @@
                                     data-bs-toggle="modal" data-bs-target="#cartModal">
                                     <i class="bi bi-cart3 fa-2x text-danger"></i>
                                 </button>
-
                             </div>
-
                         </div>
                     </div>
                 </div>
