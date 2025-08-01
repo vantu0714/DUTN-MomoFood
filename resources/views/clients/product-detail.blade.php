@@ -1,6 +1,6 @@
 @include('clients.layouts.header')
 @include('clients.layouts.sidebar')
-{{-- @vite('resources/css/shop.css') --}}
+<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 <link rel="stylesheet" href="{{ asset('clients/css/shop-detail.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <!-- Single Page Header start -->
@@ -867,8 +867,7 @@
         updateCarousel();
     });
 </script>
-<!-- Footer Start -->
-@include('clients.layouts.footer')
+
 {{-- CSS cho  carousel liên quan --}}
 <style>
     .related-products-carousel {
@@ -1003,3 +1002,4 @@
         border-radius: 0 8px 8px 0;
     }
 </style>
+@include('clients.layouts.footer')

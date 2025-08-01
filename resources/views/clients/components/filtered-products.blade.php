@@ -1,4 +1,3 @@
-<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 <div class="tab-content">
     <div id="tab-1" class="tab-pane fade show active p-0">
