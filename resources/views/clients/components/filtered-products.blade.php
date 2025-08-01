@@ -60,7 +60,7 @@
                                 <h6 class="fw-bold text-dark text-truncate" title="{{ $product->product_name }}">
                                     {{ $product->product_name }}
                                 </h6>
-                                <p class="text-muted small mb-2">{{ $product->description }}</p>
+                                <p class="text-muted small mb-2 product-description">{{ $product->description }}</p>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
