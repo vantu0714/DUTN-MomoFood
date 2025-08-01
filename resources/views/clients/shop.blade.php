@@ -290,6 +290,7 @@
                                                     data-product-original-price="{{ $original ?? 0 }}"
                                                     data-product-description="{{ $product->description }}"
                                                     data-variants='@json($variants)'
+                                                    data-total-stock="{{ $product->product_type === 'simple' ? $product->quantity_in_stock : $firstVariant?->quantity_in_stock ?? 0 }}"
                                                     data-bs-toggle="modal" data-bs-target="#cartModal">
                                                     <i class="bi bi-cart3 fa-2x text-danger"></i>
                                                 </button>
@@ -443,70 +444,7 @@
                 }
             });
         });
-    </script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const rangeInput = document.getElementById('rangeInput');
-            const output = document.getElementById('amount');
-
-            function formatCurrency(value) {
-                return parseInt(value).toLocaleString('vi-VN') + ' đ';
-            }
-
-            rangeInput.addEventListener('input', function() {
-                output.textContent = formatCurrency(this.value);
-            });
-
-            // Gọi lần đầu khi tải trang
-            output.textContent = formatCurrency(rangeInput.value);
-
-
-            document.addEventListener('DOMContentLoaded', function() {
-                const radios = document.querySelectorAll('input[name="price_range"]');
-                const customInputs = document.getElementById('customPriceInputs');
-
-                radios.forEach(radio => {
-                    radio.addEventListener('change', function() {
-                        if (this.value === 'custom') {
-                            customInputs.style.display = '';
-                        } else {
-                            customInputs.style.display = 'none';
-                            // Clear giá trị nếu không chọn tùy chỉnh
-                            document.querySelector('input[name="min_price"]').value = '';
-                            document.querySelector('input[name="max_price"]').value = '';
-                        }
-                    });
-                });
-            });
-        });
-    </script>
-
-    <script>
-        $(document).ready(function() {
-
-            document.addEventListener('DOMContentLoaded', function() {
-                @if (session('success') || session('error'))
-                    let message = "{{ session('success') ?? session('error') }}";
-                    let isError = {{ session('error') ? 'true' : 'false' }};
-
-                    const container = document.getElementById('toast-container');
-                    const messageEl = document.getElementById('toast-message');
-
-                    messageEl.textContent = message;
-                    container.classList.remove('d-none');
-                    if (isError) container.classList.add('toast-error');
-
-                    setTimeout(() => {
-                        container.classList.add('d-none');
-                        container.classList.remove('toast-error');
-                    }, 4000);
-                @endif
-            });
-        });
-    </script>
-
-    <script>
         function rebindOpenCartModal() {
             const modal = new bootstrap.Modal(document.getElementById('cartModal'));
             const variantSection = document.getElementById('variant-section');
@@ -605,6 +543,69 @@
         }
     </script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rangeInput = document.getElementById('rangeInput');
+            const output = document.getElementById('amount');
+
+            function formatCurrency(value) {
+                return parseInt(value).toLocaleString('vi-VN') + ' đ';
+            }
+
+            rangeInput.addEventListener('input', function() {
+                output.textContent = formatCurrency(this.value);
+            });
+
+            // Gọi lần đầu khi tải trang
+            output.textContent = formatCurrency(rangeInput.value);
+
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const radios = document.querySelectorAll('input[name="price_range"]');
+                const customInputs = document.getElementById('customPriceInputs');
+
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'custom') {
+                            customInputs.style.display = '';
+                        } else {
+                            customInputs.style.display = 'none';
+                            // Clear giá trị nếu không chọn tùy chỉnh
+                            document.querySelector('input[name="min_price"]').value = '';
+                            document.querySelector('input[name="max_price"]').value = '';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+
+            document.addEventListener('DOMContentLoaded', function() {
+                @if (session('success') || session('error'))
+                    let message = "{{ session('success') ?? session('error') }}";
+                    let isError = {{ session('error') ? 'true' : 'false' }};
+
+                    const container = document.getElementById('toast-container');
+                    const messageEl = document.getElementById('toast-message');
+
+                    messageEl.textContent = message;
+                    container.classList.remove('d-none');
+                    if (isError) container.classList.add('toast-error');
+
+                    setTimeout(() => {
+                        container.classList.add('d-none');
+                        container.classList.remove('toast-error');
+                    }, 4000);
+                @endif
+            });
+        });
+    </script>
+
+
+
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -624,31 +625,7 @@
                         }
                     });
                 });
-
             });
         </script>
 
         @include('clients.layouts.footer')
-
-
-        <style>
-            .section-title {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 12px;
-                /* khoảng cách giữa icon và chữ */
-                margin-bottom: 40px;
-                /* khoảng cách dưới */
-            }
-
-            .section-title .title-text {
-                color: #e86c4d;
-                /* màu cam giống hình */
-                font-weight: 700;
-                /* đậm */
-                font-size: 48px;
-                font-family: 'Arial', sans-serif;
-                text-transform: uppercase;
-            }
-        </style>

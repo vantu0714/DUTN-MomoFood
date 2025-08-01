@@ -1,4 +1,4 @@
-{{-- <!-- Modal chi tiết sản phẩm -->
+<!-- Modal chi tiết sản phẩm -->
 <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form method="POST" action="{{ route('carts.add') }}" id="modal-add-to-cart-form" class="modal-content">
@@ -107,4 +107,4 @@
         variantOptionsDiv.appendChild(radio);
         variantOptionsDiv.appendChild(label);
     });
-</script> --}}
+</script>
