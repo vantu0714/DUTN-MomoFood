@@ -264,6 +264,17 @@ class OrderController extends Controller
 
         $order->save();
 
+        if ($order->status == 4) {
+            $userId = $order->user_id;
+            $totalSpent = Order::where('user_id', $userId)
+                ->whereIn('status', 4)
+                ->sum('total_price');
+
+            if ($totalSpent >= 5000000) {
+                User::where('id', $userId)->update(['is_vip' => true]);
+            }
+        }
+
         return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật.');
     }
     public function cancel(Request $request, $id)
