@@ -64,8 +64,6 @@
 </div>
 <!-- Hero Banner Fullscreen End -->
 
-
-
 <!-- Featurs Section Start -->
 <div class="container-fluid featurs py-5">
     <div class="container py-2">
@@ -132,10 +130,7 @@
         </div>
     </div>
 </div>
-<!-- Featurs Section End -->
-
-
-<!-- Fruits Shop Start -->
+<!-- DANH SÁCH SẢN PHẨM -->
 <div class="container-fluid fruite py-5">
     <div class="container py-2">
         <!-- DANH MỤC NGANG -->
@@ -170,17 +165,15 @@
                     </div>
 
                     <div id="filtered-products">
-                        @include('clients.components.filtered-products')
+                        <div id="filtered-products">
+                            @include('clients.components.filtered-products', ['products' => $products])
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- Fruits Shop End -->
-
-
-
 <!-- Featurs Start -->
 <div class="container-fluid service py-5">
     <div class="container py-2">
@@ -391,34 +384,34 @@
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
                 @php
-                    $variantsArray = collect($product->variants ?? [])->map(function ($variant) {
-                        $flavor = optional($variant->attributeValues->firstWhere('attribute.name', 'Vị'))->value ?? '';
-                        $weight =
-                            optional($variant->attributeValues->firstWhere('attribute.name', 'Khối lượng'))->value ??
-                            (optional($variant->attributeValues->firstWhere('attribute.name', 'Size'))->value ?? '');
-                        return [
-                            'id' => $variant->id,
-                            'price' => $variant->price,
-                            'discounted_price' => $variant->discounted_price,
-                            'image' => $variant->image
-                                ? asset('storage/' . $variant->image)
-                                : asset('images/no-image.png'),
-                            'flavor' => $flavor ?: 'Không rõ',
-                            'weight' => $weight ?: 'Không rõ',
-                            'quantity_in_stock' => $variant->quantity_in_stock ?? ($variant->quantity ?? 0),
-                        ];
-                    });
+                    $variants =
+                        $product->product_type === 'variant'
+                            ? $product->variants->map(function ($v) {
+                                $flavor = $v->attributeValues->firstWhere('attribute.name', 'Vị')?->value;
+                                $weight = $v->attributeValues->firstWhere('attribute.name', 'Khối lượng')?->value;
+
+                                return [
+                                    'id' => $v->id,
+                                    'flavor' => $flavor,
+                                    'weight' => $weight,
+                                    'price' => $v->price,
+                                    'discounted_price' => $v->discounted_price,
+                                    'quantity' => $v->quantity_in_stock,
+                                    'image' => $v->image
+                                        ? asset('storage/' . $v->image)
+                                        : asset('clients/img/default.jpg'),
+                                ];
+                            })
+                            : [];
                 @endphp
+
                 <div class="col-lg-6 col-xl-4">
                     <div class="p-4 rounded bg-light h-100">
                         <div class="row align-items-center">
-                            <div class="image-wrapper position-relative rounded-circle overflow-hidden mx-auto"
-                                style="width: 150px; height: 150px;">
+                            <div class="image-wrapper mx-auto">
                                 <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/no-image.png') }}"
-                                    class="position-absolute top-50 start-50 translate-middle w-100 h-100 object-fit-cover"
                                     alt="{{ $product->product_name }}">
                             </div>
-
                             <div class="col-6">
                                 <a href="{{ route('product-detail.show', $product->id) }}" class="h5 d-block mb-2">
                                     {{ $product->product_name }}
@@ -435,20 +428,24 @@
                                     <small class="ms-2 text-muted">({{ number_format($avgRating, 1) }}/5)</small>
                                 </div>
 
-                                <h4 class="mb-3 text-danger fw-bold">
-                                    {{ number_format($product->display_price ?? 0, 0, ',', '.') }} đ
+                                <h4 class="mb-3 text-danger fw-bold ps-2 product-price">
+                                    {{ number_format($product->display_price ?? 0, 0, ',', '.') }} VND
                                 </h4>
-
+                                {{-- @php
+                                    $variants = $product->variants;
+                                @endphp --}}
                                 <button type="button"
                                     class="btn border border-secondary rounded-pill px-3 text-primary open-cart-modal d-flex align-items-center"
                                     data-product-id="{{ $product->id }}"
                                     data-product-name="{{ $product->product_name }}"
                                     data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                     data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                    data-product-price="{{ $product->display_price ?? 0 }}"
-                                    data-product-original-price="{{ $product->original_price ?? 0 }}"
+                                    data-product-price="{{ $price ?? 0 }}"
+                                    data-product-original-price="{{ $original ?? 0 }}"
                                     data-product-description="{{ $product->description }}"
-                                    data-variants='@json($variantsArray, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-bs-target="#cartModal">
+                                    data-variants='@json($variants)'
+                                    data-total-stock="{{ $product->product_type === 'simple' ? $product->quantity_in_stock : $firstVariant?->quantity_in_stock ?? 0 }}"
+                                    data-bs-toggle="modal" data-bs-target="#cartModal">
                                     <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ
                                 </button>
                             </div>
@@ -624,8 +621,6 @@
                                 <!-- JS sẽ render radio button biến thể -->
                             </div>
                         </div>
-
-
                         <!-- Số lượng -->
                         @php
                             $hasVariants = $product->variants->count() > 0;
@@ -702,7 +697,7 @@
                 const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
                 const productDescription = this.dataset.productDescription || '';
                 const variants = JSON.parse(this.dataset.variants || '[]');
-
+                console.log("Loaded variants:", variants);
                 // Reset modal
                 productIdInput.value = productId;
                 productNameEl.textContent = productName;
@@ -966,6 +961,60 @@
 @include('clients.layouts.footer')
 
 <style>
+    a.h5.d-block.mb-2:hover {
+        color: #d67054 !important;
+    }
+
+    .product-card {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        /* hoặc bg-light của Bootstrap */
+        border-radius: 10px;
+        min-height: 100%;
+        /* Cho tất cả các card cao bằng nhau */
+    }
+
+    .product-price {
+        text-align: left;
+        padding-left: 0.5rem;
+        /* hoặc giá trị tương ứng với tên sản phẩm */
+        margin-left: 0;
+        /* đảm bảo không bị lệch */
+    }
+
+    .image-wrapper {
+        width: 150px !important;
+        height: 150px !important;
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        border: 4px solid #f1f1f1 !important;
+        /* Tuỳ chỉnh màu viền nếu muốn */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+    }
+
+    /* .image-wrapper img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+        display: block !important;
+    } */
+
+    .image-wrapper img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        border-radius: 50% !important;
+        display: block !important;
+        background-color: white;
+
+    }
+
     .comment-content {
         display: -webkit-box;
         -webkit-line-clamp: 2;
