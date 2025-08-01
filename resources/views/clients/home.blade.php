@@ -160,7 +160,8 @@
                 <div class="tab-class text-center mt-4" id="best-selling-section">
                     <div class="row g-4">
                         <div class="col-12 text-start">
-                            <h2 class="text-success">MÓN ĂN NỔI BẬT</h2>
+                            <h2 style="color: #e0806d;">MÓN ĂN NỔI BẬT</h2>
+
                         </div>
                     </div>
 
@@ -535,9 +536,11 @@
 
                     <div class="d-flex align-items-start">
                         <!-- Avatar -->
-                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-                            class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;"
-                            alt="Avatar">
+                       <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+    class="rounded-circle me-3 shadow comment-avatar"
+    alt="Avatar">
+
+
 
                         <div>
                             <!-- Stars -->
@@ -961,6 +964,15 @@
 @include('clients.layouts.footer')
 
 <style>
+    .comment-avatar {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 2px solid #fff;
+    flex-shrink: 0; /* ⛔ Không cho bị ép co giãn theo flex */
+    display: block;
+}
+
     a.h5.d-block.mb-2:hover {
         color: #d67054 !important;
     }

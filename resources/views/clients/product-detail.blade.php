@@ -535,7 +535,8 @@
                                     <a href="{{ route('product-detail.show', $item->id) }}" class="d-block">
                                         <img src="{{ asset('storage/' . ($firstVariant?->image ?? $item->image)) }}"
                                             class="img-fluid rounded w-100" alt="{{ $item->product_name }}"
-                                            style="transition: transform 0.3s ease; cursor: pointer;">
+                                            style="height: 200px; object-fit: cover; transition: transform 0.3s ease; cursor: pointer;">
+
                                     </a>
 
                                     {{-- Badge --}}
