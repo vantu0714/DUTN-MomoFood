@@ -317,13 +317,6 @@
                             @endif
 
                             {{-- CHỌN SỐ LƯỢNG --}}
-                            @php
-                                $hasVariants = $product->variants->count() > 0;
-                                $totalStock = $hasVariants
-                                    ? $product->variants->sum('quantity_in_stock')
-                                    : $product->quantity_in_stock;
-                            @endphp
-
                             <div class="d-flex align-items-center gap-4">
                                 <label class="form-label fw-bold mb-0" style="font-size: 16px;">
                                     <i class="fas fa-sort-numeric-up me-2 text-success"></i>Số lượng:
@@ -333,20 +326,23 @@
                                         <i class="fa fa-minus"></i>
                                     </button>
                                     <input type="number" name="quantity" id="quantity" class="quantity-input"
-                                        value="1" min="1" max="{{ $totalStock }}" readonly>
+                                        value="1" min="1">
                                     <button type="button" class="quantity-btn btn-plus">
                                         <i class="fa fa-plus"></i>
                                     </button>
                                 </div>
-                                @if (!$hasVariants)
-                                    <input type="hidden" id="totalStock" value="{{ $totalStock }}">
-                                @endif
+                                @php
+                                    $hasVariants = $product->variants->count() > 0;
+                                    $totalStock = $hasVariants
+                                        ? $product->variants->sum('quantity_in_stock')
+                                        : $product->quantity_in_stock;
+                                @endphp
 
                                 <div class="available-stock text-muted ms-3" id="availableStock">
                                     {{ $totalStock }} sản phẩm có sẵn
                                 </div>
-                            </div>
 
+                            </div>
                             <button type="submit" class="add-to-cart-btn w-100">
                                 <i class="fa fa-shopping-bag me-2"></i>
                                 Thêm vào giỏ hàng
@@ -433,25 +429,6 @@
                                 <textarea id="content" name="content" class="form-control rounded-3" rows="6"
                                     placeholder="Hãy chia sẻ trải nghiệm của bạn về sản phẩm này..." required></textarea>
                             </div>
-                            <style>
-                                /* Đè màu viền, text và focus của textarea */
-                                textarea.form-control {
-                                    border: 1.5px solid #100603 !important;
-                                    color: #333 !important;
-                                    font-size: 1rem !important;
-                                }
-
-                                textarea.form-control::placeholder {
-                                    color: #000000 !important;
-                                    opacity: 0.7 !important;
-                                }
-
-                                textarea.form-control:focus {
-                                    border-color: #d67054 !important;
-                                    box-shadow: 0 0 0 0.15rem rgba(214, 112, 84, 0.25) !important;
-                                }
-                            </style>
-
 
                             <div class="mb-4">
                                 <label class="form-label fw-semibold d-block">Chọn số sao:</label>
@@ -547,13 +524,12 @@
                                 </div>
 
                                 <div>
-                                    <p class="text-muted mb-1 small text-capitalize">
-                                        {{ strtolower($item->category?->category_name ?? 'SẢn phẩm') }}
+                                    <p class="text-muted mb-1 small">
+                                        {{ strtoupper($item->category?->category_name ?? 'SẢN PHẨM') }}
                                     </p>
-
                                     <h6 class="text-dark fw-bold mb-2">{{ $item->product_name }}</h6>
 
-                                    {{-- Phần giá --}}
+                                    {{-- Phần giá cải tiến --}}
                                     <div class="mb-2">
                                         @if ($hasVariants)
                                             <span class="text-danger fw-bold">
@@ -563,17 +539,10 @@
                                                 @endif
                                             </span>
                                         @else
-                                            @php
-                                                $hasDirectDiscount = $price > 0 && $price < $original;
-                                                $isCouponOnly = $price == 0 && $original > 0;
-                                            @endphp
-
                                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                @if ($hasDirectDiscount)
-                                                    {{-- Có giảm giá trực tiếp --}}
-                                                    <span class="text-danger fw-bold fs-6">
-                                                        {{ number_format($price, 0, ',', '.') }}đ
-                                                    </span>
+                                                <span
+                                                    class="text-danger fw-bold fs-6">{{ number_format($price, 0, ',', '.') }}đ</span>
+                                                @if ($hasDiscount)
                                                     <div class="d-flex align-items-center gap-1">
                                                         <del
                                                             class="text-muted small">{{ number_format($original, 0, ',', '.') }}đ</del>
@@ -583,27 +552,10 @@
                                                             -{{ $discountPercent }}%
                                                         </span>
                                                     </div>
-                                                @elseif ($isCouponOnly)
-                                                    {{-- Giá gốc có, nhưng đang khuyến mãi qua mã giảm giá --}}
-                                                    <span class="text-danger fw-bold fs-6">
-                                                        {{ number_format($original, 0, ',', '.') }}đ
-                                                    </span>
-                                                    <div class="text-muted small fst-italic">
-
-                                                    </div>
-                                                @elseif ($price > 0)
-                                                    {{-- Không giảm giá, hiển thị giá bình thường --}}
-                                                    <span class="text-danger fw-bold fs-6">
-                                                        {{ number_format($price, 0, ',', '.') }}đ
-                                                    </span>
-                                                @else
-                                                    {{-- Không có giá gì cả --}}
-                                                    <span class="text-danger fw-bold fs-6">Liên hệ</span>
                                                 @endif
                                             </div>
                                         @endif
                                     </div>
-
 
                                     {{-- Ảnh các biến thể ở dưới giá --}}
                                     @if ($hasVariants && $item->variants->count() > 1)
@@ -641,26 +593,27 @@
         const stars = document.querySelectorAll('.star');
         const ratingInput = document.getElementById('rating-value');
 
-        if (stars.length && ratingInput) {
-            stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    const rating = this.getAttribute('data-rating');
-                    ratingInput.value = rating;
+        if (!stars.length || !ratingInput) return;
 
-                    stars.forEach(s => {
-                        const sRating = s.getAttribute('data-rating');
-                        if (parseInt(sRating) <= rating) {
-                            s.classList.remove('text-muted');
-                            s.classList.add('text-warning');
-                        } else {
-                            s.classList.remove('text-warning');
-                            s.classList.add('text-muted');
-                        }
-                    });
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+
+                stars.forEach(s => {
+                    const sRating = s.getAttribute('data-rating');
+                    if (parseInt(sRating) <= rating) {
+                        s.classList.remove('text-muted');
+                        s.classList.add('text-warning');
+                    } else {
+                        s.classList.remove('text-warning');
+                        s.classList.add('text-muted');
+                    }
                 });
             });
-        }
-
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
         const variantOptions = document.querySelectorAll('.variant-option');
         const mainImage = document.getElementById('mainProductImage');
         const priceElement = document.getElementById('variantPrice');
@@ -670,8 +623,6 @@
         const quantityInput = document.getElementById('quantity');
         const cancelButton = document.getElementById('cancelVariantSelection');
         const selectedVariantIdInput = document.getElementById('selectedVariantId');
-        const addToCartBtn = document.querySelector('.add-to-cart-btn');
-        const productType = "{{ $product->product_type }}";
 
         let selectedVariant = null;
 
@@ -731,6 +682,7 @@
                 stockElement.textContent = `${totalStock} sản phẩm có sẵn`;
             }
 
+
             if (quantityInput) quantityInput.value = 1;
         }
 
@@ -757,6 +709,7 @@
 
                 updatePriceDisplay(price, original);
                 updateMainImage(image);
+
                 if (stockElement) stockElement.textContent = `${stock} sản phẩm có sẵn`;
 
                 if (quantityInput && quantityInput.value > stock) {
@@ -769,13 +722,6 @@
             cancelButton.addEventListener('click', resetToDefault);
         }
 
-        // Disable manual input
-        if (quantityInput) {
-            quantityInput.setAttribute('readonly', 'readonly');
-            quantityInput.addEventListener('keydown', e => e.preventDefault());
-            quantityInput.addEventListener('paste', e => e.preventDefault());
-        }
-
         // Quantity buttons
         document.querySelector('.btn-minus')?.addEventListener('click', () => {
             let value = parseInt(quantityInput.value) || 1;
@@ -784,12 +730,15 @@
 
         document.querySelector('.btn-plus')?.addEventListener('click', () => {
             let value = parseInt(quantityInput.value) || 1;
-            const max = selectedVariant?.stock || parseInt(document.getElementById('totalStock')
-                ?.value || 9999);
+            const max = selectedVariant?.stock || 9999;
             if (value < max) quantityInput.value = value + 1;
         });
 
-        // Check variant selection before add to cart
+        // Init
+        resetToDefault();
+        const addToCartBtn = document.querySelector('.add-to-cart-btn');
+        const productType = "{{ $product->product_type }}"; // Laravel blade
+
         addToCartBtn?.addEventListener('click', function(e) {
             if (productType === 'variant') {
                 if (!selectedVariant || !selectedVariantIdInput.value) {
@@ -798,12 +747,8 @@
                 }
             }
         });
-
-        // Init
-        resetToDefault();
     });
 </script>
-
 {{-- JavaScript cho carousel liên quan --}}
 <script>
     let currentIndex = 0;
