@@ -23,7 +23,8 @@ class CommentController extends Controller
 
         // Kiểm tra người dùng đã mua sản phẩm chưa
         $hasPurchased = OrderDetail::whereHas('order', function ($query) use ($userId) {
-            $query->where('user_id', $userId)->where('status', '!=', 'cancelled'); // tuỳ status
+            $query->where('user_id', $userId)
+                ->where('status', 4);
         })->where('product_id', $productId)->exists();
 
         if (!$hasPurchased) {
@@ -48,4 +49,5 @@ class CommentController extends Controller
 
         return back()->with('success', 'Bình luận đã được gửi!');
     }
+    
 }
