@@ -291,40 +291,7 @@
                                     value="{{ old('discounted_price', $product->discounted_price ?? '') }}">
                             </div>
                         </div>
-                    @endif
-                    <!-- Additional Information -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white border-bottom py-3">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-plus-circle me-2 text-primary"></i>
-                                Thông tin bổ sung
-                            </h6>
-                        </div>
-                        @php
-                            use Carbon\Carbon;
-
-                            $oldExpiration = $product->expiration_date
-                                ? Carbon::parse($product->expiration_date)
-                                : null;
-                        @endphp
-
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-7 mb-4">
-                                    <label for="expiration_date" class="form-label fw-semibold">Ngày hết hạn</label>
-                                    <input type="date"
-                                        class="form-control @error('expiration_date') is-invalid @enderror"
-                                        id="expiration_date" name="expiration_date"
-                                        value="{{ old('expiration_date', $oldExpiration ? $oldExpiration->format('Y-m-d') : '') }}">
-                                    @error('expiration_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-
-                    </div>
+                    @endif                   
                 </div>
 
                 <!-- Right Column -->
@@ -888,56 +855,5 @@
     document.getElementById('original_price').addEventListener('input', calculateDiscountedPrice);
     document.getElementById('discount_percent').addEventListener('input', calculateDiscountedPrice);
 </script>
-<!-- js HSD -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const expirationInput = document.getElementById('expiration_date');
-        if (!expirationInput) return;
 
-        const oldExpirationDateStr = @json($product->expiration_date);
-        if (!oldExpirationDateStr) return;
 
-        const oldDate = new Date(oldExpirationDateStr);
-        const defaultValue = expirationInput.value;
-
-        expirationInput.addEventListener('input', function() {
-            const currentVal = expirationInput.value;
-
-            if (currentVal && currentVal !== defaultValue) {
-                const minDate = new Date(oldExpirationDateStr);
-                minDate.setDate(minDate.getDate() + 1);
-
-                expirationInput.setAttribute('min', formatDate(minDate));
-
-                // Gợi ý
-                if (!document.getElementById('expiration-hint')) {
-                    const hint = document.createElement('div');
-                    hint.id = 'expiration-hint';
-                    hint.classList.add('form-text', 'text-muted', 'mt-1');
-                    hint.innerText =
-                        `Ngày hết hạn mới phải sau ngày cũ ít nhất 1 ngày (tức từ ${formatDateDisplay(minDate)} trở đi).`;
-                    expirationInput.parentNode.appendChild(hint);
-                }
-            } else {
-                // Nếu người dùng giữ nguyên hoặc xóa ngày
-                expirationInput.removeAttribute('min');
-                const hint = document.getElementById('expiration-hint');
-                if (hint) hint.remove();
-            }
-        });
-
-        function formatDate(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function formatDateDisplay(date) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
-    });
-</script>

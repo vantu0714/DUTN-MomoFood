@@ -115,31 +115,7 @@
                                             @enderror
                                         </div>
                                         <!-- Expiration Date -->
-                                        <div class="col-md-6">
-    <label class="form-label fw-semibold text-dark">
-        <i class="fas fa-calendar-alt text-primary me-2"></i>Ngày hết hạn
-    </label>
-    <input
-        type="date"
-        name="expiration_date"
-        class="form-control form-control-lg @error('expiration_date') is-invalid @enderror"
-        value="{{ old('expiration_date') }}"
-        min="{{ \Carbon\Carbon::today()->addDays(30)->format('Y-m-d') }}"
-    >
-    
-    {{-- Gợi ý ngày hợp lệ --}}
-    <div class="form-text text-muted mt-1">
-        Ngày hết hạn phải cách hôm nay ít nhất 30 ngày (từ ngày {{ \Carbon\Carbon::today()->addDays(30)->format('d/m/Y') }} trở đi).
-    </div>
-
-    {{-- Thông báo lỗi --}}
-    @error('expiration_date')
-        <div class="invalid-feedback">
-            <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
-        </div>
-    @enderror
-</div>
-
+                                    
                                         <div class="col-md-6">
                                             <label class="form-label fw-semibold text-dark">
                                                 <i class="fas fa-globe-asia text-primary me-2"></i>Xuất xứ
@@ -694,14 +670,14 @@
         }
     </script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const input = document.querySelector('input[name="expiration_date"]');
-        const today = new Date();
-        today.setDate(today.getDate() + 30); // +30 ngày
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.querySelector('input[name="expiration_date"]');
+            const today = new Date();
+            today.setDate(today.getDate() + 30); // +30 ngày
 
-        const minDate = today.toISOString().split('T')[0];
-        input.setAttribute('min', minDate);
-    });
-</script>
+            const minDate = today.toISOString().split('T')[0];
+            input.setAttribute('min', minDate);
+        });
+    </script>
 
 @endsection
