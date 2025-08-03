@@ -617,14 +617,14 @@
                 }
 
                 if (variant.sub_attribute) {
-    const subSelect = document.getElementById('editSubAttributeId');
-    const targetId = variant.sub_attribute.id ?? '';
+                    const subSelect = document.getElementById('editSubAttributeId');
+                    const targetId = variant.sub_attribute.id ?? '';
 
-    // Chọn option đúng ID
-    [...subSelect.options].forEach(opt => {
-        opt.selected = (opt.value == targetId);
-    });
-}
+                    // Chọn option đúng ID
+                    [...subSelect.options].forEach(opt => {
+                        opt.selected = (opt.value == targetId);
+                    });
+                }
 
 
                 if (variant.image_url) {

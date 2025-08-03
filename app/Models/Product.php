@@ -15,8 +15,7 @@ class Product extends Model
         'product_name',
         'image',
         'description',
-        'ingredients',
-        'expiration_date',
+        'ingredients',     
         'original_price',
         'discounted_price',
         'status',
@@ -27,9 +26,7 @@ class Product extends Model
         'product_type',
         'origin_id',
     ];
-    protected $casts = [
-        'expiration_date' => 'date',
-    ];
+   
 
     public function category(): BelongsTo
     {
@@ -134,22 +131,19 @@ class Product extends Model
     // app/Models/Product.php
 
     public function scopeAvailable($query)
-    {
-        $query->where('status', 1)
-            ->where(function ($q) {
-                $q->whereNull('expiration_date')
-                    ->orWhere('expiration_date', '>', now());
-            })
-            ->where(function ($q) {
-                $q->where(function ($simple) {
-                    $simple->where('product_type', 'simple')
-                        ->where('quantity_in_stock', '>', 0);
-                })->orWhere(function ($variant) {
-                    $variant->where('product_type', 'variant')
-                        ->whereHas('variants', function ($q) {
-                            $q->where('quantity_in_stock', '>', 0);
-                        });
-                });
+{
+    $query->where('status', 1)
+        ->where(function ($q) {
+            $q->where(function ($simple) {
+                $simple->where('product_type', 'simple')
+                    ->where('quantity_in_stock', '>', 0);
+            })->orWhere(function ($variant) {
+                $variant->where('product_type', 'variant')
+                    ->whereHas('variants', function ($q) {
+                        $q->where('quantity_in_stock', '>', 0);
+                    });
             });
-    }
+        });
+}
+
 }

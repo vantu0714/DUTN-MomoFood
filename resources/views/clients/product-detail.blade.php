@@ -144,7 +144,7 @@
                                         <td>{{ $product->origin ? $product->origin->name : 'Đang cập nhật' }}</td>
                                     </tr>
 
-                                    <tr>
+                                    {{-- <tr>
                                         <th class="text-muted">Hạn sử dụng</th>
                                         <td>
                                             @if ($product->expiration_date)
@@ -156,7 +156,7 @@
                                                 Không rõ
                                             @endif
                                         </td>
-                                    </tr>
+                                    </tr> --}}
 
                                 </tbody>
                             </table>
