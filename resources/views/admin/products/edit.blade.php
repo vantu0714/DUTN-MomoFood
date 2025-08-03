@@ -291,7 +291,7 @@
                                     value="{{ old('discounted_price', $product->discounted_price ?? '') }}">
                             </div>
                         </div>
-                    @endif                   
+                    @endif
                 </div>
 
                 <!-- Right Column -->
@@ -537,22 +537,24 @@
                         <input type="hidden" name="main_attribute_id" id="editMainAttributeId">
                     </div>
                     <!-- Chọn Size -->
-                    <div class="mb-3">
-                        <label for="editSubAttributeId" class="form-label">khối lượng</label>
-                        <select class="form-select" name="sub_attribute_id" id="editSubAttributeId" required>
-                            <option value="">-- Chọn khối lượng --</option>
-                            @php
-                                $sizeAttr = $attributes->firstWhere('name', 'Khối lượng');
-                            @endphp
+                    @php
+                        $currentSubAttributeId = $variant->sub_attribute_id ?? null;
+                        $sizeAttr = $attributes->firstWhere('name', 'Khối lượng');
+                    @endphp
 
+                    <div class="mb-3">
+                        <label for="editSubAttributeId" class="form-label">Khối lượng</label>
+                        <select class="form-select" name="sub_attribute_id" id="editSubAttributeId" required>
                             @if ($sizeAttr && $sizeAttr->values)
                                 @foreach ($sizeAttr->values as $value)
-                                    <option value="{{ $value->id }}">{{ $value->value }}</option>
+                                    <option value="{{ $value->id }}"
+                                        {{ $currentSubAttributeId == $value->id ? 'selected' : '' }}>
+                                        {{ $value->value }}
+                                    </option>
                                 @endforeach
                             @else
                                 <option disabled>Không có khối lượng nào</option>
                             @endif
-
                         </select>
                     </div>
                     <div class="mb-3">
@@ -615,8 +617,15 @@
                 }
 
                 if (variant.sub_attribute) {
-                    document.getElementById('editSubAttributeId').value = variant.sub_attribute.id ?? '';
-                }
+    const subSelect = document.getElementById('editSubAttributeId');
+    const targetId = variant.sub_attribute.id ?? '';
+
+    // Chọn option đúng ID
+    [...subSelect.options].forEach(opt => {
+        opt.selected = (opt.value == targetId);
+    });
+}
+
 
                 if (variant.image_url) {
                     document.getElementById('currentVariantImage').src = variant.image_url;
@@ -855,5 +864,3 @@
     document.getElementById('original_price').addEventListener('input', calculateDiscountedPrice);
     document.getElementById('discount_percent').addEventListener('input', calculateDiscountedPrice);
 </script>
-
-
