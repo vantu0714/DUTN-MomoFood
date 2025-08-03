@@ -536,9 +536,8 @@
 
                     <div class="d-flex align-items-start">
                         <!-- Avatar -->
-                       <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-    class="rounded-circle me-3 shadow comment-avatar"
-    alt="Avatar">
+                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                            class="rounded-circle me-3 shadow comment-avatar" alt="Avatar">
 
 
 
@@ -639,7 +638,6 @@
                                     name="quantity" value="1" min="1">
                                 <button type="button" class="btn btn-outline-secondary" id="increase-qty">+</button>
                                 <br>
-
                             </div>
                             <div class="available-stock text-muted ms-3" id="availableStock">
                                 sản phẩm có sẵn {{ $totalStock }}
@@ -673,6 +671,7 @@
         const productVariantIdInput = document.getElementById('modal-variant-id');
         const quantityInput = document.getElementById('modal-quantity');
         const stockInfoEl = document.getElementById('availableStock');
+        const totalStockQuantity = "{{ $totalStock }}";
 
 
         const weightGroup = document.getElementById('modal-weight-group');
@@ -680,9 +679,20 @@
 
         // Nút +/-
         document.getElementById('increase-qty').addEventListener('click', () => {
-            const max = parseInt(quantityInput.max) || 9999;
+            const max = parseInt(quantityInput.max) || totalStockQuantity;
             let current = parseInt(quantityInput.value);
             if (current < max) quantityInput.value = current + 1;
+
+            if (current >= max) {
+                Toastify({
+                    text: "Bạn đã vượt quá số lượng cho phép!",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336", // đỏ cảnh báo
+                    stopOnFocus: true
+                }).showToast();
+            }
         });
 
         document.getElementById('decrease-qty').addEventListener('click', () => {
@@ -840,6 +850,24 @@
                     });
                 }
 
+                if (quantityInput) {
+                    quantityInput.addEventListener('input', function() {
+                        const max = totalStock || totalStockQuantity;
+                        let value = parseInt(quantityInput.value) || 1;
+
+                        if (value > max) {
+                            quantityInput.value = max;
+                            Toastify({
+                                text: "Bạn đã vượt quá số lượng cho phép!",
+                                duration: 3000,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "#f44336", // đỏ cảnh báo
+                                stopOnFocus: true
+                            }).showToast();
+                        }
+                    });
+                }
                 modal.show();
             });
         });
@@ -965,13 +993,14 @@
 
 <style>
     .comment-avatar {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border: 2px solid #fff;
-    flex-shrink: 0; /* ⛔ Không cho bị ép co giãn theo flex */
-    display: block;
-}
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border: 2px solid #fff;
+        flex-shrink: 0;
+        /* ⛔ Không cho bị ép co giãn theo flex */
+        display: block;
+    }
 
     a.h5.d-block.mb-2:hover {
         color: #d67054 !important;
