@@ -94,6 +94,7 @@
                         6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
                         7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
                         8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
+                        9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
                     ];
                     $status = $statusLabels[$order->status] ?? ['label' => 'Không rõ', 'class' => 'light'];
 
@@ -143,6 +144,7 @@
                                     6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
                                     7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
                                     8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
+                                    9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
                                 ];
                             @endphp
 
@@ -332,7 +334,6 @@
                 </div>
             </div>
         @endif
-
 
         {{-- Quay lại --}}
         <div class="text-end mt-4">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\UpdateOrderStatus;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
@@ -218,17 +219,10 @@ class OrderController extends Controller
         return redirect()->route('admin.orders.index')->with('success', 'Cập nhật thành công');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Order $order)
-    {
-        //
-    }
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|integer|min:1|max:6',
+            'status' => 'required|integer|min:1|max:9',
         ]);
 
         $newStatus = (int) $request->status;
@@ -238,34 +232,57 @@ class OrderController extends Controller
             return back()->with('error', 'Không thể hủy đơn hàng sau khi đã hoàn hàng.');
         }
 
-        // Nếu chuyển sang trạng thái Hoàn thành (4) → auto paid
-        if ($newStatus == 4) {
-            $order->status = 4;
-            $order->completed_at = now();
-            $order->payment_status = 'paid';
+        // Xử lý các trạng thái đặc biệt
+        switch ($newStatus) {
+            case 3: // Đang giao
+                $order->status = 3;
+                $order->delivered_at = now();
+                $order->save();
 
-            foreach ($order->orderDetails as $detail) {
-                Product::where('id', $detail->product_id)->increment('sold_count', $detail->quantity);
-            }
-        }
-        // Nếu chuyển sang trạng thái Hoàn hàng (5) → bắt buộc có lý do
-        elseif ($newStatus == 5) {
-            $request->validate([
-                'reason' => 'required|string|max:1000',
-            ]);
+                UpdateOrderStatus::dispatch($order, 9)
+                    ->delay(now()->addMinutes(1));
 
-            $order->status = 5;
-            $order->reason = $request->reason;
-        }
-        // Các trạng thái khác
-        else {
-            $order->status = $newStatus;
+                return back()->with('success', 'Đơn hàng đang được giao và sẽ tự động cập nhật trạng thái sau 1 phút.');
+
+            case 9: // Đã giao hàng - Thêm case này để xử lý thủ công nếu cần
+                $order->status = 9;
+                $order->received_at = now();
+                $order->save();
+
+                UpdateOrderStatus::dispatch($order, 4)
+                    ->delay(now()->addMinutes(1));
+
+                return back()->with('success', 'Đơn hàng đã được giao và sẽ tự động hoàn thành sau 1 phút.');
+
+            case 4: // Hoàn thành
+                $order->status = 4;
+                $order->completed_at = now();
+                $order->payment_status = 'paid';
+
+                foreach ($order->orderDetails as $detail) {
+                    $product = $detail->product;
+                    if ($product) {
+                        $product->increment('sold_count', $detail->quantity);
+                    }
+                }
+                break;
+
+            case 5: // Hoàn hàng
+                $request->validate([
+                    'reason' => 'required|string|max:1000',
+                ]);
+                $order->status = 5;
+                $order->reason = $request->reason;
+                break;
+
+            default:
+                $order->status = $newStatus;
         }
 
         $order->save();
-
         return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật.');
     }
+
     public function cancel(Request $request, $id)
     {
         $order = Order::findOrFail($id);
