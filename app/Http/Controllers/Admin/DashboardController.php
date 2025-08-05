@@ -108,6 +108,8 @@ class DashboardController extends Controller
 
         // Tổng tồn kho
         $totalStock = Product::sum('quantity_in_stock');
+        // Sản phẩm đã hết hàng
+        $outOfStockProducts = Product::where('quantity_in_stock', 0)->get();
 
         // Khách hàng mua nhiều nhất
         $topCustomers = User::whereHas('orders', function ($q) use ($completedOrderIds) {
@@ -138,7 +140,8 @@ class DashboardController extends Controller
             'fromDate',
             'toDate',
             'month',
-            'year'
+            'year',
+            'outOfStockProducts'
         ));
     }
 }
