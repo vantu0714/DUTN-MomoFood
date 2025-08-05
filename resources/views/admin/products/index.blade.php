@@ -79,25 +79,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="col-xl-3 col-md-6 mb-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="bg-warning bg-gradient rounded-circle p-3">
-                                    <i class="fas fa-exclamation-triangle text-white"></i>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-xs fw-bold text-warning text-uppercase mb-1">Hết hạn sử dụng</div>
-                                <div class="h5 mb-0">{{ $expiredProductsCount }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
         <!-- Filter & Search Section -->
         <div class="card border-0 shadow-sm mb-4">

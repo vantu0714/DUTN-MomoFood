@@ -33,5 +33,14 @@ class CartItem extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+    public function getIsOutOfStockAttribute()
+{
+    if ($this->product_variant_id) {
+        return ($this->productVariant?->quantity_in_stock ?? 0) <= 0;
+    } else {
+        return ($this->product?->quantity_in_stock ?? 0) <= 0;
+    }
+}
+
     
 }
