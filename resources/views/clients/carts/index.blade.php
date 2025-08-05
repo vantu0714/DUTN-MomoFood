@@ -353,7 +353,6 @@
 {{-- AJAX cập nhật số lượng --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const stockQuantity = "{{ $stock }}";
         const rows = document.querySelectorAll('.cart-item');
         const alertBox = document.getElementById('cart-error-alert');
 
@@ -461,7 +460,7 @@
             input.addEventListener('change', () => {
                 let quantity = parseInt(input.value) || 1;
                 if (quantity < 1) quantity = 1;
-                if (quantity > stockQuantity) {
+                if (quantity > stock) {
                     Toastify({
                         text: "Bạn đã vượt quá số lượng cho phép!",
                         duration: 3000,
