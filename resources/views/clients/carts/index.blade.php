@@ -83,7 +83,9 @@
                                         data-stock="{{ $stock }}">
                                         <td>
                                             <input type="checkbox" name="selected_items[]" value="{{ $item->id }}"
-                                                class="select-item" data-subtotal="{{ $subTotal ?? 0 }}">
+                                                class="select-item" data-subtotal="{{ $subTotal ?? 0 }}"
+                                                {{ $stock <= 0 ? 'disabled' : '' }}>
+
                                         </td>
                                         <td>
                                             <img src="{{ asset('storage/' . $image) }}" class="rounded"
@@ -101,20 +103,27 @@
                                                     @endforeach
                                                 </div>
                                             @endif
+                                            @if ($stock <= 0)
+                                                <div class="text-danger small fw-bold mt-1">Tạm thời hết hàng</div>
+                                            @endif
                                         </td>
                                         <td>{{ number_format($price, 0, ',', '.') }} đ</td>
                                         <td>
                                             <div class="input-group input-group-sm quantity-control mx-auto"
                                                 style="max-width: 130px;">
                                                 <button type="button"
-                                                    class="btn btn-outline-secondary quantity-decrease">−</button>
+                                                    class="btn btn-outline-secondary quantity-decrease"
+                                                    {{ $stock <= 0 ? 'disabled' : '' }}>−</button>
                                                 <input type="number" class="form-control text-center quantity-input"
                                                     value="{{ $item->quantity }}" min="1"
-                                                    data-old-value="{{ $item->quantity }}">
+                                                    data-old-value="{{ $item->quantity }}"
+                                                    {{ $stock <= 0 ? 'disabled' : '' }}>
                                                 <button type="button"
-                                                    class="btn btn-outline-secondary quantity-increase">+</button>
+                                                    class="btn btn-outline-secondary quantity-increase"
+                                                    {{ $stock <= 0 ? 'disabled' : '' }}>+</button>
                                             </div>
                                         </td>
+
                                         <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
                                         <td>
                                             <a href="{{ route('carts.remove', $item->id) }}"
@@ -461,7 +470,10 @@
 
         if (selectAll) {
             selectAll.addEventListener('change', function() {
-                itemCheckboxes.forEach(cb => cb.checked = this.checked);
+                itemCheckboxes.forEach(cb => {
+                    if (!cb.disabled) cb.checked = selectAll.checked;
+                });
+
                 updateSummaryFromSelectedItems(); // GỌI HÀM cập nhật lại tổng tiền
             });
 

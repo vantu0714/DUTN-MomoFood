@@ -23,15 +23,9 @@ class ProductDetailController extends Controller
             'comments.user'
         ])->findOrFail($id);
 
-        // Kiểm tra hạn sử dụng với sản phẩm đơn
-        if ($product->product_type === 'simple') {
-            if ($product->expiration_date && $product->expiration_date <= now()) {
-                abort(404, 'Sản phẩm đã hết hạn sử dụng');
-            }
-
-            if ($product->quantity_in_stock <= 0) {
-                abort(404, 'Sản phẩm đã hết hàng');
-            }
+        // Kiểm tra tồn kho nếu là sản phẩm đơn
+        if ($product->product_type === 'simple' && $product->quantity_in_stock <= 0) {
+            abort(404, 'Sản phẩm đã hết hàng');
         }
 
         $relatedProducts = Product::with([
