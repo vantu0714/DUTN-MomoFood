@@ -353,6 +353,7 @@
 {{-- AJAX cập nhật số lượng --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const stockQuantity = "{{ $stock }}";
         const rows = document.querySelectorAll('.cart-item');
         const alertBox = document.getElementById('cart-error-alert');
 
@@ -431,7 +432,14 @@
             btnIncrease?.addEventListener('click', () => {
                 let quantity = parseInt(input.value) || 1;
                 if (quantity >= stock) {
-                    showError('Không thể vượt quá tồn kho: ' + stock);
+                    Toastify({
+                        text: "Bạn đã vượt quá số lượng cho phép!",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#f44336", // đỏ cảnh báo
+                        stopOnFocus: true
+                    }).showToast();
                     return;
                 }
                 input.dataset.oldValue = quantity;
@@ -453,12 +461,17 @@
             input.addEventListener('change', () => {
                 let quantity = parseInt(input.value) || 1;
                 if (quantity < 1) quantity = 1;
-                if (quantity > stock) {
-                    showError('Không thể vượt quá tồn kho: ' + stock);
+                if (quantity > stockQuantity) {
+                    Toastify({
+                        text: "Bạn đã vượt quá số lượng cho phép!",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#f44336", // đỏ cảnh báo
+                        stopOnFocus: true
+                    }).showToast();
                     input.value = input.dataset.oldValue;
-                    return;
                 }
-                input.dataset.oldValue = quantity;
                 input.value = quantity;
                 updateQuantityAjax(id, quantity, row, input);
             });
