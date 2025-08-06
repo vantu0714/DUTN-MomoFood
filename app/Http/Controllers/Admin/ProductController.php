@@ -5,19 +5,21 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Attribute;
+use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductOrigin;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
-use League\CommonMark\Extension\Attributes\Node\Attributes;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        // --- 1. Query sản phẩm ---
         $query = Product::with(['category', 'variants'])
             ->withCount([
                 'variants as min_price' => function ($q) {
@@ -29,63 +31,88 @@ class ProductController extends Controller
             ])
             ->orderBy('created_at', 'desc');
 
-
+        // --- 2. Tìm kiếm ---
         if ($request->filled('search')) {
             $query->where('product_name', 'like', '%' . $request->search . '%');
         }
 
+        // --- 3. Lọc theo trạng thái ---
         if ($request->filled('status')) {
-            $statusFilter = $request->input('status');
-            $query->where(function ($q) use ($statusFilter) {
-                $q->where(function ($subQuery) use ($statusFilter) {
-                    $subQuery->where('product_type', 'simple');
-                    if ($statusFilter === 'Còn hàng') {
-                        $subQuery->where('quantity_in_stock', '>', 0);
-                    } elseif ($statusFilter === 'Hết hàng') {
-                        $subQuery->where('quantity_in_stock', '=', 0);
-                    }
-                })->orWhere(function ($subQuery) use ($statusFilter) {
-                    $subQuery->where('product_type', 'variant')->whereHas('variants', function ($variantQuery) use ($statusFilter) {
-                        if ($statusFilter === 'Còn hàng') {
-                            $variantQuery->where('quantity_in_stock', '>', 0);
-                        } elseif ($statusFilter === 'Hết hàng') {
-                            $variantQuery->where('quantity_in_stock', '=', 0);
-                        }
+            $status = $request->input('status');
+
+            if ($status === 'Còn hàng') {
+                $query->where('status', 1)->where(function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('product_type', 'simple')
+                            ->where('quantity_in_stock', '>', 0);
+                    })->orWhere(function ($sub) {
+                        $sub->where('product_type', 'variant')
+                            ->whereHas('variants', function ($v) {
+                                $v->where('quantity_in_stock', '>', 0);
+                            });
                     });
                 });
-            });
+            } elseif ($status === 'Hết hàng') {
+                $query->where('status', 1)->where(function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('product_type', 'simple')
+                            ->where('quantity_in_stock', '=', 0);
+                    })->orWhere(function ($sub) {
+                        $sub->where('product_type', 'variant')
+                            ->whereDoesntHave('variants', function ($v) {
+                                $v->where('quantity_in_stock', '>', 0);
+                            });
+                    });
+                });
+            }
+        } else {
+            $query->whereIn('status', [0, 1]);
         }
 
+        // --- 4. Lọc theo danh mục ---
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->input('category_id'));
+            $query->where('category_id', $request->category_id);
         }
 
-        $availableProductsCount = Product::where(function ($query) {
-            $query->where(function ($q) {
-                $q->where('product_type', 'simple')->where('quantity_in_stock', '>', 0);
-            })->orWhere(function ($q) {
-                $q->where('product_type', 'variant')->whereHas('variants', function ($variantQuery) {
-                    $variantQuery->where('quantity_in_stock', '>', 0);
-                });
+        // --- 5. Thống kê số lượng ---
+        $availableProductsCount = Product::where(function ($q) {
+            $q->where(function ($sub) {
+                $sub->where('product_type', 'simple')
+                    ->where('quantity_in_stock', '>', 0);
+            })->orWhere(function ($sub) {
+                $sub->where('product_type', 'variant')
+                    ->whereHas('variants', function ($v) {
+                        $v->where('quantity_in_stock', '>', 0);
+                    });
             });
         })->count();
 
-        $outOfStockProductsCount = Product::where(function ($query) {
-            $query->where(function ($q) {
-                $q->where('product_type', 'simple')->where('quantity_in_stock', '=', 0);
-            })->orWhere(function ($q) {
-                $q->where('product_type', 'variant')->whereDoesntHave('variants', function ($variantQuery) {
-                    $variantQuery->where('quantity_in_stock', '>', 0);
-                });
+        $outOfStockProductsCount = Product::where(function ($q) {
+            $q->where(function ($sub) {
+                $sub->where('product_type', 'simple')
+                    ->where('quantity_in_stock', '=', 0);
+            })->orWhere(function ($sub) {
+                $sub->where('product_type', 'variant')
+                    ->whereDoesntHave('variants', function ($v) {
+                        $v->where('quantity_in_stock', '>', 0);
+                    });
             });
         })->count();
 
-        $totalProducts = Product::count();
+        $totalStockQuantity = Product::where('product_type', 'simple')->sum('quantity_in_stock') +
+            ProductVariant::sum('quantity_in_stock');
 
+        // --- 6. Kết quả ---
         $products = $query->paginate(10);
         $categories = Category::all();
 
-        return view('admin.products.index', compact('products', 'categories', 'availableProductsCount', 'outOfStockProductsCount', 'totalProducts'));
+        return view('admin.products.index', compact(
+            'products',
+            'categories',
+            'availableProductsCount',
+            'outOfStockProductsCount',
+            'totalStockQuantity'
+        ));
     }
 
     public function create()
@@ -106,12 +133,10 @@ class ProductController extends Controller
             'original_price' => 'nullable|numeric|min:1',
             'discounted_price' => 'nullable|numeric|lt:original_price|gt:0',
             'quantity_in_stock' => 'exclude_if:product_type,variant|required|integer|min:1',
-            'expiration_date' => 'nullable|date|after:today',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'origin_id' => 'required|exists:product_origins,id',
         ];
-
 
         if ($request->input('product_type') === 'simple') {
             $rules['original_price'] = ['required', 'numeric', 'gt:0'];
@@ -130,14 +155,12 @@ class ProductController extends Controller
             'discounted_price.lt' => 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
             'quantity_in_stock.required' => 'Vui lòng nhập số lượng tồn kho.',
             'quantity_in_stock.min' => 'Số lượng tồn kho phải lớn hơn 0.',
-            'expiration_date.after' => 'Ngày hết hạn phải sau hôm nay.',
             'origin_id.required' => 'Vui lòng chọn xuất xứ.',
             'origin_id.exists' => 'Xuất xứ không hợp lệ.',
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);
 
-        // Rule bổ sung: discounted_price phải < original_price (nếu có)
         $validator->after(function ($validator) use ($request) {
             if (
                 $request->input('product_type') === 'simple' &&
@@ -156,7 +179,6 @@ class ProductController extends Controller
 
         $validated = $validator->validated();
 
-        // Nếu sản phẩm có biến thể
         if ($validated['product_type'] === 'variant') {
             if ($request->hasFile('image')) {
                 $validated['image'] = $request->file('image')->store('products/temp', 'public');
@@ -169,12 +191,10 @@ class ProductController extends Controller
                 ->with('success', 'Tiếp tục thêm biến thể cho sản phẩm.');
         }
 
-        // Sản phẩm đơn
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
 
-        // Nếu không có giá khuyến mãi hoặc không hợp lệ
         if (
             !$request->filled('discounted_price') ||
             floatval($request->input('discounted_price')) <= 0 ||
@@ -189,18 +209,17 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công.');
     }
+
     public function edit($id)
     {
         $product = Product::with('variants.attributeValues.attribute', 'origin')->findOrFail($id);
         $categories = Category::all();
         $attributes = Attribute::with('values')->get();
         $origins = ProductOrigin::all();
-        // Kiểm tra sản phẩm có biến thể không
         $hasVariants = $product->variants && $product->variants->isNotEmpty();
 
         return view('admin.products.edit', compact('product', 'categories', 'attributes', 'hasVariants', 'origins'));
     }
-
 
     public function update(Request $request, $id)
     {
@@ -215,11 +234,9 @@ class ProductController extends Controller
             'original_price' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:99.99',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'quantity_in_stock' => 'nullable|integer|min:0', 
-            'expiration_date' => 'nullable|date|after:today',
+            'quantity_in_stock' => 'nullable|integer|min:0',
         ]);
 
-        // Tính discounted_price
         if (!empty($validated['original_price']) && !empty($validated['discount_percent'])) {
             $percent = $validated['discount_percent'];
             $discountAmount = $validated['original_price'] * ($percent / 100);
@@ -228,32 +245,27 @@ class ProductController extends Controller
             $validated['discounted_price'] = null;
         }
 
-        // Xử lý ảnh
         if ($request->hasFile('image')) {
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
-            $imagePath = $request->file('image')->store('products', 'public');
-            $validated['image'] = $imagePath;
+            $validated['image'] = $request->file('image')->store('products', 'public');
         }
 
         unset($validated['discount_percent']);
 
-        // Cập nhật sản phẩm lần đầu
         $product->update($validated);
 
-        // Nếu có biến thể thì tính lại tồn kho
         if ($product->variants()->exists()) {
             $totalVariantQty = $product->variants()->sum('quantity_in_stock');
             $product->update(['quantity_in_stock' => $totalVariantQty]);
         }
 
-        // Cập nhật trạng thái chính xác sau cùng
         $product->update([
             'status' => $product->quantity_in_stock > 0 ? 1 : 0
         ]);
 
-        return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công');
+        return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công.');
     }
 
     public function destroy(Request $request, $id)
@@ -261,11 +273,25 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $actionType = $request->input('action_type');
 
-        $hasOrders = $product->orderDetails()->exists() ||
-            $product->variants()->whereHas('orderDetails')->exists();
+        $inCart = CartItem::where('product_id', $product->id)->exists()
+            || CartItem::whereIn('variant_id', $product->variants->pluck('id'))->exists();
 
-        if ($hasOrders) {
-            return redirect()->route('admin.products.index')->with('error', 'Không thể xóa sản phẩm vì đã có đơn hàng liên quan.');
+        if ($inCart) {
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Không thể xóa sản phẩm vì đang có trong giỏ hàng của khách.');
+        }
+
+        $hasActiveOrders = $product->orderDetails()
+            ->whereHas('order', function ($query) {
+                $query->whereNotIn('status', ['cancelled', 'failed']);
+            })->exists()
+            || $product->variants()->whereHas('orderDetails.order', function ($query) {
+                $query->whereNotIn('status', ['cancelled', 'failed']);
+            })->exists();
+
+        if ($hasActiveOrders) {
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Không thể xóa sản phẩm vì đã nằm trong đơn hàng chưa hoàn tất.');
         }
 
         if ($actionType === 'variants') {
@@ -288,15 +314,15 @@ class ProductController extends Controller
         $product = Product::with('variants')->findOrFail($id);
         return view('products.variants', compact('product'));
     }
+
     public function show($id)
     {
         $product = Product::with([
             'category',
-            'origin', // <--- Thêm dòng này
+            'origin',
             'variants.attributeValues.attribute'
         ])->findOrFail($id);
 
-        // Gọi riêng để đảm bảo lấy đúng thứ tự
         $product->setRelation(
             'variants',
             $product->variants()->orderBy('price', 'asc')->get()

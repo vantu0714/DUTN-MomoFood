@@ -56,18 +56,21 @@ class OrderController extends Controller
             }
         }
 
-        // Nếu có recipient_id từ form (người dùng chọn địa chỉ cụ thể)
-        $recipient = Recipient::where('user_id', $userId)
-            ->where('is_default', true)
-            ->first();
+        // ✅ Lấy danh sách tất cả địa chỉ của user
+        $savedRecipients = Recipient::where('user_id', $userId)
+            ->orderByDesc('is_default')
+            ->latest()
+            ->get();
 
-        if (session()->has('selected_recipient_id')) {
-            $recipient = Recipient::where('user_id', $userId)
-                ->where('id', session('selected_recipient_id'))
-                ->first();
+        // ✅ Không dùng session: lấy địa chỉ từ request (nếu có), không thì lấy mặc định
+        $recipient = null;
+        if ($request->has('recipient_id')) {
+            $recipient = $savedRecipients->where('id', $request->recipient_id)->first();
         }
-        // Lấy danh sách địa chỉ đã lưu
-        $savedRecipients = Recipient::where('user_id', $userId)->get();
+
+        if (!$recipient) {
+            $recipient = $savedRecipients->where('is_default', true)->first();
+        }
 
         // Lấy các voucher đang hoạt động
         $vouchers = Promotion::where('status', 1)
@@ -105,8 +108,6 @@ class OrderController extends Controller
                 'districts' => $districts,
             ];
         }
-
-        session()->forget('selected_recipient_id');
 
         return view('clients.order', compact(
             'cart',
@@ -153,14 +154,27 @@ class OrderController extends Controller
 
         // Kiểm tra địa chỉ nhận hàng
         if ($request->filled('recipient_id')) {
+
+            $request->validate([
+                'recipient_id' => 'required|exists:recipients,id',
+            ], [
+                'recipient_id.required' => 'Vui lòng chọn địa chỉ nhận hàng.',
+                'recipient_id.exists' => 'Địa chỉ nhận hàng không hợp lệ.',
+            ]);
             $recipient = Recipient::where('user_id', $userId)->findOrFail($request->recipient_id);
         } else {
-            $request->validate([
-                'recipient_name' => 'required|string|max:255',
-                'recipient_phone' => 'required|string|max:15',
-                'recipient_address' => 'required|string|max:500',
-            ]);
-
+            $request->validate(
+                [
+                    'recipient_name' => 'required|string|max:255',
+                    'recipient_phone' => 'required|string|max:15',
+                    'recipient_address' => 'required|string|max:500',
+                ],
+                [
+                    'recipient_name.required' => 'Vui lòng nhập họ tên người nhận.',
+                    'recipient_phone.required' => 'Vui lòng nhập số điện thoại.',
+                    'recipient_address.required' => 'Vui lòng nhập địa chỉ nhận hàng.',
+                ]
+            );
             $recipient = Recipient::create([
                 'user_id' => $userId,
                 'recipient_name' => $request->recipient_name,
@@ -239,14 +253,6 @@ class OrderController extends Controller
                 'status' => 1,
             ]);
 
-            // DEBUG (bạn có thể xóa dòng này khi xong)
-            // dd([
-            //     'cart_total' => $total,
-            //     'shipping_fee' => $request->shipping_fee,
-            //     'discount_from_promotion' => $discount,
-            //     'grand_total' => $grandTotal,
-            // ]);
-
             // Thêm chi tiết đơn hàng
             foreach ($cartItems as $item) {
                 OrderDetail::create([
@@ -260,7 +266,7 @@ class OrderController extends Controller
 
             // Cập nhật trạng thái VIP
             $totalSpent = Order::where('user_id', $userId)
-                ->whereIn('status', [2, 3, 4])
+                ->whereIn('status', [3,4])
                 ->sum('total_price');
 
             if ($totalSpent >= 5000000) {
@@ -287,8 +293,6 @@ class OrderController extends Controller
             return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
         }
     }
-
-
 
     public function orderList(Request $request)
     {
@@ -488,7 +492,6 @@ class OrderController extends Controller
 
             return redirect()->route('clients.orderdetail', $order->id)
                 ->with('success', 'Yêu cầu hoàn hàng đã được gửi thành công!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Xử lý yêu cầu thất bại: ' . $e->getMessage());

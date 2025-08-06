@@ -5,18 +5,27 @@
         <div class="container pt-5 mt-5">
             {{-- THÔNG BÁO --}}
             @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+                </div>
             @endif
+
             @if (session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+                </div>
             @endif
+
             @if ($errors->any())
-                <div class="alert alert-danger">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <ul class="mb-0">
                         @foreach ($errors->all() as $err)
                             <li>{{ $err }}</li>
                         @endforeach
                     </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
                 </div>
             @endif
 
@@ -42,15 +51,22 @@
 
                                 {{-- Hiển thị địa chỉ mặc định --}}
                                 <div id="address-display">
-                                    <strong>{{ $recipient['recipient_name'] ?? auth()->user()->name }} (+84)
-                                        {{ $recipient['recipient_phone'] ?? auth()->user()->phone }}</strong>
-                                    <div class="text-muted mt-1">
-                                        {{ $recipient['recipient_address'] ?? auth()->user()->address }}
-                                    </div>
-                                    <span class="badge bg-danger">Mặc Định</span>
+                                    @if (!empty($recipient))
+                                        <strong>{{ $recipient->recipient_name }} (+84
+                                            {{ $recipient->recipient_phone }})</strong>
+                                        <div class="text-muted mt-1">
+                                            {{ $recipient->recipient_address }}
+                                        </div>
+                                        @if ($recipient->is_default)
+                                            <span class="badge bg-danger mt-1">Mặc Định</span>
+                                        @endif
+                                    @else
+                                        <strong class="text-danger">Chưa chọn địa chỉ nhận hàng</strong>
+                                        @if ($errors->has('recipient_id'))
+                                            <div class="text-danger mt-1">{{ $errors->first('recipient_id') }}</div>
+                                        @endif
+                                    @endif
                                 </div>
-
-
                             </div>
                         </div>
 
@@ -297,7 +313,6 @@
         </div>
     </div>
 
-
     <!-- Modal chọn địa chỉ giao hàng -->
     <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -311,11 +326,11 @@
 
                 <!-- Nội dung Modal -->
                 <div class="modal-body">
-                    <!-- Danh sách địa chỉ đã lưu -->
-                    <form action="{{ route('recipients.select') }}" method="POST">
+                    <!-- Form chọn địa chỉ giao hàng -->
+                    <form action="{{ route('clients.order') }}" method="GET">
                         @csrf
                         @foreach ($savedRecipients as $recipientItem)
-                            <div class="form-check mb-3">
+                            <div class="form-check mb-4">
                                 <input class="form-check-input" type="radio" name="recipient_id"
                                     id="recipient{{ $recipientItem->id }}" value="{{ $recipientItem->id }}">
                                 <label class="form-check-label" for="recipient{{ $recipientItem->id }}">
@@ -326,11 +341,71 @@
                                         <span class="badge bg-danger ms-2">Mặc định</span>
                                     @endif
                                 </label>
+
+                                <!-- Nút mở modal -->
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-2 ms-2"
+                                    data-bs-toggle="modal" data-bs-target="#editRecipientModal{{ $recipientItem->id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                             </div>
                         @endforeach
 
                         <button type="submit" class="btn btn-danger w-100 mt-2">Chọn địa chỉ này</button>
                     </form>
+
+                    <!-- Modal sửa địa chỉ -->
+                    @foreach ($savedRecipients as $recipientItem)
+                        <div class="modal fade" id="editRecipientModal{{ $recipientItem->id }}" tabindex="-1"
+                            aria-labelledby="editRecipientLabel{{ $recipientItem->id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <form action="{{ route('clients.recipients.update', $recipientItem->id) }}"
+                                    method="POST" class="form-edit-recipient" data-id="{{ $recipientItem->id }}">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editRecipientLabel{{ $recipientItem->id }}">
+                                                Sửa địa chỉ
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Đóng"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Tên người nhận</label>
+                                                <input type="text" class="form-control" name="recipient_name"
+                                                    value="{{ $recipientItem->recipient_name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Số điện thoại</label>
+                                                <input type="text" class="form-control" name="recipient_phone"
+                                                    value="{{ $recipientItem->recipient_phone }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Địa chỉ</label>
+                                                <textarea class="form-control" name="recipient_address" rows="2" required>{{ $recipientItem->recipient_address }}</textarea>
+                                            </div>
+
+                                            <div class="form-check">
+                                                <input type="hidden" name="is_default" value="0">
+                                                <input class="form-check-input" type="checkbox" name="is_default"
+                                                    id="default{{ $recipientItem->id }}" value="1"
+                                                    {{ $recipientItem->is_default ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="default{{ $recipientItem->id }}">
+                                                    Đặt làm mặc định
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
 
                     <hr>
 
@@ -385,7 +460,7 @@
 
                             <div class="form-group">
                                 <label for="detail_address">Địa chỉ chi tiết</label>
-                                <input type="text" id="detail_address" class="form-control"
+                                <input type="text" id="detail_address" name="recipient_address" class="form-control"
                                     placeholder="Số nhà, tên đường...">
                             </div>
 
@@ -413,21 +488,33 @@
         </div>
     </div>
 
-
 @endsection
+
 <script>
-    document.querySelectorAll('input[name="recipient_id"]').forEach(item => {
-        item.addEventListener('change', () => {
-            document.getElementById('recipient_id').value = item.value;
-        });
-    });
-
-    function toggleAddressForm() {
-        const form = document.getElementById('address-form');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
+        // Gán giá trị recipient_id từ radio
+        document.querySelectorAll('input[name="recipient_id"]').forEach(item => {
+            item.addEventListener('change', () => {
+                document.getElementById('recipient_id').value = item.value;
+            });
+        });
+
+        // Mở modal thêm địa chỉ dùng Bootstrap API
+        document.getElementById('open-address-modal')?.addEventListener('click', () => {
+            const modal = new bootstrap.Modal(document.getElementById('addressModal'));
+            modal.show();
+        });
+
+        window.toggleAddressForm = function() {
+            const addressForm = document.getElementById('address-form');
+            if (addressForm.style.display === 'none' || addressForm.style.display === '') {
+                addressForm.style.display = 'block';
+            } else {
+                addressForm.style.display = 'none';
+            }
+        };
+
+        // Validate đơn giản các input
         const nameInput = document.querySelector('[name="recipient_name"]');
         const phoneInput = document.querySelector('[name="recipient_phone"]');
         const addressInput = document.querySelector('[name="recipient_address"]');
@@ -447,7 +534,7 @@
             if (errorEl) errorEl.remove();
         }
 
-        nameInput.addEventListener('blur', () => {
+        nameInput?.addEventListener('blur', () => {
             if (nameInput.value.trim() === '') {
                 showError(nameInput, 'Vui lòng nhập họ và tên.');
             } else {
@@ -455,7 +542,7 @@
             }
         });
 
-        phoneInput.addEventListener('blur', () => {
+        phoneInput?.addEventListener('blur', () => {
             const phoneRegex = /^0[0-9]{9}$/;
             if (phoneInput.value.trim() === '') {
                 showError(phoneInput, 'Vui lòng nhập số điện thoại.');
@@ -466,7 +553,7 @@
             }
         });
 
-        addressInput.addEventListener('blur', () => {
+        addressInput?.addEventListener('blur', () => {
             if (addressInput.value.trim() === '') {
                 showError(addressInput, 'Vui lòng nhập địa chỉ chi tiết.');
             } else {
@@ -474,6 +561,7 @@
             }
         });
 
+        // Xử lý địa chỉ
         const locations = @json($locations);
 
         const provinceSelect = document.getElementById('province');
@@ -545,11 +633,21 @@
             fullAddressInput.value = addressParts.join(', ');
         }
 
-        // Nếu đã có tỉnh sẵn được chọn (ví dụ khi validation trả về lỗi)
+        // Tự động trigger lại nếu đã có dữ liệu (ví dụ sau validation)
         if (provinceSelect.value) {
             provinceSelect.dispatchEvent(new Event('change'));
         }
+    });
+</script>
 
-        console.log(locations);
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert-dismissible');
+        alerts.forEach(alertBox => {
+            setTimeout(() => {
+                const alert = new bootstrap.Alert(alertBox);
+                alert.close();
+            }, 5000);
+        });
     });
 </script>

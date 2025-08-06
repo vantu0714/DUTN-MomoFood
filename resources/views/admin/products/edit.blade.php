@@ -292,29 +292,6 @@
                             </div>
                         </div>
                     @endif
-                    <!-- Additional Information -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white border-bottom py-3">
-                            <h6 class="mb-0 fw-semibold">
-                                <i class="fas fa-plus-circle me-2 text-primary"></i>
-                                Thông tin bổ sung
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="expiration_date" class="form-label fw-semibold">Ngày hết hạn</label>
-                                    <input type="date"
-                                        class="form-control @error('expiration_date') is-invalid @enderror"
-                                        id="expiration_date" name="expiration_date"
-                                        value="{{ old('expiration_date', $product->expiration_date ? \Carbon\Carbon::parse($product->expiration_date)->format('Y-m-d') : '') }}">
-                                    @error('expiration_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Right Column -->
@@ -560,22 +537,24 @@
                         <input type="hidden" name="main_attribute_id" id="editMainAttributeId">
                     </div>
                     <!-- Chọn Size -->
-                    <div class="mb-3">
-                        <label for="editSubAttributeId" class="form-label">khối lượng</label>
-                        <select class="form-select" name="sub_attribute_id" id="editSubAttributeId" required>
-                            <option value="">-- Chọn khối lượng --</option>
-                            @php
-                                $sizeAttr = $attributes->firstWhere('name', 'Khối lượng');
-                            @endphp
+                    @php
+                        $currentSubAttributeId = $variant->sub_attribute_id ?? null;
+                        $sizeAttr = $attributes->firstWhere('name', 'Khối lượng');
+                    @endphp
 
+                    <div class="mb-3">
+                        <label for="editSubAttributeId" class="form-label">Khối lượng</label>
+                        <select class="form-select" name="sub_attribute_id" id="editSubAttributeId" required>
                             @if ($sizeAttr && $sizeAttr->values)
                                 @foreach ($sizeAttr->values as $value)
-                                    <option value="{{ $value->id }}">{{ $value->value }}</option>
+                                    <option value="{{ $value->id }}"
+                                        {{ $currentSubAttributeId == $value->id ? 'selected' : '' }}>
+                                        {{ $value->value }}
+                                    </option>
                                 @endforeach
                             @else
                                 <option disabled>Không có khối lượng nào</option>
                             @endif
-
                         </select>
                     </div>
                     <div class="mb-3">
@@ -638,8 +617,15 @@
                 }
 
                 if (variant.sub_attribute) {
-                    document.getElementById('editSubAttributeId').value = variant.sub_attribute.id ?? '';
+                    const subSelect = document.getElementById('editSubAttributeId');
+                    const targetId = variant.sub_attribute.id ?? '';
+
+                    // Chọn option đúng ID
+                    [...subSelect.options].forEach(opt => {
+                        opt.selected = (opt.value == targetId);
+                    });
                 }
+
 
                 if (variant.image_url) {
                     document.getElementById('currentVariantImage').src = variant.image_url;

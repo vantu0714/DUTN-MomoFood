@@ -20,6 +20,8 @@
         Thứ 2 luôn là ngày thử thách nhất trong tuần. Sau một cuối tuần thư giãn, việc quay lại guồng quay công việc khiến nhiều người cảm thấy uể oải. Nhưng đừng lo! Chúng tôi có một bất ngờ dành cho bạn – ưu đãi đặc biệt cho bữa sáng nhanh gọn, giúp bạn khởi đầu tuần mới tràn đầy năng lượng.
     </p>
 
+    <img src="{{ asset('clients/img/anhtintuc2.png') }}" alt="Tin 2">
+
     <h4 id="uu-dai" class="mt-4 fw-bold">Ưu đãi hấp dẫn chỉ có vào thứ 2</h4>
     <p>
         Để giúp bạn tỉnh táo và sẵn sàng cho một tuần làm việc hiệu quả, chúng tôi mang đến chương trình giảm giá đặc biệt vào mỗi sáng thứ 2.

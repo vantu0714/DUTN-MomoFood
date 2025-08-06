@@ -90,7 +90,7 @@
                 </div>
 
                 <!-- Sản phẩm đã bán -->
-              
+
 
                 <!-- Đơn hàng hoàn thành -->
                 <div class="col-md-3">
@@ -111,6 +111,42 @@
                         </div>
                     </div>
                 </div>
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-box-open me-2"></i> Sản phẩm đã hết hàng
+                        </h5>
+                        <span class="badge bg-light text-danger px-3 py-2 rounded-pill">
+                            {{ count($outOfStockProducts) }} sản phẩm
+                        </span>
+                    </div>
+
+                    <div class="card-body">
+                        @if ($outOfStockProducts->isEmpty())
+                            <p class="text-muted">Không có sản phẩm nào hết hàng.</p>
+                        @else
+                            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+                                @foreach ($outOfStockProducts as $product)
+                                    <div class="col">
+                                        <div
+                                            class="card h-100 border border-danger-subtle shadow-sm hover-shadow transition">
+                                            <div class="position-relative">
+                                                <span class="badge bg-danger position-absolute top-0 end-0 m-2">Hết
+                                                    hàng</span>
+                                            </div>
+                                            <div class="card-body">
+                                                <h6 class="card-title text-danger fw-semibold">{{ $product->product_name }}
+                                                </h6>
+                                                <p class="mb-1 text-muted small">Mã SP: {{ $product->id }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
 
                 <!-- Lợi nhuận -->
             </div>

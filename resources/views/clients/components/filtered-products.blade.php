@@ -1,4 +1,3 @@
-<link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 
 <div class="tab-content">
     <div id="tab-1" class="tab-pane fade show active p-0">
@@ -86,12 +85,12 @@
                                     data-product-price="{{ $price ?? 0 }}"
                                     data-product-original-price="{{ $original ?? 0 }}"
                                     data-product-description="{{ $product->description }}"
-                                    data-variants='@json($variants)' data-bs-toggle="modal"
-                                    data-bs-target="#cartModal">
+                                    data-variants='@json($variants)'
+                                    data-total-stock="{{ $product->product_type === 'simple' ? $product->quantity_in_stock : $firstVariant?->quantity_in_stock ?? 0 }}"
+                                    data-bs-toggle="modal" data-bs-target="#cartModal">
                                     <i class="bi bi-cart3 fa-2x text-danger"></i>
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -110,7 +109,7 @@
     </div>
 </div>
 
-<script>
+{{-- <script>
     document.addEventListener('click', function(e) {
         const link = e.target.closest('.pagination a');
         if (link) {
@@ -142,7 +141,7 @@
                 .catch(err => console.error('Lỗi khi phân trang:', err));
         }
     });
-</script>
+</script> --}}
 
 <style>
     .card-body .btn {

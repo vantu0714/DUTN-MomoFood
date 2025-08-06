@@ -45,36 +45,11 @@
 <!-- Fruits Shop Start-->
 <div class="container-fluid fruite py-5">
     <div class="container py-0">
-        <h1 class="mb-4">CỬA HÀNG ĐỒ ĂN VẶT</h1>
+        <div class="section-title text-center">
+            <span class="title-text">CỬA HÀNG ĐỒ ĂN VẶT</span>
+        </div>
         <div class="row g-4">
             <div class="col-lg-12">
-                <div class="row g-4">
-                    <div class="col-xl-3">
-                        <form action="{{ route('clients.search') }}" method="GET"
-                            class="input-group w-100 mx-auto d-flex">
-                            <input type="search" class="form-control border-secondary" name="keyword"
-                                placeholder="Tìm kiếm sản phẩm" aria-describedby="search-icon-1">
-                            <button type="submit" id="search-icon-1" class="btn btn-outline-primary p-3"
-                                type="button">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </form>
-                    </div>
-
-                    <div class="col-6"></div>
-                    <div class="col-xl-3">
-                        <div class="bg-light ps-3 py-3 rounded d-flex justify-content-between mb-4">
-                            <label for="fruits">Sắp xếp mặc định:</label>
-                            <select id="fruits" name="fruitlist" class="border-0 form-select-sm bg-light me-3"
-                                form="fruitform">
-                                <option value="volvo">Sản phẩm đang cập nhật</option>
-                                <option value="saab">Được yêu thích</option>
-                                <option value="opel">Đồ ăn phổ biến</option>
-                                <option value="audi">Đồ uống siêu hot</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
                 <div class="row g-4">
                     <div class="col-lg-3">
                         <div class="row g-4">
@@ -147,14 +122,12 @@
                                     <div class="row g-2 mb-3" id="customPriceInputs"
                                         style="{{ request('price_range') == 'custom' ? '' : 'display:none;' }}">
                                         <div class="col-6">
-                                            <input type="number" name="min_price"
-                                                class="form-control form-control-sm" placeholder="Giá từ"
-                                                value="{{ request('min_price') }}">
+                                            <input type="number" name="min_price" class="form-control form-control-sm"
+                                                placeholder="Giá từ" value="{{ request('min_price') }}">
                                         </div>
                                         <div class="col-6">
-                                            <input type="number" name="max_price"
-                                                class="form-control form-control-sm" placeholder="Giá đến"
-                                                value="{{ request('max_price') }}">
+                                            <input type="number" name="max_price" class="form-control form-control-sm"
+                                                placeholder="Giá đến" value="{{ request('max_price') }}">
                                         </div>
                                     </div>
 
@@ -317,6 +290,7 @@
                                                     data-product-original-price="{{ $original ?? 0 }}"
                                                     data-product-description="{{ $product->description }}"
                                                     data-variants='@json($variants)'
+                                                    data-total-stock="{{ $product->product_type === 'simple' ? $product->quantity_in_stock : $firstVariant?->quantity_in_stock ?? 0 }}"
                                                     data-bs-toggle="modal" data-bs-target="#cartModal">
                                                     <i class="bi bi-cart3 fa-2x text-danger"></i>
                                                 </button>
@@ -470,70 +444,7 @@
                 }
             });
         });
-    </script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const rangeInput = document.getElementById('rangeInput');
-            const output = document.getElementById('amount');
-
-            function formatCurrency(value) {
-                return parseInt(value).toLocaleString('vi-VN') + ' đ';
-            }
-
-            rangeInput.addEventListener('input', function() {
-                output.textContent = formatCurrency(this.value);
-            });
-
-            // Gọi lần đầu khi tải trang
-            output.textContent = formatCurrency(rangeInput.value);
-
-
-            document.addEventListener('DOMContentLoaded', function() {
-                const radios = document.querySelectorAll('input[name="price_range"]');
-                const customInputs = document.getElementById('customPriceInputs');
-
-                radios.forEach(radio => {
-                    radio.addEventListener('change', function() {
-                        if (this.value === 'custom') {
-                            customInputs.style.display = '';
-                        } else {
-                            customInputs.style.display = 'none';
-                            // Clear giá trị nếu không chọn tùy chỉnh
-                            document.querySelector('input[name="min_price"]').value = '';
-                            document.querySelector('input[name="max_price"]').value = '';
-                        }
-                    });
-                });
-            });
-        });
-    </script>
-
-    <script>
-        $(document).ready(function() {
-
-            document.addEventListener('DOMContentLoaded', function() {
-                @if (session('success') || session('error'))
-                    let message = "{{ session('success') ?? session('error') }}";
-                    let isError = {{ session('error') ? 'true' : 'false' }};
-
-                    const container = document.getElementById('toast-container');
-                    const messageEl = document.getElementById('toast-message');
-
-                    messageEl.textContent = message;
-                    container.classList.remove('d-none');
-                    if (isError) container.classList.add('toast-error');
-
-                    setTimeout(() => {
-                        container.classList.add('d-none');
-                        container.classList.remove('toast-error');
-                    }, 4000);
-                @endif
-            });
-        });
-    </script>
-
-    <script>
         function rebindOpenCartModal() {
             const modal = new bootstrap.Modal(document.getElementById('cartModal'));
             const variantSection = document.getElementById('variant-section');
@@ -632,26 +543,109 @@
         }
     </script>
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const radios = document.querySelectorAll('input[name="price_range"]');
-        const customInputs = document.getElementById('customPriceInputs');
-        const minInput = document.querySelector('input[name="min_price"]');
-        const maxInput = document.querySelector('input[name="max_price"]');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rangeInput = document.getElementById('rangeInput');
+            const output = document.getElementById('amount');
 
-        radios.forEach(radio => {
-            radio.addEventListener('change', function () {
-                if (this.value === 'custom') {
-                    customInputs.style.display = 'flex'; // hiển thị dạng flex
-                } else {
-                    customInputs.style.display = 'none';
-                    minInput.value = '';
-                    maxInput.value = '';
-                }
+            function formatCurrency(value) {
+                return parseInt(value).toLocaleString('vi-VN') + ' đ';
+            }
+
+            rangeInput.addEventListener('input', function() {
+                output.textContent = formatCurrency(this.value);
+            });
+
+            // Gọi lần đầu khi tải trang
+            output.textContent = formatCurrency(rangeInput.value);
+
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const radios = document.querySelectorAll('input[name="price_range"]');
+                const customInputs = document.getElementById('customPriceInputs');
+
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'custom') {
+                            customInputs.style.display = '';
+                        } else {
+                            customInputs.style.display = 'none';
+                            // Clear giá trị nếu không chọn tùy chỉnh
+                            document.querySelector('input[name="min_price"]').value = '';
+                            document.querySelector('input[name="max_price"]').value = '';
+                        }
+                    });
+                });
             });
         });
-    });
-</script>
+    </script>
 
-    @include('clients.layouts.footer')
+    <script>
+        $(document).ready(function() {
+
+            document.addEventListener('DOMContentLoaded', function() {
+                @if (session('success') || session('error'))
+                    let message = "{{ session('success') ?? session('error') }}";
+                    let isError = {{ session('error') ? 'true' : 'false' }};
+
+                    const container = document.getElementById('toast-container');
+                    const messageEl = document.getElementById('toast-message');
+
+                    messageEl.textContent = message;
+                    container.classList.remove('d-none');
+                    if (isError) container.classList.add('toast-error');
+
+                    setTimeout(() => {
+                        container.classList.add('d-none');
+                        container.classList.remove('toast-error');
+                    }, 4000);
+                @endif
+            });
+        });
+    </script>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const radios = document.querySelectorAll('input[name="price_range"]');
+                const customInputs = document.getElementById('customPriceInputs');
+                const minInput = document.querySelector('input[name="min_price"]');
+                const maxInput = document.querySelector('input[name="max_price"]');
+
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'custom') {
+                            customInputs.style.display = 'flex'; // hiển thị dạng flex
+                        } else {
+                            customInputs.style.display = 'none';
+                            minInput.value = '';
+                            maxInput.value = '';
+                        }
+                    });
+                });
+            });
+        </script>
+
+         <style>
+            .section-title {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 12px;
+                /* khoảng cách giữa icon và chữ */
+                margin-bottom: 40px;
+                /* khoảng cách dưới */
+            }
+
+            .section-title .title-text {
+                color: #e86c4d;
+                /* màu cam giống hình */
+                font-weight: 700;
+                /* đậm */
+                font-size: 48px;
+                font-family: 'Arial', sans-serif;
+                text-transform: uppercase;
+            }
+        </style>
+
+        @include('clients.layouts.footer')

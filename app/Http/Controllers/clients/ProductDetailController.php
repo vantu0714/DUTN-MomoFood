@@ -13,39 +13,43 @@ class ProductDetailController extends Controller
     {
         $product = Product::with([
             'category',
+            'variants' => function ($query) {
+                $query->where('quantity_in_stock', '>', 0); // Chỉ lấy biến thể còn hàng
+            },
             'variants.attributeValues.attribute',
             'comments' => function ($query) {
-                $query->latest(); // sắp xếp bình luận mới nhất trước
+                $query->latest();
             },
             'comments.user'
         ])->findOrFail($id);
 
-        $relatedProducts = Product::where('category_id', $product->category_id)
+        // Kiểm tra tồn kho nếu là sản phẩm đơn
+        if ($product->product_type === 'simple' && $product->quantity_in_stock <= 0) {
+            abort(404, 'Sản phẩm đã hết hàng');
+        }
+
+        $relatedProducts = Product::with([
+            'variants' => fn($q) => $q->where('quantity_in_stock', '>', 0)
+        ])
+            ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
-            ->where('status', 1)
+            ->available() // dùng scope lọc sản phẩm hợp lệ
             ->latest()
             ->take(8)
             ->get();
 
-        // Tính trung bình rating
         $averageRating = round($product->comments->avg('rating'), 1) ?? 0;
 
-        // Mặc định
         $hasPurchased = false;
         $hasReviewed = false;
 
         if (Auth::check()) {
             $userId = Auth::id();
 
-            // Kiểm tra đã mua hàng chưa
             $hasPurchased = OrderDetail::whereHas('order', function ($query) use ($userId) {
-                $query->where('user_id', $userId)
-                    ->where('status', '!=', 'cancelled'); // hoặc 'completed'
-            })
-                ->where('product_id', $product->id)
-                ->exists();
+                $query->where('user_id', $userId)->where('status', '!=', 'cancelled');
+            })->where('product_id', $product->id)->exists();
 
-            // Kiểm tra đã đánh giá chưa
             $hasReviewed = $product->comments->where('user_id', $userId)->isNotEmpty();
         }
 

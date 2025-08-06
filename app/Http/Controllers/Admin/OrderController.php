@@ -252,11 +252,39 @@ class OrderController extends Controller
             $order->payment_status = 'paid';
 
             foreach ($order->orderDetails as $detail) {
-                $product = $detail->product;
+                $product = Product::find($detail->product_id);
+
                 if ($product) {
+                    // Nếu là sản phẩm đơn (simple) → trừ tồn kho trực tiếp
+                    if ($product->product_type === 'simple') {
+                        $product->decrement('quantity_in_stock', $detail->quantity);
+                    }
+
+                    // Nếu là sản phẩm có biến thể → trừ tồn kho ở bảng product_variants
+                    elseif ($product->product_type === 'variant' && $detail->product_variant_id) {
+                        DB::table('product_variants')
+                            ->where('id', $detail->product_variant_id)
+                            ->decrement('quantity_in_stock', $detail->quantity);
+                    }
+
+                    // Tăng số lượng đã bán cho sản phẩm chính
                     $product->increment('sold_count', $detail->quantity);
                 }
             }
+
+            $order->save();
+
+            // Chỉ tính đơn hàng Hoàn thành (4) để xét VIP
+            $userId = $order->user_id;
+            $totalSpent = Order::where('user_id', $userId)
+                ->where('status', 4) // chỉ tính đơn hoàn thành
+                ->sum('total_price');
+
+            if ($totalSpent >= 5000000) {
+                User::where('id', $userId)->update(['is_vip' => true]);
+            }
+
+            return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật và kiểm tra VIP.');
         }
         // Nếu chuyển sang trạng thái Hoàn hàng (5) → bắt buộc có lý do
         elseif ($newStatus == 5) {

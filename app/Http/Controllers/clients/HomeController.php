@@ -18,7 +18,14 @@ class HomeController extends Controller
             return redirect('/admin/dashboard')->with('error', 'Admin không được phép truy cập trang chủ.');
         }
 
-        $query = Product::with(['category', 'variants.attributeValues.attribute'])
+        $query = Product::with([
+            'category',
+            'variants' => function ($q) {
+                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status'); 
+            },
+            'variants.attributeValues.attribute'
+        ])
+
             ->where(function ($q) {
                 $q->where(function ($q1) {
                     $q1->where('product_type', 'simple')
@@ -39,6 +46,7 @@ class HomeController extends Controller
 
         $products = $query->paginate(12);
         $categories = Category::withCount('products')->get();
+        
 
         $bestSellingProducts = Product::with('category')
             ->where('product_type', 'simple')
@@ -148,7 +156,8 @@ class HomeController extends Controller
     {
         $categoryId = $request->get('category');
 
-        $products = Product::with(['category', 'variants'])
+        $products = Product::with(['category', 'variants.attributeValues.attribute']) // đủ thông tin
+
             ->where('status', 1)
             ->where(function ($q) {
                 // Sản phẩm đơn còn hàng
@@ -158,11 +167,11 @@ class HomeController extends Controller
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
-                    $q2->where('product_type', 'variant')
-                        ->whereHas('variants', function ($q3) {
-                            $q3->where('quantity_in_stock', '>', 0);
-                        });
-                });
+                        $q2->where('product_type', 'variant')
+                            ->whereHas('variants', function ($q3) {
+                                $q3->where('quantity_in_stock', '>', 0);
+                            });
+                    });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()

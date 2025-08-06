@@ -111,14 +111,11 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::post('/apply-coupon', [ClientsOrderController::class, 'applyCoupon'])->name('order.applyCoupon');
     Route::get('/remove-coupon', [ClientsOrderController::class, 'removeCoupon'])->name('order.removeCoupon');
 
+    //thong tin nguoi nhan
     Route::post('/recipients', [RecipientController::class, 'store'])->name('recipients.store');
-    // Route chọn địa chỉ
     Route::post('/recipients/select', [RecipientController::class, 'select'])->name('recipients.select');
-
-
-
-    //tt nguoi nhan
-    // Route::post('/store', [RecipientController::class, 'store'])->name('recipients.store');
+    Route::put('/recipients/{id}', [RecipientController::class, 'update'])->name('clients.recipients.update');
+    Route::delete('/recipients/{id}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
 
 });
 
@@ -174,7 +171,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
         Route::get('/{product_variant}', [ProductVariantController::class, 'show'])->name('show');
     });
-
     // Order Management
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
@@ -203,7 +199,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 
     // Comment Management
-    Route::resource('comments', CommentController::class)->only(['index', 'destroy']);
+    Route::resource('comments', CommentController::class)->only('index');
+    Route::get('comments/{product}', [CommentController::class, 'show'])->name('comments.show');
+    Route::put('comments/{comment}/toggle-status', [CommentController::class, 'toggleStatus'])->name('comments.toggle');
+
+
+
 
     // thống kê
     Route::get('thongke', [ThongKeController::class, 'index'])->name('thongke');
