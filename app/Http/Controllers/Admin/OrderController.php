@@ -232,54 +232,51 @@ class OrderController extends Controller
             return back()->with('error', 'Không thể hủy đơn hàng sau khi đã hoàn hàng.');
         }
 
-        // Xử lý các trạng thái đặc biệt
-        switch ($newStatus) {
-            case 3: // Đang giao
-                $order->status = 3;
-                $order->delivered_at = now();
-                $order->save();
+        // Nếu chuyển sang trạng thái Đang giao (3) → lên lịch chuyển sang Đã giao (9) sau 1 phút
+        if ($newStatus == 3) {
+            $order->status = 3;
+            $order->delivered_at = now();
+            $order->save();
 
-                UpdateOrderStatus::dispatch($order, 9)
-                    ->delay(now()->addMinutes(1));
+            // Lên lịch chuyển sang trạng thái Đã giao hàng sau 1 phút
+            UpdateOrderStatus::dispatch($order, 9)
+                ->delay(now()->addMinutes(1));
 
-                return back()->with('success', 'Đơn hàng đang được giao và sẽ tự động cập nhật trạng thái sau 1 phút.');
+            return back()->with('success', 'Đơn hàng đang được giao và sẽ tự động cập nhật trạng thái sau 1 phút.');
+        }
 
-            case 9: // Đã giao hàng - Thêm case này để xử lý thủ công nếu cần
-                $order->status = 9;
-                $order->received_at = now();
-                $order->save();
+        // Nếu chuyển sang trạng thái Hoàn thành (4) → auto paid
+        elseif ($newStatus == 4) {
+            $order->status = 4;
+            $order->completed_at = now();
+            $order->payment_status = 'paid';
 
-                UpdateOrderStatus::dispatch($order, 4)
-                    ->delay(now()->addMinutes(1));
-
-                return back()->with('success', 'Đơn hàng đã được giao và sẽ tự động hoàn thành sau 1 phút.');
-
-            case 4: // Hoàn thành
-                $order->status = 4;
-                $order->completed_at = now();
-                $order->payment_status = 'paid';
-
-                foreach ($order->orderDetails as $detail) {
-                    $product = $detail->product;
-                    if ($product) {
-                        $product->increment('sold_count', $detail->quantity);
-                    }
+            foreach ($order->orderDetails as $detail) {
+                $product = $detail->product;
+                if ($product) {
+                    $product->increment('sold_count', $detail->quantity);
                 }
-                break;
+            }
+        }
+        // Nếu chuyển sang trạng thái Hoàn hàng (5) → bắt buộc có lý do
+        elseif ($newStatus == 5) {
+            $request->validate([
+                'reason' => 'required|string|max:1000',
+            ]);
 
-            case 5: // Hoàn hàng
-                $request->validate([
-                    'reason' => 'required|string|max:1000',
-                ]);
-                $order->status = 5;
-                $order->reason = $request->reason;
-                break;
-
-            default:
-                $order->status = $newStatus;
+            $order->status = 5;
+            $order->reason = $request->reason;
+        } elseif ($order->status == 3 && $newStatus == 9) {
+            $order->status = 9;
+            $order->received_at = now();
+        }
+        // Các trạng thái khác
+        else {
+            $order->status = $newStatus;
         }
 
         $order->save();
+
         return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật.');
     }
 
@@ -334,9 +331,14 @@ class OrderController extends Controller
             'return_rejection_reason' => 'required|string|min:10|max:1000',
         ]);
 
+        if ($request->has('return_rejection_reason')) {
+            $request->validate([
+                'return_rejection_reason' => 'required|string|min:10|max:1000',
+            ]);
+        }
+
         $order = Order::findOrFail($id);
 
-        // Kiểm tra trạng thái hiện tại phải là "Chờ xử lý hoàn hàng" (7)
         if ($order->status != 7) {
             return back()->with('error', 'Đơn hàng không ở trạng thái chờ xử lý hoàn hàng.');
         }
@@ -345,7 +347,6 @@ class OrderController extends Controller
         try {
             $order->update([
                 'status' => 8,
-                'return_approved' => false,
                 'return_rejection_reason' => $request->return_rejection_reason,
                 'return_processed_at' => now(),
             ]);

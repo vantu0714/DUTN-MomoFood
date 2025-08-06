@@ -11,6 +11,7 @@
             6 => 'Hủy đơn',
             7 => 'Chờ xử lý hoàn hàng',
             8 => 'Hoàn hàng thất bại',
+            9 => 'Đã giao hàng',
         ];
 
         $paymentStatusLabels = [
@@ -28,6 +29,7 @@
             6 => 'bg-danger text-white',
             7 => 'bg-purple text-white',
             8 => 'bg-danger text-white',
+            9 => 'bg-primary text-white',
         ];
 
         $paymentStatusClasses = [
@@ -43,8 +45,8 @@
         $calculatedDiscount = max(0, $subtotal + $order->shipping_fee - $order->total_price);
 
         // Tính toán một lần cho form hoàn hàng
-        $returnDeadline = $order->completed_at ? \Carbon\Carbon::parse($order->completed_at)->addHours(24) : null;
-        $canReturn = $order->status == 4 && $returnDeadline && now()->lte($returnDeadline);
+        $returnDeadline = $order->received_at ? \Carbon\Carbon::parse($order->received_at)->addMinutes(5) : null;
+        $canReturn = $order->status == 9 && $returnDeadline && now()->lte($returnDeadline);
     @endphp
 
     <div class="container mb-5" style="margin-top: 150px">
@@ -121,6 +123,32 @@
                         @if ($order->status == 6 && $order->reason)
                             <div class="alert alert-danger p-2 mb-0">
                                 <strong>Lý do hủy:</strong> {{ $order->reason }}
+                            </div>
+                        @endif
+
+                        @if ($order->status == 3)
+                            <div class="alert alert-info d-flex align-items-center mb-4">
+                                <i class="fas fa-truck fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Đơn hàng đang được giao</h5>
+                                    <p class="mb-0">Đơn hàng của bạn đang trên đường vận chuyển. Vui lòng chú ý điện thoại
+                                        để nhận hàng!</p>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($order->status == 9)
+                            <div class="alert alert-success d-flex align-items-center mb-4">
+                                <i class="fas fa-check-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Đơn hàng đã giao thành công</h5>
+                                    <p class="mb-0">Cảm ơn bạn đã mua hàng! Nếu có bất kỳ vấn đề gì với sản phẩm, bạn có
+                                        thể yêu cầu hoàn hàng trong vòng 24 giờ.</p>
+                                    @if ($canReturn)
+                                        <p class="mb-0 mt-2"><small><i class="fas fa-info-circle me-1"></i> Bạn có thể yêu
+                                                cầu hoàn hàng trong vòng 24 giờ sau khi nhận hàng.</small></p>
+                                    @endif
+                                </div>
                             </div>
                         @endif
 

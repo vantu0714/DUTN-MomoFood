@@ -139,12 +139,12 @@
                                     1 => ['label' => 'Chưa xác nhận', 'class' => 'secondary'],
                                     2 => ['label' => 'Đã xác nhận', 'class' => 'info'],
                                     3 => ['label' => 'Đang giao', 'class' => 'primary'],
+                                    9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
                                     4 => ['label' => 'Hoàn thành', 'class' => 'success'],
                                     5 => ['label' => 'Hoàn hàng', 'class' => 'dark'],
                                     6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
                                     7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
                                     8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
-                                    9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
                                 ];
                             @endphp
 
@@ -312,6 +312,7 @@
                         {{-- Form từ chối --}}
                         <form id="reject-form" class="mt-4 p-4 bg-light rounded shadow-sm d-none"
                             action="{{ route('admin.orders.reject_return', $order->id) }}" method="POST">
+                            @csrf
                             <h6 class="fw-bold text-danger mb-3">
                                 <i class="fas fa-exclamation-triangle me-2"></i>Nhập lý do từ chối
                             </h6>
