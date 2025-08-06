@@ -144,7 +144,7 @@
                                         <td>{{ $product->origin ? $product->origin->name : 'Đang cập nhật' }}</td>
                                     </tr>
 
-                                    <tr>
+                                    {{-- <tr>
                                         <th class="text-muted">Hạn sử dụng</th>
                                         <td>
                                             @if ($product->expiration_date)
@@ -156,7 +156,7 @@
                                                 Không rõ
                                             @endif
                                         </td>
-                                    </tr>
+                                    </tr> --}}
 
                                 </tbody>
                             </table>
@@ -589,167 +589,6 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const stars = document.querySelectorAll('.star');
-        const ratingInput = document.getElementById('rating-value');
-
-        if (!stars.length || !ratingInput) return;
-
-        stars.forEach(star => {
-            star.addEventListener('click', function() {
-                const rating = this.getAttribute('data-rating');
-                ratingInput.value = rating;
-
-                stars.forEach(s => {
-                    const sRating = s.getAttribute('data-rating');
-                    if (parseInt(sRating) <= rating) {
-                        s.classList.remove('text-muted');
-                        s.classList.add('text-warning');
-                    } else {
-                        s.classList.remove('text-warning');
-                        s.classList.add('text-muted');
-                    }
-                });
-            });
-        });
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        const variantOptions = document.querySelectorAll('.variant-option');
-        const mainImage = document.getElementById('mainProductImage');
-        const priceElement = document.getElementById('variantPrice');
-        const originalPriceElement = document.getElementById('originalPrice');
-        const discountPercentElement = document.getElementById('discountPercent');
-        const stockElement = document.getElementById('availableStock');
-        const quantityInput = document.getElementById('quantity');
-        const cancelButton = document.getElementById('cancelVariantSelection');
-        const selectedVariantIdInput = document.getElementById('selectedVariantId');
-
-        let selectedVariant = null;
-
-        function formatCurrency(number) {
-            return number.toLocaleString('vi-VN');
-        }
-
-        function updatePriceDisplay(price, original) {
-            if (priceElement) priceElement.textContent = 'đ' + formatCurrency(price);
-
-            if (originalPriceElement && discountPercentElement) {
-                if (original > price) {
-                    originalPriceElement.textContent = 'đ' + formatCurrency(original);
-                    originalPriceElement.style.display = 'inline';
-                    const percent = Math.round((1 - price / original) * 100);
-                    discountPercentElement.textContent = `-${percent}%`;
-                    discountPercentElement.style.display = 'inline-block';
-                } else {
-                    originalPriceElement.style.display = 'none';
-                    discountPercentElement.style.display = 'none';
-                }
-            }
-        }
-
-        function updateMainImage(imageUrl) {
-            if (!mainImage || !imageUrl) return;
-            mainImage.src = imageUrl;
-        }
-
-        function resetToDefault() {
-            selectedVariant = null;
-            selectedVariantIdInput.value = '';
-
-            variantOptions.forEach(opt => opt.classList.remove('selected'));
-
-            const min = parseInt(document.getElementById('minPrice')?.value || 0);
-            const max = parseInt(document.getElementById('maxPrice')?.value || 0);
-            if (priceElement) {
-                if (min && max && min !== max) {
-                    priceElement.textContent = `đ${formatCurrency(min)} - đ${formatCurrency(max)}`;
-                } else {
-                    priceElement.textContent = `đ${formatCurrency(min)}`;
-                }
-            }
-
-            if (originalPriceElement) originalPriceElement.style.display = 'none';
-            if (discountPercentElement) discountPercentElement.style.display = 'none';
-
-            if (mainImage?.dataset.originalSrc) {
-                mainImage.src = mainImage.dataset.originalSrc;
-            }
-
-            if (stockElement) {
-                const totalStock = Array.from(variantOptions).reduce((sum, opt) => {
-                    return sum + (parseInt(opt.dataset.variantStock || '0'));
-                }, 0);
-                stockElement.textContent = `${totalStock} sản phẩm có sẵn`;
-            }
-
-
-            if (quantityInput) quantityInput.value = 1;
-        }
-
-        variantOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                variantOptions.forEach(opt => opt.classList.remove('selected'));
-                option.classList.add('selected');
-
-                const price = parseFloat(option.dataset.variantPrice);
-                const original = parseFloat(option.dataset.variantOriginal || option.dataset
-                    .variantPrice);
-                const image = option.dataset.variantImage;
-                const stock = parseInt(option.dataset.variantStock || '0');
-                const id = option.dataset.variantId;
-
-                selectedVariant = {
-                    id,
-                    price,
-                    original,
-                    stock,
-                    image
-                };
-                selectedVariantIdInput.value = id;
-
-                updatePriceDisplay(price, original);
-                updateMainImage(image);
-
-                if (stockElement) stockElement.textContent = `${stock} sản phẩm có sẵn`;
-
-                if (quantityInput && quantityInput.value > stock) {
-                    quantityInput.value = stock;
-                }
-            });
-        });
-
-        if (cancelButton) {
-            cancelButton.addEventListener('click', resetToDefault);
-        }
-
-        // Quantity buttons
-        document.querySelector('.btn-minus')?.addEventListener('click', () => {
-            let value = parseInt(quantityInput.value) || 1;
-            if (value > 1) quantityInput.value = value - 1;
-        });
-
-        document.querySelector('.btn-plus')?.addEventListener('click', () => {
-            let value = parseInt(quantityInput.value) || 1;
-            const max = selectedVariant?.stock || 9999;
-            if (value < max) quantityInput.value = value + 1;
-        });
-
-        // Init
-        resetToDefault();
-        const addToCartBtn = document.querySelector('.add-to-cart-btn');
-        const productType = "{{ $product->product_type }}"; // Laravel blade
-
-        addToCartBtn?.addEventListener('click', function(e) {
-            if (productType === 'variant') {
-                if (!selectedVariant || !selectedVariantIdInput.value) {
-                    e.preventDefault();
-                    alert('Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
-                }
-            }
-        });
-    });
-</script>
 {{-- JavaScript cho carousel liên quan --}}
 <script>
     let currentIndex = 0;
@@ -947,4 +786,193 @@
         border-radius: 0 8px 8px 0;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('rating-value');
+
+        if (!stars.length || !ratingInput) return;
+
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+
+                stars.forEach(s => {
+                    const sRating = s.getAttribute('data-rating');
+                    if (parseInt(sRating) <= rating) {
+                        s.classList.remove('text-muted');
+                        s.classList.add('text-warning');
+                    } else {
+                        s.classList.remove('text-warning');
+                        s.classList.add('text-muted');
+                    }
+                });
+            });
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const variantOptions = document.querySelectorAll('.variant-option');
+        const mainImage = document.getElementById('mainProductImage');
+        const priceElement = document.getElementById('variantPrice');
+        const originalPriceElement = document.getElementById('originalPrice');
+        const discountPercentElement = document.getElementById('discountPercent');
+        const stockElement = document.getElementById('availableStock');
+        const quantityInput = document.getElementById('quantity');
+        const cancelButton = document.getElementById('cancelVariantSelection');
+        const selectedVariantIdInput = document.getElementById('selectedVariantId');
+        var selectedVariant = null;
+        var totalStockQuantity = "{{ $totalStock }}";
+
+        function formatCurrency(number) {
+            return number.toLocaleString('vi-VN');
+        }
+
+        function updatePriceDisplay(price, original) {
+            if (priceElement) priceElement.textContent = 'đ' + formatCurrency(price);
+
+            if (originalPriceElement && discountPercentElement) {
+                if (original > price) {
+                    originalPriceElement.textContent = 'đ' + formatCurrency(original);
+                    originalPriceElement.style.display = 'inline';
+                    const percent = Math.round((1 - price / original) * 100);
+                    discountPercentElement.textContent = `-${percent}%`;
+                    discountPercentElement.style.display = 'inline-block';
+                } else {
+                    originalPriceElement.style.display = 'none';
+                    discountPercentElement.style.display = 'none';
+                }
+            }
+        }
+
+        function updateMainImage(imageUrl) {
+            if (!mainImage || !imageUrl) return;
+            mainImage.src = imageUrl;
+        }
+
+        function resetToDefault() {
+            selectedVariantIdInput.value = '';
+            variantOptions.forEach(opt => opt.classList.remove('selected'));
+
+            const min = parseInt(document.getElementById('minPrice')?.value || 0);
+            const max = parseInt(document.getElementById('maxPrice')?.value || 0);
+
+            if (priceElement) {
+                if (min && max && min !== max) {
+                    priceElement.textContent = `đ${formatCurrency(min)} - đ${formatCurrency(max)}`;
+                } else {
+                    priceElement.textContent = `đ${formatCurrency(min)}`;
+                }
+            }
+
+            if (originalPriceElement) originalPriceElement.style.display = 'none';
+            if (discountPercentElement) discountPercentElement.style.display = 'none';
+
+            if (mainImage?.dataset.originalSrc) {
+                mainImage.src = mainImage.dataset.originalSrc;
+            }
+
+            if (stockElement) {
+                const totalStock = Array.from(variantOptions).reduce((sum, opt) => {
+                    return sum + (parseInt(opt.dataset.variantStock || '0'));
+                }, 0);
+                stockElement.textContent = `${totalStock} sản phẩm có sẵn`;
+            }
+
+            if (quantityInput) quantityInput.value = 1;
+        }
+
+        variantOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                variantOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+
+                const price = parseFloat(option.dataset.variantPrice);
+                const original = parseFloat(option.dataset.variantOriginal || option.dataset
+                    .variantPrice);
+                const image = option.dataset.variantImage;
+                const stock = parseInt(option.dataset.variantStock || '0');
+                const id = option.dataset.variantId;
+
+                selectedVariant = {
+                    id,
+                    price,
+                    original,
+                    stock,
+                    image
+                };
+
+                selectedVariantIdInput.value = id;
+
+                updatePriceDisplay(price, original);
+                updateMainImage(image);
+
+                if (stockElement) stockElement.textContent = `${stock} sản phẩm có sẵn`;
+
+                if (quantityInput && quantityInput.value > stock) {
+                    quantityInput.value = stock;
+                }
+            });
+        });
+
+        if (cancelButton) {
+            cancelButton.addEventListener('click', resetToDefault);
+        }
+
+        // Quantity buttons
+        document.querySelector('.btn-minus')?.addEventListener('click', () => {
+            let value = parseInt(quantityInput.value) || 1;
+            if (value > 1) quantityInput.value = value - 1;
+        });
+
+        document.querySelector('.btn-plus')?.addEventListener('click', () => {
+            let value = parseInt(quantityInput.value) || 1;
+            const max = selectedVariant?.stock || totalStockQuantity;
+            if (value < max) quantityInput.value = value + 1;
+            if (value >= max) {
+                Toastify({
+                    text: "Bạn đã vượt quá số lượng cho phép!",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336", // đỏ cảnh báo
+                    stopOnFocus: true
+                }).showToast();
+            }
+        });
+
+        if (quantityInput) {
+            quantityInput.addEventListener('input', function() {
+                const max = selectedVariant?.stock || totalStockQuantity;
+                let value = parseInt(quantityInput.value) || 1;
+
+                if (value > max) {
+                    quantityInput.value = max;
+                    Toastify({
+                        text: "Bạn đã vượt quá số lượng cho phép!",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#f44336", // đỏ cảnh báo
+                        stopOnFocus: true
+                    }).showToast();
+                }
+            });
+        }
+        // Init
+        resetToDefault();
+        const addToCartBtn = document.querySelector('.add-to-cart-btn');
+        const productType = "{{ $product->product_type }}"; // Laravel blade
+
+        addToCartBtn?.addEventListener('click', function(e) {
+            if (productType === 'variant') {
+                if (!selectedVariant || !selectedVariantIdInput.value) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+                }
+            }
+        });
+    });
+</script>
 @include('clients.layouts.footer')
