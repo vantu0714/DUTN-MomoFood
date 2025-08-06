@@ -109,8 +109,6 @@
                     </div>
                     <div class="featurs-content text-center">
                         <h5>Hỗ trợ trả hàng trong vòng 1 tuần</h5>
-                        {{-- <p class="mb-0">Hoàn tiền trong vòng 30 ngày</p> --}}
-
                     </div>
                 </div>
             </div>
@@ -130,7 +128,9 @@
         </div>
     </div>
 </div>
-<!-- DANH SÁCH SẢN PHẨM -->
+<!-- Featurs Section End -->
+
+<!-- DANH SÁCH SẢN PHẨM START-->
 <div class="container-fluid fruite py-5">
     <div class="container py-2">
         <!-- DANH MỤC NGANG -->
@@ -175,6 +175,8 @@
         </div>
     </div>
 </div>
+<!-- DANH SÁCH SẢN PHẨM END -->
+
 <!-- Featurs Start -->
 <div class="container-fluid service py-5">
     <div class="container py-2">
@@ -536,9 +538,8 @@
 
                     <div class="d-flex align-items-start">
                         <!-- Avatar -->
-                       <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-    class="rounded-circle me-3 shadow comment-avatar"
-    alt="Avatar">
+                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                            class="rounded-circle me-3 shadow comment-avatar" alt="Avatar">
 
 
 
@@ -965,13 +966,14 @@
 
 <style>
     .comment-avatar {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border: 2px solid #fff;
-    flex-shrink: 0; /* ⛔ Không cho bị ép co giãn theo flex */
-    display: block;
-}
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border: 2px solid #fff;
+        flex-shrink: 0;
+        /* ⛔ Không cho bị ép co giãn theo flex */
+        display: block;
+    }
 
     a.h5.d-block.mb-2:hover {
         color: #d67054 !important;

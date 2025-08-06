@@ -21,7 +21,7 @@ class HomeController extends Controller
         $query = Product::with([
             'category',
             'variants' => function ($q) {
-                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status'); 
+                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status');
             },
             'variants.attributeValues.attribute'
         ])
@@ -46,15 +46,26 @@ class HomeController extends Controller
 
         $products = $query->paginate(12);
         $categories = Category::withCount('products')->get();
-        
+
 
         $bestSellingProducts = Product::with('category')
-            ->where('product_type', 'simple')
             ->where('status', 1)
-            ->where('quantity_in_stock', '>', 0)
-            ->inRandomOrder()
+            ->where(function ($q) {
+                $q->where(function ($q1) {
+                    $q1->where('product_type', 'simple')
+                        ->where('quantity_in_stock', '>', 0);
+                })
+                    ->orWhere(function ($q2) {
+                        $q2->where('product_type', 'variant')
+                            ->whereHas('variants', function ($q3) {
+                                $q3->where('quantity_in_stock', '>', 0);
+                            });
+                    });
+            })
+            ->latest('created_at') // Lấy mới nhất
             ->take(8)
             ->get();
+
 
         //  Thêm sản phẩm có đánh giá >= 4 sao
         $highRatedProducts = Product::with([
