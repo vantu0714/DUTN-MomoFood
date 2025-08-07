@@ -99,7 +99,7 @@
 
  <!-- Copyright End -->
 
-
+<script lang="javascript">var __vnp = {code : 25622,key:'', secret : '32ecf215a95c0d026f98f218b41d1326'};(function() {var ga = document.createElement('script');ga.type = 'text/javascript';ga.async=true; ga.defer=true;ga.src = '//core.vchat.vn/code/tracking.js?v=60659'; var s = document.getElementsByTagName('script');s[0].parentNode.insertBefore(ga, s[0]);})();</script>
  <!-- Back to Top -->
  <a href="#" class="btn border-3 border-0 rounded-circle back-to-top text-white"
      style="background-color: #db735b;"><i class="fa fa-arrow-up"></i></a>
