@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -70,19 +71,32 @@ class DashboardController extends Controller
         $completedTotalProfit = $profits->total_profit ?? 0;
 
         // Biểu đồ doanh thu theo tháng
-        $monthlyRevenue = (clone $baseOrderQuery)
-            ->where('status', 4)
-            ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
-            ->groupBy('month')
-            ->pluck('total', 'month')
-            ->toArray();
-
         $chartLabels = [];
         $chartData = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $chartLabels[] = 'Tháng ' . $i;
-            $chartData[] = $monthlyRevenue[$i] ?? 0;
+
+        if ($filterType === 'year' && $year) {
+            // Hiển thị duy nhất 1 cột cho cả năm
+            $yearlyRevenue = (clone $baseOrderQuery)
+                ->where('status', 4)
+                ->sum('total_price');
+
+            $chartLabels[] = 'Năm ' . $year;
+            $chartData[] = $yearlyRevenue;
+        } else {
+            // Biểu đồ doanh thu theo tháng (mặc định)
+            $monthlyRevenue = (clone $baseOrderQuery)
+                ->where('status', 4)
+                ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
+                ->groupBy('month')
+                ->pluck('total', 'month')
+                ->toArray();
+
+            for ($i = 1; $i <= 12; $i++) {
+                $chartLabels[] = 'Tháng ' . $i;
+                $chartData[] = $monthlyRevenue[$i] ?? 0;
+            }
         }
+
 
         // Sản phẩm bán chạy (tính theo biến thể nếu có)
         $bestSellingProducts = DB::table('order_details as od')
@@ -108,8 +122,43 @@ class DashboardController extends Controller
 
         // Tổng tồn kho
         $totalStock = Product::sum('quantity_in_stock');
+
+
         // Sản phẩm đã hết hàng
-        $outOfStockProducts = Product::where('quantity_in_stock', 0)->get();
+        // Sản phẩm cha hết hàng (không có biến thể hoặc tổng hết hàng)
+        // Sản phẩm cha hết hàng (không có biến thể hoặc tổng hết hàng)
+        $outOfStockProducts = Product::with('category')->where('quantity_in_stock', 0);
+
+        // Lọc theo ngày / tháng / năm nếu có
+        if ($filterType === 'date' && $fromDate && $toDate) {
+            $outOfStockProducts->whereBetween('created_at', ["$fromDate 00:00:00", "$toDate 23:59:59"]);
+        } elseif ($filterType === 'month' && $month && $year) {
+            $outOfStockProducts->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month);
+        } elseif ($filterType === 'year' && $year) {
+            $outOfStockProducts->whereYear('created_at', $year);
+        }
+
+        $outOfStockProducts = $outOfStockProducts->get();
+
+
+        // Biến thể sản phẩm hết hàng
+        $outOfStockVariants = ProductVariant::with('product.category')->where('quantity_in_stock', 0);
+
+        // Lọc theo ngày / tháng / năm nếu có
+        if ($filterType === 'date' && $fromDate && $toDate) {
+            $outOfStockVariants->whereBetween('created_at', ["$fromDate 00:00:00", "$toDate 23:59:59"]);
+        } elseif ($filterType === 'month' && $month && $year) {
+            $outOfStockVariants->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month);
+        } elseif ($filterType === 'year' && $year) {
+            $outOfStockVariants->whereYear('created_at', $year);
+        }
+
+        $outOfStockVariants = $outOfStockVariants->get();
+
+        // Tổng số sản phẩm hết hàng
+        $totalOutOfStock = $outOfStockProducts->count() + $outOfStockVariants->count();
 
         // Khách hàng mua nhiều nhất
         $topCustomers = User::whereHas('orders', function ($q) use ($completedOrderIds) {
@@ -141,7 +190,9 @@ class DashboardController extends Controller
             'toDate',
             'month',
             'year',
-            'outOfStockProducts'
+            'outOfStockProducts',
+            'outOfStockVariants',
+            'totalOutOfStock'
         ));
     }
 }
