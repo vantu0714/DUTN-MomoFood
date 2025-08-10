@@ -94,6 +94,7 @@
                         6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
                         7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
                         8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
+                        9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
                     ];
                     $status = $statusLabels[$order->status] ?? ['label' => 'Không rõ', 'class' => 'light'];
 
@@ -138,6 +139,7 @@
                                     1 => ['label' => 'Chưa xác nhận', 'class' => 'secondary'],
                                     2 => ['label' => 'Đã xác nhận', 'class' => 'info'],
                                     3 => ['label' => 'Đang giao', 'class' => 'primary'],
+                                    9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
                                     4 => ['label' => 'Hoàn thành', 'class' => 'success'],
                                     5 => ['label' => 'Hoàn hàng', 'class' => 'dark'],
                                     6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
@@ -230,6 +232,155 @@
             </div>
         </div>
 
+        {{-- Lịch sử trạng thái đơn hàng --}}
+        <div class="card mb-4 shadow-sm rounded">
+            <div class="card-header bg-info text-white fw-bold">Lịch sử trạng thái đơn hàng</div>
+            <div class="card-body">
+                <div class="timeline">
+                    @php
+                        $statusHistory = [];
+
+                        // Luôn có trạng thái tạo đơn hàng
+                        $statusHistory[] = [
+                            'label' => 'Đơn hàng được tạo',
+                            'time' => $order->created_at,
+                            'icon' => 'fas fa-plus-circle',
+                            'color' => 'secondary',
+                        ];
+
+                        // Thêm các trạng thái khác nếu có timestamp
+                        if ($order->confirmed_at) {
+                            $statusHistory[] = [
+                                'label' => 'Đã xác nhận',
+                                'time' => $order->confirmed_at,
+                                'icon' => 'fas fa-check-circle',
+                                'color' => 'info',
+                            ];
+                        }
+
+                        if ($order->shipping_at) {
+                            $statusHistory[] = [
+                                'label' => 'Đang giao hàng',
+                                'time' => $order->shipping_at,
+                                'icon' => 'fas fa-truck',
+                                'color' => 'primary',
+                            ];
+                        }
+
+                        if ($order->delivered_at) {
+                            $statusHistory[] = [
+                                'label' => 'Đã giao hàng',
+                                'time' => $order->delivered_at,
+                                'icon' => 'fas fa-box-open',
+                                'color' => 'success',
+                            ];
+                        }
+
+                        if ($order->received_at) {
+                            $statusHistory[] = [
+                                'label' => 'Đã nhận hàng',
+                                'time' => $order->received_at,
+                                'icon' => 'fas fa-check-double',
+                                'color' => 'success',
+                            ];
+                        }
+
+                        if ($order->completed_at) {
+                            $statusHistory[] = [
+                                'label' => 'Hoàn thành',
+                                'time' => $order->completed_at,
+                                'icon' => 'fas fa-medal',
+                                'color' => 'success',
+                            ];
+                        }
+
+                        if ($order->return_requested_at) {
+                            $statusHistory[] = [
+                                'label' => 'Yêu cầu hoàn hàng',
+                                'time' => $order->return_requested_at,
+                                'icon' => 'fas fa-undo',
+                                'color' => 'warning',
+                                'note' => $order->return_reason ? 'Lý do: ' . $order->return_reason : null,
+                            ];
+                        }
+
+                        if ($order->return_processed_at) {
+                            $label = '';
+                            $icon = '';
+                            $color = '';
+
+                            if ($order->status == 5) {
+                                $label = 'Hoàn hàng thành công';
+                                $icon = 'fas fa-check-double';
+                                $color = 'success';
+                            } elseif ($order->status == 8) {
+                                $label = 'Yêu cầu bị từ chối';
+                                $icon = 'fas fa-times-circle';
+                                $color = 'danger';
+                            }
+
+                            if ($label) {
+                                $statusHistory[] = [
+                                    'label' => $label,
+                                    'time' => $order->return_processed_at,
+                                    'icon' => $icon,
+                                    'color' => $color,
+                                    'note' => $order->return_rejection_reason
+                                        ? 'Lý do: ' . $order->return_rejection_reason
+                                        : null,
+                                ];
+                            }
+                        }
+
+                        if ($order->status == 6 && $order->updated_at) {
+                            $statusHistory[] = [
+                                'label' => 'Đã hủy',
+                                'time' => $order->updated_at,
+                                'icon' => 'fas fa-ban',
+                                'color' => 'danger',
+                                'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+                            ];
+                        }
+
+                        // Sắp xếp theo thời gian
+                        usort($statusHistory, function ($a, $b) {
+                            return strtotime($a['time']) - strtotime($b['time']);
+                        });
+                    @endphp
+
+                    @forelse ($statusHistory as $index => $item)
+                        <div class="timeline-item {{ $loop->last ? 'last' : '' }}">
+                            <div class="timeline-marker bg-{{ $item['color'] }}">
+                                <i class="{{ $item['icon'] }} text-white"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1 fw-semibold">{{ $item['label'] }}</h6>
+                                        @if (isset($item['note']) && $item['note'])
+                                            <p class="mb-0 small text-muted">{{ $item['note'] }}</p>
+                                        @endif
+                                    </div>
+                                    <small class="text-muted">
+                                        @if ($item['time'])
+                                            {{ \Carbon\Carbon::parse($item['time'])->format('d/m/Y H:i') }}
+                                        @else
+                                            N/A
+                                        @endif
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Không có lịch sử trạng thái
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
         {{-- Thông tin hoàn hàng --}}
         @if (in_array($order->status, [5, 7, 8]))
             <div
@@ -310,6 +461,7 @@
                         {{-- Form từ chối --}}
                         <form id="reject-form" class="mt-4 p-4 bg-light rounded shadow-sm d-none"
                             action="{{ route('admin.orders.reject_return', $order->id) }}" method="POST">
+                            @csrf
                             <h6 class="fw-bold text-danger mb-3">
                                 <i class="fas fa-exclamation-triangle me-2"></i>Nhập lý do từ chối
                             </h6>
@@ -332,7 +484,6 @@
                 </div>
             </div>
         @endif
-
 
         {{-- Quay lại --}}
         <div class="text-end mt-4">
@@ -367,3 +518,47 @@
         }
     }
 </script>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+
+    .timeline-item.last {
+        padding-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -1.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        top: 0.25rem;
+    }
+
+    .timeline-item.last .timeline-marker {
+        background-color: #198754;
+    }
+
+    .timeline-content {
+        padding-left: 1rem;
+    }
+
+    .timeline-item:not(.last)::after {
+        content: '';
+        position: absolute;
+        left: -1rem;
+        top: 1.25rem;
+        height: calc(100% - 1rem);
+        width: 2px;
+        background-color: #dee2e6;
+    }
+</style>

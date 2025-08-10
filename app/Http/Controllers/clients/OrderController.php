@@ -15,7 +15,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -470,7 +469,7 @@ class OrderController extends Controller
             return back()->with('info', 'Yêu cầu hoàn hàng đang chờ xử lý');
         }
 
-        if ($order->status != 4 || ($order->completed_at && now()->gt(Carbon::parse($order->completed_at)->addHours(24)))) {
+        if ($order->status != 9 || ($order->completed_at && now()->gt(Carbon::parse($order->completed_at)->addHours(24)))) {
             return back()->with('error', 'Không đủ điều kiện hoàn hàng');
         }
 

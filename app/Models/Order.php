@@ -37,6 +37,10 @@ class Order extends Model
         'return_requested_at'
     ];
 
+    protected $casts = [
+        'shipping_started_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
