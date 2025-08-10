@@ -43,6 +43,7 @@ class UpdateOrderStatus implements ShouldQueue
             switch ($this->targetStatus) {
                 case 9: // Đã giao hàng
                     $order->received_at = now();
+                    $order->payment_status = 'paid';
                     break;
 
                 case 4: // Hoàn thành
@@ -67,7 +68,7 @@ class UpdateOrderStatus implements ShouldQueue
                 ->delay(now()->addMinutes(1));
         } elseif ($this->targetStatus == 9 && !in_array($order->status, [5, 7, 8])) {
             UpdateOrderStatus::dispatch($order, 4)
-                ->delay(now()->addMinutes(5));
+                ->delay(now()->addMinutes(15));
         }
     }
 }

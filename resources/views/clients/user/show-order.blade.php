@@ -152,73 +152,169 @@
                             </div>
                         @endif
 
-                        @if (in_array($order->status, [5, 7, 8]))
-                            <div
-                                class="card mt-3 border-{{ $order->status == 7 ? 'warning' : ($order->status == 8 ? 'danger' : 'secondary') }}">
-                                <div
-                                    class="card-header bg-{{ $order->status == 7 ? 'warning' : ($order->status == 8 ? 'danger' : 'secondary') }} text-white d-flex align-items-center">
-                                    <i
-                                        class="fas fa-{{ $order->status == 7 ? 'clock' : ($order->status == 5 ? 'check-circle' : 'times-circle') }} me-2"></i>
-                                    <strong>
-                                        @if ($order->status == 7)
-                                            YÊU CẦU HOÀN HÀNG ĐANG CHỜ XỬ LÝ
-                                        @elseif($order->status == 5)
-                                            ĐƠN HÀNG ĐÃ ĐƯỢC HOÀN TRẢ
-                                        @else
-                                            YÊU CẦU HOÀN HÀNG BỊ TỪ CHỐI
-                                        @endif
-                                    </strong>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        @if ($order->return_reason)
-                                            <div class="col-md-6 mb-3">
-                                                <div class="p-3 bg-light rounded">
-                                                    <h6 class="fw-bold text-uppercase small">Lý do hoàn hàng</h6>
-                                                    <p class="mb-0">{{ $order->return_reason }}</p>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        @if ($order->status == 8 && $order->return_rejection_reason)
-                                            <div class="col-md-6 mb-3">
-                                                <div class="p-3 bg-light rounded">
-                                                    <h6 class="fw-bold text-uppercase small">Lý do từ chối</h6>
-                                                    <p class="mb-0 text-danger">{{ $order->return_rejection_reason }}</p>
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled">
-                                                <li class="mb-2">
-                                                    <span class="fw-bold">Ngày yêu cầu:</span>
-                                                    {{ $order->return_requested_at ?: 'N/A' }}
-                                                </li>
-                                                @if ($order->status == 5)
-                                                    <li class="mb-2">
-                                                        <span class="fw-bold">Ngày hoàn thành:</span>
-                                                        {{ $order->completed_at ?: 'N/A' }}
-                                                    </li>
-                                                @elseif($order->status == 8)
-                                                    <li class="mb-2">
-                                                        <span class="fw-bold">Ngày từ chối:</span>
-                                                        {{ $order->updated_at }}
-                                                    </li>
-                                                @endif
-                                            </ul>
-                                        </div>
-                                    </div>
-
-                                    @if ($order->status == 7)
-                                        <div class="alert alert-warning mb-0 mt-2">
-                                            <i class="fas fa-info-circle me-2"></i> Yêu cầu hoàn hàng của bạn đang được xử
-                                            lý. Vui lòng chờ phản hồi từ cửa hàng.
-                                        </div>
-                                    @endif
+                        @if ($order->status == 7)
+                            <div class="alert alert-warning d-flex align-items-center mb-4">
+                                <i class="fas fa-info-circle fa-2x me-3"></i>
+                                <div>
+                                    <p class="mb-0">Yêu cầu hoàn hàng của bạn đang được xử lý. Vui lòng chờ phản hồi từ
+                                        cửa hàng.</p>
                                 </div>
                             </div>
                         @endif
+                    </div>
+                </div>
+
+                <!-- Lịch sử trạng thái đơn hàng -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-history me-2 text-primary"></i>
+                            Lịch sử trạng thái đơn hàng
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            @php
+                                $statusHistory = [];
+
+                                // Luôn có trạng thái tạo đơn hàng
+                                $statusHistory[] = [
+                                    'label' => 'Đơn hàng được tạo',
+                                    'time' => $order->created_at,
+                                    'icon' => 'fas fa-plus-circle',
+                                    'color' => 'secondary',
+                                ];
+
+                                // Thêm các trạng thái khác nếu có timestamp
+                                if ($order->confirmed_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Đã xác nhận',
+                                        'time' => $order->confirmed_at,
+                                        'icon' => 'fas fa-check-circle',
+                                        'color' => 'info',
+                                    ];
+                                }
+
+                                if ($order->shipping_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Đang giao hàng',
+                                        'time' => $order->shipping_at,
+                                        'icon' => 'fas fa-truck',
+                                        'color' => 'primary',
+                                    ];
+                                }
+
+                                if ($order->delivered_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Đã giao hàng',
+                                        'time' => $order->delivered_at,
+                                        'icon' => 'fas fa-box-open',
+                                        'color' => 'success',
+                                    ];
+                                }
+
+                                if ($order->received_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Đã nhận hàng',
+                                        'time' => $order->received_at,
+                                        'icon' => 'fas fa-check-double',
+                                        'color' => 'success',
+                                    ];
+                                }
+
+                                if ($order->completed_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Hoàn thành',
+                                        'time' => $order->completed_at,
+                                        'icon' => 'fas fa-medal',
+                                        'color' => 'success',
+                                    ];
+                                }
+
+                                if ($order->return_requested_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Yêu cầu hoàn hàng',
+                                        'time' => $order->return_requested_at,
+                                        'icon' => 'fas fa-undo',
+                                        'color' => 'warning',
+                                        'note' => $order->return_reason ? 'Lý do: ' . $order->return_reason : null,
+                                    ];
+                                }
+
+                                if ($order->return_processed_at) {
+                                    $label = '';
+                                    $icon = '';
+                                    $color = '';
+
+                                    if ($order->status == 5) {
+                                        $label = 'Hoàn hàng thành công';
+                                        $icon = 'fas fa-check-double';
+                                        $color = 'success';
+                                    } elseif ($order->status == 8) {
+                                        $label = 'Yêu cầu bị từ chối';
+                                        $icon = 'fas fa-times-circle';
+                                        $color = 'danger';
+                                    }
+
+                                    if ($label) {
+                                        $statusHistory[] = [
+                                            'label' => $label,
+                                            'time' => $order->return_processed_at,
+                                            'icon' => $icon,
+                                            'color' => $color,
+                                            'note' => $order->return_rejection_reason
+                                                ? 'Lý do: ' . $order->return_rejection_reason
+                                                : null,
+                                        ];
+                                    }
+                                }
+
+                                if ($order->status == 6 && $order->updated_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Đã hủy',
+                                        'time' => $order->updated_at,
+                                        'icon' => 'fas fa-ban',
+                                        'color' => 'danger',
+                                        'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+                                    ];
+                                }
+
+                                // Sắp xếp theo thời gian
+                                usort($statusHistory, function ($a, $b) {
+                                    return strtotime($a['time']) - strtotime($b['time']);
+                                });
+                            @endphp
+
+                            @forelse ($statusHistory as $index => $item)
+                                <div class="timeline-item {{ $loop->last ? 'last' : '' }}">
+                                    <div class="timeline-marker bg-{{ $item['color'] }}">
+                                        <i class="{{ $item['icon'] }} text-white"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1 fw-semibold">{{ $item['label'] }}</h6>
+                                                @if (isset($item['note']) && $item['note'])
+                                                    <p class="mb-0 small text-muted">{{ $item['note'] }}</p>
+                                                @endif
+                                            </div>
+                                            <small class="text-muted">
+                                                @if ($item['time'])
+                                                    {{ \Carbon\Carbon::parse($item['time'])->format('d/m/Y H:i') }}
+                                                @else
+                                                    N/A
+                                                @endif
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Không có lịch sử trạng thái
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
 
@@ -439,6 +535,81 @@
 
             .bg-purple {
                 background-color: #6f42c1 !important;
+            }
+        </style>
+    @endpush
+
+    @push('styles')
+        <style>
+            .timeline {
+                position: relative;
+                padding-left: 1.5rem;
+            }
+
+            .timeline-item {
+                position: relative;
+                padding-bottom: 1.5rem;
+            }
+
+            .timeline-item.last {
+                padding-bottom: 0;
+            }
+
+            .timeline-marker {
+                position: absolute;
+                left: -1.5rem;
+                width: 1rem;
+                height: 1rem;
+                border-radius: 50%;
+                top: 0.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid white;
+                box-shadow: 0 0 0 2px #dee2e6;
+            }
+
+            .timeline-marker i {
+                font-size: 0.5rem;
+            }
+
+            .timeline-content {
+                padding-left: 1rem;
+            }
+
+            .timeline-item:not(.last)::after {
+                content: '';
+                position: absolute;
+                left: -1rem;
+                top: 1.25rem;
+                height: calc(100% - 1rem);
+                width: 2px;
+                background-color: #dee2e6;
+            }
+
+            /* Responsive */
+            @media (max-width: 576px) {
+                .timeline {
+                    padding-left: 1.25rem;
+                }
+
+                .timeline-marker {
+                    left: -1.25rem;
+                    width: 0.875rem;
+                    height: 0.875rem;
+                }
+
+                .timeline-marker i {
+                    font-size: 0.4rem;
+                }
+
+                .timeline-item:not(.last)::after {
+                    left: -0.875rem;
+                }
+
+                .timeline-content {
+                    padding-left: 0.75rem;
+                }
             }
         </style>
     @endpush
