@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <h3 class="mb-4 fw-bold text-primary">📊 Thống kê đơn hàng</h3>
+        <h3 class="mb-4 fw-bold text-info">📊 Thống kê đơn hàng</h3>
 
         {{-- Biểu mẫu lọc --}}
         <form action="{{ route('admin.dashboard') }}" method="GET" class="mb-4">
@@ -57,47 +57,47 @@
         </form>
 
         {{-- Tổng quan --}}
-      <div class="row row-cols-1 row-cols-md-5 g-4 mb-4">
-    <div class="col">
-        <div class="card bg-primary text-white shadow-sm rounded-4 text-center">
-            <div class="card-body">
-                <h6 class="mb-2">📦 Tổng đơn hàng</h6>
-                <h3 class="fw-bold">{{ $totalOrders }}</h3>
+        <div class="row row-cols-1 row-cols-md-5 g-4 mb-4">
+            <div class="col">
+                <div class="card bg-primary text-white shadow-sm rounded-4 text-center">
+                    <div class="card-body">
+                        <h6 class="mb-2">📦 Tổng đơn hàng</h6>
+                        <h3 class="fw-bold">{{ $totalOrders }}</h3>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card bg-info text-white shadow-sm rounded-4 text-center">
-            <div class="card-body">
-                <h6 class="mb-2">💰 Tổng doanh thu</h6>
-                <h3 class="fw-bold">{{ number_format($totalRevenue, 0, ',', '.') }} ₫</h3>
+            <div class="col">
+                <div class="card bg-info text-white shadow-sm rounded-4 text-center">
+                    <div class="card-body">
+                        <h6 class="mb-2">💰 Tổng doanh thu</h6>
+                        <h3 class="fw-bold">{{ number_format($totalRevenue, 0, ',', '.') }} ₫</h3>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card bg-success text-white shadow-sm rounded-4 text-center">
-            <div class="card-body">
-                <h6 class="mb-2">✅ Đơn hàng hoàn thành</h6>
-                <h3 class="fw-bold">{{ $completedOrderCount }}</h3>
+            <div class="col">
+                <div class="card bg-success text-white shadow-sm rounded-4 text-center">
+                    <div class="card-body">
+                        <h6 class="mb-2">✅ Đơn hàng hoàn thành</h6>
+                        <h3 class="fw-bold">{{ $completedOrderCount }}</h3>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card bg-danger text-white shadow-sm rounded-4 text-center">
-            <div class="card-body">
-                <h6 class="mb-2">❌ Đơn hàng đã huỷ</h6>
-                <h3 class="fw-bold">{{ $cancelledOrderCount }}</h3>
+            <div class="col">
+                <div class="card bg-danger text-white shadow-sm rounded-4 text-center">
+                    <div class="card-body">
+                        <h6 class="mb-2">❌ Đơn hàng đã huỷ</h6>
+                        <h3 class="fw-bold">{{ $cancelledOrderCount }}</h3>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card bg-warning text-white shadow-sm rounded-4 text-center">
-            <div class="card-body">
-                <h6 class="mb-2">📉 Sản phẩm hết hàng</h6>
-                <h3 class="fw-bold">{{ $totalOutOfStock }}</h3>
+            <div class="col">
+                <div class="card bg-warning text-white shadow-sm rounded-4 text-center">
+                    <div class="card-body">
+                        <h6 class="mb-2">📉 Sản phẩm hết hàng</h6>
+                        <h3 class="fw-bold">{{ $totalOutOfStock }}</h3>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
             <select class="form-select mb-3" id="outOfStockSelect">
                 <option value="">-- Chọn sản phẩm hết hàng --</option>
@@ -142,15 +142,25 @@
         {{-- Biểu đồ doanh thu theo tháng --}}
         <div class="card mb-4 shadow-sm rounded-4">
             <div class="card-header bg-white border-0">
-                <h5 class="fw-bold text-primary">📊 Biểu đồ cột doanh thu theo tháng</h5>
+                <h3 class="fw-bold text-info">📊 Biểu đồ cột doanh thu theo tháng</h3>
             </div>
             <div class="card-body">
                 <canvas id="revenueChart" height="140"></canvas>
             </div>
         </div>
+        <div class="row">
+            <h3 class="text-info">📊Trạng thái đơn hàng</h3>
+            <div class="d-flex justify-content-center my-3">
+                <div style="max-width: 400px; width: 100%;">
+                    <canvas id="orderStatusChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
         {{-- Sản phẩm bán chạy --}}
         <div class="card shadow-sm rounded-4 mb-4">
-            <h4>🔥 Top 10 sản phẩm bán chạy</h4>
+            <h3 class="text-info">🔥 Top 10 sản phẩm bán chạy</h3>
             <table class="table table-bordered">
                 <thead>
                     <tr>
@@ -175,7 +185,7 @@
                             <td>{{ $product->product_name }}
                                 @if ($product->variant_attributes)
                                     <br>
-                                    <small class="text-primary">{{ $product->variant_attributes }}</small>
+                                    <small class="text-info">{{ $product->variant_attributes }}</small>
                                 @endif
                             </td>
                             <td>{{ $product->total_quantity }}</td>
@@ -191,7 +201,7 @@
         {{-- Khách hàng mua nhiều nhất --}}
         <div class="card shadow-sm rounded-4 mb-4">
             <div class="card-header bg-white border-0">
-                <h5 class="fw-bold text-info">👤 Top 5 khách hàng mua nhiều nhất</h5>
+                <h3 class="fw-bold text-info">👤 Top 5 khách hàng mua nhiều nhất</h3>
             </div>
             <div class="card-body p-0">
                 <table class="table table-striped mb-0">
@@ -289,14 +299,89 @@
             data: {
                 labels: {!! json_encode($chartLabels) !!},
                 datasets: [{
-                    label: 'Doanh thu (VNĐ)',
-                    data: {!! json_encode($chartData) !!},
-                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                    borderRadius: 6,
-                    barPercentage: 0.6,
-                    categoryPercentage: 0.5
+                        label: 'Doanh thu (VNĐ)',
+                        data: {!! json_encode($chartDataRevenue) !!},
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Số đơn hàng',
+                        data: {!! json_encode($chartDataOrders) !!},
+                        backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.label.includes('Doanh thu')) {
+                                    return new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
+                                }
+                                return context.parsed.y + ' đơn';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('vi-VN').format(value);
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+        // Biểu đồ tròn thống kê đơn hàng theo trạng thái
+        const ctx2 = document.getElementById('orderStatusChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: {!! json_encode(array_keys($orderStatusCount)) !!},
+                datasets: [{
+                    label: 'Tỷ lệ đơn hàng',
+                    data: {!! json_encode(array_values($orderStatusCount)) !!},
+                    backgroundColor: [
+                        'rgba(255, 206, 86, 0.7)', // Chờ xử lý
+                        'rgba(54, 162, 235, 0.7)', // Đang giao
+                        'rgba(75, 192, 192, 0.7)', // Hoàn thành
+                        'rgba(255, 99, 132, 0.7)' // Đã hủy
+                    ],
+                    borderColor: [
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -305,20 +390,9 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
-                            }
-                        }
-                    },
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.NumberFormat('vi-VN').format(value);
+                                let label = context.label || '';
+                                let value = context.raw || 0;
+                                return `${label}: ${value} đơn`;
                             }
                         }
                     }
@@ -326,6 +400,7 @@
             }
         });
     </script>
+
 
     {{-- Toggle bộ lọc --}}
     <script>
