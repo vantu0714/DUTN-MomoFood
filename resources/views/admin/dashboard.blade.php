@@ -191,7 +191,7 @@
         {{-- Khách hàng mua nhiều nhất --}}
         <div class="card shadow-sm rounded-4 mb-4">
             <div class="card-header bg-white border-0">
-                <h5 class="fw-bold text-info">👤 Top 5 khách hàng mua nhiều nhất</h5>
+                <h5 class="fw-bold text-info">👤 Khách hàng mua nhiều nhất</h5>
             </div>
             <div class="card-body p-0">
                 <table class="table table-striped mb-0">
