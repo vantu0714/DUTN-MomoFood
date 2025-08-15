@@ -313,27 +313,47 @@ class ProductVariantController extends Controller
     {
         $variant = ProductVariant::findOrFail($id);
 
-        // Nếu đang tồn tại trong đơn hàng hoặc giỏ hàng
-        if ($variant->orderDetails()->exists() || $variant->cartItems()->exists()) {
+        // Nếu còn trong giỏ hàng → chặn xóa
+        if ($variant->cartItems()->exists()) {
             return response()->json([
-                'error' => 'Không thể xoá vì biến thể đang tồn tại trong đơn hàng hoặc giỏ hàng.'
+                'error' => 'Không thể xoá vì biến thể này vẫn còn trong giỏ hàng.'
+            ], 422);
+        }
+
+        // Nếu vẫn còn trong đơn hàng chưa hoàn thành hoặc chưa hủy → chặn xóa
+        $existsInActiveOrders = $variant->orderDetails()
+            ->whereHas('order', function ($query) {
+                $query->whereNotIn('status', [4, 6]); // không phải hoàn thành/hủy
+            })
+            ->exists();
+
+        if ($existsInActiveOrders) {
+            return response()->json([
+                'error' => 'Không thể xoá vì biến thể này vẫn còn trong đơn hàng chưa hoàn thành hoặc hủy.'
             ], 422);
         }
 
         $productId = $variant->product_id;
 
+        // Xoá giá trị thuộc tính
         ProductVariantValue::where('product_variant_id', $variant->id)->delete();
 
-        if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+        // Xoá ảnh nếu có
+        if (!empty($variant->image) && Storage::disk('public')->exists($variant->image)) {
             Storage::disk('public')->delete($variant->image);
         }
 
+        // Xoá biến thể
         $variant->delete();
 
+        // Cập nhật trạng thái sản phẩm
         $this->updateProductStatus($productId);
 
         return response()->json(['message' => 'Đã xoá biến thể thành công!']);
     }
+
+
+
 
     /**
      * Cập nhật trạng thái "còn hàng / hết hàng" cho sản phẩm cha
@@ -348,18 +368,18 @@ class ProductVariantController extends Controller
         }
     }
     // thêm biến thể cho sản phẩm có sẳn
-   public function createMultiple()
-{
-    $products = Product::where('status', 1)
-        ->with(['variants.attributeValues.attribute'])
-        ->withCount('variants') 
-        ->orderByDesc('id')
-        ->get();
+    public function createMultiple()
+    {
+        $products = Product::where('status', 1)
+            ->with(['variants.attributeValues.attribute'])
+            ->withCount('variants')
+            ->orderByDesc('id')
+            ->get();
 
-    $sizeValues = Attribute::where('name', 'Khối lượng')->first()?->values ?? collect();
+        $sizeValues = Attribute::where('name', 'Khối lượng')->first()?->values ?? collect();
 
-    return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
-}
+        return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
+    }
 
 
     public function storeMultiple(Request $request)

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attribute;
 use App\Models\CartItem;
 use App\Models\Category;
+use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\ProductOrigin;
 use App\Models\ProductVariant;
@@ -270,45 +271,54 @@ class ProductController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('variants')->findOrFail($id);
         $actionType = $request->input('action_type');
 
-        $inCart = CartItem::where('product_id', $product->id)->exists()
-            || CartItem::whereIn('variant_id', $product->variants->pluck('id'))->exists();
+        // Trạng thái hoàn tất hoặc hủy
+        $completedStatuses = [4, 6];
+
+        // Kiểm tra đơn hàng chưa hoàn tất
+        $hasPendingOrders =
+            $product->orderDetails()
+            ->whereHas('order', function ($query) use ($completedStatuses) {
+                $query->whereNotIn('status', $completedStatuses);
+            })->exists()
+            ||
+            OrderDetail::whereIn('variant_id', $product->variants->pluck('id'))
+            ->whereHas('order', function ($query) use ($completedStatuses) {
+                $query->whereNotIn('status', $completedStatuses);
+            })->exists();
+
+        if ($hasPendingOrders) {
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Không thể ẩn sản phẩm vì đang có trong đơn hàng chưa hoàn tất.');
+        }
+
+        // Kiểm tra giỏ hàng
+        $inCart =
+            CartItem::where('product_id', $product->id)->exists()
+            ||
+            CartItem::whereIn('variant_id', $product->variants->pluck('id'))->exists();
 
         if ($inCart) {
             return redirect()->route('admin.products.index')
-                ->with('error', 'Không thể xóa sản phẩm vì đang có trong giỏ hàng của khách.');
+                ->with('error', 'Không thể ẩn sản phẩm vì đang có trong giỏ hàng.');
         }
-
-        $hasActiveOrders = $product->orderDetails()
-            ->whereHas('order', function ($query) {
-                $query->whereNotIn('status', ['cancelled', 'failed']);
-            })->exists()
-            || $product->variants()->whereHas('orderDetails.order', function ($query) {
-                $query->whereNotIn('status', ['cancelled', 'failed']);
-            })->exists();
-
-        if ($hasActiveOrders) {
-            return redirect()->route('admin.products.index')
-                ->with('error', 'Không thể xóa sản phẩm vì đã nằm trong đơn hàng chưa hoàn tất.');
+        if ($actionType === 'hide') {
+            $product->delete();
+            return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được ẩn.');
         }
-
-        if ($actionType === 'variants') {
-            $product->variants()->delete();
-            return redirect()->route('admin.products.index')->with('success', 'Đã xóa các biến thể của sản phẩm.');
+        if ($actionType === 'delete') {
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $product->variants()->forceDelete();
+            $product->forceDelete();
+            return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được xóa hoàn toàn.');
         }
-
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
-        }
-
-        $product->variants()->delete();
-        $product->delete();
-
-        return redirect()->route('admin.products.index')->with('success', 'Đã xóa sản phẩm và các biến thể.');
+        return redirect()->route('admin.products.index')
+            ->with('error', 'Hành động không hợp lệ.');
     }
-
     public function showVariants($id)
     {
         $product = Product::with('variants')->findOrFail($id);
