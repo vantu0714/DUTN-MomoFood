@@ -530,39 +530,35 @@
     <!-- Comment Carousel -->
     <div class="row" id="commentSlider">
         @foreach ($comments as $comment)
-            <div class="col-md-6 mb-4 comment-item">
-                <div class="bg-light rounded p-4 h-100 hover-shadow comment-box"
-                    data-href="{{ route('product-detail.show', $comment->product->id) }}" style="cursor: pointer;">
+            @if ($comment->product)
+                <div class="col-md-6 mb-4 comment-item">
+                    <div class="bg-light rounded p-4 h-100 hover-shadow comment-box"
+                        data-href="{{ route('product-detail.show', $comment->product->id) }}"
+                        style="cursor: pointer;">
 
-                    <div class="d-flex align-items-start">
-                        <!-- Avatar -->
-                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-                            class="rounded-circle me-3 shadow comment-avatar" alt="Avatar">
+                        <div class="d-flex align-items-start">
+                            <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                                class="rounded-circle me-3 shadow comment-avatar" alt="Avatar">
 
-
-
-                        <div>
-                            <!-- Stars -->
-                            <div class="mb-2">
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <i
-                                        class="{{ $i <= $comment->rating ? 'fa-solid text-warning' : 'fa-regular text-secondary' }} fa-star"></i>
-                                @endfor
+                            <div>
+                                <div class="mb-2">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i
+                                            class="{{ $i <= $comment->rating ? 'fa-solid text-warning' : 'fa-regular text-secondary' }} fa-star"></i>
+                                    @endfor
+                                </div>
+                                <p class="mb-1 fw-bold">{{ $comment->user->name ?? 'Ẩn danh' }}
+                                    <span class="fw-normal text-muted">.
+                                        {{ $comment->user->profession ?? 'Khách hàng' }}</span>
+                                </p>
+                                <p class="fst-italic mb-0 comment-content">{{ $comment->content }}</p>
                             </div>
-
-                            <!-- Name -->
-                            <p class="mb-1 fw-bold">{{ $comment->user->name ?? 'Ẩn danh' }}
-                                <span class="fw-normal text-muted">.
-                                    {{ $comment->user->profession ?? 'Khách hàng' }}</span>
-                            </p>
-
-                            <!-- Content -->
-                            <p class="fst-italic mb-0 comment-content">{{ $comment->content }}</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
         @endforeach
+
     </div>
     <!-- Navigation Buttons -->
     <div class="testimonial-nav">

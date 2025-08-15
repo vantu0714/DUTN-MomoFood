@@ -39,7 +39,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-primary text-uppercase mb-1">Tổng sản phẩm</div>
-                               <div class="h5 mb-0">{{ number_format($totalStockQuantity) }} </div>
+                                <div class="h5 mb-0">{{ number_format($totalStockQuantity) }} </div>
                             </div>
                         </div>
                     </div>
@@ -305,73 +305,6 @@
                                     </td>
                                 </tr>
                             @endforeach
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    // Khởi tạo tooltip
-                                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                                    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                                        return new bootstrap.Tooltip(tooltipTriggerEl);
-                                    });
-
-                                    console.log('Page loaded, tooltips initialized');
-
-                                    const csrfToken = document.querySelector('meta[name="csrf-token"]');
-                                    if (csrfToken) {
-                                        console.log('CSRF Token found:', csrfToken.getAttribute('content'));
-                                    } else {
-                                        console.error('CSRF Token not found!');
-                                    }
-                                });
-                                const deleteProductModal = document.getElementById('deleteProductModal');
-                                deleteProductModal.addEventListener('show.bs.modal', function(event) {
-                                    const button = event.relatedTarget;
-                                    const productId = button.getAttribute('data-product-id');
-                                    const productName = button.getAttribute('data-product-name');
-                                    const hasVariants = button.getAttribute('data-has-variants') === 'true';
-
-                                    // Cập nhật form action
-                                    const form = document.getElementById('deleteProductForm');
-                                    form.action = `/admin/products/${productId}`;
-
-                                    // Cập nhật nội dung cảnh báo
-                                    const message = hasVariants ?
-                                        `Sản phẩm <strong>${productName}</strong> có biến thể. Bạn muốn xóa toàn bộ hay chỉ xóa các biến thể?` :
-                                        `Bạn có chắc chắn muốn xóa sản phẩm <strong>${productName}</strong>?`;
-
-                                    document.getElementById('deleteProductMessage').innerHTML = message;
-
-                                    // Ẩn nút "Chỉ xóa biến thể" nếu sản phẩm không có biến thể
-                                    document.getElementById('variantOptions').querySelector('button.btn-warning').style.display =
-                                        hasVariants ? 'inline-block' : 'none';
-                                });
-                                // Optional: test ajax delete
-                                function testAjaxDelete(productId) {
-                                    if (!confirm('Test AJAX delete?')) return;
-
-                                    fetch(`/admin/products/${productId}`, {
-                                            method: 'DELETE',
-                                            headers: {
-                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                                'Accept': 'application/json',
-                                                'Content-Type': 'application/json'
-                                            }
-                                        })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            console.log('Response:', data);
-                                            if (data.success) {
-                                                alert('Xóa thành công!');
-                                                location.reload();
-                                            } else {
-                                                alert('Lỗi: ' + data.message);
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error:', error);
-                                            alert('Có lỗi xảy ra!');
-                                        });
-                                }
-                            </script>
                         </tbody>
                     </table>
                     <div class="d-flex justify-content-center mt-4">
@@ -411,24 +344,51 @@
             @method('DELETE')
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Xác nhận xóa sản phẩm</h5>
+                    <h5 class="modal-title">Xác nhận hành động với sản phẩm</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body">
                     <p id="deleteProductMessage"></p>
-                    <input type="hidden" name="action_type" id="deleteActionType" value="full">
+                    <input type="hidden" name="action_type" id="deleteActionType" value="">
                 </div>
                 <div class="modal-footer d-flex justify-content-between">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <div id="variantOptions" class="d-flex gap-2">
+                    <div id="variantOptions" class="d-flex gap-2 flex-wrap">
+                        <!-- Nút ẩn sản phẩm -->
                         <button type="submit" class="btn btn-warning"
-                            onclick="document.getElementById('deleteActionType').value='variants'">Chỉ xóa biến
-                            thể</button>
-                        <button type="submit" class="btn btn-danger"
-                            onclick="document.getElementById('deleteActionType').value='full'">Xóa toàn bộ</button>
+                            onclick="document.getElementById('deleteActionType').value='hide'">
+                            Ẩn sản phẩm
+                        </button>
+                        <!-- Nút chỉ xóa biến thể -->
+                        <button type="submit" id="deleteVariantsBtn" class="btn btn-info"
+                            onclick="document.getElementById('deleteActionType').value='variants'">
+                            Chỉ xóa biến thể
+                        </button>
                     </div>
                 </div>
             </div>
         </form>
     </div>
 </div>
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var deleteModal = document.getElementById('deleteProductModal');
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var productId = button.getAttribute('data-product-id');
+                var productName = button.getAttribute('data-product-name');
+                var hasVariants = button.getAttribute('data-has-variants') === 'true';
+
+                // Set form action
+                document.getElementById('deleteProductForm').action = '/admin/products/' + productId;
+                // Set message
+                document.getElementById('deleteProductMessage').textContent =
+                    'Bạn có chắc chắn muốn thao tác với sản phẩm "' + productName + '" không?';
+                // Ẩn nút "Chỉ xóa biến thể" nếu không có biến thể
+                document.getElementById('deleteVariantsBtn').style.display = hasVariants ? 'inline-block' :
+                    'none';
+            });
+        });
+    </script>
+@endpush
