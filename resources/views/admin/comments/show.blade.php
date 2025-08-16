@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container mt-4">
-        <h3 class="mb-4 fw-bold text-primary">Bình luận cho sản phẩm: {{ $product->product_name }}</h3>
+        <h3 class="mb-4 fw-bold text-info">Bình luận cho sản phẩm: {{ $product->product_name }}</h3>
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
