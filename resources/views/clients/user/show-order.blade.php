@@ -206,7 +206,7 @@
 
                                 if ($order->delivered_at) {
                                     $statusHistory[] = [
-                                        'label' => 'Đã giao hàng',
+                                        'label' => 'Đang giao hàng',
                                         'time' => $order->delivered_at,
                                         'icon' => 'fas fa-box-open',
                                         'color' => 'success',
@@ -267,6 +267,16 @@
                                                 : null,
                                         ];
                                     }
+                                }
+
+                                if ($order->status == 5 && !$order->return_requested_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Đã hoàn hàng',
+                                        'time' => $order->return_processed_at ?? $order->updated_at,
+                                        'icon' => 'fas fa-check-double',
+                                        'color' => 'success',
+                                        'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+                                    ];
                                 }
 
                                 if ($order->status == 6 && $order->updated_at) {
