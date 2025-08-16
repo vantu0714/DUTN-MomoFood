@@ -286,6 +286,17 @@
                 preview.src = "{{ asset('images/default-avatar.png') }}";
             }
         }
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const emailInput = document.querySelector('input[name="email"]');
+            const emailValue = emailInput.value;
+
+            if (!emailValue.endsWith('@gmail.com')) {
+                e.preventDefault();
+                alert('Chỉ chấp nhận địa chỉ email Gmail (@gmail.com)');
+                emailInput.focus();
+            }
+        });
     </script>
 @endsection
 

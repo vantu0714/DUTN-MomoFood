@@ -54,7 +54,16 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => [
+                'required',
+                'email',
+                'unique:users,email',
+                function ($attribute, $value, $fail) {
+                    if (!preg_match('/@gmail\.com$/i', $value)) {
+                        $fail('Chỉ chấp nhận địa chỉ email Gmail (@gmail.com).');
+                    }
+                }
+            ],
             'password' => 'required|string|confirmed|min:6',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ], [

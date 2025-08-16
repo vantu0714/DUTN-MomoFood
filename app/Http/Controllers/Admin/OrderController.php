@@ -226,86 +226,26 @@ class OrderController extends Controller
         ]);
 
         $newStatus = (int) $request->status;
+        $currentStatus = $order->status;
 
-        // Không cho phép chuyển từ trạng thái Hoàn hàng (5) sang Hủy đơn (6)
-        if ($order->status == 5 && $newStatus == 6) {
-            return back()->with('error', 'Không thể hủy đơn hàng sau khi đã hoàn hàng.');
+        // Danh sách các trạng thái được phép chuyển đổi
+        $allowedTransitions = [
+            1 => [2, 6], // Chưa xác nhận → Đã xác nhận hoặc Hủy
+            2 => [3], // Đã xác nhận → Đang giao
+            3 => [5, 9], // Đang giao → Hoàn hàng hoặc Đã giao
+            5 => [],     // Hoàn hàng → Không thể chuyển tiếp
+            6 => [],     // Hủy → Không thể chuyển tiếp
+            9 => [4],    // Đã giao → Hoàn thành
+        ];
+
+        // Kiểm tra tính hợp lệ
+        if (!in_array($newStatus, $allowedTransitions[$currentStatus] ?? [])) {
+            return back()->with('error', 'Không thể chuyển từ trạng thái hiện tại sang trạng thái này.');
         }
 
-        // Nếu chuyển sang trạng thái Đang giao (3) → lên lịch chuyển sang Đã giao (9) sau 1 phút
-        if ($newStatus == 3) {
-            $order->status = 3;
-            $order->delivered_at = now();
-            $order->save();
-
-            // Lên lịch chuyển sang trạng thái Đã giao hàng sau 1 phút
-            UpdateOrderStatus::dispatch($order, 9)
-                ->delay(now()->addMinutes(1));
-
-            return back()->with('success', 'Đơn hàng đang được giao và sẽ tự động cập nhật trạng thái sau 1 phút.');
-        }
-
-        // Nếu chuyển sang trạng thái Hoàn thành (4) → auto paid
-        elseif ($newStatus == 4) {
-            $order->status = 4;
-            $order->completed_at = now();
-            $order->payment_status = 'paid';
-
-            foreach ($order->orderDetails as $detail) {
-                $product = Product::find($detail->product_id);
-
-                if ($product) {
-                    // Nếu là sản phẩm đơn (simple) → trừ tồn kho trực tiếp
-                    if ($product->product_type === 'simple') {
-                        $product->decrement('quantity_in_stock', $detail->quantity);
-                    }
-
-                    // Nếu là sản phẩm có biến thể → trừ tồn kho ở bảng product_variants
-                    elseif ($product->product_type === 'variant' && $detail->product_variant_id) {
-                        DB::table('product_variants')
-                            ->where('id', $detail->product_variant_id)
-                            ->decrement('quantity_in_stock', $detail->quantity);
-                    }
-
-                    // Tăng số lượng đã bán cho sản phẩm chính
-                    $product->increment('sold_count', $detail->quantity);
-                }
-            }
-
-            $order->save();
-
-            // Chỉ tính đơn hàng Hoàn thành (4) để xét VIP
-            $userId = $order->user_id;
-            $totalSpent = Order::where('user_id', $userId)
-                ->where('status', 4) // chỉ tính đơn hoàn thành
-                ->sum('total_price');
-
-            if ($totalSpent >= 5000000) {
-                User::where('id', $userId)->update(['is_vip' => true]);
-            }
-
-            return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật và kiểm tra VIP.');
-        }
-        // Nếu chuyển sang trạng thái Hoàn hàng (5) → bắt buộc có lý do
-        elseif ($newStatus == 5) {
-            $request->validate([
-                'reason' => 'required|string|max:1000',
-            ]);
-
-            $order->status = 5;
-            $order->reason = $request->reason;
-        } elseif ($order->status == 3 && $newStatus == 9) {
-            $order->status = 9;
-            $order->received_at = now();
-        }
-        // Các trạng thái khác
-        else {
-            $order->status = $newStatus;
-        }
-
-        $order->save();
-
-        return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật.');
+        // Cập nhật trạng thái hợp lệ
+        $order->update(['status' => $newStatus]);
+        return back()->with('success', 'Cập nhật trạng thái thành công!');
     }
 
     public function cancel(Request $request, $id)
