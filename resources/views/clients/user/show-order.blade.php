@@ -478,8 +478,7 @@
                                     @csrf
                                     <div class="mb-3">
                                         <label class="form-label fw-bold text-danger">Lý do hủy:</label>
-                                        <textarea name="cancellation_reason" class="form-control" required placeholder="Nhập lý do hủy đơn hàng..."
-                                            rows="3"></textarea>
+                                        <textarea name="reason" class="form-control" required placeholder="Nhập lý do hủy đơn hàng..." rows="3"></textarea>
                                     </div>
                                     <button type="submit" class="btn btn-danger text-white w-100">
                                         <i class="fas fa-times-circle me-2"></i>Xác nhận hủy
