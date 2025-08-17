@@ -149,20 +149,28 @@
                                                 <i class="fas fa-clipboard-check me-1"></i>Trạng thái
                                             </label>
                                             <div class="status-display p-2 bg-light rounded-3">
-                                                @if ($product->quantity_in_stock > 0)
+                                                @if ($product->status == 0)
                                                     <span
-                                                        class="badge bg-success-subtle text-success border border-success-subtle fs-6 px-3 py-2 rounded-pill">
-                                                        <i class="fas fa-check-circle me-1"></i>Còn hàng
+                                                        class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-6 px-3 py-2 rounded-pill">
+                                                        <i class="fas fa-eye-slash me-1"></i>Ẩn
                                                     </span>
                                                 @else
-                                                    <span
-                                                        class="badge bg-danger-subtle text-danger border border-danger-subtle fs-6 px-3 py-2 rounded-pill">
-                                                        <i class="fas fa-times-circle me-1"></i>Hết hàng
-                                                    </span>
+                                                    @if ($product->quantity_in_stock > 0)
+                                                        <span
+                                                            class="badge bg-success-subtle text-success border border-success-subtle fs-6 px-3 py-2 rounded-pill">
+                                                            <i class="fas fa-check-circle me-1"></i>Còn hàng
+                                                        </span>
+                                                    @else
+                                                        <span
+                                                            class="badge bg-danger-subtle text-danger border border-danger-subtle fs-6 px-3 py-2 rounded-pill">
+                                                            <i class="fas fa-times-circle me-1"></i>Hết hàng
+                                                        </span>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
 
@@ -228,7 +236,7 @@
                 </div>
             </div>
 
-            
+
         </div>
 
         <!-- Danh sách biến thể -->
@@ -300,16 +308,23 @@
                                             @endif
                                         </td>
                                         <td class="py-3">
-                                            @if ($variant->quantity_in_stock > 0)
-                                                <span class="badge bg-success text-white border">
-                                                    <i class="fas fa-check-circle me-1"></i>Còn hàng
+                                            @if ($variant->status == 0)
+                                                <span class="badge bg-secondary text-white border">
+                                                    <i class="fas fa-eye-slash me-1"></i>Ẩn
                                                 </span>
                                             @else
-                                                <span class="badge bg-danger text-white border">
-                                                    <i class="fas fa-times-circle me-1"></i>Hết hàng
-                                                </span>
+                                                @if ($variant->quantity_in_stock > 0)
+                                                    <span class="badge bg-success text-white border">
+                                                        <i class="fas fa-check-circle me-1"></i>Còn hàng
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger text-white border">
+                                                        <i class="fas fa-times-circle me-1"></i>Hết hàng
+                                                    </span>
+                                                @endif
                                             @endif
                                         </td>
+
                                         <td class="py-3">
                                             <div class="d-flex flex-wrap gap-1">
                                                 @foreach ($variant->attributeValues as $attrValue)
