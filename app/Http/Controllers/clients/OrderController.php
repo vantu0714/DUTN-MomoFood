@@ -15,7 +15,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -267,7 +266,7 @@ class OrderController extends Controller
 
             // Cập nhật trạng thái VIP
             $totalSpent = Order::where('user_id', $userId)
-                ->whereIn('status', [3,4])
+                ->whereIn('status', [3, 4])
                 ->sum('total_price');
 
             if ($totalSpent >= 5000000) {
@@ -354,17 +353,28 @@ class OrderController extends Controller
             'reason' => 'required|string|max:1000',
         ]);
 
-        $order = Order::findOrFail($id);
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
 
         if ($order->status != 1) {
-            return back()->with('error', 'Đơn hàng không thể hủy.');
+            return back()->with('error', 'Chỉ có thể hủy đơn hàng khi chưa được xác nhận.');
         }
 
-        $order->status = 6; // hủy đơn
-        $order->cancellation_reason = $request->reason;
-        $order->save();
+        DB::beginTransaction();
+        try {
+            $order->update([
+                'status' => 6,
+                'reason' => $request->reason,
+                'cancelled_at' => now()
+            ]);
 
-        return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy.');
+            DB::commit();
+            return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Hủy đơn hàng thất bại: ' . $e->getMessage());
+        }
     }
 
     public function applyCoupon(Request $request)
@@ -470,7 +480,7 @@ class OrderController extends Controller
             return back()->with('info', 'Yêu cầu hoàn hàng đang chờ xử lý');
         }
 
-        if ($order->status != 4 || ($order->completed_at && now()->gt(Carbon::parse($order->completed_at)->addHours(24)))) {
+        if ($order->status != 9 || ($order->completed_at && now()->gt(Carbon::parse($order->completed_at)->addHours(24)))) {
             return back()->with('error', 'Không đủ điều kiện hoàn hàng');
         }
 

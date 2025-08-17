@@ -1,6 +1,7 @@
 @include('admin.layouts.header')
 @include('admin.layouts.sidebar')
 @stack('page-css')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <div class="main_content_iner " >
     <div class="container-fluid p-0" >
