@@ -70,20 +70,26 @@ class DashboardController extends Controller
 
         $completedTotalProfit = $profits->total_profit ?? 0;
 
-        // Biểu đồ doanh thu theo tháng
+        // Biểu đồ doanh thu + số đơn hàng theo tháng hoặc năm
         $chartLabels = [];
-        $chartData = [];
+        $chartDataRevenue = []; // Doanh thu
+        $chartDataOrders = [];  // Số đơn hàng
 
         if ($filterType === 'year' && $year) {
-            // Hiển thị duy nhất 1 cột cho cả năm
+            // Chỉ 1 cột cho cả năm
             $yearlyRevenue = (clone $baseOrderQuery)
                 ->where('status', 4)
                 ->sum('total_price');
 
+            $yearlyOrders = (clone $baseOrderQuery)
+                ->where('status', 4)
+                ->count();
+
             $chartLabels[] = 'Năm ' . $year;
-            $chartData[] = $yearlyRevenue;
+            $chartDataRevenue[] = $yearlyRevenue;
+            $chartDataOrders[] = $yearlyOrders;
         } else {
-            // Biểu đồ doanh thu theo tháng (mặc định)
+            // Theo tháng
             $monthlyRevenue = (clone $baseOrderQuery)
                 ->where('status', 4)
                 ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
@@ -91,9 +97,17 @@ class DashboardController extends Controller
                 ->pluck('total', 'month')
                 ->toArray();
 
+            $monthlyOrders = (clone $baseOrderQuery)
+                ->where('status', 4)
+                ->selectRaw('MONTH(created_at) as month, COUNT(*) as total_orders')
+                ->groupBy('month')
+                ->pluck('total_orders', 'month')
+                ->toArray();
+
             for ($i = 1; $i <= 12; $i++) {
                 $chartLabels[] = 'Tháng ' . $i;
-                $chartData[] = $monthlyRevenue[$i] ?? 0;
+                $chartDataRevenue[] = $monthlyRevenue[$i] ?? 0;
+                $chartDataOrders[] = $monthlyOrders[$i] ?? 0;
             }
         }
 
@@ -173,6 +187,14 @@ class DashboardController extends Controller
             ->orderByDesc('orders_sum_total_price')
             ->limit(5)
             ->get();
+        // Thống kê đơn hàng theo trạng thái (ví dụ: 1=Chờ xử lý, 2=Đang giao, 4=Hoàn thành, 6=Đã hủy)
+        $orderStatusCount = [
+            'Chờ xử lý' => (clone $baseOrderQuery)->where('status', 1)->count(),
+            'Đang giao' => (clone $baseOrderQuery)->where('status', 3)->count(),
+            'Hoàn thành' => (clone $baseOrderQuery)->where('status', 4)->count(),
+            'Đã hủy' => (clone $baseOrderQuery)->where('status', 6)->count(),
+        ];
+
 
         return view('admin.dashboard', compact(
             'totalOrders',
@@ -184,7 +206,8 @@ class DashboardController extends Controller
             'bestSellingProducts',
             'topCustomers',
             'chartLabels',
-            'chartData',
+            'chartDataRevenue',
+            'chartDataOrders',
             'filterType',
             'fromDate',
             'toDate',
@@ -192,7 +215,8 @@ class DashboardController extends Controller
             'year',
             'outOfStockProducts',
             'outOfStockVariants',
-            'totalOutOfStock'
+            'totalOutOfStock',
+            'orderStatusCount'
         ));
     }
 }
