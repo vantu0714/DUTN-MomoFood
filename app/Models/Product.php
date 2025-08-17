@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'product_code',
@@ -146,6 +146,23 @@ class Product extends Model
                 });
             });
     }
-    
+    public function scopeActiveInStock($query)
+    {
+        return $query->where(function ($q) {
+            $q->where(function ($q1) {
+                // Sản phẩm đơn giản
+                $q1->where('product_type', 'simple')
+                    ->where('quantity_in_stock', '>', 0)
+                    ->where('status', 1);
+            })->orWhere(function ($q2) {
+                // Sản phẩm có biến thể
+                $q2->where('product_type', 'variant')
+                    ->where('status', 1)
+                    ->whereHas('variants', function ($q3) {
+                        $q3->where('status', 1)
+                            ->where('quantity_in_stock', '>', 0);
+                    });
+            });
+        });
+    }
 }
-

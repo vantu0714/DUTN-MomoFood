@@ -97,4 +97,9 @@ class ProductVariant extends Model
     {
         return $query->where('status', 1);
     }
+    public function scopeActiveInStock($query)
+    {
+        return $query->where('status', 1)
+            ->where('quantity_in_stock', '>', 0);
+    }
 }

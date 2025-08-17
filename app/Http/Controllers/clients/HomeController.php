@@ -67,11 +67,13 @@ class HomeController extends Controller
             },
             'variants.attributeValues.attribute'
         ])
+            ->activeInStock() // << lọc sản phẩm hiển thị + còn hàng
             ->withAvg('comments', 'rating')
             ->having('comments_avg_rating', '>=', 4)
             ->orderByDesc('comments_avg_rating')
             ->take(6)
             ->get();
+
 
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
 
@@ -83,9 +85,6 @@ class HomeController extends Controller
             'highRatedProducts'
         ));
     }
-
-
-
     public function search(Request $request)
     {
         $keyword = $request->input('keyword');
