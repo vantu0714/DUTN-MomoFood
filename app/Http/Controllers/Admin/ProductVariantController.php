@@ -313,47 +313,41 @@ class ProductVariantController extends Controller
     {
         $variant = ProductVariant::findOrFail($id);
 
-        // Nếu còn trong giỏ hàng → chặn xóa
+        // Nếu còn trong giỏ hàng → chặn ẩn
         if ($variant->cartItems()->exists()) {
             return response()->json([
-                'error' => 'Không thể xoá vì biến thể này vẫn còn trong giỏ hàng.'
+                'error' => 'Không thể ẩn vì biến thể này vẫn còn trong giỏ hàng.'
             ], 422);
         }
 
-        // Nếu vẫn còn trong đơn hàng chưa hoàn thành hoặc chưa hủy → chặn xóa
+        // Nếu vẫn còn trong đơn hàng chưa hoàn thành hoặc chưa hủy → chặn ẩn
         $existsInActiveOrders = $variant->orderDetails()
             ->whereHas('order', function ($query) {
-                $query->whereNotIn('status', [4, 6]); // không phải hoàn thành/hủy
+                $query->whereNotIn('status', [4, 6]);
             })
             ->exists();
 
         if ($existsInActiveOrders) {
             return response()->json([
-                'error' => 'Không thể xoá vì biến thể này vẫn còn trong đơn hàng chưa hoàn thành hoặc hủy.'
+                'error' => 'Không thể ẩn vì biến thể này vẫn còn trong đơn hàng chưa hoàn thành hoặc hủy.'
             ], 422);
         }
 
-        $productId = $variant->product_id;
+        $product = $variant->product;
 
-        // Xoá giá trị thuộc tính
-        ProductVariantValue::where('product_variant_id', $variant->id)->delete();
+        // Cập nhật trạng thái biến thể thành ẩn
+        $variant->update(['status' => 0]);
 
-        // Xoá ảnh nếu có
-        if (!empty($variant->image) && Storage::disk('public')->exists($variant->image)) {
-            Storage::disk('public')->delete($variant->image);
+        // Giảm tổng số lượng của product (nếu bạn có trường `quantity` ở bảng products)
+        if ($product) {
+            $product->quantity_in_stock = $product->variants()
+                ->where('status', 1) // chỉ tính biến thể còn hiển thị
+                ->sum('quantity_in_stock');
+            $product->save();
         }
 
-        // Xoá biến thể
-        $variant->delete();
-
-        // Cập nhật trạng thái sản phẩm
-        $this->updateProductStatus($productId);
-
-        return response()->json(['message' => 'Đã xoá biến thể thành công!']);
+        return response()->json(['message' => 'Đã ẩn biến thể thành công!']);
     }
-
-
-
 
     /**
      * Cập nhật trạng thái "còn hàng / hết hàng" cho sản phẩm cha

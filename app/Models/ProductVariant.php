@@ -93,4 +93,8 @@ class ProductVariant extends Model
             ->withPivot('price_adjustment')
             ->withTimestamps();
     }
+    public function scopeVisible($query)
+    {
+        return $query->where('status', 1);
+    }
 }

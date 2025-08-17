@@ -65,8 +65,11 @@ class ProductController extends Controller
                             });
                     });
                 });
+            } elseif ($status === 'Ẩn') {
+                $query->where('status', 0); // chỉ lấy sản phẩm ẩn
             }
         } else {
+            // Admin mặc định thấy cả sp ẩn + sp active
             $query->whereIn('status', [0, 1]);
         }
 
@@ -76,7 +79,7 @@ class ProductController extends Controller
         }
 
         // --- 5. Thống kê số lượng ---
-        $availableProductsCount = Product::where(function ($q) {
+        $availableProductsCount = Product::where('status', 1)->where(function ($q) {
             $q->where(function ($sub) {
                 $sub->where('product_type', 'simple')
                     ->where('quantity_in_stock', '>', 0);
@@ -88,7 +91,7 @@ class ProductController extends Controller
             });
         })->count();
 
-        $outOfStockProductsCount = Product::where(function ($q) {
+        $outOfStockProductsCount = Product::where('status', 1)->where(function ($q) {
             $q->where(function ($sub) {
                 $sub->where('product_type', 'simple')
                     ->where('quantity_in_stock', '=', 0);
@@ -106,15 +109,19 @@ class ProductController extends Controller
         // --- 6. Kết quả ---
         $products = $query->paginate(10);
         $categories = Category::all();
+        $hiddenProductsCount = Product::where('status', 0)->count();
+
 
         return view('admin.products.index', compact(
             'products',
             'categories',
             'availableProductsCount',
             'outOfStockProductsCount',
-            'totalStockQuantity'
+            'totalStockQuantity',
+            'hiddenProductsCount'
         ));
     }
+
 
     public function create()
     {
@@ -305,9 +312,11 @@ class ProductController extends Controller
                 ->with('error', 'Không thể ẩn sản phẩm vì đang có trong giỏ hàng.');
         }
         if ($actionType === 'hide') {
-            $product->delete();
+            $product->update(['status' => 0]); // chỉ đổi trạng thái, số lượng vẫn giữ nguyên
             return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được ẩn.');
         }
+
+
         if ($actionType === 'delete') {
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);

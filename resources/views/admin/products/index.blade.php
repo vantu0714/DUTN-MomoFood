@@ -28,6 +28,7 @@
         @endif
         <!-- Stats Cards -->
         <div class="row mb-4">
+            <!-- Tổng sản phẩm -->
             <div class="col-xl-3 col-md-6 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -39,12 +40,14 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-primary text-uppercase mb-1">Tổng sản phẩm</div>
-                                <div class="h5 mb-0">{{ number_format($totalStockQuantity) }} </div>
+                                <div class="h5 mb-0">{{ number_format($totalStockQuantity) }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Còn hàng -->
             <div class="col-xl-3 col-md-6 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -62,6 +65,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Hết hàng -->
             <div class="col-xl-3 col-md-6 mb-3">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -73,13 +78,33 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-danger text-uppercase mb-1">Hết hàng</div>
-                                <div class="h5 mb-0">{{ $outOfStockProductsCount }}</div>
+                                <div class="h5 mb-0">{{ number_format($outOfStockProductsCount) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ẩn -->
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-secondary bg-gradient rounded-circle p-3">
+                                    <i class="fas fa-eye-slash text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="text-xs fw-bold text-secondary text-uppercase mb-1">Ẩn</div>
+                                <div class="h5 mb-0">{{ number_format($hiddenProductsCount) }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
         <!-- Filter & Search Section -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
@@ -119,8 +144,10 @@
                                 </option>
                                 <option value="Hết hàng" {{ request('status') == 'Hết hàng' ? 'selected' : '' }}>Hết hàng
                                 </option>
+                                <option value="Ẩn" {{ request('status') == 'Ẩn' ? 'selected' : '' }}>Ẩn</option>
                             </select>
                         </div>
+
                         <div class="col-md-2">
                             <label class="form-label">&nbsp;</label>
                             <div class="d-grid">
@@ -193,13 +220,7 @@
                                             <p class="text-muted mb-0 small">
                                                 {{ Str::limit($item->description, 60) }}
                                             </p>
-                                            @if ($item->expiration_date)
-                                                <small class="text-warning">
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    HSD:
-                                                    {{ \Carbon\Carbon::parse($item->expiration_date)->format('d/m/Y') }}
-                                                </small>
-                                            @endif
+                                            <!-- Đã xóa phần HSD -->
                                         </div>
                                     </td>
                                     <td>
@@ -210,13 +231,24 @@
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center justify-content-center">
+                                            @php
+                                                if ($item->product_type === 'simple') {
+                                                    $quantity = $item->quantity_in_stock;
+                                                } else {
+                                                    // chỉ tính biến thể còn hiển thị (status=1)
+                                                    $quantity = $item->variants
+                                                        ->where('status', 1)
+                                                        ->sum('quantity_in_stock');
+                                                }
+                                            @endphp
+
                                             <span
                                                 class="quantity-badge fw-bold 
-                                                @if ($item->quantity_in_stock <= 10) text-danger border-danger
-                                                @elseif($item->quantity_in_stock <= 50) text-warning border-warning
-                                                @else text-success border-success @endif border rounded px-3 py-1">
+                                                @if ($quantity <= 10) text-danger border-danger
+                                                 @elseif($quantity <= 50) text-warning border-warning
+                                                  @else text-success border-success @endif border rounded px-3 py-1">
                                                 <i class="fas fa-cubes me-1"></i>
-                                                {{ number_format($item->quantity_in_stock) }}
+                                                {{ number_format($quantity) }}
                                             </span>
                                         </div>
                                     </td>
@@ -246,20 +278,16 @@
                                     </td>
                                     <td>
                                         @php
-                                            $isExpiringSoon =
-                                                $item->expiration_date &&
-                                                \Carbon\Carbon::parse($item->expiration_date)->lte(now()->addDays(5));
-
                                             $hasStock =
                                                 $item->product_type === 'simple'
                                                     ? $item->quantity_in_stock > 0
                                                     : $item->variants->where('quantity_in_stock', '>', 0)->count() > 0;
                                         @endphp
 
-                                        @if ($isExpiringSoon)
+                                        @if ($item->status == 0)
                                             <span
-                                                class="status-badge fw-bold text-warning border border-warning rounded px-3 py-1">
-                                                <i class="fas fa-exclamation-triangle me-1"></i> Hết HSD
+                                                class="status-badge fw-bold text-secondary border border-secondary rounded px-3 py-1">
+                                                <i class="fas fa-eye-slash me-1"></i> Ẩn
                                             </span>
                                         @elseif (!$hasStock)
                                             <span
@@ -273,7 +301,6 @@
                                             </span>
                                         @endif
                                     </td>
-
 
                                     <td>
                                         <span class="text-muted">{{ $item->created_at->format('d/m/Y') }}</span>
@@ -305,6 +332,7 @@
                                     </td>
                                 </tr>
                             @endforeach
+
                         </tbody>
                     </table>
                     <div class="d-flex justify-content-center mt-4">

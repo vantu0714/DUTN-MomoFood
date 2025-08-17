@@ -12,19 +12,21 @@ class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        // Lấy tất cả sản phẩm hợp lệ (còn hàng + status = 1)
-        $products = Product::with(['category', 'variants'])
+ 
+        $products = Product::with(['category', 'variants' => function ($q) {
+            $q->where('status', 1); 
+        }])
             ->where('status', 1)
             ->get();
 
-        // Sản phẩm nổi bật ngẫu nhiên (status=1)
-        $featuredProducts = Product::with(['variants', 'category'])
+        $featuredProducts = Product::with(['variants' => function ($q) {
+            $q->where('status', 1);
+        }, 'category'])
             ->where('status', 1)
             ->inRandomOrder()
             ->take(6)
             ->get();
 
-        // Lọc theo price range + tồn kho
         $filtered = $products->filter(function ($product) use ($request) {
             $min = null;
             $max = null;
@@ -39,8 +41,13 @@ class ShopController extends Controller
             $price = null;
 
             if ($product->product_type === 'variant') {
-                $variant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+                $variant = $product->variants
+                    ->where('status', 1)
+                    ->where('quantity_in_stock', '>', 0)
+                    ->first();
+
                 if (!$variant) return false;
+
                 $price = $variant->discounted_price ?? $variant->price;
             } elseif ($product->product_type === 'simple') {
                 if ($product->quantity_in_stock <= 0) return false;
@@ -53,8 +60,6 @@ class ShopController extends Controller
 
             return true;
         });
-
-        // Phân trang
         $page = $request->get('page', 1);
         $perPage = 9;
         $paginated = new LengthAwarePaginator(
@@ -64,8 +69,6 @@ class ShopController extends Controller
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
-
-        // Danh mục với số sản phẩm còn hàng
         $categories = Category::withCount([
             'products as available_products_count' => function ($query) {
                 $query->where('status', 1)
@@ -76,7 +79,8 @@ class ShopController extends Controller
                         })->orWhere(function ($q2) {
                             $q2->where('product_type', 'variant')
                                 ->whereHas('variants', function ($q3) {
-                                    $q3->where('quantity_in_stock', '>', 0);
+                                    $q3->where('status', 1) // lọc thêm status
+                                        ->where('quantity_in_stock', '>', 0);
                                 });
                         });
                     });
@@ -89,6 +93,7 @@ class ShopController extends Controller
             'featuredProducts' => $featuredProducts
         ]);
     }
+
 
     public function category(Request $request, $id)
     {

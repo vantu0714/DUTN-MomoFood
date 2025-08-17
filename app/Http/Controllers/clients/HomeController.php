@@ -21,21 +21,25 @@ class HomeController extends Controller
         $query = Product::with([
             'category',
             'variants' => function ($q) {
-                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status'); 
+                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status')
+                    ->where('status', 1) // chỉ lấy biến thể đang hiển thị
+                    ->where('quantity_in_stock', '>', 0); // chỉ lấy biến thể còn hàng
             },
             'variants.attributeValues.attribute'
         ])
-
             ->where(function ($q) {
                 $q->where(function ($q1) {
+                    // sản phẩm đơn giản
                     $q1->where('product_type', 'simple')
                         ->where('quantity_in_stock', '>', 0)
                         ->where('status', 1);
                 })->orWhere(function ($q2) {
+                    // sản phẩm có biến thể
                     $q2->where('product_type', 'variant')
                         ->where('status', 1)
                         ->whereHas('variants', function ($q3) {
-                            $q3->where('quantity_in_stock', '>', 0);
+                            $q3->where('status', 1) // lọc biến thể hiển thị
+                                ->where('quantity_in_stock', '>', 0);
                         });
                 });
             });
@@ -46,7 +50,6 @@ class HomeController extends Controller
 
         $products = $query->paginate(12);
         $categories = Category::withCount('products')->get();
-        
 
         $bestSellingProducts = Product::with('category')
             ->where('product_type', 'simple')
@@ -56,19 +59,19 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
-        //  Thêm sản phẩm có đánh giá >= 4 sao
         $highRatedProducts = Product::with([
             'comments',
             'category',
-            'variants.attributeValues.attribute' //  
+            'variants' => function ($q) {
+                $q->where('status', 1)->where('quantity_in_stock', '>', 0);
+            },
+            'variants.attributeValues.attribute'
         ])
             ->withAvg('comments', 'rating')
             ->having('comments_avg_rating', '>=', 4)
             ->orderByDesc('comments_avg_rating')
             ->take(6)
             ->get();
-
-
 
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
 
@@ -80,6 +83,7 @@ class HomeController extends Controller
             'highRatedProducts'
         ));
     }
+
 
 
     public function search(Request $request)
