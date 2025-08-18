@@ -380,9 +380,12 @@
     <div class="container py-0">
         <div class="text-center mx-auto mb-5" style="max-width: 700px;">
             <h2 class="display-4"
-                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700;">
-                SIÊU PHẨM ĂN VẶT 5 ⭐
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                font-weight: 700; 
+                font-size: 40px;">
+                    SIÊU PHẨM ĂN VẶT 5 ⭐
             </h2>
+
         </div>
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
