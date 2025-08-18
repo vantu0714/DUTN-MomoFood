@@ -2,11 +2,11 @@
 
 @section('content')
 <div class="container mt-5">
-    <h2 class="mb-4 text-primary fw-bold">📦 Sản phẩm có bình luận</h2>
+    <h2 class="mb-4 text-info fw-bold">📦 Sản phẩm có bình luận</h2>
 
     <div class="table-responsive">
         <table class="table table-hover align-middle shadow-sm rounded bg-white">
-            <thead class="table-primary text-center">
+            <thead class="table-info text-center">
                 <tr>
                     <th>#</th>
                     <th>Tên sản phẩm</th>
@@ -25,7 +25,7 @@
                             <span class="badge bg-info text-dark">{{ $product->comments_count }}</span>
                         </td>
                         <td>
-                            <a href="{{ route('admin.comments.show', $product->id) }}" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ route('admin.comments.show', $product->id) }}" class="btn btn-sm btn-outline-info">
                                 <i class="fas fa-comments me-1"></i> Xem bình luận
                             </a>
                         </td>
