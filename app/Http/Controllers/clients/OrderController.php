@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -36,6 +37,7 @@ class OrderController extends Controller
         // Lấy cart và lọc items
         $cart = Cart::with(['items.product', 'items.productVariant'])->where('user_id', $userId)->first();
         $cartItems = collect();
+        $errors = [];
 
         if ($cart && $cart->items) {
             $items = !empty($selectedIds)
@@ -47,6 +49,9 @@ class OrderController extends Controller
                 $item->calculated_price = $price;
                 $item->item_total = $price * $item->quantity;
 
+                if($item?->productVariant->quantity_in_stock == 0){
+                    $errors[] = "Sản phẩm ". Str::lower($item->product->product_name ). " bạn chọn đã hết hàng";
+                }
                 // Gộp tên biến thể
                 $item->variant_summary = $item->productVariant && is_array($item->productVariant->variant_values)
                     ? implode(', ', array_filter($item->productVariant->variant_values))
@@ -54,6 +59,10 @@ class OrderController extends Controller
 
                 $cartItems->push($item);
             }
+        }
+
+        if(!empty($errors)){
+            return redirect()->back()->withErrors($errors);
         }
 
         // ✅ Lấy danh sách tất cả địa chỉ của user
