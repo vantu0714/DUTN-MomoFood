@@ -222,51 +222,48 @@
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
     <div class="container py-0">
-        <h1 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h1>
+        <h3 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h3>
 
         <div class="row g-4">
             @foreach ($bestSellingProducts as $product)
                 @php
                     $firstVariant = null;
-                    $price = 0;
-                    $original = 0;
                     $variants = [];
-
                     $isVariant = $product->product_type === 'variant';
 
-                    if ($isVariant) {
+                    if ($isVariant && $product->variants->count() > 0) {
+                        // Lấy giá thấp nhất và cao nhất
+                        $prices = $product->variants->map(function ($v) {
+                            return $v->discounted_price ?? $v->price;
+                        });
+
+                        $minPrice = $prices->min();
+                        $maxPrice = $prices->max();
+
+                        // Lấy biến thể đầu tiên còn hàng
                         $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
 
-                        if ($firstVariant) {
-                            $price = $firstVariant->discounted_price ?? $firstVariant->price;
-                            $original = $firstVariant->price;
-                        }
+                        $variants = $product->variants->where('quantity_in_stock', '>', 0)->map(function ($v) {
+                            $flavor = $v->attributeValues->firstWhere('attribute.name', 'Vị')?->value;
+                            $weight = $v->attributeValues->firstWhere('attribute.name', 'Khối lượng')?->value;
 
-                        $variants = $product->variants
-                            ->where('quantity_in_stock', '>', 0)
-                            ->sortBy(function ($v) {
-                                return $v->discounted_price ?? $v->price;
-                            })
-                            ->map(function ($v) {
-                                return [
-                                    'id' => $v->id,
-                                    'price' => $v->price,
-                                    'discounted_price' => $v->discounted_price,
-                                    'quantity' => $v->quantity,
-                                    'quantity_in_stock' => $v->quantity_in_stock,
-                                    'image' => $v->image,
-                                    'attribute_values' => $v->attributeValues->map(function ($attrValue) {
-                                        return [
-                                            'attribute_name' => $attrValue->attribute->name,
-                                            'value' => $attrValue->value,
-                                        ];
-                                    }),
-                                ];
-                            });
+                            return [
+                                'id' => $v->id,
+                                'flavor' => $flavor,
+                                'weight' => $weight,
+                                'price' => $v->price,
+                                'discounted_price' => $v->discounted_price,
+                                'quantity_in_stock' => $v->quantity_in_stock,
+                                'image' => $v->image ? asset('storage/' . $v->image) : asset('clients/img/default.jpg'),
+                            ];
+                        });
                     } else {
-                        $price = $product->discounted_price ?? $product->original_price;
-                        $original = $product->original_price;
+                        // Sản phẩm đơn
+                        $minPrice = $product->discounted_price ?? $product->original_price;
+                        $maxPrice = $product->original_price;
                     }
+
+                    $avgRating = round($product->comments->avg('rating') ?? 0);
                 @endphp
 
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3">
@@ -287,39 +284,25 @@
 
                         <div class="card-body d-flex flex-column">
                             <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
-                            <p class="text-muted small mb-3">{{ Str::limit($product->description, 60) }}</p>
-
-                            {{-- Nếu có biến thể, hiển thị flavor & weight --}}
-                            @if ($product->product_type === 'variant')
-                                <div class="d-flex flex-wrap gap-2 mb-2">
-                                    @foreach ($product->variants as $variant)
-                                        @php
-                                            $flavor = $variant->attributeValues->firstWhere('attribute.name', 'Vị');
-                                            $weight = $variant->attributeValues->firstWhere(
-                                                'attribute.name',
-                                                'Khối lượng',
-                                            );
-                                        @endphp
-                                        <span class="badge bg-info text-white">
-                                            {{ $flavor ? 'Vị: ' . $flavor->value : '' }}
-                                        </span>
-                                        <span class="badge bg-info text-white">
-                                            {{ $weight ? 'Khối lượng: ' . $weight->value : '' }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            @endif
+                            <p class="text-muted small mb-2">{{ Str::limit($product->description, 60) }}</p>
 
                             <div class="mt-auto d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="text-danger fw-bold fs-5">
-                                        {{ number_format($price, 0, ',', '.') }} <small class="text-muted">VND</small>
+                                        @if ($isVariant)
+                                            {{ number_format($minPrice, 0, ',', '.') }} -
+                                            {{ number_format($maxPrice, 0, ',', '.') }}
+                                            <small class="text-muted">VND</small>
+                                        @else
+                                            {{ number_format($minPrice, 0, ',', '.') }} <small
+                                                class="text-muted">VND</small>
+                                            @if ($minPrice < $maxPrice)
+                                                <div class="text-muted text-decoration-line-through small">
+                                                    {{ number_format($maxPrice, 0, ',', '.') }} VND
+                                                </div>
+                                            @endif
+                                        @endif
                                     </div>
-                                    @if ($price < $original)
-                                        <div class="text-muted text-decoration-line-through small">
-                                            {{ number_format($original, 0, ',', '.') }} VND
-                                        </div>
-                                    @endif
                                 </div>
 
                                 <div class="d-flex justify-content-end mt-auto">
@@ -328,15 +311,14 @@
                                         data-product-name="{{ $product->product_name }}"
                                         data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                         data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                        data-product-price="{{ $price ?? 0 }}"
-                                        data-product-original-price="{{ $original ?? 0 }}"
+                                        data-product-price="{{ $minPrice ?? 0 }}"
+                                        data-product-original-price="{{ $maxPrice ?? 0 }}"
                                         data-product-description="{{ $product->description }}"
-                                        data-total-stock="{{ $product->product_type === 'simple' ? $product->quantity_in_stock : $firstVariant->quantity_in_stock ?? 0 }}"
+                                        data-total-stock="{{ $isVariant ? $firstVariant->quantity_in_stock ?? 0 : $product->quantity_in_stock }}"
                                         data-variants='@json($variants)' data-bs-toggle="modal"
                                         data-bs-target="#cartModal">
                                         <i class="bi bi-cart3 fa-2x text-danger"></i>
                                     </button>
-
                                 </div>
                             </div>
                         </div>
@@ -344,6 +326,7 @@
                 </div>
             @endforeach
         </div>
+
     </div>
 </div>
 <!-- Banner Section Start-->
@@ -378,37 +361,52 @@
 <!--  5 sao -->
 <div class="container-fluid py-5">
     <div class="container py-0">
-        <div class="text-center mx-auto mb-5" style="max-width: 700px;">
-            <h2 class="display-4"
-                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                font-weight: 700; 
-                font-size: 40px;">
-                    SIÊU PHẨM ĂN VẶT 5 ⭐
-            </h2>
-
+        <div class="text-center mx-auto mb-5">
+            <h3 class="display-4" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">
+                SIÊU PHẨM ĂN VẶT 5 ⭐
+            </h3>
         </div>
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
                 @php
-                    $variants =
-                        $product->product_type === 'variant'
-                            ? $product->variants->map(function ($v) {
-                                $flavor = $v->attributeValues->firstWhere('attribute.name', 'Vị')?->value;
-                                $weight = $v->attributeValues->firstWhere('attribute.name', 'Khối lượng')?->value;
+                    $variants = [];
+                    $isVariant = $product->product_type === 'variant';
 
-                                return [
-                                    'id' => $v->id,
-                                    'flavor' => $flavor,
-                                    'weight' => $weight,
-                                    'price' => $v->price,
-                                    'discounted_price' => $v->discounted_price,
-                                    'quantity' => $v->quantity_in_stock,
-                                    'image' => $v->image
-                                        ? asset('storage/' . $v->image)
-                                        : asset('clients/img/default.jpg'),
-                                ];
-                            })
-                            : [];
+                    if ($isVariant && $product->variants->count() > 0) {
+                        // Tính giá min/max
+                        $prices = $product->variants->map(function ($v) {
+                            return $v->discounted_price ?? $v->price;
+                        });
+
+                        $minPrice = $prices->min();
+                        $maxPrice = $prices->max();
+
+                        // Lấy biến thể đầu tiên còn hàng
+                        $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
+
+                        // Map biến thể để đưa vào data-variants
+                        $variants = $product->variants->map(function ($v) {
+                            $flavor = $v->attributeValues->firstWhere('attribute.name', 'Vị')?->value;
+                            $weight = $v->attributeValues->firstWhere('attribute.name', 'Khối lượng')?->value;
+
+                            return [
+                                'id' => $v->id,
+                                'flavor' => $flavor,
+                                'weight' => $weight,
+                                'price' => $v->price,
+                                'discounted_price' => $v->discounted_price,
+                                'quantity' => $v->quantity_in_stock,
+                                'image' => $v->image ? asset('storage/' . $v->image) : asset('clients/img/default.jpg'),
+                            ];
+                        });
+                    } else {
+                        // Sản phẩm đơn
+                        $minPrice = $product->discounted_price ?? $product->original_price;
+                        $maxPrice = $product->original_price;
+                        $firstVariant = null;
+                    }
+
+                    $avgRating = round($product->comments->avg('rating') ?? 0);
                 @endphp
 
                 <div class="col-lg-6 col-xl-4">
@@ -423,9 +421,6 @@
                                     {{ $product->product_name }}
                                 </a>
 
-                                @php
-                                    $avgRating = round($product->comments->avg('rating') ?? 0);
-                                @endphp
                                 <div class="d-flex align-items-center mb-2">
                                     @for ($i = 1; $i <= 5; $i++)
                                         <i
@@ -435,22 +430,30 @@
                                 </div>
 
                                 <h4 class="mb-3 text-danger fw-bold ps-2 product-price">
-                                    {{ number_format($product->display_price ?? 0, 0, ',', '.') }} VND
+                                    @if ($isVariant)
+                                        {{ number_format($minPrice, 0, ',', '.') }} -
+                                        {{ number_format($maxPrice, 0, ',', '.') }} VND
+                                    @else
+                                        {{ number_format($minPrice, 0, ',', '.') }} VND
+                                        @if ($minPrice < $maxPrice)
+                                            <small class="text-muted text-decoration-line-through">
+                                                {{ number_format($maxPrice, 0, ',', '.') }} VND
+                                            </small>
+                                        @endif
+                                    @endif
                                 </h4>
-                                {{-- @php
-                                    $variants = $product->variants;
-                                @endphp --}}
+
                                 <button type="button"
                                     class="btn border border-secondary rounded-pill px-3 text-primary open-cart-modal d-flex align-items-center"
                                     data-product-id="{{ $product->id }}"
                                     data-product-name="{{ $product->product_name }}"
                                     data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                     data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                    data-product-price="{{ $price ?? 0 }}"
-                                    data-product-original-price="{{ $original ?? 0 }}"
+                                    data-product-price="{{ $minPrice ?? 0 }}"
+                                    data-product-original-price="{{ $maxPrice ?? 0 }}"
                                     data-product-description="{{ $product->description }}"
                                     data-variants='@json($variants)'
-                                    data-total-stock="{{ $product->product_type === 'simple' ? $product->quantity_in_stock : $firstVariant?->quantity_in_stock ?? 0 }}"
+                                    data-total-stock="{{ $isVariant ? $firstVariant?->quantity_in_stock ?? 0 : $product->quantity_in_stock }}"
                                     data-bs-toggle="modal" data-bs-target="#cartModal">
                                     <i class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ
                                 </button>
@@ -535,39 +538,35 @@
     <!-- Comment Carousel -->
     <div class="row" id="commentSlider">
         @foreach ($comments as $comment)
-            <div class="col-md-6 mb-4 comment-item">
-                <div class="bg-light rounded p-4 h-100 hover-shadow comment-box"
-                    data-href="{{ route('product-detail.show', $comment->product->id) }}" style="cursor: pointer;">
+            @if ($comment->product)
+                <div class="col-md-6 mb-4 comment-item">
+                    <div class="bg-light rounded p-4 h-100 hover-shadow comment-box"
+                        data-href="{{ route('product-detail.show', $comment->product->id) }}"
+                        style="cursor: pointer;">
 
-                    <div class="d-flex align-items-start">
-                        <!-- Avatar -->
-                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-                            class="rounded-circle me-3 shadow comment-avatar" alt="Avatar">
+                        <div class="d-flex align-items-start">
+                            <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                                class="rounded-circle me-3 shadow comment-avatar" alt="Avatar">
 
-
-
-                        <div>
-                            <!-- Stars -->
-                            <div class="mb-2">
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <i
-                                        class="{{ $i <= $comment->rating ? 'fa-solid text-warning' : 'fa-regular text-secondary' }} fa-star"></i>
-                                @endfor
+                            <div>
+                                <div class="mb-2">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i
+                                            class="{{ $i <= $comment->rating ? 'fa-solid text-warning' : 'fa-regular text-secondary' }} fa-star"></i>
+                                    @endfor
+                                </div>
+                                <p class="mb-1 fw-bold">{{ $comment->user->name ?? 'Ẩn danh' }}
+                                    <span class="fw-normal text-muted">.
+                                        {{ $comment->user->profession ?? 'Khách hàng' }}</span>
+                                </p>
+                                <p class="fst-italic mb-0 comment-content">{{ $comment->content }}</p>
                             </div>
-
-                            <!-- Name -->
-                            <p class="mb-1 fw-bold">{{ $comment->user->name ?? 'Ẩn danh' }}
-                                <span class="fw-normal text-muted">.
-                                    {{ $comment->user->profession ?? 'Khách hàng' }}</span>
-                            </p>
-
-                            <!-- Content -->
-                            <p class="fst-italic mb-0 comment-content">{{ $comment->content }}</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
         @endforeach
+
     </div>
     <!-- Navigation Buttons -->
     <div class="testimonial-nav">
@@ -580,86 +579,91 @@
     </div>
 </div>
 <!-- Modal chi tiết sản phẩm -->
-<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <form method="POST" action="{{ route('carts.add') }}" id="modal-add-to-cart-form" class="modal-content">
-            @csrf
-            <input type="hidden" name="product_id" id="modal-product-id">
-            <input type="hidden" name="product_variant_id" id="modal-variant-id">
+@foreach ($products as $product)
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" action="{{ route('carts.add') }}" id="modal-add-to-cart-form"
+                class="modal-content">
+                @csrf
+                <input type="hidden" name="product_id" id="modal-product-id">
+                <input type="hidden" name="product_variant_id" id="modal-variant-id">
 
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold text-primary" id="cartModalLabel">Chọn sản phẩm</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-primary" id="cartModalLabel">Chọn sản phẩm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
-            <div class="modal-body">
-                <div class="row g-4">
-                    <!-- Hình ảnh -->
-                    <div class="col-md-6 text-center">
-                        <img id="modal-product-image" src="" alt="Hình sản phẩm"
-                            class="img-fluid rounded shadow-sm"
-                            style="max-height: 500px; object-fit: cover; width: 100%;">
-                    </div>
-
-                    <!-- Thông tin sản phẩm -->
-                    <div class="col-md-6">
-                        <h4 id="modal-product-name" class="fw-bold mb-2 text-dark"></h4>
-                        <p class="text-muted mb-2">
-                            Danh mục: <span id="modal-product-category" class="fw-medium text-dark"></span>
-                        </p>
-
-                        <p class="h5 text-danger fw-bold mb-3 tabular-numbers">
-                            <span id="modal-product-price">0</span>
-                            <span class="text-muted fs-6">VND</span>
-                            <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
-                        </p>
-
-                        <div class="mb-3" id="modal-rating">
-                            <!-- Đánh giá (nếu cần) -->
+                <div class="modal-body">
+                    <div class="row g-4">
+                        <!-- Hình ảnh -->
+                        <div class="col-md-6 text-center">
+                            <img id="modal-product-image" src="" alt="Hình sản phẩm"
+                                class="img-fluid rounded shadow-sm"
+                                style="max-height: 500px; object-fit: cover; width: 100%;">
                         </div>
 
-                        <p id="modal-product-description" class="text-muted mb-3" style="min-height: 60px;"></p>
+                        <!-- Thông tin sản phẩm -->
+                        <div class="col-md-6">
+                            <h4 id="modal-product-name" class="fw-bold mb-2 text-dark"></h4>
+                            <p class="text-muted mb-2">
+                                Danh mục: <span id="modal-product-category" class="fw-medium text-dark"></span>
+                            </p>
+
+                            <p class="h5 text-danger fw-bold mb-3 tabular-numbers">
+                                <span id="modal-product-price">0</span>
+                                <span class="text-muted fs-6">VND</span>
+                                <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
+                            </p>
+
+                            <div class="mb-3" id="modal-rating">
+                                <!-- Đánh giá (nếu cần) -->
+                            </div>
+
+                            <p id="modal-product-description" class="text-muted mb-3" style="min-height: 60px;"></p>
 
 
-                        <!-- Biến thể -->
-                        <div class="mb-3" id="variant-section">
-                            <label class="form-label fw-semibold">🍃 Chọn biến thể:</label>
-                            <div id="variant-options" class="d-flex flex-wrap gap-2">
-                                <!-- JS sẽ render radio button biến thể -->
+                            <!-- Biến thể -->
+                            <div class="mb-3" id="variant-section">
+                                <label class="form-label fw-semibold">🍃 Chọn biến thể:</label>
+                                <div id="variant-options" class="d-flex flex-wrap gap-2">
+                                    <!-- JS sẽ render radio button biến thể -->
+                                </div>
                             </div>
-                        </div>
-                        <!-- Số lượng -->
-                        @php
-                            $hasVariants = $product->variants->count() > 0;
-                            $totalStock = $hasVariants
-                                ? $product->variants->sum('quantity_in_stock')
-                                : $product->quantity_in_stock;
-                        @endphp
-                        <div class="mb-3">
-                            <label for="modal-quantity" class="form-label fw-semibold">🔁 Số lượng:</label>
-                            <div class="input-group" style="width: 160px;">
-                                <button type="button" class="btn btn-outline-secondary" id="decrease-qty">-</button>
-                                <input type="number" class="form-control text-center" id="modal-quantity"
-                                    name="quantity" value="1" min="1">
-                                <button type="button" class="btn btn-outline-secondary" id="increase-qty">+</button>
-                                <br>
-                            </div>
-                            <div class="available-stock text-muted ms-3" id="availableStock">
-                                sản phẩm có sẵn {{ $totalStock }}
+                            <!-- Số lượng -->
+                            @php
+                                $hasVariants = $product->variants->count() > 0;
+                                $totalStock = $hasVariants
+                                    ? $product->variants->sum('quantity_in_stock')
+                                    : $product->quantity_in_stock;
+                            @endphp
+                            <div class="mb-3">
+                                <label for="modal-quantity" class="form-label fw-semibold">🔁 Số lượng:</label>
+                                <div class="input-group" style="width: 160px;">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        id="decrease-qty">-</button>
+                                    <input type="number" class="form-control text-center" id="modal-quantity"
+                                        name="quantity" value="1" min="1">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        id="increase-qty">+</button>
+                                    <br>
+                                </div>
+                                <div class="available-stock text-muted ms-3" id="availableStock">
+                                    sản phẩm có sẵn {{ $totalStock }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="modal-footer border-0 pt-0">
-                <button type="submit" class="btn btn-danger w-100 fw-bold py-2">
-                    <i class="bi bi-bag-plus-fill me-1"></i> Thêm vào giỏ hàng
-                </button>
-            </div>
-        </form>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-danger w-100 fw-bold py-2">
+                        <i class="bi bi-bag-plus-fill me-1"></i> Thêm vào giỏ hàng
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+@endforeach
 <!--js modal-->
 <script>
     document.addEventListener("DOMContentLoaded", function() {

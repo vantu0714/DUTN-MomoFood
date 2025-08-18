@@ -457,18 +457,26 @@
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    @if ($variant->quantity_in_stock > 0)
+                                                    @if ($variant->status == 0)
                                                         <span
-                                                            class="status-badge status-available fw-bold text-success border border-success rounded px-2 py-1">
-                                                            <i class="fas fa-check me-1"></i>Còn hàng
+                                                            class="status-badge fw-bold text-secondary border border-secondary rounded px-2 py-1">
+                                                            <i class="fas fa-eye-slash me-1"></i>Đã ẩn
                                                         </span>
                                                     @else
-                                                        <span
-                                                            class="status-badge status-out-of-stock fw-bold text-danger border border-danger rounded px-2 py-1">
-                                                            <i class="fas fa-times me-1"></i>Hết hàng
-                                                        </span>
+                                                        @if ($variant->quantity_in_stock > 0)
+                                                            <span
+                                                                class="status-badge status-available fw-bold text-success border border-success rounded px-2 py-1">
+                                                                <i class="fas fa-check me-1"></i>Còn hàng
+                                                            </span>
+                                                        @else
+                                                            <span
+                                                                class="status-badge status-out-of-stock fw-bold text-danger border border-danger rounded px-2 py-1">
+                                                                <i class="fas fa-times me-1"></i>Hết hàng
+                                                            </span>
+                                                        @endif
                                                     @endif
                                                 </td>
+
                                                 <td>
                                                     <div class="d-flex flex-wrap gap-1">
                                                         @foreach ($variant->attributeValues as $attrValue)
@@ -699,29 +707,39 @@
         }
     });
 
-    // Xoá biến thể
-    window.deleteVariant = function(variantId, sku) {
-        if (!confirm(`Bạn có chắc muốn xoá biến thể "${sku}" không?`)) return;
+    function deleteVariant(variantId) {
+        if (!confirm("Bạn có chắc muốn ẩn biến thể này không?")) return;
 
         fetch(`/admin/product-variants/${variantId}/destroy`, {
-                method: 'DELETE',
+                method: "DELETE",
                 headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                    "Accept": "application/json"
                 }
             })
-            .then(response => {
-                if (!response.ok) return response.json().then(err => {
-                    throw new Error(err.message || 'Không thể xoá');
-                });
-                alert('Xoá thành công!');
-                location.reload();
+
+            .then(async res => {
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text);
+                }
+                return res.json();
             })
-            .catch(error => {
-                console.error(error);
-                alert('Xoá thất bại: ' + error.message);
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert(data.message);
+                    location.reload();
+                }
+            })
+            .catch(err => {
+                console.error("❌ Lỗi xoá:", err);
+                alert("Có lỗi xảy ra khi ẩn biến thể!");
             });
-    };
+    }
+
+
     // sửa sản phẩm 
     document.addEventListener('DOMContentLoaded', function() {
         // ===== Xử lý sản phẩm đơn =====

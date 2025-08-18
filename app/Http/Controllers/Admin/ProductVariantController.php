@@ -313,26 +313,40 @@ class ProductVariantController extends Controller
     {
         $variant = ProductVariant::findOrFail($id);
 
-        // Nếu đang tồn tại trong đơn hàng hoặc giỏ hàng
-        if ($variant->orderDetails()->exists() || $variant->cartItems()->exists()) {
+        // Nếu còn trong giỏ hàng → chặn ẩn
+        if ($variant->cartItems()->exists()) {
             return response()->json([
-                'error' => 'Không thể xoá vì biến thể đang tồn tại trong đơn hàng hoặc giỏ hàng.'
+                'error' => 'Không thể ẩn vì biến thể này vẫn còn trong giỏ hàng.'
             ], 422);
         }
 
-        $productId = $variant->product_id;
+        // Nếu vẫn còn trong đơn hàng chưa hoàn thành hoặc chưa hủy → chặn ẩn
+        $existsInActiveOrders = $variant->orderDetails()
+            ->whereHas('order', function ($query) {
+                $query->whereNotIn('status', [4, 6]);
+            })
+            ->exists();
 
-        ProductVariantValue::where('product_variant_id', $variant->id)->delete();
-
-        if ($variant->image && Storage::disk('public')->exists($variant->image)) {
-            Storage::disk('public')->delete($variant->image);
+        if ($existsInActiveOrders) {
+            return response()->json([
+                'error' => 'Không thể ẩn vì biến thể này vẫn còn trong đơn hàng chưa hoàn thành hoặc hủy.'
+            ], 422);
         }
 
-        $variant->delete();
+        $product = $variant->product;
 
-        $this->updateProductStatus($productId);
+        // Cập nhật trạng thái biến thể thành ẩn
+        $variant->update(['status' => 0]);
 
-        return response()->json(['message' => 'Đã xoá biến thể thành công!']);
+        // Giảm tổng số lượng của product (nếu bạn có trường `quantity` ở bảng products)
+        if ($product) {
+            $product->quantity_in_stock = $product->variants()
+                ->where('status', 1) // chỉ tính biến thể còn hiển thị
+                ->sum('quantity_in_stock');
+            $product->save();
+        }
+
+        return response()->json(['message' => 'Đã ẩn biến thể thành công!']);
     }
 
     /**
@@ -348,18 +362,18 @@ class ProductVariantController extends Controller
         }
     }
     // thêm biến thể cho sản phẩm có sẳn
-   public function createMultiple()
-{
-    $products = Product::where('status', 1)
-        ->with(['variants.attributeValues.attribute'])
-        ->withCount('variants') 
-        ->orderByDesc('id')
-        ->get();
+    public function createMultiple()
+    {
+        $products = Product::where('status', 1)
+            ->with(['variants.attributeValues.attribute'])
+            ->withCount('variants')
+            ->orderByDesc('id')
+            ->get();
 
-    $sizeValues = Attribute::where('name', 'Khối lượng')->first()?->values ?? collect();
+        $sizeValues = Attribute::where('name', 'Khối lượng')->first()?->values ?? collect();
 
-    return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
-}
+        return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
+    }
 
 
     public function storeMultiple(Request $request)
