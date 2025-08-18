@@ -364,7 +364,6 @@
         <div class="text-center mx-auto mb-5">
             <h3 class="display-4" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">
                 SIÊU PHẨM ĂN VẶT 5 ⭐
-            </h3>
         </div>
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
