@@ -52,10 +52,10 @@ class HomeController extends Controller
         $categories = Category::withCount('products')->get();
 
         $bestSellingProducts = Product::with('category')
-            ->where('product_type', 'simple')
+            // ->where('product_type', 'simple')
             ->where('status', 1)
             ->where('quantity_in_stock', '>', 0)
-            ->inRandomOrder()
+            ->orderByDesc('sold_count')
             ->take(8)
             ->get();
 

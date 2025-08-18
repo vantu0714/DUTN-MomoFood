@@ -322,7 +322,7 @@
                             </div>
                             <div class="col-md-6 text-right">
                                 <h5><strong>Tổng cộng: <span
-                                            class="text-danger">{{ number_format($order->total_price) }}₫</span></strong>
+                                            class="text-danger fw-bold">{{ number_format($order->total_price) }}₫</span></strong>
                                 </h5>
                             </div>
                         </div>
