@@ -50,7 +50,6 @@ class HomeController extends Controller
 
         $products = $query->paginate(12);
         $categories = Category::withCount('products')->get();
-
         $bestSellingProducts = Product::with('category')
             // ->where('product_type', 'simple')
             ->where('status', 1)

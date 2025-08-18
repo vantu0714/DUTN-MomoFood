@@ -2,192 +2,195 @@
 @include('clients.layouts.sidebar')
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 <div class="main_content_iner overly_inner">
-    <div class="container-fluid p-0">
-        <div class="container-fluid page-header py-5 bg-primary text-white">
-            <h1 class="text-center display-6">Giỏ hàng</h1>
+    <div class="container-fluid page-header py-5 text-white d-flex align-items-center justify-content-center"
+        style="background: url('{{ asset('clients/img/bannergiohang.jpg') }}') center/cover no-repeat; height: 250px; position: relative;">
+
+        <!-- lớp phủ làm tối ảnh để chữ rõ hơn -->
+        <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4);"></div>
+
+        <!-- nội dung hiển thị -->
+        <div class="text-center position-relative">
+            <h1 class="display-5 fw-bold">🛒 Giỏ hàng</h1>
             <ol class="breadcrumb justify-content-center mb-0">
-                <li class="breadcrumb-item"><a href="#" class="text-white">Trang chủ</a></li>
-                <li class="breadcrumb-item"><a href="#" class="text-white">Trang</a></li>
-                <li class="breadcrumb-item active text-white">Giỏ hàng</li>
             </ol>
         </div>
+    </div>
 
-        <div class="container-fluid py-5">
 
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-                </div>
-            @endif
 
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-                </div>
-            @endif
+    <div class="container-fluid py-5">
 
-            @php $total = 0; @endphp
-            <form action="{{ route('carts.removeSelected') }}" method="POST" id="delete-selected-form"
-                onsubmit="return checkSelectedItems()">
-                @csrf
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Danh sách sản phẩm trong giỏ</h5>
-                    <button type="submit" class="btn btn-danger btn-sm" {{ count($carts) == 0 ? 'disabled' : '' }}>
-                        🗑️ Xóa các sản phẩm đã chọn
-                    </button>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table align-middle text-center table-hover table-bordered">
-                        <thead class="table-dark">
-                            <tr>
-                                <th><input type="checkbox" id="select-all"></th>
-                                <th>Ảnh</th>
-                                <th>Tên sản phẩm</th>
-                                <th>Giá</th>
-                                <th>Số lượng</th>
-                                <th>Tạm tính</th>
-                                <th>Xử lý</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (count($carts) > 0)
-                                @foreach ($carts as $item)
-                                    @php
-                                        $product = $item->product;
-                                        $variant = $item->productVariant;
-
-                                        $image = $product->image ?? 'clients/img/default.png';
-                                        $productName = $product->product_name ?? 'Không có tên';
-
-                                        // ✅ Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
-                                        $variantName = '';
-                                        if ($variant && $variant->attributeValues) {
-                                            $variantName = $variant->attributeValues
-                                                ->map(function ($val) {
-                                                    return $val->attribute->name . ': ' . $val->value;
-                                                })
-                                                ->implode(', ');
-                                        }
-
-                                        $stock = $variant->quantity_in_stock ?? ($product->quantity_in_stock ?? 0);
-                                        $price = $item->discounted_price ?? 0;
-                                        $subTotal = $price * $item->quantity;
-                                        $total += $subTotal;
-                                    @endphp
-
-                                    <tr class="cart-item" data-id="{{ $item->id }}"
-                                        data-stock="{{ $stock }}">
-                                        <td>
-                                            <input type="checkbox" name="selected_items[]" value="{{ $item->id }}"
-                                                class="select-item" data-subtotal="{{ $subTotal ?? 0 }}"
-                                                {{ $stock <= 0 ? 'disabled' : '' }}>
-
-                                        </td>
-                                        <td>
-                                            <img src="{{ asset('storage/' . $image) }}" class="rounded"
-                                                style="width: 60px; height: 60px;" />
-                                        </td>
-                                        <td class="text-start">
-                                            <strong>{{ $productName }}</strong>
-                                            @if ($variant && $variant->attributeValues->count())
-                                                <div class="mt-1">
-                                                    @foreach ($variant->attributeValues as $value)
-                                                        <span class="badge bg-info text-dark me-1">
-                                                            {{ $value->attribute->name }}:
-                                                            <strong>{{ $value->value }}</strong>
-                                                        </span>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                            @if ($stock <= 0)
-                                                <div class="text-danger small fw-bold mt-1">Tạm thời hết hàng</div>
-                                            @endif
-                                        </td>
-                                        <td>{{ number_format($price, 0, ',', '.') }} đ</td>
-                                        <td>
-                                            <div class="input-group input-group-sm quantity-control mx-auto"
-                                                style="max-width: 130px;">
-                                                <button type="button"
-                                                    class="btn btn-outline-secondary quantity-decrease"
-                                                    {{ $stock <= 0 ? 'disabled' : '' }}>−</button>
-                                                <input type="number" class="form-control text-center quantity-input"
-                                                    value="{{ $item->quantity }}" min="1"
-                                                    data-old-value="{{ $item->quantity }}"
-                                                    {{ $stock <= 0 ? 'disabled' : '' }}>
-                                                <button type="button"
-                                                    class="btn btn-outline-secondary quantity-increase"
-                                                    {{ $stock <= 0 ? 'disabled' : '' }}>+</button>
-                                            </div>
-                                        </td>
-
-                                        <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
-                                        <td>
-                                            <a href="{{ route('carts.remove', $item->id) }}"
-                                                class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                                                <i class="fa fa-times"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted">Giỏ hàng của bạn đang trống</td>
-                                </tr>
-                            @endif
-                        </tbody>
-
-                    </table>
-                </div>
-            </form>
-        </div>
-
-        @php
-            $shipping = 30000;
-            $discount = session('discount', 0);
-            $promotionName = session('promotion.name', '');
-            $grandTotal = $total + $shipping - $discount;
-
-            if ($grandTotal < 0) {
-                $grandTotal = 0;
-            }
-        @endphp
-
-        @if ($carts->count() > 0)
-            <div class="row justify-content-end mt-5">
-                <div class="col-sm-12 col-md-6 col-lg-4">
-                    <div id="cart-summary" class="bg-white rounded-4 shadow-sm p-4">
-                        <h5 class="mb-4 text-primary">Tóm tắt đơn hàng</h5>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Tạm tính:</span>
-                            <span id="total-price">{{ number_format($total, 0, ',', '.') }} đ</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Phí vận chuyển:</span>
-                            <span id="shipping-fee">{{ number_format($shipping, 0, ',', '.') }} đ</span>
-                        </div>
-                        <hr>
-                        <div class="d-flex justify-content-between fw-bold text-dark fs-5">
-                            <span>Tổng cộng:</span>
-                            <span id="grand-total">{{ number_format($grandTotal, 0, ',', '.') }} đ</span>
-                        </div>
-
-                        <form id="checkout-form" action="{{ route('clients.order') }}" method="GET">
-                            <input type="hidden" id="selected-items-input">
-                            <button type="submit" class="btn btn-primary w-100 mt-4 py-2 text-uppercase">
-                                Thanh toán
-                            </button>
-                        </form>
-
-                    </div>
-                </div>
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
             </div>
         @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+            </div>
+        @endif
+
+        @php $total = 0; @endphp
+        <form action="{{ route('carts.removeSelected') }}" method="POST" id="delete-selected-form"
+            onsubmit="return checkSelectedItems()">
+            @csrf
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Danh sách sản phẩm trong giỏ</h5>
+                <button type="submit" class="btn btn-danger btn-sm" {{ count($carts) == 0 ? 'disabled' : '' }}>
+                    🗑️ Xóa các sản phẩm đã chọn
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle text-center table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th><input type="checkbox" id="select-all"></th>
+                            <th>Ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Số lượng</th>
+                            <th>Tạm tính</th>
+                            <th>Xử lý</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (count($carts) > 0)
+                            @foreach ($carts as $item)
+                                @php
+                                    $product = $item->product;
+                                    $variant = $item->productVariant;
+
+                                    $image = $product->image ?? 'clients/img/default.png';
+                                    $productName = $product->product_name ?? 'Không có tên';
+
+                                    // ✅ Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
+                                    $variantName = '';
+                                    if ($variant && $variant->attributeValues) {
+                                        $variantName = $variant->attributeValues
+                                            ->map(function ($val) {
+                                                return $val->attribute->name . ': ' . $val->value;
+                                            })
+                                            ->implode(', ');
+                                    }
+
+                                    $stock = $variant->quantity_in_stock ?? ($product->quantity_in_stock ?? 0);
+                                    $price = $item->discounted_price ?? 0;
+                                    $subTotal = $price * $item->quantity;
+                                    $total += $subTotal;
+                                @endphp
+
+                                <tr class="cart-item" data-id="{{ $item->id }}" data-stock="{{ $stock }}">
+                                    <td>
+                                        <input type="checkbox" name="selected_items[]" value="{{ $item->id }}"
+                                            class="select-item" data-subtotal="{{ $subTotal ?? 0 }}"
+                                            {{ $stock <= 0 ? 'disabled' : '' }}>
+
+                                    </td>
+                                    <td>
+                                        <img src="{{ asset('storage/' . $image) }}" class="rounded"
+                                            style="width: 60px; height: 60px;" />
+                                    </td>
+                                    <td class="text-start">
+                                        <strong>{{ $productName }}</strong>
+                                        @if ($variant && $variant->attributeValues->count())
+                                            <div class="mt-1">
+                                                @foreach ($variant->attributeValues as $value)
+                                                    <span class="badge bg-info text-dark me-1">
+                                                        {{ $value->attribute->name }}:
+                                                        <strong>{{ $value->value }}</strong>
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @if ($stock <= 0)
+                                            <div class="text-danger small fw-bold mt-1">Tạm thời hết hàng</div>
+                                        @endif
+                                    </td>
+                                    <td>{{ number_format($price, 0, ',', '.') }} đ</td>
+                                    <td>
+                                        <div class="input-group input-group-sm quantity-control mx-auto"
+                                            style="max-width: 130px;">
+                                            <button type="button" class="btn btn-outline-secondary quantity-decrease"
+                                                {{ $stock <= 0 ? 'disabled' : '' }}>−</button>
+                                            <input type="number" class="form-control text-center quantity-input"
+                                                value="{{ $item->quantity }}" min="1"
+                                                data-old-value="{{ $item->quantity }}"
+                                                {{ $stock <= 0 ? 'disabled' : '' }}>
+                                            <button type="button" class="btn btn-outline-secondary quantity-increase"
+                                                {{ $stock <= 0 ? 'disabled' : '' }}>+</button>
+                                        </div>
+                                    </td>
+
+                                    <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
+                                    <td>
+                                        <a href="{{ route('carts.remove', $item->id) }}"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                            <i class="fa fa-times"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Giỏ hàng của bạn đang trống</td>
+                            </tr>
+                        @endif
+                    </tbody>
+
+                </table>
+            </div>
+        </form>
     </div>
+
+    @php
+        $shipping = 30000;
+        $discount = session('discount', 0);
+        $promotionName = session('promotion.name', '');
+        $grandTotal = $total + $shipping - $discount;
+
+        if ($grandTotal < 0) {
+            $grandTotal = 0;
+        }
+    @endphp
+
+    @if ($carts->count() > 0)
+        <div class="row justify-content-end mt-5">
+            <div class="col-sm-12 col-md-6 col-lg-4">
+                <div id="cart-summary" class="bg-white rounded-4 shadow-sm p-4">
+                    <h5 class="mb-4 text-primary">Tóm tắt đơn hàng</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tạm tính:</span>
+                        <span id="total-price">{{ number_format($total, 0, ',', '.') }} đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Phí vận chuyển:</span>
+                        <span id="shipping-fee">{{ number_format($shipping, 0, ',', '.') }} đ</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold text-dark fs-5">
+                        <span>Tổng cộng:</span>
+                        <span id="grand-total">{{ number_format($grandTotal, 0, ',', '.') }} đ</span>
+                    </div>
+
+                    <form id="checkout-form" action="{{ route('clients.order') }}" method="GET">
+                        <input type="hidden" id="selected-items-input">
+                        <button type="submit" class="btn btn-primary w-100 mt-4 py-2 text-uppercase">
+                            Thanh toán
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
 </div>
 
 <!-- Modal chi tiết đơn hàng -->

@@ -102,10 +102,6 @@
                 </div>
             @endif
         </div>
-
-        <div class="pagination-wrapper d-flex justify-content-center mt-4">
-            {{ $products->links() }}
-        </div>
     </div>
 </div>
 

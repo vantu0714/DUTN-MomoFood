@@ -109,8 +109,6 @@
                     </div>
                     <div class="featurs-content text-center">
                         <h5>Hỗ trợ trả hàng trong vòng 1 tuần</h5>
-                        {{-- <p class="mb-0">Hoàn tiền trong vòng 30 ngày</p> --}}
-
                     </div>
                 </div>
             </div>
@@ -130,7 +128,9 @@
         </div>
     </div>
 </div>
-<!-- DANH SÁCH SẢN PHẨM -->
+<!-- Featurs Section End -->
+
+<!-- DANH SÁCH SẢN PHẨM START-->
 <div class="container-fluid fruite py-5">
     <div class="container py-2">
         <!-- DANH MỤC NGANG -->
@@ -175,6 +175,8 @@
         </div>
     </div>
 </div>
+<!-- DANH SÁCH SẢN PHẨM END -->
+
 <!-- Featurs Start -->
 <div class="container-fluid service py-5">
     <div class="container py-2">
@@ -362,7 +364,6 @@
         <div class="text-center mx-auto mb-5">
             <h3 class="display-4" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">
                 SIÊU PHẨM ĂN VẶT 5 ⭐
-            </h3>
         </div>
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
