@@ -231,7 +231,8 @@
 
                                 <div class="d-flex justify-content-between mb-4">
                                     <h5>Tổng cộng:</h5>
-                                    <h5 class="text-danger">₫{{ number_format($grandTotal, 0, ',', '.') }}</h5>
+                                    <h5 class="text-danger fw-bold fs-5 mb-0">
+                                        ₫{{ number_format($grandTotal, 0, ',', '.') }}</h5>
                                 </div>
 
                                 {{-- Hidden inputs để gửi đi --}}
