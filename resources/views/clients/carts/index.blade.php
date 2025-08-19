@@ -16,28 +16,6 @@
         </div>
     </div>
 
-
-
-    <div class="container-fluid py-5">
-
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-        @endif
-    </div>
     @php $total = 0; @endphp
     <form action="{{ route('carts.removeSelected') }}" method="POST" id="delete-selected-form"
         onsubmit="return checkSelectedItems()">
@@ -594,4 +572,51 @@
         orderSuccessModal.show();
     }
     // Xóa session sau 5 giây (gợi ý – cần backend hỗ trợ thêm nếu cần thiết)
+</script>
+<!-- CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+<!-- JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<script>
+    function showToast(type, message) {
+        switch (type) {
+            case 'success':
+                toastr.success(message, {
+                    positionClass: "toast-top-right",
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 4000
+                });
+                break;
+            case 'error':
+                toastr.error(message, {
+                    positionClass: "toast-top-right",
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 4000
+                });
+                break;
+            case 'warning':
+                toastr.warning(message, {
+                    positionClass: "toast-top-right",
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 4000
+                });
+                break;
+        }
+    }
+    @isset($errors)
+        @if (session('success'))
+            showToast('success', "{{ session('success') }}");
+        @elseif (session('error'))
+            showToast('error', "{{ session('error') }}");
+        @elseif ($errors->any())
+            @foreach ($errors->all() as $warning)
+                showToast('warning', "{{ $warning }}");
+            @endforeach
+        @endif
+    @endisset
 </script>
