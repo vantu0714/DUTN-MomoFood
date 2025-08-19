@@ -181,7 +181,7 @@
 
                     <form id="checkout-form" action="{{ route('clients.order') }}" method="GET">
                         <input type="hidden" id="selected-items-input">
-                        <button type="submit" class="btn btn-primary w-100 mt-4 py-2 text-uppercase">
+                        <button type="submit" class="btn btn-danger w-100 mt-4 py-2 text-uppercase">
                             Thanh toán
                         </button>
                     </form>
@@ -324,9 +324,11 @@
                                 @endif
                             </div>
                             <div class="col-md-6 text-right">
-                                <h5><strong>Tổng cộng: <span
-                                            class="text-danger fw-bold">{{ number_format($order->total_price) }}₫</span></strong>
-                                </h5>
+                                <p>
+                                    <strong>Tổng cộng: 
+                                    <span class="text-danger fw-bold">{{ number_format($order->total_price) }}₫</span>
+                                    </strong>
+                                </p>
                             </div>
                         </div>
 

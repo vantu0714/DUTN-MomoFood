@@ -202,6 +202,17 @@ class OrderController extends Controller
         if ($status == 4) {
             $paymentStatus = 'paid';
             foreach ($order->orderDetails as $detail) {
+                // Nếu có biến thể thì trừ ở bảng product_variants
+                if ($detail->product_variant_id) {
+                    DB::table('product_variants')
+                        ->where('id', $detail->product_variant_id)
+                        ->decrement('quantity_in_stock', $detail->quantity);
+                } else {
+                    // Nếu sản phẩm thường thì trừ trực tiếp trong bảng products
+                    Product::where('id', $detail->product_id)
+                        ->decrement('quantity_in_stock', $detail->quantity);
+                }
+
                 Product::where('id', $detail->product_id)->increment('sold_count', $detail->quantity);
             }
         }

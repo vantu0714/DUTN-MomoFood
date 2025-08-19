@@ -231,8 +231,8 @@
 
                                 <div class="d-flex justify-content-between mb-4">
                                     <h5>Tổng cộng:</h5>
-                                    <h5 class="text-danger fw-bold fs-5 mb-0">
-                                        ₫{{ number_format($grandTotal, 0, ',', '.') }}</h5>
+                                    <span class="text-danger fw-bold fs-5 mb-0">
+                                        ₫{{ number_format($grandTotal, 0, ',', '.') }}</span>
                                 </div>
 
                                 {{-- Hidden inputs để gửi đi --}}
@@ -295,7 +295,7 @@
                                 <form method="POST" action="{{ route('order.applyCoupon') }}">
                                     @csrf
                                     <input type="hidden" name="promotion" value="{{ $voucher->code }}">
-                                    <button class="btn btn-outline-danger">Lưu</button>
+                                    <button class="btn btn-outline-danger">Dùng</button>
                                 </form>
                             </div>
 
