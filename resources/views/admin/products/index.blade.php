@@ -387,11 +387,6 @@
                             onclick="document.getElementById('deleteActionType').value='hide'">
                             Ẩn sản phẩm
                         </button>
-                        <!-- Nút chỉ xóa biến thể -->
-                        <button type="submit" id="deleteVariantsBtn" class="btn btn-info"
-                            onclick="document.getElementById('deleteActionType').value='variants'">
-                            Chỉ xóa biến thể
-                        </button>
                     </div>
                 </div>
             </div>

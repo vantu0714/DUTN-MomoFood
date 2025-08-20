@@ -823,7 +823,7 @@
                                          style="width: 60px; height: 60px; object-fit: cover;">
                                      <div>
                                          <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
-                                         ${disabled ? '<small class="text-danger">Hết hàng</small>' : ''}
+                                         ${disabled ? '<small class="text-danger"></small>' : ''}
                                      </div>
                                  </div>`;
                         variantOptionsEl.insertAdjacentHTML('beforeend', html);

@@ -69,7 +69,7 @@
                                     $image = $product->image ?? 'clients/img/default.png';
                                     $productName = $product->product_name ?? 'Không có tên';
 
-                                    // ✅ Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
+                                    //  Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
                                     $variantName = '';
                                     if ($variant && $variant->attributeValues) {
                                         $variantName = $variant->attributeValues

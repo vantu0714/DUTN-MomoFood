@@ -671,6 +671,7 @@
         width: calc(25% - 11.25px);
         /* 4 items per view */
     }
+
     .carousel-nav {
         position: absolute;
         top: 50%;
