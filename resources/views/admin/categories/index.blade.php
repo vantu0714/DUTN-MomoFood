@@ -38,12 +38,12 @@
                     <td>{{ $cat->created_at->format('d/m/Y') }}</td>
                     <td>{{ $cat->updated_at->format('d/m/Y') }}</td>
                     <td>
-                        <a href="{{ route('admin.categories.show', $cat->id) }}" class="btn btn-sm btn-info">Xem</a>
-                        <a href="{{ route('admin.categories.edit', $cat->id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                        <a href="{{ route('admin.categories.show', $cat->id) }}" class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a>
+                        <a href="{{ route('admin.categories.edit', $cat->id) }}" class="btn btn-sm btn-outline-warning"> <i class="fas fa-edit"></i></a>
                         <form action="{{ route('admin.categories.destroy', $cat->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa danh mục này?')">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-sm btn-danger">Xóa</button>
+                            <button class="btn btn-sm btn-outline-danger"> <i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>
