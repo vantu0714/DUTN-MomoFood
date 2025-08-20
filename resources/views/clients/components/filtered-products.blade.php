@@ -1,4 +1,3 @@
-
 <div class="tab-content">
     <div id="tab-1" class="tab-pane fade show active p-0">
         <div class="row g-4">
@@ -30,6 +29,7 @@
                                     'price' => $v->price,
                                     'discounted_price' => $v->discounted_price,
                                     'quantity' => $v->quantity_in_stock,
+                                    'status' => $v->status,
                                     'image' => $v->image
                                         ? asset('storage/' . $v->image)
                                         : asset('clients/img/default.jpg'),
@@ -64,16 +64,39 @@
 
                             <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
                                 <div>
-                                    @if ($price && $original && $price < $original)
-                                        <div class="text-danger fw-bold fs-5 mb-0">
-                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                        </div>
-                                    @elseif ($price)
-                                        <div class="text-danger fw-bold fs-5 mb-0">
-                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
-                                        </div>
+                                    @if ($product->product_type === 'variant' && $product->variants->count() > 0)
+                                        @php
+                                            $minPrice = $product->variants->min(
+                                                fn($v) => $v->discounted_price ?? $v->price,
+                                            );
+                                            $maxPrice = $product->variants->max(
+                                                fn($v) => $v->discounted_price ?? $v->price,
+                                            );
+                                        @endphp
+
+                                        @if ($minPrice != $maxPrice)
+                                            <div class="text-danger fw-bold fs-5 mb-0">
+                                                {{ number_format($minPrice, 0, ',', '.') }} -
+                                                {{ number_format($maxPrice, 0, ',', '.') }}
+                                                <small>VND</small>
+                                            </div>
+                                        @else
+                                            <div class="text-danger fw-bold fs-5 mb-0">
+                                                {{ number_format($minPrice, 0, ',', '.') }} <small>VND</small>
+                                            </div>
+                                        @endif
                                     @else
-                                        <div class="text-muted">Liên hệ để biết giá</div>
+                                        @if ($price && $original && $price < $original)
+                                            <div class="text-danger fw-bold fs-5 mb-0">
+                                                {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                            </div>
+                                        @elseif ($price)
+                                            <div class="text-danger fw-bold fs-5 mb-0">
+                                                {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                            </div>
+                                        @else
+                                            <div class="text-muted">Liên hệ để biết giá</div>
+                                        @endif
                                     @endif
                                 </div>
 
@@ -104,40 +127,6 @@
         </div>
     </div>
 </div>
-
-{{-- <script>
-    document.addEventListener('click', function(e) {
-        const link = e.target.closest('.pagination a');
-        if (link) {
-            e.preventDefault();
-
-            const productContainer = document.querySelector('#tab-1');
-            const url = link.href;
-
-            fetch(url)
-                .then(res => res.text())
-                .then(data => {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data;
-                    const newContent = tempDiv.querySelector('#tab-1')?.innerHTML;
-
-                    if (newContent) {
-                        productContainer.innerHTML = newContent;
-
-                        // 🔁 Gán lại sự kiện cho nút giỏ hàng mới được load
-                        rebindOpenCartModal();
-
-                        window.scrollTo({
-                            top: productContainer.offsetTop - 100,
-                            behavior: 'smooth'
-                        });
-                    }
-
-                })
-                .catch(err => console.error('Lỗi khi phân trang:', err));
-        }
-    });
-</script> --}}
 
 <style>
     .card-body .btn {

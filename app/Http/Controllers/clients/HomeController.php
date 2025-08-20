@@ -21,37 +21,35 @@ class HomeController extends Controller
         $query = Product::with([
             'category',
             'variants' => function ($q) {
-                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status')
-                    ->where('status', 1) // chỉ lấy biến thể đang hiển thị
-                    ->where('quantity_in_stock', '>', 0); // chỉ lấy biến thể còn hàng
+                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status');
+                // KHÔNG lọc ở đây nữa, để blade xử lý disabled/mờ
             },
             'variants.attributeValues.attribute'
         ])
             ->where(function ($q) {
                 $q->where(function ($q1) {
-                    // sản phẩm đơn giản
+                    // sản phẩm đơn -> chỉ lấy còn hàng + hiển thị
                     $q1->where('product_type', 'simple')
-                        ->where('quantity_in_stock', '>', 0)
-                        ->where('status', 1);
-                })->orWhere(function ($q2) {
-                    // sản phẩm có biến thể
-                    $q2->where('product_type', 'variant')
                         ->where('status', 1)
-                        ->whereHas('variants', function ($q3) {
-                            $q3->where('status', 1) // lọc biến thể hiển thị
-                                ->where('quantity_in_stock', '>', 0);
-                        });
+                        ->where('quantity_in_stock', '>', 0);
+                })->orWhere(function ($q2) {
+                    // sản phẩm có biến thể -> chỉ lấy sp cha hiển thị
+                    $q2->where('product_type', 'variant')
+                        ->where('status', 1);
                 });
             });
 
+
+        // lọc theo danh mục nếu có
         if ($request->has('category_id') && $request->category_id !== '') {
             $query->where('category_id', $request->category_id);
         }
 
         $products = $query->paginate(12);
+
         $categories = Category::withCount('products')->get();
+
         $bestSellingProducts = Product::with('category')
-            // ->where('product_type', 'simple')
             ->where('status', 1)
             ->where('quantity_in_stock', '>', 0)
             ->orderByDesc('sold_count')
@@ -61,18 +59,26 @@ class HomeController extends Controller
         $highRatedProducts = Product::with([
             'comments',
             'category',
-            'variants' => function ($q) {
-                $q->where('status', 1)->where('quantity_in_stock', '>', 0);
-            },
-            'variants.attributeValues.attribute'
+            'variants.attributeValues.attribute',
+            'variants'
         ])
-            ->activeInStock() // << lọc sản phẩm hiển thị + còn hàng
+            ->where(function ($q) {
+                $q->where(function ($q1) {
+
+                    $q1->where('product_type', 'simple')
+                        ->where('status', 1)
+                        ->where('quantity_in_stock', '>', 0);
+                })->orWhere(function ($q2) {
+
+                    $q2->where('product_type', 'variant')
+                        ->where('status', 1);
+                });
+            })
             ->withAvg('comments', 'rating')
             ->having('comments_avg_rating', '>=', 4)
             ->orderByDesc('comments_avg_rating')
             ->take(6)
             ->get();
-
 
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
 
@@ -84,6 +90,8 @@ class HomeController extends Controller
             'highRatedProducts'
         ));
     }
+
+
     public function search(Request $request)
     {
         $keyword = $request->input('keyword');

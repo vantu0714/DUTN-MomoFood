@@ -284,17 +284,15 @@ class ProductController extends Controller
         // Trạng thái hoàn tất hoặc hủy
         $completedStatuses = [4, 6];
 
-        // Kiểm tra đơn hàng chưa hoàn tất
+        // Kiểm tra đơn hàng chưa hoàn tất (cả sản phẩm chính và variants)
         $hasPendingOrders =
             $product->orderDetails()
-            ->whereHas('order', function ($query) use ($completedStatuses) {
-                $query->whereNotIn('status', $completedStatuses);
-            })->exists()
+            ->whereHas('order', fn($q) => $q->whereNotIn('status', $completedStatuses))
+            ->exists()
             ||
-            OrderDetail::whereIn('variant_id', $product->variants->pluck('id'))
-            ->whereHas('order', function ($query) use ($completedStatuses) {
-                $query->whereNotIn('status', $completedStatuses);
-            })->exists();
+            OrderDetail::whereIn('product_variant_id', $product->variants->pluck('id'))
+            ->whereHas('order', fn($q) => $q->whereNotIn('status', $completedStatuses))
+            ->exists();
 
         if ($hasPendingOrders) {
             return redirect()->route('admin.products.index')
@@ -305,29 +303,42 @@ class ProductController extends Controller
         $inCart =
             CartItem::where('product_id', $product->id)->exists()
             ||
-            CartItem::whereIn('variant_id', $product->variants->pluck('id'))->exists();
+            CartItem::whereIn('product_variant_id', $product->variants->pluck('id'))->exists();
 
         if ($inCart) {
             return redirect()->route('admin.products.index')
                 ->with('error', 'Không thể ẩn sản phẩm vì đang có trong giỏ hàng.');
         }
+
         if ($actionType === 'hide') {
             $product->update(['status' => 0]); // chỉ đổi trạng thái, số lượng vẫn giữ nguyên
             return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được ẩn.');
         }
 
-
         if ($actionType === 'delete') {
+            // Xóa ảnh sản phẩm
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
-            $product->variants()->forceDelete();
+
+            // Xóa variants
+            $product->variants->each(function ($variant) {
+                if ($variant->image && Storage::disk('public')->exists($variant->image)) {
+                    Storage::disk('public')->delete($variant->image);
+                }
+                $variant->forceDelete();
+            });
+
+            // Xóa sản phẩm
             $product->forceDelete();
+
             return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được xóa hoàn toàn.');
         }
+
         return redirect()->route('admin.products.index')
             ->with('error', 'Hành động không hợp lệ.');
     }
+
     public function showVariants($id)
     {
         $product = Product::with('variants')->findOrFail($id);
