@@ -15,7 +15,7 @@
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/dashboard.svg') }}" alt>
                 </div>
-                <span>Thống kê</span>
+                <span>Dashboard</span>
             </a>
         </li>
         <li class>

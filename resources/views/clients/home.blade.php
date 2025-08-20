@@ -292,11 +292,9 @@
                                     <div class="text-danger fw-bold fs-5">
                                         @if ($isVariant)
                                             {{ number_format($minPrice, 0, ',', '.') }} -
-                                            {{ number_format($maxPrice, 0, ',', '.') }}
-                                            <small class="text-muted">VND</small>
+                                            {{ number_format($maxPrice, 0, ',', '.') }} VND
                                         @else
-                                            {{ number_format($minPrice, 0, ',', '.') }} <small
-                                                class="text-muted">VND</small>
+                                            {{ number_format($minPrice, 0, ',', '.') }} VND
                                             @if ($minPrice < $maxPrice)
                                                 <div class="text-muted text-decoration-line-through small">
                                                     {{ number_format($maxPrice, 0, ',', '.') }} VND

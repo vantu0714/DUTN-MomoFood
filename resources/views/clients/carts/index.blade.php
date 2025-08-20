@@ -73,157 +73,61 @@
                                         class="select-item" data-subtotal="{{ $subTotal ?? 0 }}"
                                         {{ $stock <= 0 ? 'disabled' : '' }}>
 
-                                    <div class="table-responsive">
-                                        <table class="table align-middle text-center table-hover table-bordered">
-                                            <thead class="table-dark">
-                                                <tr>
-                                                    <th><input type="checkbox" id="select-all"></th>
-                                                    <th>Ảnh</th>
-                                                    <th>Tên sản phẩm</th>
-                                                    <th>Giá</th>
-                                                    <th>Số lượng</th>
-                                                    <th>Tạm tính</th>
-                                                    <th>Xử lý</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @if (count($carts) > 0)
-                                                    @foreach ($carts as $item)
-                                                        @php
-                                                            $product = $item->product;
-                                                            $variant = $item->productVariant;
-
-                                                            $image = $product->image ?? 'clients/img/default.png';
-                                                            $productName = $product->product_name ?? 'Không có tên';
-
-                                                            //  Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
-                                                            $variantName = '';
-                                                            if ($variant && $variant->attributeValues) {
-                                                                $variantName = $variant->attributeValues
-                                                                    ->map(function ($val) {
-                                                                        return $val->attribute->name .
-                                                                            ': ' .
-                                                                            $val->value;
-                                                                    })
-                                                                    ->implode(', ');
-                                                            }
-
-                                                            $stock =
-                                                                $variant->quantity_in_stock ??
-                                                                ($product->quantity_in_stock ?? 0);
-                                                            $price = $item->discounted_price ?? 0;
-                                                            $subTotal = $price * $item->quantity;
-                                                            $total += $subTotal;
-                                                        @endphp
-
-                                                        <tr class="cart-item" data-id="{{ $item->id }}"
-                                                            data-stock="{{ $stock }}">
-                                                            <td>
-                                                                <input type="checkbox" name="selected_items[]"
-                                                                    value="{{ $item->id }}" class="select-item"
-                                                                    data-subtotal="{{ $subTotal ?? 0 }}"
-                                                                    {{ $stock <= 0 ? 'disabled' : '' }}>
-
-                                                            </td>
-                                                            <td>
-                                                                <img src="{{ asset('storage/' . $image) }}"
-                                                                    class="rounded"
-                                                                    style="width: 60px; height: 60px;" />
-                                                            </td>
-                                                            <td class="text-start">
-                                                                <strong>{{ $productName }}</strong>
-                                                                @if ($variant && $variant->attributeValues->count())
-                                                                    <div class="mt-1">
-                                                                        @foreach ($variant->attributeValues as $value)
-                                                                            <span class="badge bg-info text-dark me-1">
-                                                                                {{ $value->attribute->name }}:
-                                                                                <strong>{{ $value->value }}</strong>
-                                                                            </span>
-                                                                        @endforeach
-                                                                    </div>
-                                                                @endif
-                                                                @if ($stock <= 0)
-                                                                    <div class="text-danger small fw-bold mt-1">Tạm thời
-                                                                        hết hàng</div>
-                                                                @endif
-                                                            </td>
-                                                            <td>{{ number_format($price, 0, ',', '.') }} đ</td>
-                                                            <td>
-                                                                <div class="input-group input-group-sm quantity-control mx-auto"
-                                                                    style="max-width: 130px;">
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary quantity-decrease"
-                                                                        {{ $stock <= 0 ? 'disabled' : '' }}>−</button>
-                                                                    <input type="number"
-                                                                        class="form-control text-center quantity-input"
-                                                                        value="{{ $item->quantity }}" min="1"
-                                                                        data-old-value="{{ $item->quantity }}"
-                                                                        {{ $stock <= 0 ? 'disabled' : '' }}>
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary quantity-increase"
-                                                                        {{ $stock <= 0 ? 'disabled' : '' }}>+</button>
-                                                            </td>
-                                                            <td>
-                                                                <img src="{{ asset('storage/' . $image) }}"
-                                                                    class="rounded"
-                                                                    style="width: 60px; height: 60px;" />
-                                                            </td>
-                                                            <td class="text-start">
-                                                                <strong>{{ $productName }}</strong>
-                                                                @if ($variant && $variant->attributeValues->count())
-                                                                    <div class="mt-1">
-                                                                        @foreach ($variant->attributeValues as $value)
-                                                                            <span class="badge bg-info text-dark me-1">
-                                                                                {{ $value->attribute->name }}:
-                                                                                <strong>{{ $value->value }}</strong>
-                                                                            </span>
-                                                                        @endforeach
-                                                                    </div>
-                                                                @endif
-                                                                @if ($stock <= 0)
-                                                                    <div class="text-danger small fw-bold mt-1">Tạm thời
-                                                                        hết hàng</div>
-                                                                @endif
-                                                            </td>
-                                                            <td>{{ number_format($price, 0, ',', '.') }} đ</td>
-                                                            <td>
-                                                                <div class="input-group input-group-sm quantity-control mx-auto"
-                                                                    style="max-width: 130px;">
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary quantity-decrease"
-                                                                        {{ $stock <= 0 ? 'disabled' : '' }}>−</button>
-                                                                    <input type="number"
-                                                                        class="form-control text-center quantity-input"
-                                                                        value="{{ $item->quantity }}" min="1"
-                                                                        data-old-value="{{ $item->quantity }}"
-                                                                        {{ $stock <= 0 ? 'disabled' : '' }}>
-                                                                    <button type="button"
-                                                                        class="btn btn-outline-secondary quantity-increase"
-                                                                        {{ $stock <= 0 ? 'disabled' : '' }}>+</button>
-                                                                </div>
-                                                            </td>
-
-                                                            <td class="sub-total">
-                                                                {{ number_format($subTotal, 0, ',', '.') }} đ</td>
-                                                            <td>
-                                                                <a href="{{ route('carts.remove', $item->id) }}"
-                                                                    class="btn btn-sm btn-outline-danger"
-                                                                    onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                                                                    <i class="fa fa-times"></i>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                @else
-                                                    <tr>
-                                                        <td colspan="7" class="text-center text-muted">Giỏ hàng của
-                                                            bạn đang trống</td>
-                                                    </tr>
-                                                @endif
-                                            </tbody>
-
-                                        </table>
+                                </td>
+                                <td>
+                                    <img src="{{ asset('storage/' . $image) }}" class="rounded"
+                                        style="width: 60px; height: 60px;" />
+                                </td>
+                                <td class="text-start">
+                                    <strong>{{ $productName }}</strong>
+                                    @if ($variant && $variant->attributeValues->count())
+                                        <div class="mt-1">
+                                            @foreach ($variant->attributeValues as $value)
+                                                <span class="badge bg-info text-dark me-1">
+                                                    {{ $value->attribute->name }}:
+                                                    <strong>{{ $value->value }}</strong>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @if ($stock <= 0)
+                                        <div class="text-danger small fw-bold mt-1">Tạm thời hết hàng</div>
+                                    @endif
+                                </td>
+                                <td>{{ number_format($price, 0, ',', '.') }} đ</td>
+                                <td>
+                                    <div class="input-group input-group-sm quantity-control mx-auto"
+                                        style="max-width: 130px;">
+                                        <button type="button" class="btn btn-outline-secondary quantity-decrease"
+                                            {{ $stock <= 0 ? 'disabled' : '' }}>−</button>
+                                        <input type="number" class="form-control text-center quantity-input"
+                                            value="{{ $item->quantity }}" min="1"
+                                            data-old-value="{{ $item->quantity }}"
+                                            {{ $stock <= 0 ? 'disabled' : '' }}>
+                                        <button type="button" class="btn btn-outline-secondary quantity-increase"
+                                            {{ $stock <= 0 ? 'disabled' : '' }}>+</button>
                                     </div>
+                                </td>
+
+                                <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
+                                <td>
+                                    <a href="{{ route('carts.remove', $item->id) }}"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                        <i class="fa fa-times"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Giỏ hàng của bạn đang trống</td>
+                        </tr>
+                    @endif
+                </tbody>
+
+            </table>
+        </div>
     </form>
 </div>
 
@@ -259,7 +163,7 @@
 
                 <form id="checkout-form" action="{{ route('clients.order') }}" method="GET">
                     <input type="hidden" id="selected-items-input">
-                    <button type="submit" class="btn btn-primary w-100 mt-4 py-2 text-uppercase">
+                    <button type="submit" class="btn btn-danger w-100 mt-4 py-2 text-uppercase">
                         Thanh toán
                     </button>
                 </form>
@@ -285,8 +189,8 @@
             aria-labelledby="orderSuccessModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title" id="orderSuccessModalLabel">
+                    <div class="modal-header bg-origin text-white">
+                        <h5 class="modal-title " id="orderSuccessModalLabel">
                             <i class="fas fa-check-circle"></i> Đặt hàng thành công!
                         </h5>
                     </div>
@@ -402,9 +306,12 @@
                                 @endif
                             </div>
                             <div class="col-md-6 text-right">
-                                <h5><strong>Tổng cộng: <span
-                                            class="text-danger fw-bold">{{ number_format($order->total_price) }}₫</span></strong>
-                                </h5>
+                                <p>
+                                    <strong>Tổng cộng:
+                                        <span
+                                            class="text-danger fw-bold">{{ number_format($order->total_price) }}₫</span>
+                                    </strong>
+                                </p>
                             </div>
                         </div>
 

@@ -28,14 +28,14 @@
                     </div>
 
                     {{-- Mã giảm giá --}}
-                    <div class="mb-3">
+                    {{-- <div class="mb-3">
                         <label for="code" class="form-label">Mã giảm giá</label>
                         <input type="text" name="code" id="code"
                             class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}">
                         @error('code')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                    </div>
+                    </div> --}}
 
                     {{-- Loại & Giá trị giảm --}}
                     <div class="row">
@@ -160,6 +160,7 @@
             if (name === 'promotion_name') message = 'Vui lòng nhập tên chương trình.';
             if (name === 'code') message = 'Vui lòng nhập mã giảm giá.';
             if (name === 'discount_value') message = 'Vui lòng nhập giá trị giảm.';
+            if (name === 'min_total_spent') message = 'Vui lòng nhập tổng đơn hàng tối thiểu.';
         } else if (name === 'discount_value') {
             const num = parseFloat(value);
             if (discountType === 'percent') {
@@ -174,6 +175,12 @@
                 } else if (!isNaN(minTotalSpent) && minTotalSpent > 0 && num > minTotalSpent * 0.5) {
                     message = 'Số tiền giảm không được vượt quá 50% tổng đơn hàng tối thiểu.';
                 }
+            }
+
+        } else if (name === 'min_total_spent') {
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 1000) {
+                message = 'Tổng đơn hàng tối thiểu phải từ 1.000đ trở lên.';
             }
         }
 

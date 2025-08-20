@@ -3,7 +3,7 @@
 @section('content')
     <div class="container-fluid">
 <h3 class="mb-4 fw-bold text-info position-relative" style="font-size: 2rem;">
-    📊 Thống kê đơn hàng
+    📊 Dashboard
     <span style="
         display:block;
         height:4px;

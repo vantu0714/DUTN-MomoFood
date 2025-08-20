@@ -49,8 +49,12 @@ class OrderController extends Controller
                 $item->calculated_price = $price;
                 $item->item_total = $price * $item->quantity;
 
-                if($item?->productVariant->quantity_in_stock == 0){
-                    $errors[] = "Sản phẩm ". Str::lower($item->product->product_name ). " bạn chọn đã hết hàng";
+                $stock = $item->productVariant
+                    ? $item->productVariant->quantity_in_stock
+                    : ($item->product->quantity_in_stock ?? 0);
+
+                if ($stock <= 0) {
+                    $errors[] = "Sản phẩm " . Str::lower($item->product->product_name) . " bạn chọn đã hết hàng";
                 }
                 // Gộp tên biến thể
                 $item->variant_summary = $item->productVariant && is_array($item->productVariant->variant_values)
@@ -61,7 +65,7 @@ class OrderController extends Controller
             }
         }
 
-        if(!empty($errors)){
+        if (!empty($errors)) {
             return redirect()->back()->withErrors($errors);
         }
 
