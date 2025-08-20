@@ -143,21 +143,6 @@
                                         <th class="text-muted">Xuất xứ</th>
                                         <td>{{ $product->origin ? $product->origin->name : 'Đang cập nhật' }}</td>
                                     </tr>
-
-                                    {{-- <tr>
-                                        <th class="text-muted">Hạn sử dụng</th>
-                                        <td>
-                                            @if ($product->expiration_date)
-                                                {{ \Carbon\Carbon::parse($product->expiration_date)->format('d/m/Y') }}
-                                                (còn
-                                                {{ \Carbon\Carbon::now()->diffInDays($product->expiration_date, false) }}
-                                                ngày)
-                                            @else
-                                                Không rõ
-                                            @endif
-                                        </td>
-                                    </tr> --}}
-
                                 </tbody>
                             </table>
                         </div>
@@ -269,13 +254,15 @@
                                     <div class="row g-3" id="variantOptions">
                                         @foreach ($product->variants as $variant)
                                             <div class="col-md-6">
-                                                <div class="variant-option" data-variant-id="{{ $variant->id }}"
+                                                <div class="variant-option {{ $variant->status == 0 || $variant->quantity_in_stock <= 0 ? 'disabled' : '' }}"
+                                                    data-variant-id="{{ $variant->id }}"
                                                     data-variant-name="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}"
                                                     data-variant-price="{{ $variant->discounted_price ?? $variant->price }}"
                                                     data-variant-original="{{ $variant->price }}"
                                                     data-variant-stock="{{ $variant->quantity_in_stock }}"
                                                     data-variant-image="{{ $variant->image_url }}"
-                                                    style="cursor: pointer;">
+                                                    {{ $variant->status == 0 || $variant->quantity_in_stock <= 0 ? 'style=pointer-events:none;' : 'style=cursor:pointer;' }}>
+
                                                     <div class="variant-content d-flex align-items-center gap-2">
                                                         @if ($variant->image_url)
                                                             <img src="{{ $variant->image_url }}"
@@ -654,6 +641,13 @@
 
 {{-- CSS cho  carousel liên quan --}}
 <style>
+    .variant-option.disabled {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+        pointer-events: none;
+        /* không cho click */
+    }
+
     .related-products-carousel {
         position: relative;
         margin: 20px 0;
@@ -677,59 +671,6 @@
         width: calc(25% - 11.25px);
         /* 4 items per view */
     }
-
-    @media (max-width: 992px) {
-        .product-item {
-            width: calc(33.333% - 10px);
-            /* 3 items per view */
-        }
-    }
-
-    @media (max-width: 768px) {
-        .product-item {
-            width: calc(50% - 7.5px);
-            /* 2 items per view */
-        }
-
-        .related-products-carousel {
-            padding: 0 50px;
-            /* Giảm padding trên mobile */
-        }
-
-        .carousel-nav.prev {
-            left: -40px;
-        }
-
-        .carousel-nav.next {
-            right: -40px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .product-item {
-            width: calc(100% - 0px);
-            /* 1 item per view */
-        }
-
-        .related-products-carousel {
-            padding: 0 30px;
-            /* Padding nhỏ hơn trên mobile nhỏ */
-        }
-
-        .carousel-nav {
-            width: 35px;
-            height: 35px;
-        }
-
-        .carousel-nav.prev {
-            left: -25px;
-        }
-
-        .carousel-nav.next {
-            right: -25px;
-        }
-    }
-
     .carousel-nav {
         position: absolute;
         top: 50%;

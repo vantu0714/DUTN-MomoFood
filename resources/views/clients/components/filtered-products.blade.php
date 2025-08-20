@@ -30,6 +30,7 @@
                                     'price' => $v->price,
                                     'discounted_price' => $v->discounted_price,
                                     'quantity' => $v->quantity_in_stock,
+                                    'status' => $v->status,
                                     'image' => $v->image
                                         ? asset('storage/' . $v->image)
                                         : asset('clients/img/default.jpg'),

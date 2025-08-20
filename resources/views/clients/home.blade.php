@@ -254,6 +254,7 @@
                                 'price' => $v->price,
                                 'discounted_price' => $v->discounted_price,
                                 'quantity_in_stock' => $v->quantity_in_stock,
+                                'status' => $v->status,
                                 'image' => $v->image ? asset('storage/' . $v->image) : asset('clients/img/default.jpg'),
                             ];
                         });
@@ -395,6 +396,7 @@
                                 'price' => $v->price,
                                 'discounted_price' => $v->discounted_price,
                                 'quantity' => $v->quantity_in_stock,
+                                'status' => $v->status,
                                 'image' => $v->image ? asset('storage/' . $v->image) : asset('clients/img/default.jpg'),
                             ];
                         });
@@ -591,7 +593,6 @@
                     <h5 class="modal-title fw-bold text-primary" id="cartModalLabel">Chọn sản phẩm</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-
                 <div class="modal-body">
                     <div class="row g-4">
                         <!-- Hình ảnh -->
@@ -600,32 +601,39 @@
                                 class="img-fluid rounded shadow-sm"
                                 style="max-height: 500px; object-fit: cover; width: 100%;">
                         </div>
-
                         <!-- Thông tin sản phẩm -->
                         <div class="col-md-6">
                             <h4 id="modal-product-name" class="fw-bold mb-2 text-dark"></h4>
                             <p class="text-muted mb-2">
                                 Danh mục: <span id="modal-product-category" class="fw-medium text-dark"></span>
                             </p>
-
                             <p class="h5 text-danger fw-bold mb-3 tabular-numbers">
                                 <span id="modal-product-price">0</span>
                                 <span class="text-muted fs-6">VND</span>
                                 <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
                             </p>
-
                             <div class="mb-3" id="modal-rating">
                                 <!-- Đánh giá (nếu cần) -->
                             </div>
-
                             <p id="modal-product-description" class="text-muted mb-3" style="min-height: 60px;"></p>
-
-
                             <!-- Biến thể -->
                             <div class="mb-3" id="variant-section">
                                 <label class="form-label fw-semibold">🍃 Chọn biến thể:</label>
                                 <div id="variant-options" class="d-flex flex-wrap gap-2">
-                                    <!-- JS sẽ render radio button biến thể -->
+                                    @foreach ($product->variants as $variant)
+                                        @php
+                                            $disabled = $variant->status == 0 || $variant->quantity_in_stock <= 0;
+                                        @endphp
+                                        <label
+                                            class="variant-option btn btn-outline-primary {{ $disabled ? 'disabled-variant' : '' }}">
+                                            <input type="radio" name="product_variant_id"
+                                                value="{{ $variant->id }}" class="d-none"
+                                                {{ $disabled ? 'disabled' : '' }}>
+                                            {{ $variant->flavor ?? '' }}
+                                            {{ $variant->size ?? '' }}
+                                            - {{ number_format($variant->price, 0, ',', '.') }} VND
+                                        </label>
+                                    @endforeach
                                 </div>
                             </div>
                             <!-- Số lượng -->
@@ -791,35 +799,40 @@
                         productPriceEl.textContent = priceText;
                     }
                     variants.forEach(variant => {
-                        console.log(variant);
                         const imageUrl = variant.image || productImage;
                         const flavorText = variant.flavor || '';
                         const weightText = variant.weight || variant.mass || variant
                             .size || '';
                         const stock = variant.quantity_in_stock ?? variant.quantity ??
                             variant.stock ?? 0;
+                        const disabled = (variant.status == 0 || stock <=
+                            0); // check hết hàng/ẩn
 
                         const html = `
-                        <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center"
-                            style="cursor: pointer; transition: 0.3s;"
-                            data-variant-id="${variant.id}"
-                            data-variant-price="${variant.discounted_price || variant.price}"
-                            data-variant-original="${variant.price}"
-                            data-variant-weight="${weightText}"
-                            data-variant-stock="${stock}"
-                            data-variant-image="${imageUrl}">
-                            <img src="${imageUrl}" alt="variant-image"
-                                class="rounded me-3"
-                                style="width: 60px; height: 60px; object-fit: cover;">
-                            <div>
-                                <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
-                            </div>
-                        </div>`;
+                                                   <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center
+                                     ${disabled ? 'disabled-variant' : ''}"
+                                     style="cursor: pointer; transition: 0.3s;"
+                                     data-variant-id="${variant.id}"
+                                     data-variant-price="${variant.discounted_price || variant.price}"
+                                     data-variant-original="${variant.price}"
+                                     data-variant-weight="${weightText}"
+                                     data-variant-stock="${stock}"
+                                     data-variant-image="${imageUrl}">
+                                     <img src="${imageUrl}" alt="variant-image"
+                                         class="rounded me-3"
+                                         style="width: 60px; height: 60px; object-fit: cover;">
+                                     <div>
+                                         <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
+                                         ${disabled ? '<small class="text-danger">Hết hàng</small>' : ''}
+                                     </div>
+                                 </div>`;
                         variantOptionsEl.insertAdjacentHTML('beforeend', html);
                     });
 
-                    // Gán sự kiện click biến thể
+                    // Gán sự kiện click biến thể (chỉ cho card KHÔNG disabled)
                     variantOptionsEl.querySelectorAll('.variant-card').forEach(card => {
+                        if (card.classList.contains('disabled-variant'))
+                            return; // bỏ qua
                         card.addEventListener('click', () => {
                             variantOptionsEl.querySelectorAll('.variant-card')
                                 .forEach(c => {
@@ -845,10 +858,9 @@
                                 price) ? 'inline' : 'none';
                             productImageEl.src = imageUrl;
 
-                            // Hiển thị kho + giới hạn số lượng
                             if (stockInfoEl) {
                                 stockInfoEl.textContent =
-                                    `sản phẩm có sẳn : ${stock} `;
+                                    `Sản phẩm có sẵn: ${stock}`;
                             }
                             quantityInput.max = stock;
                             if (parseInt(quantityInput.value) > stock) {
@@ -856,6 +868,7 @@
                             }
                         });
                     });
+
                 }
 
                 if (quantityInput) {
@@ -1000,29 +1013,55 @@
 @include('clients.layouts.footer')
 
 <style>
+    .variant-option.disabled-variant,
+    .variant-card.disabled-variant {
+        opacity: 0.5 !important;
+        pointer-events: none !important;
+        cursor: not-allowed !important;
+    }
+    .variant-option.disabled-variant {
+        background-color: #f8f9fa !important;
+        border-color: #ccc !important;
+        color: #6c757d !important;
+    }
+
+    .variant-card.disabled-variant {
+        background-color: #f8f9fa !important;
+        border: 1px solid #ccc !important;
+    }
+
+    .variant-option.disabled-variant,
+    .variant-option.disabled-variant input {
+        opacity: 0.5 !important;
+        pointer-events: none !important;
+        cursor: not-allowed !important;
+    }
+
+    .variant-card.disabled-variant {
+        opacity: 0.5 !important;
+        pointer-events: none !important;
+        cursor: not-allowed !important;
+    }
+
     .comment-avatar {
         width: 80px;
         height: 80px;
         object-fit: cover;
         border: 2px solid #fff;
         flex-shrink: 0;
-        /* ⛔ Không cho bị ép co giãn theo flex */
         display: block;
     }
-
     a.h5.d-block.mb-2:hover {
         color: #d67054 !important;
     }
-
     .product-card {
         padding: 1rem;
         background-color: #f8f9fa;
-        /* hoặc bg-light của Bootstrap */
+
         border-radius: 10px;
         min-height: 100%;
-        /* Cho tất cả các card cao bằng nhau */
-    }
 
+    }
     .product-price {
         text-align: left;
         padding-left: 0.5rem;
@@ -1030,7 +1069,6 @@
         margin-left: 0;
         /* đảm bảo không bị lệch */
     }
-
     .image-wrapper {
         width: 150px !important;
         height: 150px !important;
