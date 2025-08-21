@@ -35,9 +35,9 @@ class OrderController extends Controller
         // Lọc theo phương thức thanh toán
         if ($request->filled('payment_status')) {
             if ($request->payment_status == 'paid') {
-                $query->where('payment_method', '!=', 'cod');
+                $query->where('payment_status', '!=', 'cod');
             } elseif ($request->payment_status == 'unpaid') {
-                $query->where('payment_method', 'cod');
+                $query->where('payment_status', 'cod');
             }
         }
 

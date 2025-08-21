@@ -32,8 +32,6 @@
                                     toán</option>
                                 <option value="unpaid" {{ request('payment_status') == 'unpaid' ? 'selected' : '' }}>Chưa
                                     thanh toán</option>
-                                <option value="refunded" {{ request('payment_status') == 'refunded' ? 'selected' : '' }}>
-                                    Hoàn tiền</option>
                             </select>
                         </div>
                         <div class="col-md-3">
