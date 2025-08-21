@@ -116,7 +116,6 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::post('/recipients/select', [RecipientController::class, 'select'])->name('recipients.select');
     Route::put('/recipients/{id}', [RecipientController::class, 'update'])->name('clients.recipients.update');
     Route::delete('/recipients/{id}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
-
 });
 
 // ==================== ADMIN ROUTES ====================
@@ -168,7 +167,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/store', [ProductVariantController::class, 'store'])->name('store');
         Route::get('/{product_variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
         Route::put('/{product_variant}', [ProductVariantController::class, 'update'])->name('update');
-        Route::delete('/{product_variant}/destroy', [ProductVariantController::class, 'destroy'])->name('destroy');
+        Route::patch('/{product_variant}/toggle-status', [ProductVariantController::class, 'toggleStatus'])->name('toggleStatus');
         Route::get('/{product_variant}', [ProductVariantController::class, 'show'])->name('show');
     });
     // Order Management

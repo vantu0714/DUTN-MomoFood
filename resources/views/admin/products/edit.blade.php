@@ -339,12 +339,16 @@
                                 <span class="text-muted">Cập nhật lần cuối:</span>
                                 <span class="fw-semibold">{{ $product->updated_at->format('d/m/Y H:i') }}</span>
                             </div>
-
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-muted">Trạng thái:</span>
-                                <span class="badge {{ $product->quantity_in_stock > 0 ? 'bg-success' : 'bg-danger' }}">
-                                    {{ $product->quantity_in_stock > 0 ? 'Còn hàng' : 'Hết hàng' }}
-                                </span>
+                                @if ($product->status == 0)
+                                    <span class="badge bg-secondary">Ẩn</span>
+                                @else
+                                    <span
+                                        class="badge {{ $product->quantity_in_stock > 0 ? 'bg-success' : 'bg-danger' }}">
+                                        {{ $product->quantity_in_stock > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -497,11 +501,22 @@
 
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                                            data-bs-toggle="tooltip" title="Xóa biến thể"
-                                                            onclick="deleteVariant({{ $variant->id }}, '{{ $variant->sku }}')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
+                                                        @if ($variant->status == 1)
+                                                            <!-- Đang hiện thì cho phép Ẩn -->
+                                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                                data-bs-toggle="tooltip" title="Ẩn biến thể"
+                                                                onclick="toggleVariantStatus({{ $variant->id }}, 'hide')">
+                                                                <i class="fas fa-toggle-off"></i>
+                                                            </button>
+                                                        @else
+                                                            <!-- Đang ẩn thì cho phép Hiện -->
+                                                            <button type="button" class="btn btn-sm btn-outline-success"
+                                                                data-bs-toggle="tooltip" title="Hiện biến thể"
+                                                                onclick="toggleVariantStatus({{ $variant->id }}, 'show')">
+                                                                <i class="fas fa-toggle-on"></i>
+                                                            </button>
+                                                        @endif
+
                                                     </div>
                                                 </td>
                                             </tr>
@@ -707,17 +722,24 @@
         }
     });
 
-    function deleteVariant(variantId) {
-        if (!confirm("Bạn có chắc muốn ẩn biến thể này không?")) return;
+    function toggleVariantStatus(variantId, actionType) {
+        let confirmMsg = actionType === "hide" ?
+            "Bạn có chắc muốn ẩn biến thể này không?" :
+            "Bạn có chắc muốn hiện biến thể này không?";
 
-        fetch(`/admin/product-variants/${variantId}/destroy`, {
-                method: "DELETE",
+        if (!confirm(confirmMsg)) return;
+
+        fetch(`/admin/product-variants/${variantId}/toggle-status`, {
+                method: "PATCH",
                 headers: {
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    "Accept": "application/json"
-                }
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    action_type: actionType
+                })
             })
-
             .then(async res => {
                 if (!res.ok) {
                     const text = await res.text();
@@ -726,20 +748,14 @@
                 return res.json();
             })
             .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    alert(data.message);
-                    location.reload();
-                }
+                alert(data.message);
+                location.reload();
             })
             .catch(err => {
-                console.error("❌ Lỗi xoá:", err);
-                alert("Có lỗi xảy ra khi ẩn biến thể!");
+                console.error("❌ Lỗi toggle:", err);
+                alert("Có lỗi xảy ra khi thay đổi trạng thái biến thể!");
             });
     }
-
-
     // sửa sản phẩm 
     document.addEventListener('DOMContentLoaded', function() {
         // ===== Xử lý sản phẩm đơn =====
