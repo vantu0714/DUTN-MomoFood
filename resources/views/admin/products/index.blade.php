@@ -40,7 +40,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-xs fw-bold text-primary text-uppercase mb-1">Tổng sản phẩm</div>
-                                <div class="h5 mb-0">{{ number_format($totalStockQuantity) }}</div>
+                                <div class="h5 mb-0">{{ number_format($totalProductsCount) }}</div>
                             </div>
                         </div>
                     </div>
@@ -321,13 +321,22 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <!-- Nút mở modal -->
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                            <button type="button"
+                                                class="btn btn-sm {{ $item->status == 0 ? 'btn-outline-success' : 'btn-outline-danger' }}"
                                                 data-bs-toggle="modal" data-bs-target="#deleteProductModal"
                                                 data-product-id="{{ $item->id }}"
                                                 data-product-name="{{ $item->product_name }}"
+                                                data-product-status="{{ $item->status }}"
                                                 data-has-variants="{{ $item->variants->count() > 0 ? 'true' : 'false' }}">
-                                                <i class="fas fa-trash"></i>
+
+                                                @if ($item->status == 1)
+                                                    <i class="fas fa-toggle-off"></i> {{-- Đang hiện -> cho phép Ẩn --}}
+                                                @else
+                                                    <i class="fas fa-toggle-on"></i> {{-- Đang ẩn -> cho phép Hiện --}}
+                                                @endif
                                             </button>
+
+
                                         </div>
                                     </td>
                                 </tr>
@@ -382,17 +391,15 @@
                 <div class="modal-footer d-flex justify-content-between">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     <div id="variantOptions" class="d-flex gap-2 flex-wrap">
-                        <!-- Nút ẩn sản phẩm -->
-                        <button type="submit" class="btn btn-warning"
-                            onclick="document.getElementById('deleteActionType').value='hide'">
-                            Ẩn sản phẩm
-                        </button>
+                        <!-- Nút ẩn/hiện sản phẩm -->
+                        <button type="submit" id="toggleProductBtn" class="btn"></button>
                     </div>
                 </div>
             </div>
         </form>
     </div>
 </div>
+
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -402,15 +409,39 @@
                 var productId = button.getAttribute('data-product-id');
                 var productName = button.getAttribute('data-product-name');
                 var hasVariants = button.getAttribute('data-has-variants') === 'true';
+                var productStatus = button.getAttribute('data-product-status'); // 1 = hiện, 0 = ẩn
 
                 // Set form action
                 document.getElementById('deleteProductForm').action = '/admin/products/' + productId;
+
                 // Set message
                 document.getElementById('deleteProductMessage').textContent =
                     'Bạn có chắc chắn muốn thao tác với sản phẩm "' + productName + '" không?';
-                // Ẩn nút "Chỉ xóa biến thể" nếu không có biến thể
-                document.getElementById('deleteVariantsBtn').style.display = hasVariants ? 'inline-block' :
-                    'none';
+
+                var toggleBtn = document.getElementById('toggleProductBtn');
+
+                if (hasVariants) {
+                    // Nếu có biến thể => không thao tác trong modal
+                    toggleBtn.style.display = 'none';
+                    document.getElementById('deleteProductMessage').textContent =
+                        'Sản phẩm "' + productName + '" có biến thể, hãy chỉnh sửa trong trang chỉnh sửa .';
+                } else {
+                    toggleBtn.style.display = 'inline-block';
+
+                    if (productStatus == 1) {
+                        toggleBtn.textContent = "Ẩn sản phẩm";
+                        toggleBtn.className = "btn btn-warning";
+                        toggleBtn.onclick = function() {
+                            document.getElementById('deleteActionType').value = 'hide';
+                        }
+                    } else {
+                        toggleBtn.textContent = "Hiện sản phẩm";
+                        toggleBtn.className = "btn btn-success";
+                        toggleBtn.onclick = function() {
+                            document.getElementById('deleteActionType').value = 'show';
+                        }
+                    }
+                }
             });
         });
     </script>

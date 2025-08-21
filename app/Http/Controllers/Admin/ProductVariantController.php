@@ -309,49 +309,43 @@ class ProductVariantController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function toggleStatus(Request $request, $id)
     {
         $variant = ProductVariant::findOrFail($id);
-
-        // Nếu còn trong giỏ hàng → chặn ẩn
-        if ($variant->cartItems()->exists()) {
-            return response()->json([
-                'error' => 'Không thể ẩn vì biến thể này vẫn còn trong giỏ hàng.'
-            ], 422);
-        }
-
-        // Nếu vẫn còn trong đơn hàng chưa hoàn thành hoặc chưa hủy → chặn ẩn
-        $existsInActiveOrders = $variant->orderDetails()
-            ->whereHas('order', function ($query) {
-                $query->whereNotIn('status', [4, 6]);
-            })
-            ->exists();
-
-        if ($existsInActiveOrders) {
-            return response()->json([
-                'error' => 'Không thể ẩn vì biến thể này vẫn còn trong đơn hàng chưa hoàn thành hoặc hủy.'
-            ], 422);
-        }
-
+        $actionType = $request->input('action_type');
         $product = $variant->product;
 
-        // Cập nhật trạng thái biến thể thành ẩn
-        $variant->update(['status' => 0]);
+        if ($actionType === 'hide') {
+            if ($variant->cartItems()->exists()) {
+                return response()->json(['error' => 'Không thể ẩn vì còn trong giỏ hàng.'], 422);
+            }
 
-        // Giảm tổng số lượng của product (nếu bạn có trường `quantity` ở bảng products)
+            $existsInActiveOrders = $variant->orderDetails()
+                ->whereHas('order', function ($query) {
+                    $query->whereNotIn('status', [4, 6]);
+                })
+                ->exists();
+
+            if ($existsInActiveOrders) {
+                return response()->json(['error' => 'Không thể ẩn vì còn trong đơn hàng chưa hoàn thành.'], 422);
+            }
+
+            $variant->update(['status' => 0]);
+        } elseif ($actionType === 'show') {
+            $variant->update(['status' => 1]);
+        }
+
         if ($product) {
-            $product->quantity_in_stock = $product->variants()
-                ->where('status', 1) // chỉ tính biến thể còn hiển thị
-                ->sum('quantity_in_stock');
+            $product->quantity_in_stock = $product->variants()->where('status', 1)->sum('quantity_in_stock');
             $product->save();
         }
 
-        return response()->json(['message' => 'Đã ẩn biến thể thành công!']);
+        return response()->json([
+            'message' => $actionType === 'hide' ? 'Đã ẩn biến thể thành công!' : 'Đã hiển thị biến thể thành công!'
+        ]);
     }
 
-    /**
-     * Cập nhật trạng thái "còn hàng / hết hàng" cho sản phẩm cha
-     */
+
     protected function updateProductStatus($productId)
     {
         $product = Product::find($productId);
