@@ -353,30 +353,29 @@ class ProductController extends Controller
         return view('products.variants', compact('product'));
     }
     public function show($id)
-{
-    // Lấy sản phẩm kèm quan hệ category, origin và variants (kèm attribute values)
-    $product = Product::with([
-        'category',
-        'origin',
-        'variants.attributeValues.attribute'
-    ])->findOrFail($id);
+    {
+        // Lấy sản phẩm kèm quan hệ category, origin và variants (kèm attribute values)
+        $product = Product::with([
+            'category',
+            'origin',
+            'variants.attributeValues.attribute'
+        ])->findOrFail($id);
 
-    // Lấy tất cả biến thể (kể cả bị ẩn), sắp xếp theo giá
-    $variants = $product->variants()->orderBy('price', 'asc')->get();
+        // Lấy tất cả biến thể (kể cả bị ẩn), sắp xếp theo giá
+        $variants = $product->variants()->orderBy('price', 'asc')->get();
 
-    // Nếu sản phẩm có biến thể => tính tổng tồn kho từ biến thể đang active (status = 1)
-    $totalStock = $variants->isNotEmpty()
-        ? $product->variants()->where('status', 1)->sum('quantity_in_stock')
-        : $product->quantity_in_stock; // Nếu không có biến thể thì lấy stock của sản phẩm đơn
+        // Nếu sản phẩm có biến thể => tính tổng tồn kho từ biến thể đang active (status = 1)
+        $totalStock = $variants->isNotEmpty()
+            ? $product->variants()->where('status', 1)->sum('quantity_in_stock')
+            : $product->quantity_in_stock; // Nếu không có biến thể thì lấy stock của sản phẩm đơn
 
-    // Gắn lại danh sách variants vào product để Blade không query thêm
-    $product->setRelation('variants', $variants);
+        // Gắn lại danh sách variants vào product để Blade không query thêm
+        $product->setRelation('variants', $variants);
 
-    return view('admin.products.show', [
-        'product' => $product,
-        'totalStock' => $totalStock
-    ]);
-}
-
-
+        return view('admin.products.show', [
+            'product' => $product,
+            'totalStock' => $totalStock
+        ]);
+    }
+    
 }

@@ -742,46 +742,65 @@
             confirmButtonText: 'Đồng ý',
             cancelButtonText: 'Hủy'
         }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/admin/product-variants/${variantId}/toggle-status`, {
-                        method: "PATCH",
-                        headers: {
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                "content"),
-                            "Accept": "application/json",
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            action_type: actionType
-                        })
+            if (!result.isConfirmed) return;
+
+            fetch(`/admin/product-variants/${variantId}/toggle-status`, {
+                    method: "PATCH",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            "content"),
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        action_type: actionType
                     })
-                    .then(async res => {
-                        if (!res.ok) {
-                            const text = await res.text();
-                            throw new Error(text);
+                })
+                .then(async res => {
+                    const contentType = res.headers.get('content-type');
+
+                    if (!res.ok) {
+                        let message = 'Có lỗi xảy ra khi thay đổi trạng thái.';
+                        if (contentType && contentType.includes('application/json')) {
+                            const data = await res.json();
+                            message = data.error || data.message || message;
+                        } else {
+                            console.error(await res.text());
                         }
-                        return res.json();
-                    })
-                    .then(data => {
-                        Swal.fire({
-                            title: 'Thành công!',
-                            text: data.message,
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
-                    })
-                    .catch(err => {
+
+                        await Swal.fire({
+                            title: 'Thất bại!',
+                            text: message,
+                            icon: 'error'
+                        });
+                        return Promise.reject(); // Ngắt chain ở đây
+                    }
+
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return; // Ngăn lỗi khi chain bị reject
+                    Swal.fire({
+                        title: 'Thành công!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                })
+                .catch(err => {
+                    if (err) {
                         console.error("❌ Lỗi toggle:", err);
                         Swal.fire({
                             title: 'Lỗi!',
                             text: "Có lỗi xảy ra khi thay đổi trạng thái biến thể!",
                             icon: 'error'
                         });
-                    });
-            }
+                    }
+                });
         });
     }
+
 
     // sửa sản phẩm 
     document.addEventListener('DOMContentLoaded', function() {
@@ -894,7 +913,8 @@
                                 const data = await response.json();
                                 Swal.fire({
                                     title: 'Thất bại!',
-                                    text: data?.message || 'Có lỗi xảy ra',
+                                    text: data?.error || data?.message ||
+                                        'Có lỗi xảy ra',
                                     icon: 'error'
                                 });
                             } else {

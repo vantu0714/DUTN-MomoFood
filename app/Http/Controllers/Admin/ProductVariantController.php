@@ -240,6 +240,31 @@ class ProductVariantController extends Controller
                     ? response()->json(['error' => $msg], 422)
                     : back()->withInput()->with('error', $msg);
             }
+            // Lấy "Vị" và "Size" từ request
+            $mainAttrName = trim($request->input('main_attribute_name'));
+            $subAttrId = $request->input('sub_attribute_id');
+
+            // Kiểm tra biến thể khác (không phải hiện tại) có cùng "Vị" + "Size" trong cùng sản phẩm
+            $exists = ProductVariant::where('product_id', $product->id)
+                ->where('id', '<>', $variant->id) // bỏ qua biến thể đang sửa
+                ->whereHas('values.attribute', function ($q) use ($mainAttrName) {
+                    $q->where('name', 'Vị')
+                        ->whereHas('values', function ($q2) use ($mainAttrName) {
+                            $q2->where('value', $mainAttrName);
+                        });
+                })
+                ->whereHas('values', function ($q) use ($subAttrId) {
+                    $q->where('attribute_value_id', $subAttrId);
+                })
+                ->exists();
+
+            if ($exists) {
+                $msg = 'Biến thể với Vị "' . $mainAttrName . '" và Size đã tồn tại.';
+                return $request->ajax()
+                    ? response()->json(['error' => $msg], 422)
+                    : back()->withInput()->with('error', $msg);
+            }
+
 
             // Tự động tạo SKU nếu chưa có
             if (empty($request->sku)) {
@@ -336,17 +361,21 @@ class ProductVariantController extends Controller
 
         if ($actionType === 'hide') {
             if ($variant->cartItems()->exists()) {
-                return response()->json(['error' => 'Không thể ẩn vì còn trong giỏ hàng.'], 422);
+                return response()->json([
+                    'error' => 'Không thể ẩn vì biến thể này còn trong giỏ hàng.'
+                ], 422);
             }
 
             $existsInActiveOrders = $variant->orderDetails()
                 ->whereHas('order', function ($query) {
-                    $query->whereNotIn('status', [4, 6]);
+                    $query->whereNotIn('status', [4, 6]); // 4, 6 = hoàn tất / hủy
                 })
                 ->exists();
 
             if ($existsInActiveOrders) {
-                return response()->json(['error' => 'Không thể ẩn vì còn trong đơn hàng chưa hoàn thành.'], 422);
+                return response()->json([
+                    'error' => 'Không thể ẩn vì biến thể này còn trong đơn hàng chưa hoàn thành.'
+                ], 422);
             }
 
             $variant->update(['status' => 0]);
@@ -354,13 +383,16 @@ class ProductVariantController extends Controller
             $variant->update(['status' => 1]);
         }
 
+        // Chỉ cập nhật stock khi thành công
         if ($product) {
             $product->quantity_in_stock = $product->variants()->where('status', 1)->sum('quantity_in_stock');
             $product->save();
         }
 
         return response()->json([
-            'message' => $actionType === 'hide' ? 'Đã ẩn biến thể thành công!' : 'Đã hiển thị biến thể thành công!'
+            'message' => $actionType === 'hide'
+                ? 'Đã ẩn biến thể thành công!'
+                : 'Đã hiển thị biến thể thành công!'
         ]);
     }
 
@@ -387,7 +419,6 @@ class ProductVariantController extends Controller
 
         return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
     }
-
 
     public function storeMultiple(Request $request)
     {
@@ -520,9 +551,6 @@ class ProductVariantController extends Controller
             return back()->withInput()->with('error', 'Lỗi khi thêm biến thể: ' . $e->getMessage());
         }
     }
-
-
-
     public function cancel()
     {
         Session::forget('pending_product');
