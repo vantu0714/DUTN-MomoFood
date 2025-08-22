@@ -21,7 +21,6 @@ class ProductSeeder extends Seeder
                 'image' => 'https://via.placeholder.com/300x300?text=Product+' . $i,
                 'description' => 'Mô tả sản phẩm ' . $i,
                 'ingredients' => 'Thành phần sản phẩm ' . $i,
-                'expiration_date' => now()->addMonths(rand(1, 12)),
                 'original_price' => rand(10000, 100000),
                 'discounted_price' => rand(5000, 90000),
                 'status' => 1,

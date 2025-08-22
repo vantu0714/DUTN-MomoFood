@@ -5,17 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'product_code',
         'product_name',
         'image',
         'description',
-        'ingredients',     
+        'ingredients',
         'original_price',
         'discounted_price',
         'status',
@@ -26,7 +27,7 @@ class Product extends Model
         'product_type',
         'origin_id',
     ];
-   
+
 
     public function category(): BelongsTo
     {
@@ -115,7 +116,7 @@ class Product extends Model
     {
         return $this->belongsTo(ProductOrigin::class, 'origin_id');
     }
-  
+
     public function getTotalVariantStockAttribute()
     {
         return $this->variants->sum(function ($v) {
@@ -131,19 +132,37 @@ class Product extends Model
     // app/Models/Product.php
 
     public function scopeAvailable($query)
-{
-    $query->where('status', 1)
-        ->where(function ($q) {
-            $q->where(function ($simple) {
-                $simple->where('product_type', 'simple')
-                    ->where('quantity_in_stock', '>', 0);
-            })->orWhere(function ($variant) {
-                $variant->where('product_type', 'variant')
-                    ->whereHas('variants', function ($q) {
-                        $q->where('quantity_in_stock', '>', 0);
+    {
+        $query->where('status', 1)
+            ->where(function ($q) {
+                $q->where(function ($simple) {
+                    $simple->where('product_type', 'simple')
+                        ->where('quantity_in_stock', '>', 0);
+                })->orWhere(function ($variant) {
+                    $variant->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q) {
+                            $q->where('quantity_in_stock', '>', 0);
+                        });
+                });
+            });
+    }
+    public function scopeActiveInStock($query)
+    {
+        return $query->where(function ($q) {
+            $q->where(function ($q1) {
+                // Sản phẩm đơn giản
+                $q1->where('product_type', 'simple')
+                    ->where('quantity_in_stock', '>', 0)
+                    ->where('status', 1);
+            })->orWhere(function ($q2) {
+                // Sản phẩm có biến thể
+                $q2->where('product_type', 'variant')
+                    ->where('status', 1)
+                    ->whereHas('variants', function ($q3) {
+                        $q3->where('status', 1)
+                            ->where('quantity_in_stock', '>', 0);
                     });
             });
         });
-}
-
+    }
 }
