@@ -347,6 +347,25 @@ class OrderController extends Controller
         return redirect()->route('admin.orders.index')->with('success', 'Đã hủy đơn hàng.');
     }
 
+    public function reject(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        if ($order->status != 1) {
+            return back()->with('error', 'Chỉ có thể không xác nhận đơn hàng ở trạng thái chưa xác nhận.');
+        }
+
+        $order->status = 10; // Không xác nhận đơn hàng
+        $order->reason = $request->reason;
+        $order->save();
+
+        return redirect()->route('admin.orders.index')->with('success', 'Đã không xác nhận đơn hàng.');
+    }
+
     public function approveReturn($id)
     {
         $order = Order::with('orderDetails.product', 'orderDetails.productVariant')->findOrFail($id);

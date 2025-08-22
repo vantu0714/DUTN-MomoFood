@@ -180,6 +180,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/{id}', [OrderController::class, 'update'])->name('update');
         Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
         Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+        Route::put('/{id}/reject', [OrderController::class, 'reject'])->name('reject');
         Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])
             ->name('approve_return');
         Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])
