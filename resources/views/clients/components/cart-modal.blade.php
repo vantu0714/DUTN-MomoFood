@@ -74,37 +74,98 @@
     </div>
 </div>
 
-<script>
-    variants.forEach(variant => {
-        const weightText = variant.weight ?
-            `${variant.weight}g` :
-            (variant.quantity_in_stock ? `Kho: ${variant.quantity_in_stock}` : '---');
+<<script>
+    const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+    const variantOptionsDiv = document.getElementById('variant-options');
+    const productVariantIdInput = document.getElementById('modal-variant-id');
+    const stockInfoEl = document.getElementById('availableStock');
+    const quantityInput = document.getElementById('modal-quantity');
 
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = 'variant';
-        radio.value = variant.id;
-        radio.id = `variant-${variant.id}`;
-        radio.className = 'btn-check';
+    // Khi bấm nút mở modal
+    document.querySelectorAll('.open-cart-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const productId = btn.dataset.productId;
+            const productName = btn.dataset.productName;
+            const productImage = btn.dataset.productImage;
+            const productCategory = btn.dataset.productCategory;
+            const productPrice = parseInt(btn.dataset.productPrice || 0);
+            const productOriginalPrice = parseInt(btn.dataset.productOriginalPrice || 0);
+            const productDesc = btn.dataset.productDescription || '';
+            const variants = JSON.parse(btn.dataset.variants || '[]');
+            const totalStock = parseInt(btn.dataset.totalStock || 0);
 
-        const label = document.createElement('label');
-        label.className = 'btn btn-outline-secondary d-flex align-items-center';
-        label.setAttribute('for', radio.id);
-        label.style = "width: 140px; flex-direction: column; padding: 10px;";
+            // Reset modal
+            document.getElementById('modal-product-id').value = productId;
+            document.getElementById('modal-product-name').textContent = productName;
+            document.getElementById('modal-product-image').src = productImage;
+            document.getElementById('modal-product-category').textContent = productCategory;
+            document.getElementById('modal-product-description').textContent = productDesc;
+            document.getElementById('modal-product-price').textContent = productPrice.toLocaleString();
+            document.getElementById('modal-product-original-price').textContent = 
+                (productOriginalPrice > productPrice) ? productOriginalPrice.toLocaleString() + " VND" : "";
+            quantityInput.value = 1;
+            quantityInput.removeAttribute("max");
+            variantOptionsDiv.innerHTML = "";
+            stockInfoEl.textContent = `Sản phẩm có sẵn: ${totalStock}`;
 
-        const img = document.createElement('img');
-        img.src = `/storage/${variant.image}`;
-        img.style = "width: 60px; height: 60px; object-fit: cover; border-radius: 8px;";
-        img.alt = variant.name;
+            // Render biến thể
+            if (variants.length > 0) {
+                variants.forEach(variant => {
+                    const stock = variant.quantity_in_stock ?? 0;
+                    const disabled = (variant.status == 0 || stock <= 0);
 
-        const text = document.createElement('div');
-        text.className = 'text-center mt-2 text-dark fw-medium';
-        text.innerText = `${variant.name} - ${weightText}`;
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'variant';
+                    radio.value = variant.id;
+                    radio.id = `variant-${variant.id}`;
+                    radio.className = 'btn-check';
+                    if (disabled) radio.disabled = true;
 
-        label.appendChild(img);
-        label.appendChild(text);
+                    const label = document.createElement('label');
+                    label.className = `btn btn-outline-secondary d-flex align-items-center ${disabled ? 'opacity-50' : ''}`;
+                    label.setAttribute('for', radio.id);
+                    label.style = "width: 150px; flex-direction: column; padding: 10px;";
 
-        variantOptionsDiv.appendChild(radio);
-        variantOptionsDiv.appendChild(label);
+                    const img = document.createElement('img');
+                    img.src = `/storage/${variant.image || productImage}`;
+                    img.style = "width: 60px; height: 60px; object-fit: cover; border-radius: 8px;";
+                    img.alt = variant.name || '';
+
+                    const text = document.createElement('div');
+                    text.className = 'text-center mt-2 text-dark fw-medium';
+                    text.innerText = `${variant.name || ''} - ${variant.weight || ''}`;
+
+                    if (disabled) {
+                        const soldOut = document.createElement('small');
+                        soldOut.className = "text-danger fw-bold mt-1";
+                        soldOut.innerText = "Hết hàng";
+                        label.appendChild(soldOut);
+                    }
+
+                    label.appendChild(img);
+                    label.appendChild(text);
+
+                    variantOptionsDiv.appendChild(radio);
+                    variantOptionsDiv.appendChild(label);
+
+                    // Gán sự kiện khi chọn biến thể
+                    if (!disabled) {
+                        radio.addEventListener('change', () => {
+                            productVariantIdInput.value = variant.id;
+                            document.getElementById('modal-product-price').textContent =
+                                (variant.discounted_price || variant.price).toLocaleString();
+                            document.getElementById('modal-product-original-price').textContent =
+                                (variant.price > variant.discounted_price) ? variant.price.toLocaleString() + " VND" : "";
+                            stockInfoEl.textContent = `Sản phẩm có sẵn: ${stock}`;
+                            quantityInput.max = stock;
+                        });
+                    }
+                });
+            }
+
+            modal.show();
+        });
     });
 </script>
+
