@@ -559,11 +559,15 @@
                             id="editMainAttributeName" required>
                         <input type="hidden" name="main_attribute_id" id="editMainAttributeId">
                     </div>
-                    <!-- Chọn Size -->
                     @php
-                        $currentSubAttributeId = $variant->sub_attribute_id ?? null;
                         $sizeAttr = $attributes->firstWhere('name', 'Khối lượng');
+                        $currentSubAttributeId = optional(
+                            optional($variant)->values?->first(
+                                fn($v) => $v->attribute && $v->attribute->name === 'Khối lượng',
+                            ),
+                        )->id;
                     @endphp
+
 
                     <div class="mb-3">
                         <label for="editSubAttributeId" class="form-label">Khối lượng</label>
@@ -580,6 +584,7 @@
                             @endif
                         </select>
                     </div>
+
                     <div class="mb-3">
                         <label for="editPrice" class="form-label">Giá (VND)</label>
                         <input type="number" class="form-control" name="price" id="editPrice" min="0"
@@ -727,35 +732,57 @@
             "Bạn có chắc muốn ẩn biến thể này không?" :
             "Bạn có chắc muốn hiện biến thể này không?";
 
-        if (!confirm(confirmMsg)) return;
-
-        fetch(`/admin/product-variants/${variantId}/toggle-status`, {
-                method: "PATCH",
-                headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    action_type: actionType
-                })
-            })
-            .then(async res => {
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text);
-                }
-                return res.json();
-            })
-            .then(data => {
-                alert(data.message);
-                location.reload();
-            })
-            .catch(err => {
-                console.error("❌ Lỗi toggle:", err);
-                alert("Có lỗi xảy ra khi thay đổi trạng thái biến thể!");
-            });
+        Swal.fire({
+            title: 'Xác nhận',
+            text: confirmMsg,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/product-variants/${variantId}/toggle-status`, {
+                        method: "PATCH",
+                        headers: {
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                "content"),
+                            "Accept": "application/json",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            action_type: actionType
+                        })
+                    })
+                    .then(async res => {
+                        if (!res.ok) {
+                            const text = await res.text();
+                            throw new Error(text);
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        Swal.fire({
+                            title: 'Thành công!',
+                            text: data.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    })
+                    .catch(err => {
+                        console.error("❌ Lỗi toggle:", err);
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: "Có lỗi xảy ra khi thay đổi trạng thái biến thể!",
+                            icon: 'error'
+                        });
+                    });
+            }
+        });
     }
+
     // sửa sản phẩm 
     document.addEventListener('DOMContentLoaded', function() {
         // ===== Xử lý sản phẩm đơn =====
@@ -865,23 +892,42 @@
                         if (!response.ok) {
                             if (contentType && contentType.includes('application/json')) {
                                 const data = await response.json();
-                                alert('Cập nhật thất bại: ' + (data?.message ||
-                                    'Có lỗi xảy ra'));
+                                Swal.fire({
+                                    title: 'Thất bại!',
+                                    text: data?.message || 'Có lỗi xảy ra',
+                                    icon: 'error'
+                                });
                             } else {
                                 console.error(await response.text());
-                                alert('Cập nhật thất bại (xem console)');
+                                Swal.fire({
+                                    title: 'Thất bại!',
+                                    text: 'Cập nhật thất bại (xem console)',
+                                    icon: 'error'
+                                });
                             }
                             return;
                         }
 
-                        alert('Cập nhật thành công!');
-                        bootstrap.Modal.getInstance(document.getElementById('editVariantModal'))
-                            ?.hide();
-                        setTimeout(() => location.reload(), 500);
+                        Swal.fire({
+                            title: 'Thành công!',
+                            text: 'Cập nhật thành công!',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            bootstrap.Modal.getInstance(document.getElementById(
+                                'editVariantModal'))?.hide();
+                            setTimeout(() => location.reload(), 500);
+                        });
+
                     })
                     .catch(error => {
                         console.error('❌ Fetch Error:', error);
-                        alert('Đã xảy ra lỗi không xác định khi cập nhật.');
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: 'Đã xảy ra lỗi không xác định khi cập nhật.',
+                            icon: 'error'
+                        });
                     });
 
             });
@@ -890,10 +936,8 @@
             document.getElementById('editMainAttributeName')?.addEventListener('input', generateSku);
             document.getElementById('editSubAttributeId')?.addEventListener('change', generateSku);
         }
+
     });
-
-
-
     // Thêm event listener cho cả hai input
     document.getElementById('original_price').addEventListener('input', calculateDiscountedPrice);
     document.getElementById('discount_percent').addEventListener('input', calculateDiscountedPrice);

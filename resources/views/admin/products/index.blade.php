@@ -329,10 +329,10 @@
                                                 data-product-status="{{ $item->status }}"
                                                 data-has-variants="{{ $item->variants->count() > 0 ? 'true' : 'false' }}">
 
-                                                @if ($item->status == 1)
-                                                    <i class="fas fa-toggle-off"></i> {{-- Đang hiện -> cho phép Ẩn --}}
-                                                @else
+                                                @if ($item->status == 0)
                                                     <i class="fas fa-toggle-on"></i> {{-- Đang ẩn -> cho phép Hiện --}}
+                                                @else
+                                                    <i class="fas fa-toggle-off"></i> {{-- Đang hiển thị (còn hàng hoặc hết hàng) -> cho phép Ẩn --}}
                                                 @endif
                                             </button>
 
@@ -372,27 +372,49 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-<!-- Modal xác nhận xóa -->
+<!-- Modal xác nhận hành động sản phẩm -->
 <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <form method="POST" id="deleteProductForm">
             @csrf
             @method('DELETE')
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Xác nhận hành động với sản phẩm</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="modal-icon me-3">
+                            <i class="fas fa-exclamation-triangle text-warning fs-2"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark mb-1">Xác nhận hành động</h5>
+                            <p class="text-muted small mb-0">Vui lòng xác nhận thao tác với sản phẩm</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white bg-light rounded-circle p-2 ms-3"
+                        data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
-                <div class="modal-body">
-                    <p id="deleteProductMessage"></p>
+
+                <div class="modal-body pt-3">
+                    <div class="alert alert-light border-start border-4 border-warning bg-warning-subtle">
+                        <p id="deleteProductMessage" class="mb-0 text-dark fw-medium"></p>
+                    </div>
                     <input type="hidden" name="action_type" id="deleteActionType" value="">
                 </div>
-                <div class="modal-footer d-flex justify-content-between">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <div id="variantOptions" class="d-flex gap-2 flex-wrap">
-                        <!-- Nút ẩn/hiện sản phẩm -->
-                        <button type="submit" id="toggleProductBtn" class="btn"></button>
+
+                <div class="modal-footer border-0 pt-0">
+                    <div class="d-flex justify-content-between w-100 gap-3">
+                        <button type="button" class="btn btn-light btn-lg px-4" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>
+                            Hủy bỏ
+                        </button>
+
+                        <div id="variantOptions" class="d-flex gap-2 flex-wrap">
+                            <!-- Nút ẩn/hiện sản phẩm -->
+                            <button type="submit" id="toggleProductBtn" class="btn btn-lg px-4">
+                                <i class="fas fa-check me-2"></i>
+                                <span id="toggleProductText">Xác nhận</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -400,6 +422,115 @@
     </div>
 </div>
 
+<style>
+    /* Custom Modal Styles */
+    .modal-content {
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+    }
+
+    .modal-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 193, 7, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-close {
+        transition: all 0.3s ease;
+    }
+
+    .btn-close:hover {
+        transform: scale(1.1);
+        background-color: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .modal-body {
+        padding: 0 1.5rem 1rem;
+    }
+
+    .alert {
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem 1.5rem;
+        background-color: #f8f9fa;
+    }
+
+    .btn-lg {
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        min-width: 120px;
+    }
+
+    .btn-light:hover {
+        background-color: #e2e6ea;
+        border-color: #dae0e5;
+        transform: translateY(-1px);
+    }
+
+    #toggleProductBtn {
+        transition: all 0.3s ease;
+    }
+
+    #toggleProductBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Variant cho nút ẩn */
+    #toggleProductBtn.btn-warning {
+        background: linear-gradient(45deg, #fb3f3f, #ef2b2b);
+        border: none;
+        color: white;
+    }
+
+    #toggleProductBtn.btn-warning:hover {
+        background: linear-gradient(45deg, #ff9800, #f57c00);
+    }
+
+    /* Variant cho nút hiện */
+    #toggleProductBtn.btn-success {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        border: none;
+        color: white;
+    }
+
+    #toggleProductBtn.btn-success:hover {
+        background: linear-gradient(45deg, #20c997, #17a2b8);
+    }
+
+    /* Variant cho nút xóa */
+    #toggleProductBtn.btn-danger {
+        background: linear-gradient(45deg, #dc3545, #c82333);
+        border: none;
+        color: white;
+    }
+
+    #toggleProductBtn.btn-danger:hover {
+        background: linear-gradient(45deg, #c82333, #bd2130);
+    }
+
+    /* Animation cho modal */
+    .modal.fade .modal-dialog {
+        transition: transform 0.4s ease-out;
+        transform: scale(0.8);
+    }
+    .modal.show .modal-dialog {
+        transform: scale(1);
+    }
+</style>
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -428,13 +559,13 @@
                 } else {
                     toggleBtn.style.display = 'inline-block';
 
-                    if (productStatus == 1) {
+                    if (productStatus != 0) { // 1 hoặc 2 = đang hiển thị
                         toggleBtn.textContent = "Ẩn sản phẩm";
                         toggleBtn.className = "btn btn-warning";
                         toggleBtn.onclick = function() {
                             document.getElementById('deleteActionType').value = 'hide';
                         }
-                    } else {
+                    } else { // 0 = đang ẩn
                         toggleBtn.textContent = "Hiện sản phẩm";
                         toggleBtn.className = "btn btn-success";
                         toggleBtn.onclick = function() {
