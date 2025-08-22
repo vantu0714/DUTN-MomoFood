@@ -78,25 +78,29 @@ class ProductVariantController extends Controller
     {
         $attributeValues = $product_variant->attributeValues()->with('attribute')->get();
 
-        $mainAttr = $attributeValues->firstWhere('attribute.name', 'Vị');
-        $subAttr = $attributeValues->firstWhere('attribute.name', 'Size');
+        // Lấy 'Vị' (main)
+        $mainAttr = $attributeValues->first(fn($av) => $av->attribute->name === 'Vị');
+
+        // Lấy 'Size' (sub)
+        $subAttr = $attributeValues->first(fn($av) => $av->attribute->name === 'Khối lượng' || $av->attribute->name === 'Size');
 
         return response()->json([
             'sku' => $product_variant->sku,
             'price' => (int) $product_variant->price,
             'quantity_in_stock' => $product_variant->quantity_in_stock,
             'image_url' => $product_variant->image ? asset('storage/' . $product_variant->image) : null,
-            'product_code' => $product_variant->product->code, // 
-            'main_attribute' => [
-                'id' => $mainAttr?->id,
-                'name' => $mainAttr?->value,
-            ],
-            'sub_attribute' => [
-                'id' => $subAttr?->id,
-                'name' => $subAttr?->value,
-            ]
+            'product_code' => $product_variant->product->code,
+            'main_attribute' => $mainAttr ? [
+                'id' => $mainAttr->id,
+                'name' => $mainAttr->value,
+            ] : null,
+            'sub_attribute' => $subAttr ? [
+                'id' => $subAttr->id,
+                'name' => $subAttr->value,
+            ] : null,
         ]);
     }
+
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -225,27 +229,56 @@ class ProductVariantController extends Controller
         DB::beginTransaction();
 
         try {
-            $variant = ProductVariant::findOrFail($id);
+            // Lấy biến thể kèm values + attribute để xử lý size/flavor
+            $variant = ProductVariant::with('values.attribute')->findOrFail($id);
             $product = Product::findOrFail($variant->product_id);
 
+            // Check giá không thấp hơn giá gốc
             if ($request->price < $product->original_price) {
                 $msg = 'Giá biến thể không được thấp hơn giá gốc (' . number_format($product->original_price) . '₫)';
                 return $request->ajax()
                     ? response()->json(['error' => $msg], 422)
                     : back()->withInput()->with('error', $msg);
             }
+            // Lấy "Vị" và "Size" từ request
+            $mainAttrName = trim($request->input('main_attribute_name'));
+            $subAttrId = $request->input('sub_attribute_id');
+
+            // Kiểm tra biến thể khác (không phải hiện tại) có cùng "Vị" + "Size" trong cùng sản phẩm
+            $exists = ProductVariant::where('product_id', $product->id)
+                ->where('id', '<>', $variant->id) // bỏ qua biến thể đang sửa
+                ->whereHas('values.attribute', function ($q) use ($mainAttrName) {
+                    $q->where('name', 'Vị')
+                        ->whereHas('values', function ($q2) use ($mainAttrName) {
+                            $q2->where('value', $mainAttrName);
+                        });
+                })
+                ->whereHas('values', function ($q) use ($subAttrId) {
+                    $q->where('attribute_value_id', $subAttrId);
+                })
+                ->exists();
+
+            if ($exists) {
+                $msg = 'Biến thể với Vị "' . $mainAttrName . '" và Size đã tồn tại.';
+                return $request->ajax()
+                    ? response()->json(['error' => $msg], 422)
+                    : back()->withInput()->with('error', $msg);
+            }
+
+
+            // Tự động tạo SKU nếu chưa có
             if (empty($request->sku)) {
                 $mainAttrName = trim($request->input('main_attribute_name'));
                 $sizeValue = AttributeValue::find($request->sub_attribute_id)?->value ?? '';
-
                 $baseCode = $product->code;
                 $slugify = fn($str) => strtoupper(preg_replace('/[^A-Za-z0-9]/', '-', $str));
 
                 $request->merge([
-                    'sku' => $baseCode . ($mainAttrName ? '-' . $slugify($mainAttrName) : '') . ($sizeValue ? '-' . $slugify($sizeValue) : '')
+                    'sku' => $baseCode
+                        . ($mainAttrName ? '-' . $slugify($mainAttrName) : '')
+                        . ($sizeValue ? '-' . $slugify($sizeValue) : '')
                 ]);
             }
-
 
             // Xử lý ảnh
             $imagePath = $variant->image;
@@ -256,19 +289,29 @@ class ProductVariantController extends Controller
                 $imagePath = $request->file('image')->store('variants', 'public');
             }
 
-            // Cập nhật variant
-            $variant->update([
+            // Cập nhật thông tin cơ bản
+            $updateData = [
                 'price' => $request->price,
                 'quantity_in_stock' => $request->quantity_in_stock,
                 'sku' => $request->sku,
                 'image' => $imagePath,
-                'status' => $request->status ?? 1,
-            ]);
+            ];
 
-            // Xóa thuộc tính cũ
+            if ($variant->status != 0) {
+                $updateData['status'] = $request->status ?? 1;
+            }
+
+            $variant->update($updateData);
+            // Lấy Size cũ trước khi xóa
+            $variant->load('values.attribute');
+            $oldSizeAttrId = $variant->values
+                ->first(fn($v) => $v->attribute->name === 'Khối lượng')
+                ?->id;
+
+            // Xóa tất cả attribute cũ
             ProductVariantValue::where('product_variant_id', $variant->id)->delete();
 
-            // Xử lý "Vị" (main_attribute)
+            // Xử lý "Vị"
             $mainAttrName = trim($request->input('main_attribute_name'));
             if ($mainAttrName) {
                 $mainAttr = Attribute::firstOrCreate(['name' => 'Vị']);
@@ -284,11 +327,13 @@ class ProductVariantController extends Controller
                 ]);
             }
 
-            // Xử lý "Size" (sub_attribute)
-            if ($request->filled('sub_attribute_id')) {
+            // Xử lý "Size/Khối lượng"
+            $sizeAttrId = $request->filled('sub_attribute_id') ? $request->sub_attribute_id : $oldSizeAttrId;
+
+            if ($sizeAttrId) {
                 ProductVariantValue::create([
                     'product_variant_id' => $variant->id,
-                    'attribute_value_id' => $request->sub_attribute_id,
+                    'attribute_value_id' => $sizeAttrId,
                     'price_adjustment' => 0,
                 ]);
             }
@@ -308,7 +353,6 @@ class ProductVariantController extends Controller
                 : back()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
-
     public function toggleStatus(Request $request, $id)
     {
         $variant = ProductVariant::findOrFail($id);
@@ -317,17 +361,21 @@ class ProductVariantController extends Controller
 
         if ($actionType === 'hide') {
             if ($variant->cartItems()->exists()) {
-                return response()->json(['error' => 'Không thể ẩn vì còn trong giỏ hàng.'], 422);
+                return response()->json([
+                    'error' => 'Không thể ẩn vì biến thể này còn trong giỏ hàng.'
+                ], 422);
             }
 
             $existsInActiveOrders = $variant->orderDetails()
                 ->whereHas('order', function ($query) {
-                    $query->whereNotIn('status', [4, 6]);
+                    $query->whereNotIn('status', [4, 6]); // 4, 6 = hoàn tất / hủy
                 })
                 ->exists();
 
             if ($existsInActiveOrders) {
-                return response()->json(['error' => 'Không thể ẩn vì còn trong đơn hàng chưa hoàn thành.'], 422);
+                return response()->json([
+                    'error' => 'Không thể ẩn vì biến thể này còn trong đơn hàng chưa hoàn thành.'
+                ], 422);
             }
 
             $variant->update(['status' => 0]);
@@ -335,13 +383,16 @@ class ProductVariantController extends Controller
             $variant->update(['status' => 1]);
         }
 
+        // Chỉ cập nhật stock khi thành công
         if ($product) {
             $product->quantity_in_stock = $product->variants()->where('status', 1)->sum('quantity_in_stock');
             $product->save();
         }
 
         return response()->json([
-            'message' => $actionType === 'hide' ? 'Đã ẩn biến thể thành công!' : 'Đã hiển thị biến thể thành công!'
+            'message' => $actionType === 'hide'
+                ? 'Đã ẩn biến thể thành công!'
+                : 'Đã hiển thị biến thể thành công!'
         ]);
     }
 
@@ -368,7 +419,6 @@ class ProductVariantController extends Controller
 
         return view('admin.product_variants.create-multiple', compact('products', 'sizeValues'));
     }
-
 
     public function storeMultiple(Request $request)
     {
@@ -501,9 +551,6 @@ class ProductVariantController extends Controller
             return back()->withInput()->with('error', 'Lỗi khi thêm biến thể: ' . $e->getMessage());
         }
     }
-
-
-
     public function cancel()
     {
         Session::forget('pending_product');

@@ -180,4 +180,14 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class)
             ->with('attributeValues.attribute');
     }
+    public function recalcStockAndStatus()
+    {
+        // chỉ dùng cho ẩn/hiện biến thể
+        $this->quantity_in_stock = $this->variants()
+            ->where('status', 1)
+            ->sum('quantity_in_stock');
+
+        $this->status = $this->quantity_in_stock > 0 ? 1 : 0;
+        $this->save();
+    }
 }
