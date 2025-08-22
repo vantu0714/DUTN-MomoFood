@@ -20,6 +20,13 @@ class ProductVariantValue extends Model
     }
     public function attribute()
     {
-        return $this->attributeValue->attribute ?? null;
+        return $this->hasOneThrough(
+            Attribute::class,
+            AttributeValue::class,
+            'id',             // attribute_values.id
+            'id',             // attributes.id
+            'attribute_value_id', // product_variant_values.attribute_value_id
+            'attribute_id'    // attribute_values.attribute_id
+        );
     }
 }
