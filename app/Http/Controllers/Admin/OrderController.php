@@ -35,9 +35,9 @@ class OrderController extends Controller
         // Lọc theo phương thức thanh toán
         if ($request->filled('payment_status')) {
             if ($request->payment_status == 'paid') {
-                $query->where('payment_method', '!=', 'cod');
+                $query->where('payment_status', '!=', 'cod');
             } elseif ($request->payment_status == 'unpaid') {
-                $query->where('payment_method', 'cod');
+                $query->where('payment_status', 'cod');
             }
         }
 
@@ -349,7 +349,7 @@ class OrderController extends Controller
 
     public function approveReturn($id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::with('orderDetails.product', 'orderDetails.productVariant')->findOrFail($id);
 
         // Kiểm tra trạng thái hiện tại phải là "Chờ xử lý hoàn hàng" (7)
         if ($order->status != 7) {
@@ -364,6 +364,16 @@ class OrderController extends Controller
                 'return_approved' => true,
                 'return_processed_at' => now(),
             ]);
+
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
+            }
 
             DB::commit();
             return back()->with('success', 'Đã chấp nhận yêu cầu hoàn hàng và cập nhật trạng thái hoàn tiền.');
