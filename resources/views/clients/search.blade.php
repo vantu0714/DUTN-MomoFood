@@ -397,6 +397,7 @@
             flex: 0 0 auto;
             width: 180px;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .variant-card:hover {
@@ -410,9 +411,33 @@
         }
 
         .variant-card img {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             object-fit: cover;
+        }
+
+        .variant-card.disabled-variant {
+            opacity: 0.6;
+            cursor: not-allowed !important;
+            background-color: #f8f9fa;
+            pointer-events: none;
+        }
+
+        .stock-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .out-of-stock {
+            color: #dc3545;
+            font-weight: bold;
         }
 
         input[type="number"]::-webkit-outer-spin-button,
@@ -437,33 +462,15 @@
             color: white !important;
         }
 
-        .variant-card.disabled-variant {
-            opacity: 0.6;
-            cursor: not-allowed !important;
-            background-color: #f8f9fa;
-        }
-
-        .stock-badge {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: #dc3545;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        .quantity-info {
-            font-size: 0.8rem;
-            color: #6c757d;
-            margin-top: 4px;
-        }
-
-        .out-of-stock {
-            color: #dc3545;
-            font-weight: bold;
+        .tabular-numbers,
+        .tabular-numbers span,
+        .tabular-numbers del {
+            font-family: 'Roboto', sans-serif !important;
+            font-variant-numeric: tabular-nums !important;
+            font-size: 1.5rem !important;
+            line-height: 1.2 !important;
+            vertical-align: middle !important;
+            display: inline-block !important;
         }
     </style>
 
@@ -489,9 +496,9 @@
             document.getElementById('increase-qty').addEventListener('click', () => {
                 const max = parseInt(quantityInput.max) || 0;
                 let current = parseInt(quantityInput.value);
-                if (current < max) quantityInput.value = current + 1;
-
-                if (current >= max) {
+                if (current < max) {
+                    quantityInput.value = current + 1;
+                } else {
                     Toastify({
                         text: "Bạn đã vượt quá số lượng cho phép!",
                         duration: 3000,
@@ -550,14 +557,27 @@
                     if (variants.length > 0) {
                         variantSection.style.display = 'block';
 
-                        // Tìm biến thể đầu tiên còn hàng
-                        let firstAvailableVariant = null;
-                        for (const variant of variants) {
-                            if (variant.quantity > 0 || variant.quantity_in_stock > 0) {
-                                firstAvailableVariant = variant;
-                                break;
+                        // Tính giá min/max để hiển thị khoảng giá
+                        const availableVariants = variants.filter(v => (v.quantity > 0 || v
+                            .quantity_in_stock > 0) && v.status !== 0);
+                        if (availableVariants.length > 0) {
+                            const prices = availableVariants.map(v => v.discounted_price || v
+                            .price);
+                            const minPrice = Math.min(...prices);
+                            const maxPrice = Math.max(...prices);
+
+                            if (minPrice === maxPrice) {
+                                productPriceEl.textContent = formatPrice(minPrice);
+                            } else {
+                                productPriceEl.textContent = formatPrice(minPrice) + ' - ' +
+                                    formatPrice(maxPrice);
                             }
                         }
+
+                        // Hiển thị thông báo chọn biến thể
+                        stockQuantityEl.textContent = '';
+                        stockInfoEl.innerHTML =
+                            '<span class="text-warning">Vui lòng chọn biến thể</span>';
 
                         variants.forEach(variant => {
                             const imageUrl = variant.image ? '{{ asset('storage/') }}/' +
@@ -570,51 +590,47 @@
                             const variantPrice = variant.discounted_price || variant.price;
                             const variantOriginal = variant.price;
                             const stock = variant.quantity_in_stock || variant.quantity ||
-                                0;
-                            const isAvailable = stock > 0;
-                            const isSelected = firstAvailableVariant && variant.id ===
-                                firstAvailableVariant.id;
+                            0;
+                            const isAvailable = stock > 0 && variant.status !== 0;
 
                             const html = `
-                            <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center position-relative
-                                ${isSelected ? 'border-primary shadow' : ''}
-                                ${!isAvailable ? 'disabled-variant' : ''}"
-                                style="cursor: ${isAvailable ? 'pointer' : 'not-allowed'}; transition: 0.3s;"
-                                data-variant-id="${variant.id}"
-                                data-variant-price="${variantPrice}"
-                                data-variant-original="${variantOriginal}"
-                                data-variant-stock="${stock}"
-                                data-variant-weight="${weightText}"
-                                data-variant-image="${imageUrl}">
+                        <div class="variant-card border rounded p-2 mb-2 shadow-sm d-flex align-items-center position-relative
+                            ${!isAvailable ? 'disabled-variant' : ''}"
+                            style="cursor: ${isAvailable ? 'pointer' : 'not-allowed'}; transition: 0.3s;"
+                            data-variant-id="${variant.id}"
+                            data-variant-price="${variantPrice}"
+                            data-variant-original="${variantOriginal}"
+                            data-variant-stock="${stock}"
+                            data-variant-weight="${weightText}"
+                            data-variant-image="${imageUrl}">
 
-                                ${!isAvailable ? '<span class="stock-badge">Hết hàng</span>' : ''}
+                            ${!isAvailable ? '<span class="stock-badge">Hết hàng</span>' : ''}
 
-                                <img src="${imageUrl}" alt="variant-image"
-                                    class="rounded me-3"
-                                    style="width: 60px; height: 60px; object-fit: cover; opacity: ${isAvailable ? '1' : '0.6'};"
-                                    onerror="this.src='{{ asset('clients/img/default.jpg') }}';">
-                                <div>
-                                    <div class="fw-semibold text-dark" style="opacity: ${isAvailable ? '1' : '0.6'};">${flavorText} ${weightText ? ' - ' + weightText : ''}</div>
-                                    <div class="quantity-info ${!isAvailable ? 'out-of-stock' : ''}">
-                                        ${isAvailable ? `Còn ${stock} sản phẩm` : 'Hết hàng'}
-                                    </div>
+                            <img src="${imageUrl}" alt="variant-image"
+                                class="rounded me-3"
+                                style="width: 60px; height: 60px; object-fit: cover; opacity: ${isAvailable ? '1' : '0.6'};"
+                                onerror="this.src='{{ asset('clients/img/default.jpg') }}';">
+                            <div>
+                                <div class="fw-semibold text-dark" style="opacity: ${isAvailable ? '1' : '0.6'};">
+                                    ${flavorText} ${weightText ? ' - ' + weightText : ''}
                                 </div>
-                            </div>`;
+                            </div>
+                        </div>`;
                             variantOptionsEl.insertAdjacentHTML('beforeend', html);
                         });
 
                         // Gán sự kiện click cho biến thể còn hàng
                         variantOptionsEl.querySelectorAll('.variant-card').forEach(card => {
-                            const isAvailable = parseInt(card.dataset.variantStock) > 0;
+                            const isAvailable = parseInt(card.dataset.variantStock) > 0 && !
+                                card.classList.contains('disabled-variant');
 
                             if (isAvailable) {
                                 card.addEventListener('click', () => {
                                     variantOptionsEl.querySelectorAll(
-                                            '.variant-card')
-                                        .forEach(c => {
-                                            c.classList.remove('border-primary',
-                                                'shadow');
-                                        });
+                                        '.variant-card').forEach(c => {
+                                        c.classList.remove('border-primary',
+                                            'shadow');
+                                    });
                                     card.classList.add('border-primary', 'shadow');
 
                                     const id = card.dataset.variantId;
@@ -639,6 +655,8 @@
                                     // Cập nhật số lượng tối đa
                                     quantityInput.max = stock;
                                     stockQuantityEl.textContent = stock;
+                                    stockInfoEl.innerHTML =
+                                        `<span id="stock-quantity">${stock}</span> sản phẩm có sẵn`;
 
                                     // Reset quantity input if it exceeds new max
                                     if (parseInt(quantityInput.value) > stock) {
@@ -648,14 +666,7 @@
                             }
                         });
 
-                        // Tự động chọn biến thể đầu tiên còn hàng
-                        if (firstAvailableVariant) {
-                            const firstCard = variantOptionsEl.querySelector(
-                                `[data-variant-id="${firstAvailableVariant.id}"]`);
-                            if (firstCard) {
-                                firstCard.click();
-                            }
-                        }
+                        // KHÔNG tự động chọn biến thể - để người dùng chọn
                     } else {
                         variantSection.style.display = 'none';
                     }
@@ -666,9 +677,40 @@
 
             // Validate chọn biến thể trước khi thêm giỏ hàng
             document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
-                if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
+                const hasVariants = variantOptionsEl.innerHTML.trim() !== '';
+                const selectedVariant = productVariantIdInput.value;
+
+                if (hasVariants && !selectedVariant) {
                     e.preventDefault();
-                    alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+
+                    // Hiển thị thông báo bằng Toastify nếu có, hoặc alert
+                    if (typeof Toastify !== 'undefined') {
+                        Toastify({
+                            text: "⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng",
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "#f44336",
+                            stopOnFocus: true
+                        }).showToast();
+                    } else {
+                        alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+                    }
+
+                    // Làm nổi bật phần chọn biến thể
+                    variantSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                    variantSection.style.border = '2px solid #f44336';
+                    variantSection.style.borderRadius = '8px';
+                    variantSection.style.padding = '10px';
+
+                    setTimeout(() => {
+                        variantSection.style.border = '';
+                        variantSection.style.borderRadius = '';
+                        variantSection.style.padding = '';
+                    }, 3000);
                 }
             });
 
