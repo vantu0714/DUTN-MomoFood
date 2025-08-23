@@ -46,13 +46,19 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Loại giảm giá</label>
                         <select class="form-select" disabled>
-                            <option value="fixed" {{ $promotion->discount_type == 'fixed' ? 'selected' : '' }}>Giảm theo số
-                                tiền</option>
-                            <option value="percent" {{ $promotion->discount_type == 'percent' ? 'selected' : '' }}>Giảm theo
-                                phần trăm</option>
+                            <option value="fixed" {{ $promotion->discount_type == 'fixed' ? 'selected' : '' }}>
+                                Giảm theo số tiền
+                            </option>
+                            <option value="percent" {{ $promotion->discount_type == 'percent' ? 'selected' : '' }}>
+                                Giảm theo phần trăm
+                            </option>
                         </select>
-                        <input type="hidden" name="discount_type" value="{{ $promotion->discount_type }}">
+
+                        {{-- input hidden để giữ giá trị và cho JS đọc --}}
+                        <input type="hidden" id="discount_type" name="discount_type"
+                            value="{{ $promotion->discount_type }}">
                     </div>
+
 
                     {{-- Giá trị giảm --}}
                     <div class="mb-3">
@@ -65,6 +71,16 @@
                         @enderror
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tổng giá trị đơn hàng tối thiểu</label>
+                        <input type="number" step="1000" min="1000" name="min_total_spent"
+                            class="form-control @error('min_total_spent') is-invalid @enderror"
+                            value="{{ old('min_total_spent', $promotion->min_total_spent) }}">
+                        @error('min_total_spent')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     {{-- Giảm tối đa (chỉ áp dụng cho phần trăm) --}}
                     <div class="mb-3" id="max_discount_container"
                         style="{{ old('discount_type', $promotion->discount_type) === 'percent' ? '' : 'display: none;' }}">
@@ -72,18 +88,8 @@
                         <input type="number" step="1" name="max_discount_value"
                             class="form-control @error('max_discount_value') is-invalid @enderror"
                             value="{{ old('max_discount_value', $promotion->max_discount_value) }}">
-                        <small class="text-danger client-error d-none"></small>
+                        {{-- <small class="text-danger client-error d-none"></small> --}}
                         @error('max_discount_value')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Tổng giá trị đơn hàng tối thiểu</label>
-                        <input type="number" step="1000" min="1000" name="min_total_spent"
-                            class="form-control @error('min_total_spent') is-invalid @enderror"
-                            value="{{ old('min_total_spent', $promotion->min_total_spent) }}">
-                        @error('min_total_spent')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -162,60 +168,165 @@
 
 {{-- Script hiển thị giảm tối đa khi chọn loại phần trăm + validate client-side --}}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const discountType = '{{ old('discount_type', $promotion->discount_type) }}';
-        const maxDiscountContainer = document.getElementById('max_discount_container');
-        const maxDiscountEl = document.querySelector('[name="max_discount_value"]');
-        const errorEl = document.createElement('div');
+    document.addEventListener('DOMContentLoaded', () => {
+        const MIN_MONEY = 1000;
+        const discountTypeEl = document.getElementById('discount_type');
+        const discountInput = document.querySelector('[name="discount_value"]');
+        const minTotalInput = document.querySelector('[name="min_total_spent"]');
+        const maxDiscountWrapper = document.getElementById('max_discount_wrapper'); // bọc input giảm tối đa
+        const maxDiscountInput = document.querySelector('[name="max_discount_value"]'); // input giảm tối đa
 
-        // Gắn class để hiện lỗi như Laravel
-        errorEl.classList.add('invalid-feedback');
-        errorEl.id = 'max-discount-error';
+        // Chỉ lấy số, bỏ hết dấu . , và ký tự khác
+        // Chỉ lấy số, cho phép 1 dấu thập phân (.,)
+        function parseMoney(v) {
+            if (v == null) return NaN;
+            let s = String(v).trim();
+            if (s === '') return NaN;
 
-        // Gắn dưới ô input nếu chưa có
-        if (maxDiscountEl && !document.getElementById('max-discount-error')) {
-            maxDiscountEl.parentElement.appendChild(errorEl);
+            // Đổi dấu , thành .
+            s = s.replace(',', '.');
+
+            // Xóa ký tự không hợp lệ (giữ số, dấu . duy nhất)
+            s = s.replace(/[^0-9.]/g, '');
+
+            // Nếu có nhiều dấu ., chỉ giữ dấu đầu tiên
+            const parts = s.split('.');
+            if (parts.length > 2) {
+                s = parts[0] + '.' + parts.slice(1).join('');
+            }
+
+            const num = parseFloat(s);
+            return isNaN(num) ? NaN : num;
         }
 
-        // Hiện/ẩn ô giảm tối đa
-        if (discountType === 'percent') {
-            maxDiscountContainer.style.display = '';
-        } else {
-            maxDiscountContainer.style.display = 'none';
+
+        function ensureErrEl(input) {
+            let el = input.parentElement.querySelector('.client-error');
+            if (!el) {
+                el = document.createElement('small');
+                el.className = 'text-danger d-block client-error';
+                input.parentElement.appendChild(el);
+            }
+            return el;
         }
 
-        // Hàm validate giới hạn giảm tối đa
+        function setError(input, msg) {
+            const el = ensureErrEl(input);
+            if (msg) {
+                el.textContent = msg;
+                el.style.display = 'block';
+                input.classList.add('is-invalid');
+            } else {
+                el.textContent = '';
+                el.style.display = 'none';
+                input.classList.remove('is-invalid');
+            }
+        }
+
+        function validateMinTotal() {
+            if (!minTotalInput) return true;
+            const val = parseMoney(minTotalInput.value);
+            let msg = '';
+            if (isNaN(val)) msg = 'Vui lòng nhập số hợp lệ.';
+            else if (val < MIN_MONEY) msg =
+                `Tổng đơn hàng tối thiểu phải từ ${MIN_MONEY.toLocaleString('vi-VN')}đ trở lên.`;
+            setError(minTotalInput, msg);
+            return !msg;
+        }
+
+        function validateDiscount() {
+            if (!discountInput) return true;
+            const type = discountTypeEl?.value;
+            const disc = parseMoney(discountInput.value);
+            const minTotal = parseMoney(minTotalInput?.value || '');
+            let msg = '';
+
+            if (type === 'percent') {
+                if (isNaN(disc)) msg = 'Vui lòng nhập số hợp lệ.';
+                else if (disc < 1 || disc > 100) msg = 'Phần trăm giảm phải từ 1–100.';
+                else if (disc > 50) msg = 'Không được giảm quá 50%.';
+            } else { // fixed money
+                if (isNaN(disc)) msg = 'Vui lòng nhập số hợp lệ.';
+                else if (disc < MIN_MONEY) msg =
+                    `Số tiền giảm tối thiểu là ${MIN_MONEY.toLocaleString('vi-VN')}đ.`;
+                else if (!isNaN(minTotal) && minTotal >= MIN_MONEY && disc > minTotal * 0.5)
+                    msg = 'Số tiền giảm không được vượt quá 50% tổng đơn hàng tối thiểu.';
+            }
+
+            setError(discountInput, msg);
+            return !msg;
+        }
+
         function validateMaxDiscount() {
-            const discountValue = parseFloat(document.querySelector('[name="discount_value"]')?.value || 0);
-            const minTotalSpent = parseFloat(document.querySelector('[name="min_total_spent"]')?.value || 0);
-            const currentMax = parseFloat(maxDiscountEl?.value || 0);
+            if (!maxDiscountInput || discountTypeEl?.value !== 'percent') return true;
+            const val = parseMoney(maxDiscountInput.value);
+            const minTotal = parseMoney(minTotalInput?.value || '');
+            let msg = '';
 
-            let message = '';
-
-            if (discountType === 'percent' && !isNaN(discountValue) && !isNaN(minTotalSpent)) {
-                const maxAllowed = (discountValue / 100) * minTotalSpent;
-
-                if (!isNaN(currentMax) && currentMax > maxAllowed) {
-                    message =
-                        `Số tiền giảm tối đa không được vượt quá ${maxAllowed.toLocaleString('vi-VN')}đ (tương ứng ${discountValue}% của tổng đơn tối thiểu).`;
-                    maxDiscountEl.classList.add('is-invalid');
-                } else {
-                    maxDiscountEl.classList.remove('is-invalid');
+            if (isNaN(val)) {
+                msg = 'Vui lòng nhập số hợp lệ.';
+            } else if (val < MIN_MONEY) {
+                msg = `Giảm tối đa phải từ ${MIN_MONEY.toLocaleString('vi-VN')}đ trở lên.`;
+            } else if (!isNaN(minTotal) && minTotal >= MIN_MONEY) {
+                const disc = parseMoney(discountInput?.value || ''); // % giảm
+                if (!isNaN(disc)) {
+                    const maxAllowed = minTotal * (disc / 100); // lấy đúng theo % giảm
+                    if (val > maxAllowed) {
+                        msg =
+                            `Giảm tối đa không được vượt quá ${disc}% của tổng đơn hàng tối thiểu (${maxAllowed.toLocaleString('vi-VN')}đ).`;
+                    }
                 }
+            }
 
-                errorEl.textContent = message;
+            setError(maxDiscountInput, msg);
+            return !msg;
+        }
+
+        // Hiển thị/ẩn ô Giảm tối đa theo loại
+        function toggleMaxDiscount() {
+            if (!maxDiscountWrapper) return;
+            if (discountTypeEl?.value === 'percent') {
+                maxDiscountWrapper.style.display = '';
+            } else {
+                maxDiscountWrapper.style.display = 'none';
+                if (maxDiscountInput) setError(maxDiscountInput, ''); // clear lỗi khi ẩn
             }
         }
 
-        // Gắn sự kiện khi người dùng thay đổi các input
-        ['discount_value', 'min_total_spent', 'max_discount_value'].forEach(name => {
-            const el = document.querySelector(`[name="${name}"]`);
-            if (el) {
-                el.addEventListener('input', validateMaxDiscount);
-            }
+        // Gắn sự kiện
+        if (minTotalInput) {
+            minTotalInput.addEventListener('input', () => {
+                validateMinTotal();
+                validateDiscount();
+                validateMaxDiscount();
+            });
+            minTotalInput.addEventListener('blur', validateMinTotal);
+            if (minTotalInput.type === 'number') minTotalInput.min = String(MIN_MONEY);
+        }
+
+        if (discountInput) {
+            discountInput.addEventListener('input', () => {
+                validateDiscount();
+                validateMaxDiscount();
+            });
+            discountInput.addEventListener('blur', validateDiscount);
+        }
+
+        if (maxDiscountInput) {
+            maxDiscountInput.addEventListener('input', validateMaxDiscount);
+            maxDiscountInput.addEventListener('blur', validateMaxDiscount);
+        }
+
+        discountTypeEl?.addEventListener('change', () => {
+            validateDiscount();
+            toggleMaxDiscount();
+            validateMaxDiscount();
         });
 
-        // Gọi lúc đầu để kiểm tra nếu đã có lỗi
+        // chạy lần đầu
+        validateMinTotal();
+        validateDiscount();
+        toggleMaxDiscount();
         validateMaxDiscount();
     });
 </script>
