@@ -89,35 +89,35 @@
     <div class="col">
         <div class="stat-card" style="background: linear-gradient(135deg, #4e73df, #224abe);">
             <i class="fas fa-box-open stat-icon"></i>
-            <h6>📦 Tổng đơn hàng</h6>
+            <div class="stat-title">📦 Tổng đơn hàng</div>
             <div class="stat-value">{{ $totalOrders }}</div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card" style="background: linear-gradient(135deg, #36b9cc, #25848d);">
             <i class="fas fa-coins stat-icon"></i>
-            <h6>💰 Tổng doanh thu</h6>
+            <div class="stat-title">💰 Tổng doanh thu</div>
             <div class="stat-value">{{ number_format($totalRevenue, 0, ',', '.') }} ₫</div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card" style="background: linear-gradient(135deg, #1cc88a, #0e7d56);">
             <i class="fas fa-check-circle stat-icon"></i>
-            <h6>✅ Hoàn thành</h6>
+            <div class="stat-title">✅ Hoàn thành</div>
             <div class="stat-value">{{ $completedOrderCount }}</div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card" style="background: linear-gradient(135deg, #e74a3b, #a51f13);">
             <i class="fas fa-times-circle stat-icon"></i>
-            <h6>❌ Đã huỷ</h6>
+            <div class="stat-title">❌ Đã huỷ</div>
             <div class="stat-value">{{ $cancelledOrderCount }}</div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card" style="background: linear-gradient(135deg, #f6c23e, #b58e10);">
             <i class="fas fa-exclamation-triangle stat-icon"></i>
-            <h6>📉 Hết hàng</h6>
+            <div class="stat-title">📉 Hết hàng</div>
             <div class="stat-value">{{ $totalOutOfStock }}</div>
         </div>
     </div>

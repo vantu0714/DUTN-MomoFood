@@ -339,31 +339,37 @@ input[type=number] {
     -moz-appearance: textfield;
 }
 }
-
-/* Tổng quan */
- 
-    .stat-card {
-        border: none;
-        border-radius: 20px;
-        padding: 20px;
-        color: white;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 25px rgba(0,0,0,0.15);
-    }
-    .stat-icon {
-        font-size: 2.5rem;
-        opacity: 0.2;
-        position: absolute;
-        top: 15px;
-        right: 15px;
-    }
-    .stat-value {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-top: 5px;
-    }
+.stat-card {
+    border: none;
+    border-radius: 14px;
+    padding: 10px; /* gọn hơn */
+    color: white;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    min-height: 100px; /* đồng bộ chiều cao */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* căn giữa nội dung */
+}
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+}
+.stat-icon {
+    font-size: 1.5rem; /* nhỏ hơn chút */
+    opacity: 0.15;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+.stat-card h6 {
+    font-size: 0.8rem;
+    margin: 0;
+}
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 3px;
+}

@@ -34,15 +34,22 @@
                                 @endphp
 
                                 @if ($variant)
-                                    @php
-                                        $variantText = $variant->attributeValues
-                                            ->map(fn($val) => $val->attribute->name . ': ' . $val->value)
-                                            ->implode(', ');
-                                    @endphp
-
-                                    <p class="text-muted fst-italic">
-                                        {{ $variantText }}
-                                    </p>
+                                    <div class="d-flex flex-wrap gap-2 mt-1">
+                                        @foreach ($variant->attributeValues as $val)
+                                            @if (strtolower($val->attribute->name) === 'màu' || strtolower($val->attribute->name) === 'color')
+                                                {{-- Nếu là màu thì hiển thị ô màu --}}
+                                                <span class="d-inline-block border rounded-circle"
+                                                    style="width: 18px; height: 18px; background-color: {{ strtolower($val->value) }};"
+                                                    title="{{ $val->attribute->name }}: {{ $val->value }}">
+                                                </span>
+                                            @else
+                                                {{-- Các thuộc tính khác thì hiển thị badge --}}
+                                                <span class="badge bg-info">
+                                                    {{ $val->attribute->name }}: {{ $val->value }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                    </div>
                                 @endif
 
                             </td>
