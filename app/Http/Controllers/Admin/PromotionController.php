@@ -23,6 +23,12 @@ class PromotionController extends Controller
     /**
      * Show the form for creating a new resource.
      */
+    private function generatePromotionCode($length = 8)
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return substr(str_shuffle(str_repeat($characters, $length)), 0, $length);
+    }
+
     public function create()
     {
         //
@@ -37,7 +43,6 @@ class PromotionController extends Controller
         $validated = $request->validate(
             [
                 'promotion_name'      => 'required|string|max:255',
-                'code'                => 'required|string|max:50|unique:promotions,code',
                 'discount_type'       => 'required|in:fixed,percent',
                 'discount_value'      => [
                     'required',
@@ -73,14 +78,12 @@ class PromotionController extends Controller
                 'end_date'            => 'required|date|after:start_date',
                 'description'         => 'nullable|string',
                 'status'              => 'nullable|boolean',
-                'min_total_spent'     => 'nullable|numeric|min:0',
+                'min_total_spent'     => 'required|numeric|min:1000',
                 'vip_only'            => 'nullable|boolean',
             ],
             [
                 'discount_value.numeric'      => 'Số tiền giảm phải là số hợp lệ.',
                 'promotion_name.required'     => 'Vui lòng nhập tên chương trình khuyến mãi.',
-                'code.required'               => 'Vui lòng nhập mã khuyến mãi.',
-                'code.unique'                 => 'Mã khuyến mãi đã tồn tại.',
                 'discount_type.required'      => 'Vui lòng chọn loại giảm giá.',
                 'discount_value.required'     => 'Vui lòng nhập giá trị giảm.',
                 'discount_value.min'          => 'Giá trị giảm phải lớn hơn 0.',
@@ -108,10 +111,13 @@ class PromotionController extends Controller
         $validated['vip_only'] = $request->has('vip_only') ? 1 : 0;
         $validated['min_total_spent'] = $request->min_total_spent ?? null;
 
+        // Tạo code random, đảm bảo không trùng
+        do {
+            $validated['code'] = $this->generatePromotionCode(8); // VD: GIAMX7Y2
+        } while (Promotion::where('code', $validated['code'])->exists());
+
+
         Promotion::create($validated);
-
-
-        // dd($request->all());
 
         return redirect()->route('admin.promotions.index')->with('success', 'Thêm mã giảm giá thành công!');
     }

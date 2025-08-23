@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -36,6 +37,7 @@ class OrderController extends Controller
         // Lấy cart và lọc items
         $cart = Cart::with(['items.product', 'items.productVariant'])->where('user_id', $userId)->first();
         $cartItems = collect();
+        $errors = [];
 
         if ($cart && $cart->items) {
             $items = !empty($selectedIds)
@@ -47,6 +49,13 @@ class OrderController extends Controller
                 $item->calculated_price = $price;
                 $item->item_total = $price * $item->quantity;
 
+                $stock = $item->productVariant
+                    ? $item->productVariant->quantity_in_stock
+                    : ($item->product->quantity_in_stock ?? 0);
+
+                if ($stock <= 0) {
+                    $errors[] = "Sản phẩm " . Str::lower($item->product->product_name) . " bạn chọn đã hết hàng";
+                }
                 // Gộp tên biến thể
                 $item->variant_summary = $item->productVariant && is_array($item->productVariant->variant_values)
                     ? implode(', ', array_filter($item->productVariant->variant_values))
@@ -54,6 +63,10 @@ class OrderController extends Controller
 
                 $cartItems->push($item);
             }
+        }
+
+        if (!empty($errors)) {
+            return redirect()->back()->withErrors($errors);
         }
 
         // ✅ Lấy danh sách tất cả địa chỉ của user
@@ -122,7 +135,7 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $userId = Auth::id();
-        $cart = Cart::with('items')->where('user_id', $userId)->firstOrFail();
+        $cart = Cart::with('items.product', 'items.productVariant')->where('user_id', $userId)->firstOrFail();
 
         // Lấy selected_ids từ request hoặc session
         $selectedIds = [];
@@ -262,6 +275,14 @@ class OrderController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->discounted_price,
                 ]);
+
+                $item->product->quantity_in_stock -= $item->quantity;
+                $item->product->save();
+
+                if (!is_null($item->productVariant)) {
+                    $item->productVariant->quantity_in_stock -= $item->quantity;
+                    $item->productVariant->save();
+                }
             }
 
             // Cập nhật trạng thái VIP
@@ -353,7 +374,7 @@ class OrderController extends Controller
             'reason' => 'required|string|max:1000',
         ]);
 
-        $order = Order::where('id', $id)
+        $order = Order::where('id', $id)->with('orderDetails.product', 'orderDetails.productVariant')
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
@@ -368,6 +389,16 @@ class OrderController extends Controller
                 'reason' => $request->reason,
                 'cancelled_at' => now()
             ]);
+
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
+            }
 
             DB::commit();
             return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');

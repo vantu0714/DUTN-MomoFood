@@ -101,14 +101,16 @@
                                                 class="btn btn-sm btn-outline-warning">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <form action="{{ route('admin.promotions.destroy', $promotion->id) }}"
-                                                method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <form id="delete-form-{{ $promotion->id }}"
+                                                action="{{ route('admin.promotions.destroy', $promotion->id) }}"
+                                                method="POST" style="display: inline;">
+                                              @csrf
+                                              @method('DELETE')
+                                              <button type="button" class="btn btn-sm btn-outline-danger"
+                                                      onclick="confirmDelete({{ $promotion->id }})">
+                                                  <i class="fas fa-trash"></i>
+                                              </button>
+                                          </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -129,3 +131,22 @@
         </div>
     </div>
 @endsection
+
+<script>
+    function confirmDelete(promotionId) {
+        Swal.fire({
+            title: 'Bạn chắc chắn muốn xóa?',
+            text: "Hành động này không thể hoàn tác!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + promotionId).submit();
+            }
+        });
+    }
+</script>

@@ -11,10 +11,11 @@ class ProductDetailController extends Controller
 {
     public function show($id)
     {
-        // Lấy sản phẩm + biến thể còn hàng và đang active
         $product = Product::with([
             'category',
-            'variants' => fn($q) => $q->activeInStock(),
+            'variants' => function ($q) {
+                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status');
+            },
             'variants.attributeValues.attribute',
             'comments' => fn($q) => $q->latest(),
             'comments.user'
@@ -25,22 +26,38 @@ class ProductDetailController extends Controller
             abort(404, 'Sản phẩm đã hết hàng');
         }
 
-        // Sản phẩm liên quan (cùng category, khác id, còn hàng)
+        // Gắn flag is_disabled cho biến thể
+        foreach ($product->variants as $variant) {
+            $variant->is_disabled = ($variant->status == 0 || $variant->quantity_in_stock <= 0);
+        }
+
+        // Sản phẩm liên quan (lấy tất cả biến thể, xử lý disable tương tự)
         $relatedProducts = Product::with([
-            'variants' => fn($q) => $q->activeInStock()
+            'variants' => function ($q) {
+                $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status');
+                // KHÔNG lọc biến thể, lấy hết để xử lý ở Blade
+            }
         ])
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where(function ($q) {
-                $q->where(function ($q2) {
-                    $q2->where('product_type', 'simple')
-                        ->where('quantity_in_stock', '>', 0);
-                })
-                    ->orWhere('product_type', 'variant');
+                $q->where(function ($q1) {
+                    // sản phẩm đơn -> chỉ lấy đang hiển thị
+                    $q1->where('product_type', 'simple')->where('status', 1);
+                })->orWhere(function ($q2) {
+                    // sản phẩm có biến thể -> vẫn lấy sp cha hiển thị
+                    $q2->where('product_type', 'variant')->where('status', 1);
+                });
             })
             ->latest()
             ->take(8)
             ->get();
+
+        foreach ($relatedProducts as $related) {
+            foreach ($related->variants as $variant) {
+                $variant->is_disabled = ($variant->status == 0 || $variant->quantity_in_stock <= 0);
+            }
+        }
 
         // Trung bình rating
         $averageRating = round($product->comments->avg('rating'), 1) ?? 0;
@@ -51,13 +68,10 @@ class ProductDetailController extends Controller
         if (Auth::check()) {
             $userId = Auth::id();
 
-            // Kiểm tra đã mua sản phẩm chưa (status = 4 = hoàn tất)
             $hasPurchased = OrderDetail::whereHas('order', function ($query) use ($userId) {
-                $query->where('user_id', $userId)
-                    ->where('status', 4);
+                $query->where('user_id', $userId)->where('status', 4);
             })->where('product_id', $product->id)->exists();
 
-            // Kiểm tra đã review chưa
             $hasReviewed = $product->comments->where('user_id', $userId)->isNotEmpty();
         }
 

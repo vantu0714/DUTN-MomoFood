@@ -35,9 +35,9 @@ class OrderController extends Controller
         // Lọc theo phương thức thanh toán
         if ($request->filled('payment_status')) {
             if ($request->payment_status == 'paid') {
-                $query->where('payment_method', '!=', 'cod');
+                $query->where('payment_status', '!=', 'cod');
             } elseif ($request->payment_status == 'unpaid') {
-                $query->where('payment_method', 'cod');
+                $query->where('payment_status', 'cod');
             }
         }
 
@@ -202,6 +202,17 @@ class OrderController extends Controller
         if ($status == 4) {
             $paymentStatus = 'paid';
             foreach ($order->orderDetails as $detail) {
+                // Nếu có biến thể thì trừ ở bảng product_variants
+                if ($detail->product_variant_id) {
+                    DB::table('product_variants')
+                        ->where('id', $detail->product_variant_id)
+                        ->decrement('quantity_in_stock', $detail->quantity);
+                } else {
+                    // Nếu sản phẩm thường thì trừ trực tiếp trong bảng products
+                    Product::where('id', $detail->product_id)
+                        ->decrement('quantity_in_stock', $detail->quantity);
+                }
+
                 Product::where('id', $detail->product_id)->increment('sold_count', $detail->quantity);
             }
         }
@@ -228,24 +239,93 @@ class OrderController extends Controller
         $newStatus = (int) $request->status;
         $currentStatus = $order->status;
 
-        // Danh sách các trạng thái được phép chuyển đổi
-        $allowedTransitions = [
-            1 => [2, 6], // Chưa xác nhận → Đã xác nhận hoặc Hủy
-            2 => [3], // Đã xác nhận → Đang giao
-            3 => [5, 9], // Đang giao → Hoàn hàng hoặc Đã giao
-            5 => [],     // Hoàn hàng → Không thể chuyển tiếp
-            6 => [],     // Hủy → Không thể chuyển tiếp
-            9 => [4],    // Đã giao → Hoàn thành
-        ];
+        // Chỉ kiểm tra logic nghiệp vụ nếu request đến từ giao diện admin
+        if ($request->update_source === 'admin_ui') {
+            // Danh sách các trạng thái được phép chuyển đổi từ trạng thái hiện tại
+            $allowedTransitions = [
+                1 => [2, 6], // Chưa xác nhận → Đã xác nhận hoặc Hủy
+                2 => [3], // Đã xác nhận → Đang giao hoặc Hủy
+                3 => [5, 9], // Đang giao → Hoàn hàng hoặc Đã giao
+                5 => [],    // Hoàn hàng → Không thể chuyển tiếp
+                6 => [],    // Hủy → Không thể chuyển tiếp
+                9 => [4],   // Đã giao → Hoàn thành
+            ];
 
-        // Kiểm tra tính hợp lệ
-        if (!in_array($newStatus, $allowedTransitions[$currentStatus] ?? [])) {
-            return back()->with('error', 'Không thể chuyển từ trạng thái hiện tại sang trạng thái này.');
+            // Kiểm tra tính hợp lệ của chuyển trạng thái
+            if (!in_array($newStatus, $allowedTransitions[$currentStatus] ?? [])) {
+                return back()->with('error', 'Không thể chuyển từ trạng thái hiện tại sang trạng thái này.');
+            }
+
+            // Không cho phép chuyển từ Hoàn hàng (5) sang Hủy (6)
+            if ($currentStatus == 5 && $newStatus == 6) {
+                return back()->with('error', 'Không thể hủy đơn hàng sau khi đã hoàn hàng.');
+            }
         }
 
-        // Cập nhật trạng thái hợp lệ
-        $order->update(['status' => $newStatus]);
-        return back()->with('success', 'Cập nhật trạng thái thành công!');
+        // Đang giao (3) → Lên lịch chuyển sang Đã giao (9)
+        if ($newStatus == 3) {
+            $order->status = 3;
+            $order->delivered_at = now();
+            $order->save();
+
+            UpdateOrderStatus::dispatch($order, 9)
+                ->delay(now()->addMinutes(1));
+
+            return back()->with('success', 'Đơn hàng đang được giao...');
+        }
+        // Hoàn thành (4) → Xử lý tồn kho và VIP
+        elseif ($newStatus == 4) {
+            $order->status = 4;
+            $order->completed_at = now();
+            $order->payment_status = 'paid';
+
+            foreach ($order->orderDetails as $detail) {
+                $product = Product::find($detail->product_id);
+
+                if ($product) {
+                    // Nếu là sản phẩm đơn (simple) → trừ tồn kho trực tiếp
+                    if ($product->product_type === 'simple') {
+                        $product->decrement('quantity_in_stock', $detail->quantity);
+                    }
+
+                    // Nếu là sản phẩm có biến thể → trừ tồn kho ở bảng product_variants
+                    elseif ($product->product_type === 'variant' && $detail->product_variant_id) {
+                        DB::table('product_variants')
+                            ->where('id', $detail->product_variant_id)
+                            ->decrement('quantity_in_stock', $detail->quantity);
+                    }
+
+                    // Tăng số lượng đã bán cho sản phẩm chính
+                    $product->increment('sold_count', $detail->quantity);
+                }
+            }
+
+            $order->save();
+
+            // Chỉ tính đơn hàng Hoàn thành (4) để xét VIP
+            $userId = $order->user_id;
+            $totalSpent = Order::where('user_id', $userId)
+                ->where('status', 4) // chỉ tính đơn hoàn thành
+                ->sum('total_price');
+
+            if ($totalSpent >= 5000000) {
+                User::where('id', $userId)->update(['is_vip' => true]);
+            }
+
+            return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật và kiểm tra VIP.');
+        }
+        // Hoàn hàng (5) → Yêu cầu lý do
+        elseif ($newStatus == 5) {
+            $request->validate(['reason' => 'required|string|max:1000']);
+            $order->reason = $request->reason;
+        }
+        // Các trường hợp khác
+        else {
+            $order->status = $newStatus;
+        }
+
+        $order->save();
+        return back()->with('success', 'Cập nhật thành công!');
     }
 
     public function cancel(Request $request, $id)
@@ -269,7 +349,7 @@ class OrderController extends Controller
 
     public function approveReturn($id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::with('orderDetails.product', 'orderDetails.productVariant')->findOrFail($id);
 
         // Kiểm tra trạng thái hiện tại phải là "Chờ xử lý hoàn hàng" (7)
         if ($order->status != 7) {
@@ -284,6 +364,16 @@ class OrderController extends Controller
                 'return_approved' => true,
                 'return_processed_at' => now(),
             ]);
+
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
+            }
 
             DB::commit();
             return back()->with('success', 'Đã chấp nhận yêu cầu hoàn hàng và cập nhật trạng thái hoàn tiền.');

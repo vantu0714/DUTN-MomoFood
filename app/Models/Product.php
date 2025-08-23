@@ -165,4 +165,29 @@ class Product extends Model
             });
         });
     }
+    // Quan hệ chỉ biến thể hiển thị + còn hàng (dùng cho giá/hiển thị ngoài card)
+    public function variantsActiveInStock()
+    {
+        return $this->hasMany(ProductVariant::class)
+            ->with('attributeValues.attribute')
+            ->where('status', 1)
+            ->where('quantity_in_stock', '>', 0);
+    }
+
+    // Quan hệ tất cả biến thể (dùng trong modal)
+    public function variantsAll()
+    {
+        return $this->hasMany(ProductVariant::class)
+            ->with('attributeValues.attribute');
+    }
+    public function recalcStockAndStatus()
+    {
+        // chỉ dùng cho ẩn/hiện biến thể
+        $this->quantity_in_stock = $this->variants()
+            ->where('status', 1)
+            ->sum('quantity_in_stock');
+
+        $this->status = $this->quantity_in_stock > 0 ? 1 : 0;
+        $this->save();
+    }
 }

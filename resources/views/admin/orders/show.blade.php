@@ -168,6 +168,11 @@
                                         if ($order->status == 5 && $key == 6) {
                                             $canSelect = false;
                                         }
+
+                                        if ($order->status == 3 && $key == 4) {
+                                            $canSelect = false;
+                                        }
+
                                     @endphp
 
                                     <option value="{{ $key }}" {{ $order->status == $key ? 'selected' : '' }}
@@ -269,7 +274,7 @@
 
                         if ($order->delivered_at) {
                             $statusHistory[] = [
-                                'label' => 'Đã giao hàng',
+                                'label' => 'Đang giao hàng',
                                 'time' => $order->delivered_at,
                                 'icon' => 'fas fa-box-open',
                                 'color' => 'success',

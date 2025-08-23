@@ -2,10 +2,9 @@
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 @section('content')
     <div class="container-fluid">
-        <h3 class="mb-4 fw-bold text-info position-relative" style="font-size: 2rem;">
-            📊 Dashboard
-            <span
-                style="
+<h3 class="mb-4 fw-bold text-info position-relative" style="font-size: 2rem;">
+    📊 Dashboard
+    <span style="
         display:block;
         height:4px;
         width:80px;

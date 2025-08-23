@@ -51,12 +51,12 @@
                             <td> {{ $user->created_at->format('d-m-Y') }}</td>
                             <td> {{ $user->updated_at->format('d-m-Y') }}</td>
                             <td>
-                                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-warning"
+                                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-warning"
                                     title="Sửa">
                                     <i class="fas fa-edit"></i>
                                 </a>
 
-                                <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-info" title="Xem">
+                                <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-sm btn-outline-info" title="Xem">
                                     <i class="fas fa-eye"></i>
                                 </a>
 
@@ -67,12 +67,12 @@
                                     @method('PATCH')
 
                                     @if ($user->status == 1)
-                                        <button type="button" class="btn btn-secondary" title="Khóa"
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" title="Khóa"
                                             onclick="confirmToggle({{ $user->id }}, false)">
                                             <i class="fas fa-lock"></i>
                                         </button>
                                     @else
-                                        <button type="button" class="btn btn-success" title="Kích hoạt"
+                                        <button type="button" class="btn btn-sm btn-outline-success" title="Kích hoạt"
                                             onclick="confirmToggle({{ $user->id }}, true)">
                                             <i class="fas fa-unlock"></i>
                                         </button>

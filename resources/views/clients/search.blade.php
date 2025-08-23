@@ -122,105 +122,114 @@
                     <div class="col-lg-9">
                         <div class="row g-4">
                             @foreach ($availableProducts as $product)
-                                @php
-                                    $hasVariants = $product->variants && $product->variants->count() > 0;
-                                    $firstVariant = null;
-                                    $price = 0;
-                                    $original = 0;
-                                    $variants = [];
-
-                                    if ($hasVariants) {
-                                        $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
-                                        if ($firstVariant) {
-                                            $price = $firstVariant->discounted_price ?? $firstVariant->price;
-                                            $original = $firstVariant->price;
-                                        }
-
-                                        $variants = $product->variants->map(function ($v) {
-                                            return [
-                                                'id' => $v->id,
-                                                'price' => $v->price,
-                                                'discounted_price' => $v->discounted_price,
-                                                'quantity' => $v->quantity,
-                                                'image' => $v->image,
-                                                'attribute_values' => $v->attributeValues->map(function ($attrValue) {
-                                                    return [
-                                                        'attribute_name' => $attrValue->attribute->name,
-                                                        'value' => $attrValue->value,
-                                                    ];
-                                                }),
-                                            ];
-                                        });
-
-                                        $minPrice =
-                                            $product->variants->min('discounted_price') ?:
-                                            $product->variants->min('price');
-                                        $maxPrice =
-                                            $product->variants->max('discounted_price') ?:
-                                            $product->variants->max('price');
-                                        $displayPrice =
-                                            $minPrice == $maxPrice
-                                                ? number_format($minPrice, 0, ',', '.')
-                                                : number_format($minPrice, 0, ',', '.') .
-                                                    ' - ' .
-                                                    number_format($maxPrice, 0, ',', '.');
-                                    } else {
-                                        $price = $product->discounted_price ?: $product->price;
-                                        $original = $product->price;
-                                        $displayPrice = number_format($price, 0, ',', '.');
+                            @php
+                                $hasVariants = $product->product_type === 'variant' && $product->variants && $product->variants->count() > 0;
+                                $price = 0;
+                                $original = 0;
+                                $variants = [];
+                        
+                                if ($hasVariants) {
+                                    // Sản phẩm có biến thể
+                                    $firstVariant = $product->variants->firstWhere('quantity', '>', 0);
+                                    if ($firstVariant) {
+                                        $price = $firstVariant->discounted_price ?? $firstVariant->price;
+                                        $original = $firstVariant->price;
                                     }
-                                @endphp
-
-                                <div class="col-12 col-sm-6 col-md-4 col-lg-4">
-                                    <div class="card shadow-sm border rounded-4 overflow-hidden h-100"
-                                        style="border-color: #db735b !important;">
-                                        <div class="position-relative">
-                                            <a href="{{ route('product-detail.show', $product->id) }}">
-                                                <div class="product-img-wrapper">
-                                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                        alt="{{ $product->product_name }}"
-                                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                                        class="img-fluid w-100">
+                        
+                                    $variants = $product->variants->map(function ($v) {
+                                        return [
+                                            'id' => $v->id,
+                                            'price' => $v->price,
+                                            'discounted_price' => $v->discounted_price,
+                                            'quantity' => $v->quantity,
+                                            'image' => $v->image,
+                                            'attribute_values' => $v->attributeValues->map(function ($attrValue) {
+                                                return [
+                                                    'attribute_name' => $attrValue->attribute->name,
+                                                    'value' => $attrValue->value,
+                                                ];
+                                            }),
+                                        ];
+                                    });
+                        
+                                    $minPrice = $product->variants->map(fn($v) => $v->discounted_price ?? $v->price)->min();
+                                    $maxPrice = $product->variants->map(fn($v) => $v->discounted_price ?? $v->price)->max();
+                        
+                                    $displayPrice = $minPrice == $maxPrice
+                                        ? number_format($minPrice, 0, ',', '.')
+                                        : number_format($minPrice, 0, ',', '.') . ' - ' . number_format($maxPrice, 0, ',', '.');
+                                } else {
+                                    // Sản phẩm đơn (simple)
+                                    $price = $product->discounted_price && $product->discounted_price < $product->original_price
+                                        ? $product->discounted_price
+                                        : $product->original_price;
+                        
+                                    $original = $product->original_price;
+                        
+                                    if ($product->discounted_price && $product->discounted_price < $product->original_price) {
+                                        $displayPrice = number_format($product->discounted_price, 0, ',', '.') .
+                                                        ' <del class="text-muted small">' .
+                                                        number_format($product->original_price, 0, ',', '.') .
+                                                        '</del>';
+                                    } else {
+                                        $displayPrice = number_format($product->original_price, 0, ',', '.');
+                                    }
+                                }
+                            @endphp
+                        
+                            <div class="col-12 col-sm-6 col-md-4 col-lg-4">
+                                <div class="card shadow-sm border rounded-4 overflow-hidden h-100"
+                                    style="border-color: #db735b !important;">
+                                    <div class="position-relative">
+                                        <a href="{{ route('product-detail.show', $product->id) }}">
+                                            <div class="product-img-wrapper">
+                                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                    alt="{{ $product->product_name }}"
+                                                    onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
+                                                    class="img-fluid w-100">
+                                            </div>
+                                        </a>
+                                        <span class="badge text-white position-absolute top-0 start-0 m-2"
+                                            style="background-color: #db735b;">
+                                            {{ $product->category->category_name ?? 'Sản phẩm' }}
+                                        </span>
+                                    </div>
+                        
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
+                                        <p class="text-muted small mb-3">
+                                            {{ Str::limit($product->description ?? 'Không có mô tả', 60) }}
+                                        </p>
+                        
+                                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <div class="fw-bold fs-5" style="color: #db735b;">
+                                                    {!! $displayPrice !!} VND
                                                 </div>
-                                            </a>
-                                            <span class="badge text-white position-absolute top-0 start-0 m-2"
-                                                style="background-color: #db735b;">
-                                                {{ $product->category->category_name ?? 'Sản phẩm' }}
-                                            </span>
-                                        </div>
-
-                                        <div class="card-body d-flex flex-column">
-                                            <h6 class="fw-bold text-dark text-truncate">
-                                                {{ $product->product_name }}</h6>
-                                            <p class="text-muted small mb-3">
-                                                {{ Str::limit($product->description ?? 'Không có mô tả', 60) }}</p>
-
-                                            <div class="mt-auto d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <div class="fw-bold fs-5" style="color: #db735b;">
-                                                        {{ $displayPrice }} <small class="text-muted">₫</small>
-                                                    </div>
-                                                </div>
-
-                                                <div class="d-flex justify-content-end">
-                                                    <button type="button" class="btn btn-white open-cart-modal"
-                                                        data-product-id="{{ $product->id }}"
-                                                        data-product-name="{{ $product->product_name }}"
-                                                        data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                        data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                                        data-product-price="{{ $price ?? 0 }}"
-                                                        data-product-original-price="{{ $original ?? 0 }}"
-                                                        data-product-description="{{ $product->description }}"
-                                                        data-variants='@json($variants)' data-bs-toggle="modal"
-                                                        data-bs-target="#cartModal">
-                                                        <i class="bi bi-cart3 fa-2x" style="color: #db735b;"></i>
-                                                    </button>
-                                                </div>
+                                            </div>
+                        
+                                            <div class="d-flex justify-content-end">
+                                                <button type="button" class="btn btn-white open-cart-modal"
+                                                    data-product-id="{{ $product->id }}"
+                                                    data-product-name="{{ $product->product_name }}"
+                                                    data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                    data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
+                                                    data-product-price="{{ $price ?? 0 }}"
+                                                    data-product-original-price="{{ $original ?? 0 }}"
+                                                    data-product-description="{{ $product->description }}"
+                                                    data-variants='@json($variants)'
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#cartModal">
+                                                    <i class="bi bi-cart3 fa-2x" style="color: #db735b;"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            @endforeach
+                            </div>
+                        @endforeach
+                        
+
                         </div>
                     </div>
                 </div>
@@ -270,8 +279,7 @@
                             </p>
 
                             <p class="h5 fw-bold mb-3" style="color: #db735b;">
-                                <span id="modal-product-price">0</span>
-                                <span class="text-muted fs-6">₫</span>
+                                <span id="modal-product-price">0</span> VND
                                 <del class="text-secondary fs-6 ms-2" id="modal-product-original-price"></del>
                             </p>
 
@@ -500,7 +508,6 @@
                                     onerror="this.src='{{ asset('clients/img/default.jpg') }}';">
                                 <div>
                                     <div class="fw-semibold text-dark">${flavorText} - ${weightText}</div>
-                                    <div class="text-danger fw-bold">${formatPrice(variantPrice)} ₫</div>
                                 </div>
                             </div>`;
                             variantOptionsEl.insertAdjacentHTML('beforeend', html);
