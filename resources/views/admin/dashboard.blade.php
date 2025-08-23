@@ -2,9 +2,10 @@
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 @section('content')
     <div class="container-fluid">
-<h3 class="mb-4 fw-bold text-info position-relative" style="font-size: 2rem;">
-    📊 Thống kê đơn hàng
-    <span style="
+        <h3 class="mb-4 fw-bold text-info position-relative" style="font-size: 2rem;">
+            📊 Dashboard
+            <span
+                style="
         display:block;
         height:4px;
         width:80px;
@@ -14,150 +15,159 @@
         box-shadow:0 2px 6px rgba(0,0,0,0.15);
         animation: slideIn 1s ease forwards;
     "></span>
-</h3>
+        </h3>
 
-<style>
-@keyframes slideIn {
-    from { width: 0; }
-    to { width: 80px; }
-}
-</style>
+        <style>
+            @keyframes slideIn {
+                from {
+                    width: 0;
+                }
+
+                to {
+                    width: 80px;
+                }
+            }
+        </style>
 
         {{-- Biểu mẫu lọc --}}
-       <form action="{{ route('admin.dashboard') }}" method="GET" class="mb-4">
-    <div class="row g-2 justify-content-end align-items-center">
-        
-        <!-- Chọn loại lọc -->
-        <div class="col-auto">
-            <select name="filter_type" id="filter_type" class="form-select form-select-sm shadow-sm border-0 rounded-pill"
-                onchange="toggleFilterInputs()">
-                <option value="">-- Chọn loại lọc --</option>
-                <option value="date" {{ request('filter_type') == 'date' ? 'selected' : '' }}>📅 Theo ngày</option>
-                <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>📆 Theo tháng</option>
-                <option value="year" {{ request('filter_type') == 'year' ? 'selected' : '' }}>📊 Theo năm</option>
-            </select>
+        <form action="{{ route('admin.dashboard') }}" method="GET" class="mb-4">
+            <div class="row g-2 justify-content-end align-items-center">
+
+                <!-- Chọn loại lọc -->
+                <div class="col-auto">
+                    <select name="filter_type" id="filter_type"
+                        class="form-select form-select-sm shadow-sm border-0 rounded-pill" onchange="toggleFilterInputs()">
+                        <option value="">-- Chọn loại lọc --</option>
+                        <option value="date" {{ request('filter_type') == 'date' ? 'selected' : '' }}>📅 Theo ngày
+                        </option>
+                        <option value="month" {{ request('filter_type') == 'month' ? 'selected' : '' }}>📆 Theo tháng
+                        </option>
+                        <option value="year" {{ request('filter_type') == 'year' ? 'selected' : '' }}>📊 Theo năm</option>
+                    </select>
+                </div>
+
+                <!-- Ngày bắt đầu -->
+                <div class="col-auto filter-date">
+                    <input type="date" name="from_date" id="from_date"
+                        class="form-control form-control-sm shadow-sm border-0 rounded-pill"
+                        value="{{ request('from_date') }}">
+                </div>
+
+                <!-- Ngày kết thúc -->
+                <div class="col-auto filter-date">
+                    <input type="date" name="to_date" id="to_date"
+                        class="form-control form-control-sm shadow-sm border-0 rounded-pill"
+                        value="{{ request('to_date') }}">
+                </div>
+
+                <!-- Tháng -->
+                <div class="col-auto filter-month">
+                    <select name="month" id="month"
+                        class="form-select form-select-sm shadow-sm border-0 rounded-pill">
+                        <option value="">-- Chọn tháng --</option>
+                        @for ($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+                                Tháng {{ $m }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
+
+                <!-- Năm -->
+                <div class="col-auto filter-month filter-year">
+                    <select name="year" id="year"
+                        class="form-select form-select-sm shadow-sm border-0 rounded-pill">
+                        @php $currentYear = now()->year; @endphp
+                        @for ($y = $currentYear; $y >= $currentYear - 5; $y--)
+                            <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
+
+                <!-- Nút lọc -->
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-primary shadow-sm rounded-pill px-3">
+                        🔍 Lọc
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="row row-cols-1 row-cols-md-5 g-4 mb-4">
+            <div class="col">
+                <div class="stat-card" style="background: linear-gradient(135deg, #4e73df, #224abe);">
+                    <i class="fas fa-box-open stat-icon"></i>
+                    <div class="stat-title">📦 Tổng đơn hàng</div>
+                    <div class="stat-value">{{ $totalOrders }}</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card" style="background: linear-gradient(135deg, #36b9cc, #25848d);">
+                    <i class="fas fa-coins stat-icon"></i>
+                    <div class="stat-title">💰 Tổng doanh thu</div>
+                    <div class="stat-value">{{ number_format($totalRevenue, 0, ',', '.') }} ₫</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card" style="background: linear-gradient(135deg, #1cc88a, #0e7d56);">
+                    <i class="fas fa-check-circle stat-icon"></i>
+                    <div class="stat-title">✅ Hoàn thành</div>
+                    <div class="stat-value">{{ $completedOrderCount }}</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card" style="background: linear-gradient(135deg, #e74a3b, #a51f13);">
+                    <i class="fas fa-times-circle stat-icon"></i>
+                    <div class="stat-title">❌ Đã huỷ</div>
+                    <div class="stat-value">{{ $cancelledOrderCount }}</div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="stat-card" style="background: linear-gradient(135deg, #f6c23e, #b58e10);">
+                    <i class="fas fa-exclamation-triangle stat-icon"></i>
+                    <div class="stat-title">📉 Hết hàng</div>
+                    <div class="stat-value">{{ $totalOutOfStock }}</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Ngày bắt đầu -->
-        <div class="col-auto filter-date">
-            <input type="date" name="from_date" id="from_date"
-                class="form-control form-control-sm shadow-sm border-0 rounded-pill"
-                value="{{ request('from_date') }}">
-        </div>
-
-        <!-- Ngày kết thúc -->
-        <div class="col-auto filter-date">
-            <input type="date" name="to_date" id="to_date"
-                class="form-control form-control-sm shadow-sm border-0 rounded-pill"
-                value="{{ request('to_date') }}">
-        </div>
-
-        <!-- Tháng -->
-        <div class="col-auto filter-month">
-            <select name="month" id="month" class="form-select form-select-sm shadow-sm border-0 rounded-pill">
-                <option value="">-- Chọn tháng --</option>
-                @for ($m = 1; $m <= 12; $m++)
-                    <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
-                        Tháng {{ $m }}
-                    </option>
-                @endfor
-            </select>
-        </div>
-
-        <!-- Năm -->
-        <div class="col-auto filter-month filter-year">
-            <select name="year" id="year" class="form-select form-select-sm shadow-sm border-0 rounded-pill">
-                @php $currentYear = now()->year; @endphp
-                @for ($y = $currentYear; $y >= $currentYear - 5; $y--)
-                    <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
-                        {{ $y }}
-                    </option>
-                @endfor
-            </select>
-        </div>
-
-        <!-- Nút lọc -->
-        <div class="col-auto">
-            <button type="submit" class="btn btn-sm btn-primary shadow-sm rounded-pill px-3">
-                🔍 Lọc
-            </button>
-        </div>
-    </div>
-</form>
-
-<div class="row row-cols-1 row-cols-md-5 g-4 mb-4">
-    <div class="col">
-        <div class="stat-card" style="background: linear-gradient(135deg, #4e73df, #224abe);">
-            <i class="fas fa-box-open stat-icon"></i>
-            <div class="stat-title">📦 Tổng đơn hàng</div>
-            <div class="stat-value">{{ $totalOrders }}</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card" style="background: linear-gradient(135deg, #36b9cc, #25848d);">
-            <i class="fas fa-coins stat-icon"></i>
-            <div class="stat-title">💰 Tổng doanh thu</div>
-            <div class="stat-value">{{ number_format($totalRevenue, 0, ',', '.') }} ₫</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card" style="background: linear-gradient(135deg, #1cc88a, #0e7d56);">
-            <i class="fas fa-check-circle stat-icon"></i>
-            <div class="stat-title">✅ Hoàn thành</div>
-            <div class="stat-value">{{ $completedOrderCount }}</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card" style="background: linear-gradient(135deg, #e74a3b, #a51f13);">
-            <i class="fas fa-times-circle stat-icon"></i>
-            <div class="stat-title">❌ Đã huỷ</div>
-            <div class="stat-value">{{ $cancelledOrderCount }}</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card" style="background: linear-gradient(135deg, #f6c23e, #b58e10);">
-            <i class="fas fa-exclamation-triangle stat-icon"></i>
-            <div class="stat-title">📉 Hết hàng</div>
-            <div class="stat-value">{{ $totalOutOfStock }}</div>
-        </div>
-    </div>
-</div>
-
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
         {{-- Select sản phẩm hết hàng --}}
-     <div class="mb-4">
-    <label for="outOfStockSelect" class="form-label fw-bold text-info">
-        <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>
-        Danh sách sản phẩm hết hàng
-    </label>
+        <div class="mb-4">
+            <label for="outOfStockSelect" class="form-label fw-bold text-info">
+                <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>
+                Danh sách sản phẩm hết hàng
+            </label>
 
-    <select class="form-select shadow-sm border-primary" id="outOfStockSelect">
-        <option value="">🔍 Chọn sản phẩm hết hàng...</option>
+            <select class="form-select shadow-sm border-primary" id="outOfStockSelect">
+                <option value="">🔍 Chọn sản phẩm hết hàng...</option>
 
-        <optgroup label="📦 Sản phẩm thường đã hết hàng">
-            @forelse ($outOfStockProducts as $product)
-                <option value="product_{{ $product->id }}">
-                    {{ $product->product_name }} (Mã: {{ $product->product_code }}) - ❌ Hết hàng
-                </option>
-            @empty
-                <option disabled>✅ Không có sản phẩm thường nào hết hàng</option>
-            @endforelse
-        </optgroup>
+                <optgroup label="📦 Sản phẩm thường đã hết hàng">
+                    @forelse ($outOfStockProducts as $product)
+                        <option value="product_{{ $product->id }}">
+                            {{ $product->product_name }} (Mã: {{ $product->product_code }}) - ❌ Hết hàng
+                        </option>
+                    @empty
+                        <option disabled>✅ Không có sản phẩm thường nào hết hàng</option>
+                    @endforelse
+                </optgroup>
 
-        <optgroup label="🎯 Biến thể sản phẩm đã hết hàng">
-            @forelse ($outOfStockVariants as $variant)
-                <option value="variant_{{ $variant->id }}">
-                    {{ $variant->product->product_name }} 
-                    - Biến thể: {{ $variant->sku }} - ❌ Hết hàng
-                </option>
-            @empty
-                <option disabled>✅ Không có biến thể nào hết hàng</option>
-            @endforelse
-        </optgroup>
-    </select>
-</div>
+                <optgroup label="🎯 Biến thể sản phẩm đã hết hàng">
+                    @forelse ($outOfStockVariants as $variant)
+                        <option value="variant_{{ $variant->id }}">
+                            {{ $variant->product->product_name }}
+                            - Biến thể: {{ $variant->sku }} - ❌ Hết hàng
+                        </option>
+                    @empty
+                        <option disabled>✅ Không có biến thể nào hết hàng</option>
+                    @endforelse
+                </optgroup>
+            </select>
+        </div>
 
 
         {{-- Thông tin sản phẩm chi tiết --}}
@@ -231,9 +241,13 @@
                                     {{ $product->product_name }}
                                     @if ($product->variant_attributes)
                                         <br>
-                                        <small class="text-muted fst-italic">{{ $product->variant_attributes }}</small>
+                                        @foreach (explode(',', $product->variant_attributes) as $variant)
+                                            <span class="badge-variant">{{ trim($variant) }}</span>
+                                        @endforeach
                                     @endif
                                 </td>
+
+
                                 <td class="text-center">{{ $product->total_quantity }}</td>
                                 <td class="text-end text-success fw-semibold">
                                     {{ number_format($product->latest_price, 0, ',', '.') }}đ
@@ -346,121 +360,147 @@
     </script>
 
     {{-- Chart.js CDN --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctx = document.getElementById('revenueChart').getContext('2d');
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('revenueChart').getContext('2d');
 
-    const gradientRevenue = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientRevenue.addColorStop(0, 'rgba(54, 162, 235, 0.9)');
-    gradientRevenue.addColorStop(1, 'rgba(54, 162, 235, 0.3)');
+        const gradientRevenue = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientRevenue.addColorStop(0, 'rgba(54, 162, 235, 0.9)');
+        gradientRevenue.addColorStop(1, 'rgba(54, 162, 235, 0.3)');
 
-    const gradientOrders = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientOrders.addColorStop(0, 'rgba(255, 159, 64, 0.9)');
-    gradientOrders.addColorStop(1, 'rgba(255, 159, 64, 0.3)');
+        const gradientOrders = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientOrders.addColorStop(0, 'rgba(255, 159, 64, 0.9)');
+        gradientOrders.addColorStop(1, 'rgba(255, 159, 64, 0.3)');
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: {!! json_encode($chartLabels) !!},
-            datasets: [
-                {
-                    label: 'Doanh thu (VNĐ)',
-                    data: {!! json_encode($chartDataRevenue) !!},
-                    backgroundColor: gradientRevenue,
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                    yAxisID: 'y'
-                },
-                {
-                    label: 'Số đơn hàng',
-                    data: {!! json_encode($chartDataOrders) !!},
-                    backgroundColor: gradientOrders,
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            interaction: { mode: 'index', intersect: false },
-            animation: { duration: 1200, easing: 'easeOutQuart' },
-            plugins: {
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.7)',
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 13 },
-                    borderWidth: 1,
-                    borderColor: '#ddd',
-                    padding: 10,
-                    callbacks: {
-                        label: function (context) {
-                            if (context.dataset.label.includes('Doanh thu')) {
-                                return new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
-                            }
-                            return context.parsed.y + ' đơn';
-                        }
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($chartLabels) !!},
+                datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: {!! json_encode($chartDataRevenue) !!},
+                        backgroundColor: gradientRevenue,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        borderRadius: 12,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Số đơn hàng',
+                        data: {!! json_encode($chartDataOrders) !!},
+                        backgroundColor: gradientOrders,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1,
+                        borderRadius: 12,
+                        yAxisID: 'y1'
                     }
-                },
-                legend: {
-                    labels: { font: { size: 13, weight: 'bold' } }
-                }
+                ]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { callback: v => new Intl.NumberFormat('vi-VN').format(v) }
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
                 },
-                y1: {
-                    beginAtZero: true,
-                    grid: { drawOnChartArea: false }
-                }
-            }
-        }
-    });
-
-    // Pie chart hiện đại
-    const ctx2 = document.getElementById('orderStatusChart').getContext('2d');
-    new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: {!! json_encode(array_keys($orderStatusCount)) !!},
-            datasets: [{
-                label: 'Tỷ lệ đơn hàng',
-                data: {!! json_encode(array_values($orderStatusCount)) !!},
-                backgroundColor: [
-                    'rgba(255, 206, 86, 0.9)',
-                    'rgba(54, 162, 235, 0.9)',
-                    'rgba(75, 192, 192, 0.9)',
-                    'rgba(255, 99, 132, 0.9)'
-                ],
-                borderWidth: 2,
-                hoverOffset: 12
-            }]
-        },
-        options: {
-            responsive: true,
-            cutout: '70%',
-            plugins: {
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.7)',
-                    bodyFont: { size: 13 },
-                    callbacks: {
-                        label: function (context) {
-                            return `${context.label}: ${context.raw} đơn`;
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        borderWidth: 1,
+                        borderColor: '#ddd',
+                        padding: 10,
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.label.includes('Doanh thu')) {
+                                    return new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
+                                }
+                                return context.parsed.y + ' đơn';
+                            }
+                        }
+                    },
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 13,
+                                weight: 'bold'
+                            }
                         }
                     }
                 },
-                legend: {
-                    position: 'bottom',
-                    labels: { font: { size: 13, weight: 'bold' } }
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => new Intl.NumberFormat('vi-VN').format(v)
+                        }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
                 }
             }
-        }
-    });
-</script>
+        });
+
+        // Pie chart hiện đại
+        const ctx2 = document.getElementById('orderStatusChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: {!! json_encode(array_keys($orderStatusCount)) !!},
+                datasets: [{
+                    label: 'Tỷ lệ đơn hàng',
+                    data: {!! json_encode(array_values($orderStatusCount)) !!},
+                    backgroundColor: [
+                        'rgba(255, 206, 86, 0.9)',
+                        'rgba(54, 162, 235, 0.9)',
+                        'rgba(75, 192, 192, 0.9)',
+                        'rgba(255, 99, 132, 0.9)'
+                    ],
+                    borderWidth: 2,
+                    hoverOffset: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.raw} đơn`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 13,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 
 
 

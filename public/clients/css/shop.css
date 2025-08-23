@@ -373,3 +373,14 @@ input[type=number] {
     font-weight: bold;
     margin-top: 3px;
 }
+.badge-variant {
+    display: inline-block;
+    background-color: #17a2b8; /* xanh ngọc giống ảnh */
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 10px;
+    margin-right: 5px;
+    margin-top: 3px;
+}
