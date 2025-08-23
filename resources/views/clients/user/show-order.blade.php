@@ -122,12 +122,6 @@
                             </div>
                         </div>
 
-                        @if ($order->status == 6 && $order->reason)
-                            <div class="alert alert-danger p-2 mb-0">
-                                <strong>Lý do hủy:</strong> {{ $order->reason }}
-                            </div>
-                        @endif
-
                         @if ($order->status == 3)
                             <div class="alert alert-info d-flex align-items-center mb-4">
                                 <i class="fas fa-truck fa-2x me-3"></i>
@@ -174,6 +168,27 @@
                                 </div>
                             </div>
                         @endif
+
+                        @if ($order->status == 6)
+                            <div class="alert alert-danger d-flex align-items-center mb-4">
+                                <i class="fas fa-times-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Đã huỷ đơn hàng</h5>
+                                    <p class="mb-0">Đã huỷ đơn hàng thành công. Vui lòng liên hệ với
+                                        cửa hàng.</p>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($order->status == 5)
+                            <div class="alert alert-success d-flex align-items-center mb-4">
+                                <i class="fas fa-check-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Đơn hàng đã được xác nhận hoàn trả</h5>
+                                    <p class="mb-0">Vui lòng liên hệ với cửa hàng để được hoàn trả lại tiền</p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -198,7 +213,6 @@
                                     'color' => 'secondary',
                                 ];
 
-                                // Thêm các trạng thái khác nếu có timestamp
                                 if ($order->confirmed_at) {
                                     $statusHistory[] = [
                                         'label' => 'Đã xác nhận',
@@ -208,11 +222,10 @@
                                     ];
                                 }
 
-                                // Thêm trạng thái không xác nhận (10)
                                 if ($order->status == 10) {
                                     $statusHistory[] = [
                                         'label' => 'Không xác nhận',
-                                        'time' => $order->updated_at, // hoặc có thể tạo field rejected_at riêng
+                                        'time' => $order->updated_at,
                                         'icon' => 'fas fa-times-circle',
                                         'color' => 'danger',
                                         'note' => $order->reason ? 'Lý do: ' . $order->reason : null,

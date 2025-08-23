@@ -386,10 +386,17 @@ class OrderController extends Controller
         try {
             $order->update([
                 'status' => 6,
-                'reason' => $request->reason,
-                'cancelled_at' => now()
+                'reason' => $request->reason
             ]);
 
+            // Xử lý hoàn tiền nếu đã thanh toán
+            if ($order->payment_status === 'paid') {
+                $order->update([
+                    'payment_status' => 'refunded'
+                ]);
+            }
+
+            // Hoàn lại số lượng tồn kho
             foreach ($order->orderDetails as $orderDetail) {
                 $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
                 $orderDetail->product->save();
@@ -401,7 +408,12 @@ class OrderController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');
+
+            if ($order->payment_status === 'refunded') {
+                return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công. Số tiền ' . number_format($order->total_price, 0, ',', '.') . 'đ sẽ được hoàn trả trong vòng 3-5 ngày làm việc.');
+            } else {
+                return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Hủy đơn hàng thất bại: ' . $e->getMessage());

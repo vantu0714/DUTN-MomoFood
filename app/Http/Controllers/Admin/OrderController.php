@@ -317,7 +317,23 @@ class OrderController extends Controller
         // Hoàn hàng (5) → Yêu cầu lý do
         elseif ($newStatus == 5) {
             $request->validate(['reason' => 'required|string|max:1000']);
+
+            // Nếu đã thanh toán thì chuyển sang trạng thái hoàn tiền
+            if ($order->payment_status === 'paid') {
+                $order->payment_status = 'refunded';
+                $refundMessage = " Đã thực hiện hoàn tiền.";
+            } else {
+                $refundMessage = "";
+            }
+
+            $order->status = 5;
             $order->reason = $request->reason;
+
+            $order->return_processed_at = now();
+
+            $order->save();
+
+            return back()->with('success', 'Đã xác nhận hoàn hàng.' . $refundMessage);
         }
         // Các trường hợp khác
         else {
@@ -359,11 +375,32 @@ class OrderController extends Controller
             return back()->with('error', 'Chỉ có thể không xác nhận đơn hàng ở trạng thái chưa xác nhận.');
         }
 
-        $order->status = 10; // Không xác nhận đơn hàng
-        $order->reason = $request->reason;
-        $order->save();
+        DB::beginTransaction();
+        try {
+            // Xử lý hoàn tiền nếu đã thanh toán
+            $refundMessage = '';
+            if ($order->payment_status === 'paid') {
+                $order->payment_status = 'refunded';
+            }
 
-        return redirect()->route('admin.orders.index')->with('success', 'Đã không xác nhận đơn hàng.');
+            // Cập nhật trạng thái đơn hàng
+            $order->update([
+                'status' => 10,
+                'reason' => $request->reason,
+                'payment_status' => $order->payment_status,
+            ]);
+
+            DB::commit();
+
+            if ($order->payment_status === 'refunded') {
+                return redirect()->route('admin.orders.index')->with('success', 'Đã không xác nhận đơn hàng. ' . $refundMessage);
+            } else {
+                return redirect()->route('admin.orders.index')->with('success', 'Đã không xác nhận đơn hàng.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 
     public function approveReturn($id)

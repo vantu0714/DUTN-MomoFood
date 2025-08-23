@@ -247,7 +247,6 @@
                     @php
                         $statusHistory = [];
 
-                        // Luôn có trạng thái tạo đơn hàng
                         $statusHistory[] = [
                             'label' => 'Đơn hàng được tạo',
                             'time' => $order->created_at,
@@ -255,7 +254,6 @@
                             'color' => 'secondary',
                         ];
 
-                        // Thêm các trạng thái khác nếu có timestamp
                         if ($order->confirmed_at) {
                             $statusHistory[] = [
                                 'label' => 'Đã xác nhận',
@@ -339,7 +337,6 @@
                             }
                         }
 
-                        // Thêm trạng thái không xác nhận đơn hàng (10)
                         if ($order->status == 10 && $order->updated_at) {
                             $statusHistory[] = [
                                 'label' => 'Không xác nhận đơn hàng',
@@ -350,7 +347,6 @@
                             ];
                         }
 
-                        // Thêm trạng thái hủy đơn (6)
                         if ($order->status == 6 && $order->updated_at) {
                             $statusHistory[] = [
                                 'label' => 'Đã hủy',
