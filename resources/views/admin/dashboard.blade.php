@@ -2,9 +2,10 @@
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 @section('content')
     <div class="container-fluid">
-<h3 class="mb-4 fw-bold text-info position-relative" style="font-size: 2rem;">
-    📊 Dashboard
-    <span style="
+        <h3 class="mb-4 fw-bold text-info position-relative" style="font-size: 2rem;">
+            📊 Dashboard
+            <span
+                style="
         display:block;
         height:4px;
         width:80px;
@@ -172,22 +173,27 @@
         {{-- Thông tin sản phẩm chi tiết --}}
         <div id="productDetail" class="card d-none shadow-sm rounded-4">
             <div class="card-body">
-                <div class="row">
+                <div class="row g-8 align-items-center">
+                    <!-- Ảnh sản phẩm -->
                     <div class="col-md-4">
-                        <img id="productImage" src="" alt="Ảnh sản phẩm"
-                            class="img-fluid border rounded-3 shadow-sm">
+                        <div class="product-image-box">
+                            <img id="productImage" src="" alt="Ảnh sản phẩm" class="product-image" style="width:40%;">
+                        </div>
                     </div>
-                    <div class="col-md-8">
-                        <h5 id="productName" class="fw-bold text-info"></h5>
+
+                    <!-- Thông tin sản phẩm -->
+                    <div class="col-md-6">
+                        <h4 id="productName" class="fw-bold text-info mb-3"></h4>
                         <p><strong>Số lượng còn:</strong> <span id="productStock"></span></p>
                         <p><strong>Giá gốc:</strong> <span id="originalPrice"></span></p>
                         <p><strong>Giá khuyến mãi:</strong> <span id="salePrice"></span></p>
-                        <p><strong>Trạng thái:</strong> <span id="productStatus" class="text-danger">Hết hàng</span></p>
+                        <p><strong>Trạng thái:</strong>
+                            <span id="productStatus" class="status-label">Hết hàng</span>
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
-
 
         {{-- Biểu đồ doanh thu theo tháng --}}
         <div class="card mb-4 shadow-sm rounded-4">
@@ -236,7 +242,7 @@
                                         onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
                                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     {{ $product->product_name }}
                                     @if ($product->variant_attributes)
                                         <br>
@@ -248,7 +254,7 @@
 
 
                                 <td class="text-center">{{ $product->total_quantity }}</td>
-                                <td class="text-end text-success fw-semibold">
+                                <td class="text-end text-success fw-semibold text-center">
                                     {{ number_format($product->latest_price, 0, ',', '.') }}đ
                                 </td>
                             </tr>
@@ -273,7 +279,7 @@
                             <th class="text-center" style="width: 60px;">#</th>
                             <th>Tên khách hàng</th>
                             <th class="text-center">Số đơn hàng</th>
-                            <th class="text-end">Tổng chi tiêu</th>
+                            <th class="text-center">Tổng chi tiêu</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -282,7 +288,7 @@
                                 <td class="text-center fw-bold">{{ $index + 1 }}</td>
                                 <td>{{ $customer->name }}</td>
                                 <td class="text-center">{{ $customer->orders_count }}</td>
-                                <td class="text-end text-success fw-bold">
+                                <td class="text-end text-success fw-bold text-center">
                                     {{ number_format($customer->orders_sum_total_price, 0, ',', '.') }} ₫
                                 </td>
                             </tr>
