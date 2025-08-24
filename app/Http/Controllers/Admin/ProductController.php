@@ -20,7 +20,6 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        // --- 1. Query sản phẩm ---
         $query = Product::with(['category', 'variants'])
             ->withCount([
                 'variants as min_price' => function ($q) {
@@ -66,11 +65,10 @@ class ProductController extends Controller
                     });
                 });
             } elseif ($status === 'Ẩn') {
-                $query->where('status', 0); // chỉ lấy sản phẩm ẩn
+                $query->where('status', 0);
             }
         } else {
-            // Admin mặc định thấy cả sp ẩn + sp active
-            $query->whereIn('status', [0, 1]);
+            $query->whereIn('status', [0, 1, 2]);
         }
 
         // --- 4. Lọc theo danh mục ---
@@ -106,11 +104,13 @@ class ProductController extends Controller
         $totalStockQuantity = Product::where('product_type', 'simple')->sum('quantity_in_stock') +
             ProductVariant::sum('quantity_in_stock');
 
+        //  Tổng số sản phẩm (product_id duy nhất)
+        $totalProductsCount = Product::count();
+
         // --- 6. Kết quả ---
         $products = $query->paginate(10);
         $categories = Category::all();
         $hiddenProductsCount = Product::where('status', 0)->count();
-
 
         return view('admin.products.index', compact(
             'products',
@@ -118,11 +118,10 @@ class ProductController extends Controller
             'availableProductsCount',
             'outOfStockProductsCount',
             'totalStockQuantity',
-            'hiddenProductsCount'
+            'hiddenProductsCount',
+            'totalProductsCount'
         ));
     }
-
-
     public function create()
     {
         $categories = Category::all();
@@ -130,7 +129,6 @@ class ProductController extends Controller
 
         return view('admin.products.create', compact('categories', 'origins'));
     }
-
     public function store(Request $request)
     {
         $rules = [
@@ -217,18 +215,28 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công.');
     }
-
     public function edit($id)
     {
         $product = Product::with('variants.attributeValues.attribute', 'origin')->findOrFail($id);
         $categories = Category::all();
         $attributes = Attribute::with('values')->get();
         $origins = ProductOrigin::all();
+
+        // Kiểm tra sản phẩm có biến thể không
         $hasVariants = $product->variants && $product->variants->isNotEmpty();
 
-        return view('admin.products.edit', compact('product', 'categories', 'attributes', 'hasVariants', 'origins'));
-    }
+        // Nếu có biến thể, lấy biến thể đầu tiên để dùng cho form (ví dụ SKU, khối lượng, ...)
+        $variant = $hasVariants ? $product->variants->first() : null;
 
+        return view('admin.products.edit', compact(
+            'product',
+            'categories',
+            'attributes',
+            'hasVariants',
+            'origins',
+            'variant'
+        ));
+    }
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
@@ -245,6 +253,7 @@ class ProductController extends Controller
             'quantity_in_stock' => 'nullable|integer|min:0',
         ]);
 
+        // Tính giá sau giảm
         if (!empty($validated['original_price']) && !empty($validated['discount_percent'])) {
             $percent = $validated['discount_percent'];
             $discountAmount = $validated['original_price'] * ($percent / 100);
@@ -253,6 +262,7 @@ class ProductController extends Controller
             $validated['discounted_price'] = null;
         }
 
+        // Xử lý upload ảnh
         if ($request->hasFile('image')) {
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
@@ -262,102 +272,110 @@ class ProductController extends Controller
 
         unset($validated['discount_percent']);
 
+        // Cập nhật dữ liệu cơ bản
         $product->update($validated);
 
+        // Nếu có biến thể thì tổng hợp lại quantity
         if ($product->variants()->exists()) {
             $totalVariantQty = $product->variants()->sum('quantity_in_stock');
             $product->update(['quantity_in_stock' => $totalVariantQty]);
+        } else {
+            $totalVariantQty = $product->quantity_in_stock;
         }
 
-        $product->update([
-            'status' => $product->quantity_in_stock > 0 ? 1 : 0
-        ]);
+        // ✅ Cập nhật trạng thái sản phẩm
+        // Nếu đang ẩn (status = 0) thì giữ nguyên
+        if ($product->status != 0) {
+            if ($totalVariantQty > 0) {
+                $product->update(['status' => 1]); // còn hàng
+            } else {
+                $product->update(['status' => 2]); // hết hàng
+            }
+        }
 
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công.');
     }
-
     public function destroy(Request $request, $id)
     {
         $product = Product::with('variants')->findOrFail($id);
         $actionType = $request->input('action_type');
 
-        // Trạng thái hoàn tất hoặc hủy
-        $completedStatuses = [4, 6];
-
-        // Kiểm tra đơn hàng chưa hoàn tất (cả sản phẩm chính và variants)
-        $hasPendingOrders =
-            $product->orderDetails()
-            ->whereHas('order', fn($q) => $q->whereNotIn('status', $completedStatuses))
-            ->exists()
-            ||
-            OrderDetail::whereIn('product_variant_id', $product->variants->pluck('id'))
-            ->whereHas('order', fn($q) => $q->whereNotIn('status', $completedStatuses))
-            ->exists();
-
-        if ($hasPendingOrders) {
-            return redirect()->route('admin.products.index')
-                ->with('error', 'Không thể ẩn sản phẩm vì đang có trong đơn hàng chưa hoàn tất.');
-        }
-
-        // Kiểm tra giỏ hàng
-        $inCart =
-            CartItem::where('product_id', $product->id)->exists()
-            ||
-            CartItem::whereIn('product_variant_id', $product->variants->pluck('id'))->exists();
-
-        if ($inCart) {
-            return redirect()->route('admin.products.index')
-                ->with('error', 'Không thể ẩn sản phẩm vì đang có trong giỏ hàng.');
-        }
-
         if ($actionType === 'hide') {
-            $product->update(['status' => 0]); // chỉ đổi trạng thái, số lượng vẫn giữ nguyên
-            return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được ẩn.');
-        }
+            $completedStatuses = [4, 6];
 
-        if ($actionType === 'delete') {
-            // Xóa ảnh sản phẩm
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
+            $hasPendingOrders =
+                $product->orderDetails()
+                ->whereHas('order', fn($q) => $q->whereNotIn('status', $completedStatuses))
+                ->exists()
+                ||
+                OrderDetail::whereIn('product_variant_id', $product->variants->pluck('id'))
+                ->whereHas('order', fn($q) => $q->whereNotIn('status', $completedStatuses))
+                ->exists();
+
+            if ($hasPendingOrders) {
+                return redirect()->route('admin.products.index')
+                    ->with('error', 'Không thể ẩn sản phẩm vì đang có trong đơn hàng chưa hoàn tất.');
             }
 
-            // Xóa variants
-            $product->variants->each(function ($variant) {
-                if ($variant->image && Storage::disk('public')->exists($variant->image)) {
-                    Storage::disk('public')->delete($variant->image);
-                }
-                $variant->forceDelete();
-            });
+            $inCart =
+                CartItem::where('product_id', $product->id)->exists()
+                ||
+                CartItem::whereIn('product_variant_id', $product->variants->pluck('id'))->exists();
 
-            // Xóa sản phẩm
-            $product->forceDelete();
+            if ($inCart) {
+                return redirect()->route('admin.products.index')
+                    ->with('error', 'Không thể ẩn sản phẩm vì đang có trong giỏ hàng.');
+            }
 
-            return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được xóa hoàn toàn.');
+            //  KHÔNG gọi recalcStockAndStatus ở đây    
+            $product->update(['status' => 0]);
+
+            return redirect()->route('admin.products.index')
+                ->with('success', 'Sản phẩm đã được ẩn.');
         }
+        if ($actionType === 'show') {
+            // Nếu sản phẩm có số lượng > 0 thì là còn hàng (1), ngược lại hết hàng (2)
+            $newStatus = $product->quantity_in_stock > 0 ? 1 : 2;
+            $product->update(['status' => $newStatus]);
+
+            return redirect()->route('admin.products.index')
+                ->with('success', 'Sản phẩm đã được hiển thị.');
+        }
+
+
 
         return redirect()->route('admin.products.index')
             ->with('error', 'Hành động không hợp lệ.');
     }
-
     public function showVariants($id)
     {
         $product = Product::with('variants')->findOrFail($id);
         return view('products.variants', compact('product'));
     }
-
     public function show($id)
     {
+        // Lấy sản phẩm kèm quan hệ category, origin và variants (kèm attribute values)
         $product = Product::with([
             'category',
             'origin',
             'variants.attributeValues.attribute'
         ])->findOrFail($id);
 
-        $product->setRelation(
-            'variants',
-            $product->variants()->orderBy('price', 'asc')->get()
-        );
+        // Lấy tất cả biến thể (kể cả bị ẩn), sắp xếp theo giá
+        $variants = $product->variants()->orderBy('price', 'asc')->get();
 
-        return view('admin.products.show', compact('product'));
+        // Nếu sản phẩm có biến thể => tính tổng tồn kho từ biến thể đang active (status = 1)
+        $totalStock = $variants->isNotEmpty()
+            ? $product->variants()->where('status', 1)->sum('quantity_in_stock')
+            : $product->quantity_in_stock; // Nếu không có biến thể thì lấy stock của sản phẩm đơn
+
+        // Gắn lại danh sách variants vào product để Blade không query thêm
+        $product->setRelation('variants', $variants);
+
+        return view('admin.products.show', [
+            'product' => $product,
+            'totalStock' => $totalStock
+        ]);
     }
+    
 }

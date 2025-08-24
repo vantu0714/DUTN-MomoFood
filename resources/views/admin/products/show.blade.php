@@ -77,14 +77,14 @@
                             <div class="col-sm-6">
                                 <div class="info-item">
                                     <label class="form-label text-muted fw-semibold mb-2 small text-uppercase">
-                                        <i class="fas fa-boxes me-1"></i>Số lượng tồn kho
+                                        <i class="fas fa-boxes me-1"></i>Số lượng
                                     </label>
                                     <div class="fw-bold fs-5 d-flex align-items-center">
-                                        @if ($product->quantity_in_stock > 10)
-                                            <span class="text-success me-2">{{ $product->quantity_in_stock }}</span>
+                                        @if ($totalStock > 10)
+                                            <span class="text-success me-2">{{ $totalStock }}</span>
                                             <i class="fas fa-check-circle text-success"></i>
-                                        @elseif($product->quantity_in_stock > 0)
-                                            <span class="text-warning me-2">{{ $product->quantity_in_stock }}</span>
+                                        @elseif($totalStock > 0)
+                                            <span class="text-warning me-2">{{ $totalStock }}</span>
                                             <i class="fas fa-exclamation-triangle text-warning"></i>
                                         @else
                                             <span class="text-danger me-2">0</span>

@@ -91,8 +91,10 @@ class ProductVariant extends Model
     {
         return $this->belongsToMany(AttributeValue::class, 'product_variant_values', 'product_variant_id', 'attribute_value_id')
             ->withPivot('price_adjustment')
+            ->with('attribute') // eager load attribute từ AttributeValue
             ->withTimestamps();
     }
+
     public function scopeVisible($query)
     {
         return $query->where('status', 1);
@@ -101,5 +103,11 @@ class ProductVariant extends Model
     {
         return $query->where('status', 1)
             ->where('quantity_in_stock', '>', 0);
+    }
+    public function getSizeIdAttribute()
+    {
+        return optional($this->values->first(function ($v) {
+            return $v->attribute && $v->attribute->name === 'Khối lượng';
+        }))->id;
     }
 }

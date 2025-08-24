@@ -317,7 +317,23 @@ class OrderController extends Controller
         // Hoàn hàng (5) → Yêu cầu lý do
         elseif ($newStatus == 5) {
             $request->validate(['reason' => 'required|string|max:1000']);
+
+            // Nếu đã thanh toán thì chuyển sang trạng thái hoàn tiền
+            if ($order->payment_status === 'paid') {
+                $order->payment_status = 'refunded';
+                $refundMessage = " Đã thực hiện hoàn tiền.";
+            } else {
+                $refundMessage = "";
+            }
+
+            $order->status = 5;
             $order->reason = $request->reason;
+
+            $order->return_processed_at = now();
+
+            $order->save();
+
+            return back()->with('success', 'Đã xác nhận hoàn hàng.' . $refundMessage);
         }
         // Các trường hợp khác
         else {
@@ -347,9 +363,49 @@ class OrderController extends Controller
         return redirect()->route('admin.orders.index')->with('success', 'Đã hủy đơn hàng.');
     }
 
-    public function approveReturn($id)
+    public function reject(Request $request, $id)
     {
         $order = Order::findOrFail($id);
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        if ($order->status != 1) {
+            return back()->with('error', 'Chỉ có thể không xác nhận đơn hàng ở trạng thái chưa xác nhận.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Xử lý hoàn tiền nếu đã thanh toán
+            $refundMessage = '';
+            if ($order->payment_status === 'paid') {
+                $order->payment_status = 'refunded';
+            }
+
+            // Cập nhật trạng thái đơn hàng
+            $order->update([
+                'status' => 10,
+                'reason' => $request->reason,
+                'payment_status' => $order->payment_status,
+            ]);
+
+            DB::commit();
+
+            if ($order->payment_status === 'refunded') {
+                return redirect()->route('admin.orders.index')->with('success', 'Đã không xác nhận đơn hàng. ' . $refundMessage);
+            } else {
+                return redirect()->route('admin.orders.index')->with('success', 'Đã không xác nhận đơn hàng.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    public function approveReturn($id)
+    {
+        $order = Order::with('orderDetails.product', 'orderDetails.productVariant')->findOrFail($id);
 
         // Kiểm tra trạng thái hiện tại phải là "Chờ xử lý hoàn hàng" (7)
         if ($order->status != 7) {
@@ -364,6 +420,16 @@ class OrderController extends Controller
                 'return_approved' => true,
                 'return_processed_at' => now(),
             ]);
+
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
+            }
 
             DB::commit();
             return back()->with('success', 'Đã chấp nhận yêu cầu hoàn hàng và cập nhật trạng thái hoàn tiền.');

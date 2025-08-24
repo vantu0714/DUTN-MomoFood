@@ -11,14 +11,15 @@ class CommentController extends Controller
 {
     // Danh sách sản phẩm có bình luận
     public function index()
-    {
-        $products = Product::whereHas('comments')
-            ->withCount('comments')
-            ->with('comments')
-            ->get();
+{
+    $products = Product::whereHas('comments')
+        ->withCount('comments')
+        ->with(['comments', 'variants.attributeValues.attribute']) // load thêm biến thể
+        ->get();
 
-        return view('admin.comments.index', compact('products'));
-    }
+    return view('admin.comments.index', compact('products'));
+}
+
 
     // Xem chi tiết bình luận của một sản phẩm
     public function show(Product $product)

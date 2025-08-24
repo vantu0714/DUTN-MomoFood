@@ -724,7 +724,6 @@
                 const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
                 const productDescription = this.dataset.productDescription || '';
                 const variants = JSON.parse(this.dataset.variants || '[]');
-                console.log("Loaded variants:", variants);
                 // Reset modal
                 productIdInput.value = productId;
                 productNameEl.textContent = productName;
@@ -871,7 +870,7 @@
 
                 if (quantityInput) {
                     quantityInput.addEventListener('input', function() {
-                        const max = totalStock || totalStockQuantity;
+                        const max = parseInt(quantityInput.max) || totalStockQuantity;
                         let value = parseInt(quantityInput.value) || 1;
 
                         if (value > max) {
@@ -1017,6 +1016,7 @@
         pointer-events: none !important;
         cursor: not-allowed !important;
     }
+
     .variant-option.disabled-variant {
         background-color: #f8f9fa !important;
         border-color: #ccc !important;
@@ -1049,9 +1049,11 @@
         flex-shrink: 0;
         display: block;
     }
+
     a.h5.d-block.mb-2:hover {
         color: #d67054 !important;
     }
+
     .product-card {
         padding: 1rem;
         background-color: #f8f9fa;
@@ -1060,6 +1062,7 @@
         min-height: 100%;
 
     }
+
     .product-price {
         text-align: left;
         padding-left: 0.5rem;
@@ -1067,6 +1070,7 @@
         margin-left: 0;
         /* đảm bảo không bị lệch */
     }
+
     .image-wrapper {
         width: 150px !important;
         height: 150px !important;

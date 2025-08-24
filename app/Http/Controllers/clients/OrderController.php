@@ -135,7 +135,7 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $userId = Auth::id();
-        $cart = Cart::with('items')->where('user_id', $userId)->firstOrFail();
+        $cart = Cart::with('items.product', 'items.productVariant')->where('user_id', $userId)->firstOrFail();
 
         // Lấy selected_ids từ request hoặc session
         $selectedIds = [];
@@ -275,6 +275,14 @@ class OrderController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->discounted_price,
                 ]);
+
+                $item->product->quantity_in_stock -= $item->quantity;
+                $item->product->save();
+
+                if (!is_null($item->productVariant)) {
+                    $item->productVariant->quantity_in_stock -= $item->quantity;
+                    $item->productVariant->save();
+                }
             }
 
             // Cập nhật trạng thái VIP
@@ -366,7 +374,7 @@ class OrderController extends Controller
             'reason' => 'required|string|max:1000',
         ]);
 
-        $order = Order::where('id', $id)
+        $order = Order::where('id', $id)->with('orderDetails.product', 'orderDetails.productVariant')
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
@@ -378,12 +386,34 @@ class OrderController extends Controller
         try {
             $order->update([
                 'status' => 6,
-                'reason' => $request->reason,
-                'cancelled_at' => now()
+                'reason' => $request->reason
             ]);
 
+            // Xử lý hoàn tiền nếu đã thanh toán
+            if ($order->payment_status === 'paid') {
+                $order->update([
+                    'payment_status' => 'refunded'
+                ]);
+            }
+
+            // Hoàn lại số lượng tồn kho
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
+            }
+
             DB::commit();
-            return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');
+
+            if ($order->payment_status === 'refunded') {
+                return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công. Số tiền ' . number_format($order->total_price, 0, ',', '.') . 'đ sẽ được hoàn trả trong vòng 3-5 ngày làm việc.');
+            } else {
+                return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Hủy đơn hàng thất bại: ' . $e->getMessage());

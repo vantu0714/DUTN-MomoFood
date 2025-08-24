@@ -339,12 +339,16 @@
                                 <span class="text-muted">Cập nhật lần cuối:</span>
                                 <span class="fw-semibold">{{ $product->updated_at->format('d/m/Y H:i') }}</span>
                             </div>
-
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-muted">Trạng thái:</span>
-                                <span class="badge {{ $product->quantity_in_stock > 0 ? 'bg-success' : 'bg-danger' }}">
-                                    {{ $product->quantity_in_stock > 0 ? 'Còn hàng' : 'Hết hàng' }}
-                                </span>
+                                @if ($product->status == 0)
+                                    <span class="badge bg-secondary">Ẩn</span>
+                                @else
+                                    <span
+                                        class="badge {{ $product->quantity_in_stock > 0 ? 'bg-success' : 'bg-danger' }}">
+                                        {{ $product->quantity_in_stock > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -497,11 +501,22 @@
 
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                                            data-bs-toggle="tooltip" title="Xóa biến thể"
-                                                            onclick="deleteVariant({{ $variant->id }}, '{{ $variant->sku }}')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
+                                                        @if ($variant->status == 1)
+                                                            <!-- Đang hiện thì cho phép Ẩn -->
+                                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                                data-bs-toggle="tooltip" title="Ẩn biến thể"
+                                                                onclick="toggleVariantStatus({{ $variant->id }}, 'hide')">
+                                                                <i class="fas fa-toggle-off"></i>
+                                                            </button>
+                                                        @else
+                                                            <!-- Đang ẩn thì cho phép Hiện -->
+                                                            <button type="button" class="btn btn-sm btn-outline-success"
+                                                                data-bs-toggle="tooltip" title="Hiện biến thể"
+                                                                onclick="toggleVariantStatus({{ $variant->id }}, 'show')">
+                                                                <i class="fas fa-toggle-on"></i>
+                                                            </button>
+                                                        @endif
+
                                                     </div>
                                                 </td>
                                             </tr>
@@ -544,11 +559,15 @@
                             id="editMainAttributeName" required>
                         <input type="hidden" name="main_attribute_id" id="editMainAttributeId">
                     </div>
-                    <!-- Chọn Size -->
                     @php
-                        $currentSubAttributeId = $variant->sub_attribute_id ?? null;
                         $sizeAttr = $attributes->firstWhere('name', 'Khối lượng');
+                        $currentSubAttributeId = optional(
+                            optional($variant)->values?->first(
+                                fn($v) => $v->attribute && $v->attribute->name === 'Khối lượng',
+                            ),
+                        )->id;
                     @endphp
+
 
                     <div class="mb-3">
                         <label for="editSubAttributeId" class="form-label">Khối lượng</label>
@@ -565,6 +584,7 @@
                             @endif
                         </select>
                     </div>
+
                     <div class="mb-3">
                         <label for="editPrice" class="form-label">Giá (VND)</label>
                         <input type="number" class="form-control" name="price" id="editPrice" min="0"
@@ -707,36 +727,78 @@
         }
     });
 
-    function deleteVariant(variantId) {
-        if (!confirm("Bạn có chắc muốn ẩn biến thể này không?")) return;
+    function toggleVariantStatus(variantId, actionType) {
+        let confirmMsg = actionType === "hide" ?
+            "Bạn có chắc muốn ẩn biến thể này không?" :
+            "Bạn có chắc muốn hiện biến thể này không?";
 
-        fetch(`/admin/product-variants/${variantId}/destroy`, {
-                method: "DELETE",
-                headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    "Accept": "application/json"
-                }
-            })
+        Swal.fire({
+            title: 'Xác nhận',
+            text: confirmMsg,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
 
-            .then(async res => {
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text);
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    alert(data.message);
-                    location.reload();
-                }
-            })
-            .catch(err => {
-                console.error("❌ Lỗi xoá:", err);
-                alert("Có lỗi xảy ra khi ẩn biến thể!");
-            });
+            fetch(`/admin/product-variants/${variantId}/toggle-status`, {
+                    method: "PATCH",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            "content"),
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        action_type: actionType
+                    })
+                })
+                .then(async res => {
+                    const contentType = res.headers.get('content-type');
+
+                    if (!res.ok) {
+                        let message = 'Có lỗi xảy ra khi thay đổi trạng thái.';
+                        if (contentType && contentType.includes('application/json')) {
+                            const data = await res.json();
+                            message = data.error || data.message || message;
+                        } else {
+                            console.error(await res.text());
+                        }
+
+                        await Swal.fire({
+                            title: 'Thất bại!',
+                            text: message,
+                            icon: 'error'
+                        });
+                        return Promise.reject(); // Ngắt chain ở đây
+                    }
+
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return; // Ngăn lỗi khi chain bị reject
+                    Swal.fire({
+                        title: 'Thành công!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                })
+                .catch(err => {
+                    if (err) {
+                        console.error("❌ Lỗi toggle:", err);
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: "Có lỗi xảy ra khi thay đổi trạng thái biến thể!",
+                            icon: 'error'
+                        });
+                    }
+                });
+        });
     }
 
 
@@ -849,23 +911,43 @@
                         if (!response.ok) {
                             if (contentType && contentType.includes('application/json')) {
                                 const data = await response.json();
-                                alert('Cập nhật thất bại: ' + (data?.message ||
-                                    'Có lỗi xảy ra'));
+                                Swal.fire({
+                                    title: 'Thất bại!',
+                                    text: data?.error || data?.message ||
+                                        'Có lỗi xảy ra',
+                                    icon: 'error'
+                                });
                             } else {
                                 console.error(await response.text());
-                                alert('Cập nhật thất bại (xem console)');
+                                Swal.fire({
+                                    title: 'Thất bại!',
+                                    text: 'Cập nhật thất bại (xem console)',
+                                    icon: 'error'
+                                });
                             }
                             return;
                         }
 
-                        alert('Cập nhật thành công!');
-                        bootstrap.Modal.getInstance(document.getElementById('editVariantModal'))
-                            ?.hide();
-                        setTimeout(() => location.reload(), 500);
+                        Swal.fire({
+                            title: 'Thành công!',
+                            text: 'Cập nhật thành công!',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            bootstrap.Modal.getInstance(document.getElementById(
+                                'editVariantModal'))?.hide();
+                            setTimeout(() => location.reload(), 500);
+                        });
+
                     })
                     .catch(error => {
                         console.error('❌ Fetch Error:', error);
-                        alert('Đã xảy ra lỗi không xác định khi cập nhật.');
+                        Swal.fire({
+                            title: 'Lỗi!',
+                            text: 'Đã xảy ra lỗi không xác định khi cập nhật.',
+                            icon: 'error'
+                        });
                     });
 
             });
@@ -874,10 +956,8 @@
             document.getElementById('editMainAttributeName')?.addEventListener('input', generateSku);
             document.getElementById('editSubAttributeId')?.addEventListener('change', generateSku);
         }
+
     });
-
-
-
     // Thêm event listener cho cả hai input
     document.getElementById('original_price').addEventListener('input', calculateDiscountedPrice);
     document.getElementById('discount_percent').addEventListener('input', calculateDiscountedPrice);
