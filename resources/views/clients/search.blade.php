@@ -227,7 +227,6 @@
                                             <p class="text-muted small mb-3">
                                                 {{ Str::limit($product->description ?? 'Không có mô tả', 60) }}
                                             </p>
-
                                             <div class="mt-auto d-flex justify-content-between align-items-center">
                                                 <div>
                                                     <div class="fw-bold fs-5" style="color: #db735b;">
@@ -562,7 +561,7 @@
                             .quantity_in_stock > 0) && v.status !== 0);
                         if (availableVariants.length > 0) {
                             const prices = availableVariants.map(v => v.discounted_price || v
-                            .price);
+                                .price);
                             const minPrice = Math.min(...prices);
                             const maxPrice = Math.max(...prices);
 
@@ -590,7 +589,7 @@
                             const variantPrice = variant.discounted_price || variant.price;
                             const variantOriginal = variant.price;
                             const stock = variant.quantity_in_stock || variant.quantity ||
-                            0;
+                                0;
                             const isAvailable = stock > 0 && variant.status !== 0;
 
                             const html = `
@@ -603,8 +602,7 @@
                             data-variant-stock="${stock}"
                             data-variant-weight="${weightText}"
                             data-variant-image="${imageUrl}">
-
-                            ${!isAvailable ? '<span class="stock-badge">Hết hàng</span>' : ''}
+${!isAvailable ? '<span class="stock-badge">Hết hàng</span>' : ''}
 
                             <img src="${imageUrl}" alt="variant-image"
                                 class="rounded me-3"
@@ -651,7 +649,6 @@
                                             original > price) ?
                                         'inline' : 'none';
                                     productImageEl.src = imageUrl;
-
                                     // Cập nhật số lượng tối đa
                                     quantityInput.max = stock;
                                     stockQuantityEl.textContent = stock;

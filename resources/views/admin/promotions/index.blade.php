@@ -10,20 +10,12 @@
                 </h1>
                 <p class="text-muted mb-0">Danh sách mã giảm giá hiện có</p>
             </div>
-            <a href="{{ route('admin.promotions.create') }}" class="btn btn-primary btn-sm shadow">
+            <a href="{{ route('admin.promotions.create') }}" class="btn-primary btn-sm shadow">
                 <i class="fas fa-plus me-1"></i>
                 Thêm mã giảm giá
             </a>
         </div>
-
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
+        
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom-0 py-3">
                 <h6 class="mb-0 fw-semibold">
@@ -104,13 +96,13 @@
                                             <form id="delete-form-{{ $promotion->id }}"
                                                 action="{{ route('admin.promotions.destroy', $promotion->id) }}"
                                                 method="POST" style="display: inline;">
-                                              @csrf
-                                              @method('DELETE')
-                                              <button type="button" class="btn btn-sm btn-outline-danger"
-                                                      onclick="confirmDelete({{ $promotion->id }})">
-                                                  <i class="fas fa-trash"></i>
-                                              </button>
-                                          </form>
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="confirmDelete({{ $promotion->id }})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -150,3 +142,22 @@
         });
     }
 </script>
+
+<style>
+    /* Gom style chung cho nút hành động */
+    .d-flex .btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        /* bỏ padding mặc định của Bootstrap */
+        border-radius: 8px;
+        /* bo tròn mềm */
+        font-size: 14px;
+    }
+
+    /* Nếu muốn tròn hẳn thì dùng: */
+    /* border-radius: 50%; */
+</style>
