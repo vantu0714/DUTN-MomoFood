@@ -384,3 +384,38 @@ input[type=number] {
     margin-right: 5px;
     margin-top: 3px;
 }
+.product-image-box {
+    display: flex;
+    align-items: center;   /* căn giữa theo chiều dọc */
+    justify-content: center; /* căn giữa theo chiều ngang */
+    
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;              /* ảnh fill đều khung */
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.product-image:hover {
+    transform: scale(1.05);         /* zoom nhẹ */
+}
+
+/* Trạng thái sản phẩm */
+.status-label {
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.status-label.text-danger {
+    background: #ffe3e3;
+    color: #d90429;
+}
+
+.status-label.text-success {
+    background: #d1f7d6;
+    color: #2d6a4f;
+}
