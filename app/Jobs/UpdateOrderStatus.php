@@ -66,9 +66,10 @@ class UpdateOrderStatus implements ShouldQueue
         if ($this->targetStatus == 3 && !in_array($order->status, [5, 7, 8])) {
             UpdateOrderStatus::dispatch($order, 9)
                 ->delay(now()->addMinutes(1));
+            // ->delay(now()->addSeconds(30));
         } elseif ($this->targetStatus == 9 && !in_array($order->status, [5, 7, 8])) {
             UpdateOrderStatus::dispatch($order, 4)
-                ->delay(now()->addMinutes(1));
+                ->delay(now()->addSeconds(30));
         }
     }
 }

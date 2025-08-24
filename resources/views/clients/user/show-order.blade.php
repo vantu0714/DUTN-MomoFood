@@ -12,6 +12,7 @@
             7 => 'Chờ xử lý hoàn hàng',
             8 => 'Hoàn hàng thất bại',
             9 => 'Đã giao hàng',
+            10 => 'Không xác nhận',
         ];
 
         $paymentStatusLabels = [
@@ -30,6 +31,7 @@
             7 => 'bg-purple text-white',
             8 => 'bg-danger text-white',
             9 => 'bg-primary text-white',
+            10 => 'bg-danger text-white',
         ];
 
         $paymentStatusClasses = [
@@ -120,12 +122,6 @@
                             </div>
                         </div>
 
-                        @if ($order->status == 6 && $order->reason)
-                            <div class="alert alert-danger p-2 mb-0">
-                                <strong>Lý do hủy:</strong> {{ $order->reason }}
-                            </div>
-                        @endif
-
                         @if ($order->status == 3)
                             <div class="alert alert-info d-flex align-items-center mb-4">
                                 <i class="fas fa-truck fa-2x me-3"></i>
@@ -133,6 +129,17 @@
                                     <h5 class="alert-heading mb-1">Đơn hàng đang được giao</h5>
                                     <p class="mb-0">Đơn hàng của bạn đang trên đường vận chuyển. Vui lòng chú ý điện thoại
                                         để nhận hàng!</p>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($order->status == 10)
+                            <div class="alert alert-danger d-flex align-items-center mb-4">
+                                <i class="fas fa-times-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Đơn hàng không được xác nhận</h5>
+                                    <p class="mb-0">Rất tiếc, đơn hàng của bạn không được xác nhận. Vui lòng liên hệ với
+                                        cửa hàng để biết thêm thông tin.</p>
                                 </div>
                             </div>
                         @endif
@@ -161,6 +168,27 @@
                                 </div>
                             </div>
                         @endif
+
+                        @if ($order->status == 6)
+                            <div class="alert alert-danger d-flex align-items-center mb-4">
+                                <i class="fas fa-times-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Đã huỷ đơn hàng</h5>
+                                    <p class="mb-0">Đã huỷ đơn hàng thành công. Vui lòng liên hệ với
+                                        cửa hàng.</p>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($order->status == 5)
+                            <div class="alert alert-success d-flex align-items-center mb-4">
+                                <i class="fas fa-check-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Đơn hàng đã được xác nhận hoàn trả</h5>
+                                    <p class="mb-0">Vui lòng liên hệ với cửa hàng để được hoàn trả lại tiền</p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -185,13 +213,22 @@
                                     'color' => 'secondary',
                                 ];
 
-                                // Thêm các trạng thái khác nếu có timestamp
                                 if ($order->confirmed_at) {
                                     $statusHistory[] = [
                                         'label' => 'Đã xác nhận',
                                         'time' => $order->confirmed_at,
                                         'icon' => 'fas fa-check-circle',
                                         'color' => 'info',
+                                    ];
+                                }
+
+                                if ($order->status == 10) {
+                                    $statusHistory[] = [
+                                        'label' => 'Không xác nhận',
+                                        'time' => $order->updated_at,
+                                        'icon' => 'fas fa-times-circle',
+                                        'color' => 'danger',
+                                        'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
                                     ];
                                 }
 
@@ -206,7 +243,7 @@
 
                                 if ($order->delivered_at) {
                                     $statusHistory[] = [
-                                        'label' => 'Đang giao hàng',
+                                        'label' => 'Đã giao hàng',
                                         'time' => $order->delivered_at,
                                         'icon' => 'fas fa-box-open',
                                         'color' => 'success',
@@ -373,7 +410,8 @@
                                         <td>
                                             <strong class="d-block">{{ $product->product_name ?? '[Đã xoá]' }}</strong>
                                             @foreach ($variantAttributes as $attribute)
-                                                <span class="badge bg-info text-white me-1 mb-1">{{ $attribute }}</span>
+                                                <span
+                                                    class="badge bg-info text-white me-1 mb-1">{{ $attribute }}</span>
                                             @endforeach
                                         </td>
                                         <td class="text-center">

@@ -95,6 +95,7 @@
                         7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
                         8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
                         9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
+                        10 => ['label' => 'Không xác nhận', 'class' => 'danger'],
                     ];
                     $status = $statusLabels[$order->status] ?? ['label' => 'Không rõ', 'class' => 'light'];
 
@@ -137,6 +138,7 @@
                             @php
                                 $statusOptions = [
                                     1 => ['label' => 'Chưa xác nhận', 'class' => 'secondary'],
+                                    10 => ['label' => 'Không xác nhận', 'class' => 'danger'],
                                     2 => ['label' => 'Đã xác nhận', 'class' => 'info'],
                                     3 => ['label' => 'Đang giao', 'class' => 'primary'],
                                     9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
@@ -189,26 +191,26 @@
                         <span class="badge bg-{{ $payment_method['class'] }}">{{ $payment_method['label'] }}</span>
                     </div>
 
-                    @if ($order->status == 6 && $order->reason)
-                        <div class="col-12"><strong>Lý do hủy:</strong> {{ $order->reason }}</div>
+                    @if (($order->status == 6 || $order->status == 10) && $order->reason)
+                        <div class="col-12"><strong>Lý do:</strong> {{ $order->reason }}</div>
                     @endif
 
                     @if ($order->status == 1)
                         <div class="mt-3">
                             <button class="btn btn-danger"
-                                onclick="document.getElementById('cancel-form').classList.toggle('d-none')">
-                                Hủy đơn
+                                onclick="document.getElementById('reject-form').classList.toggle('d-none')">
+                                Không xác nhận đơn hàng
                             </button>
 
-                            <form action="{{ route('admin.orders.cancel', $order->id) }}" method="POST"
-                                class="mt-3 d-none" id="cancel-form">
+                            <form action="{{ route('admin.orders.reject', $order->id) }}" method="POST"
+                                class="mt-3 d-none" id="reject-form">
                                 @csrf
                                 @method('PUT')
                                 <div class="mb-3">
-                                    <label for="reason" class="form-label">Lý do hủy đơn</label>
+                                    <label for="reason" class="form-label">Lý do không xác nhận đơn hàng</label>
                                     <textarea name="reason" class="form-control" rows="3" required placeholder="Nhập lý do..."></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                                <button type="submit" class="btn btn-danger">Xác nhận</button>
                             </form>
                         </div>
                     @endif
@@ -245,7 +247,6 @@
                     @php
                         $statusHistory = [];
 
-                        // Luôn có trạng thái tạo đơn hàng
                         $statusHistory[] = [
                             'label' => 'Đơn hàng được tạo',
                             'time' => $order->created_at,
@@ -253,7 +254,6 @@
                             'color' => 'secondary',
                         ];
 
-                        // Thêm các trạng thái khác nếu có timestamp
                         if ($order->confirmed_at) {
                             $statusHistory[] = [
                                 'label' => 'Đã xác nhận',
@@ -335,6 +335,16 @@
                                         : null,
                                 ];
                             }
+                        }
+
+                        if ($order->status == 10 && $order->updated_at) {
+                            $statusHistory[] = [
+                                'label' => 'Không xác nhận đơn hàng',
+                                'time' => $order->updated_at,
+                                'icon' => 'fas fa-ban',
+                                'color' => 'danger',
+                                'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+                            ];
                         }
 
                         if ($order->status == 6 && $order->updated_at) {
