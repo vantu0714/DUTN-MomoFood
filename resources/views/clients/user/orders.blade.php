@@ -127,7 +127,7 @@
                                                 @elseif($order->status == 5) bg-secondary text-white
                                                 @elseif($order->status == 6) bg-danger text-white
                                                 @elseif($order->status == 7) bg-purple text-white
-                                                @elseif($order->status == 8) bg-dark text-white
+                                                @elseif($order->status == 8) bg-danger text-white
                                                 @elseif ($order->status == 9) bg-primary text-white
                                                 @elseif ($order->status == 10) bg-danger text-white @endif">
                                             {{ $statusLabels[$order->status] ?? 'Không xác định' }}
