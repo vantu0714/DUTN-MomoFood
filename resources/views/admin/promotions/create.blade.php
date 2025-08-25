@@ -74,58 +74,60 @@
                         @enderror
                         <small class="text-danger d-block client-error" id="discount-error" style="display: none;"></small>
                     </div>
+                    {{-- Giảm tối đa nếu là phần trăm --}}
+                    <div class="mb-3" id="max_discount_container"
+                        style="{{ old('discount_type') === 'percent' ? '' : 'display: none;' }}">
+                        <label class="form-label fw-semibold">Số tiền giảm tối đa (Áp dụng cho phần trăm)</label>
+                        <input type="number" step="1" name="max_discount_value" class="form-control"
+                            value="{{ old('max_discount_value') }}">
+                        <small class="text-danger d-block client-error" id="max-discount-error"
+                            style="display: none;"></small>
+                    </div>
+
+
+                    {{-- Chỉ áp dụng cho VIP --}}
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="vip_only" id="vip_only" value="1"
+                            {{ old('vip_only') ? 'checked' : '' }}>
+                        <label class="form-check-label fw-semibold" for="vip_only">Chỉ áp dụng cho khách hàng VIP</label>
+                    </div>
+
+                    {{-- Giới hạn lượt sử dụng --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Giới hạn lượt sử dụng</label>
+                        <input type="number" name="usage_limit" class="form-control" value="{{ old('usage_limit') }}"
+                            placeholder="VD: 100 (bỏ trống nếu không giới hạn)">
+                    </div>
+
+                    {{-- Ngày bắt đầu & kết thúc --}}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Ngày bắt đầu</label>
+                            <input type="datetime-local" name="start_date" class="form-control" required
+                                value="{{ old('start_date', now()->addMinutes(1)->format('Y-m-d\TH:i')) }}">
+                            @error('start_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Ngày kết thúc</label>
+                            <input type="datetime-local" name="end_date" class="form-control" required
+                                value="{{ old('end_date', now()->addDays(1)->format('Y-m-d\TH:i')) }}">
+                            @error('end_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Mô tả --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mô tả</label>
+                        <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
+                    </div>
+
             </div>
 
-            {{-- Giảm tối đa nếu là phần trăm --}}
-            <div class="mb-3" id="max_discount_container"
-                style="{{ old('discount_type') === 'percent' ? '' : 'display: none;' }}">
-                <label class="form-label fw-semibold">Số tiền giảm tối đa (Áp dụng cho phần trăm)</label>
-                <input type="number" step="1" name="max_discount_value" class="form-control"
-                    value="{{ old('max_discount_value') }}">
-                <small class="text-danger d-block client-error" id="max-discount-error" style="display: none;"></small>
-            </div>
-
-
-            {{-- Chỉ áp dụng cho VIP --}}
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" name="vip_only" id="vip_only" value="1"
-                    {{ old('vip_only') ? 'checked' : '' }}>
-                <label class="form-check-label fw-semibold" for="vip_only">Chỉ áp dụng cho khách hàng VIP</label>
-            </div>
-
-            {{-- Giới hạn lượt sử dụng --}}
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Giới hạn lượt sử dụng</label>
-                <input type="number" name="usage_limit" class="form-control" value="{{ old('usage_limit') }}"
-                    placeholder="VD: 100 (bỏ trống nếu không giới hạn)">
-            </div>
-
-            {{-- Ngày bắt đầu & kết thúc --}}
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Ngày bắt đầu</label>
-                    <input type="datetime-local" name="start_date" class="form-control" required
-                        value="{{ old('start_date', now()->addMinutes(1)->format('Y-m-d\TH:i')) }}">
-                    @error('start_date')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Ngày kết thúc</label>
-                    <input type="datetime-local" name="end_date" class="form-control" required
-                        value="{{ old('end_date', now()->addDays(1)->format('Y-m-d\TH:i')) }}">
-                    @error('end_date')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-
-            {{-- Mô tả --}}
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Mô tả</label>
-                <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
-            </div>
 
             {{-- Nút submit --}}
             <div class="text-end">

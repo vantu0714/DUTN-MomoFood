@@ -136,25 +136,20 @@
                     if (disabled) radio.disabled = true;
 
                     const label = document.createElement('label');
-                    label.className = `btn btn-outline-secondary d-flex align-items-center ${disabled ? 'opacity-50' : ''}`;
+                    label.className =
+                        `btn btn-outline-secondary d-flex align-items-center ${disabled ? 'opacity-50' : ''}`;
                     label.setAttribute('for', radio.id);
                     label.style = "width: 150px; flex-direction: column; padding: 10px;";
 
                     const img = document.createElement('img');
                     img.src = `/storage/${variant.image || productImage}`;
-                    img.style = "width: 60px; height: 60px; object-fit: cover; border-radius: 8px;";
+                    img.style =
+                        "width: 60px; height: 60px; object-fit: cover; border-radius: 8px;";
                     img.alt = variant.name || '';
 
                     const text = document.createElement('div');
-                    text.className = 'text-center mt-2 text-dark fw-medium';
+                    text.className = 'text-center mt-2 fw-medium';
                     text.innerText = `${variant.name || ''} - ${variant.weight || ''}`;
-
-                    if (disabled) {
-                        const soldOut = document.createElement('small');
-                        soldOut.className = "text-danger fw-bold mt-1";
-                        soldOut.innerText = "Hết hàng";
-                        label.appendChild(soldOut);
-                    }
 
                     label.appendChild(img);
                     label.appendChild(text);
@@ -185,4 +180,3 @@
         });
     });
 </script>
-
