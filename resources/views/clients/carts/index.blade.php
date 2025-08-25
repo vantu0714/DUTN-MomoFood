@@ -17,15 +17,16 @@
     </div>
 
     @php $total = 0; @endphp
-    <form action="{{ route('carts.removeSelected') }}" method="POST" id="delete-selected-form"
-        onsubmit="return checkSelectedItems()">
+    <form action="{{ route('carts.removeSelected') }}" method="POST" id="delete-selected-form">
         @csrf
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">Danh sách sản phẩm trong giỏ</h5>
-            <button type="submit" class="btn btn-danger btn-sm" {{ count($carts) == 0 ? 'disabled' : '' }}>
+            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteSelected()"
+                {{ count($carts) == 0 ? 'disabled' : '' }}>
                 🗑️ Xóa các sản phẩm đã chọn
             </button>
+
         </div>
 
         <div class="table-responsive">
@@ -51,7 +52,7 @@
                                 $image = $product->image ?? 'clients/img/default.png';
                                 $productName = $product->product_name ?? 'Không có tên';
 
-                                // ✅ Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
+                                // Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
                                 $variantName = '';
                                 if ($variant && $variant->attributeValues) {
                                     $variantName = $variant->attributeValues
@@ -110,12 +111,20 @@
                                 </td>
 
                                 <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
+
                                 <td>
-                                    <a href="{{ route('carts.remove', $item->id) }}"
-                                        class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                    <a href="javascript:void(0)" class="btn btn-sm btn-outline-danger"
+                                        onclick="confirmDeleteCart({{ $item->id }})">
                                         <i class="fa fa-times"></i>
                                     </a>
+
+                                    {{-- Form ẩn để xử lý xóa --}}
+                                    <form id="delete-form-{{ $item->id }}"
+                                        action="{{ route('carts.remove', $item->id) }}" method="POST"
+                                        style="display: none;">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach
@@ -491,14 +500,14 @@
         }
     });
 
-    function checkSelectedItems() {
-        const selected = document.querySelectorAll('.select-item:checked');
-        if (selected.length === 0) {
-            alert('Vui lòng chọn ít nhất 1 sản phẩm để xóa!');
-            return false;
-        }
-        return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');
-    }
+    // function checkSelectedItems() {
+    //     const selected = document.querySelectorAll('.select-item:checked');
+    //     if (selected.length === 0) {
+    //         alert('Vui lòng chọn ít nhất 1 sản phẩm để xóa!');
+    //         return false;
+    //     }
+    //     return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');
+    // }
 
     document.addEventListener('DOMContentLoaded', function() {
         const alertBox = document.querySelector('.alert');
@@ -622,4 +631,64 @@
             @endforeach
         @endif
     @endisset
+</script>
+
+<script>
+    function confirmDeleteCart(itemId) {
+        Swal.fire({
+            title: 'Bạn chắc chắn muốn xóa?',
+            text: "Hành động này không thể hoàn tác!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit form xóa
+                document.getElementById('delete-form-' + itemId).submit();
+            }
+        });
+    }
+</script>
+
+<script>
+    function confirmDeleteSelected() {
+        let selected = document.querySelectorAll('.select-item:checked');
+        if (selected.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Chưa chọn sản phẩm nào!',
+                text: 'Vui lòng chọn ít nhất một sản phẩm để xóa.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Bạn chắc chắn muốn xóa?',
+            text: "Các sản phẩm đã chọn sẽ bị xóa khỏi giỏ hàng.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-selected-form').submit();
+            }
+        });
+    }
+
+    // Chọn tất cả
+    document.getElementById('select-all')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.select-item');
+        checkboxes.forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = this.checked;
+            }
+        });
+    });
 </script>
