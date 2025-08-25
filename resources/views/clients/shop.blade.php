@@ -136,7 +136,7 @@
                                             <i class="fas fa-filter me-1"></i> Lọc
                                         </button>
                                     </div>
-                                </form>
+                              </form>
                             </div>
 
                             <div class="col-lg-12">
@@ -262,21 +262,41 @@
                                                     {{ $product->product_name }}
                                                 </h6>
                                                 <p class="text-muted small mb-2 product-description">
-                                                    {{ $product->description }}</p>
+                                                    {{ $product->description }}
+                                                </p>
                                             </div>
+
+                                            @php
+                                                // Nếu có nhiều biến thể -> lấy min/max price
+                                                if (!empty($variants) && count($variants) > 0) {
+                                                    $prices = collect($variants)->pluck('price')->filter()->all();
+                                                    $minPrice = $prices ? min($prices) : null;
+                                                    $maxPrice = $prices ? max($prices) : null;
+                                                } else {
+                                                    // Sản phẩm đơn giản
+                                                    $minPrice = $price ?? null;
+                                                    $maxPrice = $price ?? null;
+                                                }
+                                            @endphp
 
                                             <div
                                                 class="d-flex justify-content-between align-items-center mt-auto pt-2">
                                                 <div>
-                                                    @if ($price && $original && $price < $original)
+                                                    @if ($minPrice && $maxPrice && $minPrice != $maxPrice)
+                                                        {{-- Hiển thị khoảng giá --}}
                                                         <div class="text-danger fw-bold fs-5 mb-0">
-                                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                                            {{ number_format($minPrice, 0, ',', '.') }} -
+                                                            {{ number_format($maxPrice, 0, ',', '.') }}
+                                                            <small>VND</small>
                                                         </div>
-                                                    @elseif ($price)
+                                                    @elseif ($minPrice)
+                                                        {{-- Hiển thị 1 giá duy nhất --}}
                                                         <div class="text-danger fw-bold fs-5 mb-0">
-                                                            {{ number_format($price, 0, ',', '.') }} <small>VND</small>
+                                                            {{ number_format($minPrice, 0, ',', '.') }}
+                                                            <small>VND</small>
                                                         </div>
                                                     @else
+                                                        {{-- Không có giá --}}
                                                         <div class="text-muted">Liên hệ để biết giá</div>
                                                     @endif
                                                 </div>
@@ -286,8 +306,8 @@
                                                     data-product-name="{{ $product->product_name }}"
                                                     data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
                                                     data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                                    data-product-price="{{ $price ?? 0 }}"
-                                                    data-product-original-price="{{ $original ?? 0 }}"
+                                                    data-product-price="{{ $minPrice ?? 0 }}"
+                                                    data-product-original-price="{{ $maxPrice ?? 0 }}"
                                                     data-product-description="{{ $product->description }}"
                                                     data-variants='@json($variants)'
                                                     data-total-stock="{{ $product->product_type === 'simple' ? $product->quantity_in_stock : $firstVariant?->quantity_in_stock ?? 0 }}"
@@ -295,7 +315,6 @@
                                                     <i class="bi bi-cart3 fa-2x text-danger"></i>
                                                 </button>
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>
@@ -317,7 +336,7 @@
             </div>
         </div>
     </div>
-<!-- Fruits Shop End-->
+    <!-- Fruits Shop End-->
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -626,7 +645,7 @@
             });
         </script>
 
-         <style>
+        <style>
             .section-title {
                 display: flex;
                 justify-content: center;
@@ -648,4 +667,4 @@
             }
         </style>
 
-        @include('clients.layouts.footer')
+@include('clients.layouts.footer')
