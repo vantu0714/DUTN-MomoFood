@@ -224,108 +224,11 @@
     <div class="container py-0">
         <h3 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h3>
 
-        <div class="row g-4">
-            @foreach ($bestSellingProducts as $product)
-                @php
-                    $firstVariant = null;
-                    $variants = [];
-                    $isVariant = $product->product_type === 'variant';
-
-                    if ($isVariant && $product->variants->count() > 0) {
-                        // Lấy giá thấp nhất và cao nhất
-                        $prices = $product->variants->map(function ($v) {
-                            return $v->discounted_price ?? $v->price;
-                        });
-
-                        $minPrice = $prices->min();
-                        $maxPrice = $prices->max();
-
-                        // Lấy biến thể đầu tiên còn hàng
-                        $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
-
-                        $variants = $product->variants->where('quantity_in_stock', '>', 0)->map(function ($v) {
-                            $flavor = $v->attributeValues->firstWhere('attribute.name', 'Vị')?->value;
-                            $weight = $v->attributeValues->firstWhere('attribute.name', 'Khối lượng')?->value;
-
-                            return [
-                                'id' => $v->id,
-                                'flavor' => $flavor,
-                                'weight' => $weight,
-                                'price' => $v->price,
-                                'discounted_price' => $v->discounted_price,
-                                'quantity_in_stock' => $v->quantity_in_stock,
-                                'status' => $v->status,
-                                'image' => $v->image ? asset('storage/' . $v->image) : asset('clients/img/default.jpg'),
-                            ];
-                        });
-                    } else {
-                        // Sản phẩm đơn
-                        $minPrice = $product->discounted_price ?? $product->original_price;
-                        $maxPrice = $product->original_price;
-                    }
-
-                    $avgRating = round($product->comments->avg('rating') ?? 0);
-                @endphp
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
-                        <div class="position-relative">
-                            <a href="{{ route('product-detail.show', $product->id) }}">
-                                <div class="product-img-wrapper">
-                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                        alt="{{ $product->product_name }}"
-                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                        class="img-fluid w-100">
-                                </div>
-                            </a>
-                            <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
-                                {{ $product->category->category_name ?? 'Sản phẩm' }}
-                            </span>
-                        </div>
-
-                        <div class="card-body d-flex flex-column">
-                            <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
-                            <p class="text-muted small mb-2">{{ Str::limit($product->description, 60) }}</p>
-
-                            <div class="mt-auto d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="text-danger fw-bold fs-5">
-                                        @if ($isVariant)
-                                            {{ number_format($minPrice, 0, ',', '.') }} -
-                                            {{ number_format($maxPrice, 0, ',', '.') }} VND
-                                        @else
-                                            {{ number_format($minPrice, 0, ',', '.') }} VND
-                                            @if ($minPrice < $maxPrice)
-                                                <div class="text-muted text-decoration-line-through small">
-                                                    {{ number_format($maxPrice, 0, ',', '.') }} VND
-                                                </div>
-                                            @endif
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <div class="d-flex justify-content-end mt-auto">
-                                    <button type="button" class="btn btn-white open-cart-modal"
-                                        data-product-id="{{ $product->id }}"
-                                        data-product-name="{{ $product->product_name }}"
-                                        data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                        data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                        data-product-price="{{ $minPrice ?? 0 }}"
-                                        data-product-original-price="{{ $maxPrice ?? 0 }}"
-                                        data-product-description="{{ $product->description }}"
-                                        data-total-stock="{{ $isVariant ? $firstVariant->quantity_in_stock ?? 0 : $product->quantity_in_stock }}"
-                                        data-variants='@json($variants)' data-bs-toggle="modal"
-                                        data-bs-target="#cartModal">
-                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+        <div id="filtered-products">
+            <div id="filtered-products">
+                @include('clients.components.filtered-products', ['products' => $bestSellingProducts])
+            </div>
         </div>
-
     </div>
 </div>
 <!-- Banner Section Start-->
@@ -723,7 +626,13 @@
                 const productPrice = parseInt(this.dataset.productPrice || 0);
                 const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
                 const productDescription = this.dataset.productDescription || '';
-                const variants = JSON.parse(this.dataset.variants || '[]');
+                let variants;
+                try {
+                    const parsed = JSON.parse(this.dataset.variants || '[]');
+                    variants = Array.isArray(parsed) ? parsed : Object.values(parsed);
+                } catch (e) {
+                    variants = [];
+                }
                 // Reset modal
                 productIdInput.value = productId;
                 productNameEl.textContent = productName;
