@@ -99,7 +99,12 @@
 
  <!-- Copyright End -->
 
- <script lang="javascript">
+
+<script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>
+<script src="https://files.bpcontent.cloud/2025/08/25/11/20250825110842-DH190MUN.js" defer></script>
+    
+
+ {{-- <script lang="javascript">
      var __vnp = {
          code: 25622,
          key: '',
@@ -114,7 +119,7 @@
          var s = document.getElementsByTagName('script');
          s[0].parentNode.insertBefore(ga, s[0]);
      })();
- </script>
+ </script> --}}
  <!-- Back to Top -->
  <a href="#" class="btn border-3 border-0 rounded-circle back-to-top text-white"
      style="background-color: #db735b;"><i class="fa fa-arrow-up"></i></a>
