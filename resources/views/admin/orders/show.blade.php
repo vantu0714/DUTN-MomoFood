@@ -151,8 +151,7 @@
                             @endphp
 
                             <select name="status" id="order-status-select" class="form-select form-select-sm mt-2"
-                                onchange="handleStatusChange(this)"
-                                {{ in_array($order->status, [5, 6, 8]) ? 'disabled' : '' }}>
+                                onchange="handleStatusChange(this)">
                                 @foreach ($statusOptions as $key => $info)
                                     @php
                                         $canSelect = false;
@@ -161,8 +160,7 @@
                                             $canSelect = true;
                                         }
 
-                                        // Cho phép chuyển từ Đang giao (3) → Hoàn hàng (5)
-                                        if ($order->status == 3 && $key == 5) {
+                                        if ($order->status == 3 && $key == 9) {
                                             $canSelect = true;
                                         }
 
@@ -172,6 +170,10 @@
                                         }
 
                                         if ($order->status == 3 && $key == 4) {
+                                            $canSelect = false;
+                                        }
+
+                                        if ($order->status == 3 && $key == 10) {
                                             $canSelect = false;
                                         }
 
@@ -253,24 +255,6 @@
                             'icon' => 'fas fa-plus-circle',
                             'color' => 'secondary',
                         ];
-
-                        if ($order->confirmed_at) {
-                            $statusHistory[] = [
-                                'label' => 'Đã xác nhận',
-                                'time' => $order->confirmed_at,
-                                'icon' => 'fas fa-check-circle',
-                                'color' => 'info',
-                            ];
-                        }
-
-                        if ($order->shipping_at) {
-                            $statusHistory[] = [
-                                'label' => 'Đang giao hàng',
-                                'time' => $order->shipping_at,
-                                'icon' => 'fas fa-truck',
-                                'color' => 'primary',
-                            ];
-                        }
 
                         if ($order->delivered_at) {
                             $statusHistory[] = [

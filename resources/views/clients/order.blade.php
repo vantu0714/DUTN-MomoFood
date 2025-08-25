@@ -4,19 +4,33 @@
     <div class="container-fluid featurs py-5">
         <div class="container pt-5 mt-5">
             {{-- THÔNG BÁO --}}
+            {{-- Ở chỗ hiển thị thông báo --}}
             @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-                </div>
+                <script>
+                    Toastify({
+                        text: "{{ session('success') }}",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#4CAF50", // xanh lá cho success
+                        stopOnFocus: true
+                    }).showToast();
+                </script>
             @endif
 
             @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-                </div>
+                <script>
+                    Toastify({
+                        text: "{{ session('error') }}",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#f44336", // đỏ cho error
+                        stopOnFocus: true
+                    }).showToast();
+                </script>
             @endif
+
 
             @if ($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
