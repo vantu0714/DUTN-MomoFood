@@ -26,7 +26,7 @@
         <div class="container d-flex align-items-center justify-content-between">
             <!-- Logo -->
             <a href="{{ route('home') }}" class="navbar-brand d-flex align-items-center me-4">
-                <img src="{{ asset('clients/img/logo_datn.png') }}" alt="Logo" style="max-height: 55px;">
+                <img src="{{ asset('clients/img/logo_datn.png') }}" alt="Logo" style="max-height: 95px;">
             </a>
 
             <!-- Collapsible menu -->

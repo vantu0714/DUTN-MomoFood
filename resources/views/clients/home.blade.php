@@ -58,11 +58,40 @@
 
 
 <!-- Hero Banner Fullscreen Start -->
-<div class="hero-banner-full" style="height: 700px; overflow: hidden;">
-    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood"
-        style="width: 100%; height: 100%; object-fit: cover;">
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+    <!-- Chấm tròn điều hướng -->
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+    </div>
+
+    <!-- Ảnh -->
+    <div class="carousel-inner" style="height: 700px; overflow: hidden;">
+        <div class="carousel-item active">
+            <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" class="d-block w-100"
+                style="height: 700px; object-fit: cover;" alt="Banner 1">
+        </div>
+        <div class="carousel-item">
+            <img src="{{ asset('clients/img/01.jpg') }}" class="d-block w-100" style="height: 700px; object-fit: cover;"
+                alt="Banner 2">
+        </div>
+        <div class="carousel-item">
+            <img src="{{ asset('clients/img/02.jpg') }}" class="d-block w-100" style="height: 700px; object-fit: cover;"
+                alt="Banner 3">
+        </div>
+    </div>
+
+    <!-- Nút điều hướng -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
 </div>
 <!-- Hero Banner Fullscreen End -->
+
 
 <!-- Featurs Section Start -->
 <div class="container-fluid featurs py-5">
@@ -89,16 +118,6 @@
                         <p class="mb-0">Thanh toán bảo mật 100%</p>
 
                     </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselId"
-                        data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselId"
-                        data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
                 </div>
             </div>
 
@@ -160,7 +179,7 @@
                 <div class="tab-class text-center mt-4" id="best-selling-section">
                     <div class="row g-4">
                         <div class="col-12 text-start">
-                            <h2 style="color: #e0806d;">MÓN ĂN NỔI BẬT</h2>
+                            <h2 style="color: #e0806d;">SẢN PHẨM MỚI</h2>
 
                         </div>
                     </div>
@@ -219,6 +238,7 @@
     </div>
 </div>
 <!-- Featurs End -->
+
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
     <div class="container py-0">
@@ -232,6 +252,7 @@
     </div>
 </div>
 <!-- Banner Section Start-->
+
 <div class="container-fluid banner bg-secondary my-5">
     <div class="container py-5">
         <div class="row g-4 align-items-center">
@@ -264,9 +285,12 @@
 <div class="container-fluid py-5">
     <div class="container py-0">
         <div class="text-center mx-auto mb-5">
-            <h3 class="display-4" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">
+            <h3 class="display-4"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:2rem;">
                 SIÊU PHẨM ĂN VẶT 5 ⭐
+            </h3>
         </div>
+
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
                 @php
@@ -373,9 +397,10 @@
     <div class="container">
         <div class="bg-light p-3 rounded">
             <h1 class="display-4"
-                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700; text-align: center">
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700; text-align: center; font-size: 2rem;">
                 TIN TỨC 📰
             </h1>
+
             <br>
             <div class="news-grid">
                 <!-- Card 4 -->
