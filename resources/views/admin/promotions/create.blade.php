@@ -77,7 +77,7 @@
                     {{-- Giảm tối đa nếu là phần trăm --}}
                     <div class="mb-3" id="max_discount_container"
                         style="{{ old('discount_type') === 'percent' ? '' : 'display: none;' }}">
-                        <label class="form-label fw-semibold">Số tiền giảm tối đa (Áp dụng cho phần trăm)</label>
+                        <label class="form-label fw-semibold">Số tiền giảm tối đa (Áp dụng cho giảm theo phần trăm)</label>
                         <input type="number" step="1" name="max_discount_value" class="form-control"
                             value="{{ old('max_discount_value') }}">
                         <small class="text-danger d-block client-error" id="max-discount-error"
@@ -86,11 +86,11 @@
 
 
                     {{-- Chỉ áp dụng cho VIP --}}
-                    <div class="form-check mb-3">
+                    {{-- <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="vip_only" id="vip_only" value="1"
                             {{ old('vip_only') ? 'checked' : '' }}>
                         <label class="form-check-label fw-semibold" for="vip_only">Chỉ áp dụng cho khách hàng VIP</label>
-                    </div>
+                    </div> --}}
 
                     {{-- Giới hạn lượt sử dụng --}}
                     <div class="mb-3">

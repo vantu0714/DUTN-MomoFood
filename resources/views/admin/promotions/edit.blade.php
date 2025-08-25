@@ -84,7 +84,7 @@
                     {{-- Giảm tối đa (chỉ áp dụng cho phần trăm) --}}
                     <div class="mb-3" id="max_discount_container"
                         style="{{ old('discount_type', $promotion->discount_type) === 'percent' ? '' : 'display: none;' }}">
-                        <label class="form-label fw-semibold">Giảm tối đa (áp dụng cho %)</label>
+                        <label class="form-label fw-semibold">Giảm tối đa (áp dụng cho giảm theo %)</label>
                         <input type="number" step="1" name="max_discount_value"
                             class="form-control @error('max_discount_value') is-invalid @enderror"
                             value="{{ old('max_discount_value', $promotion->max_discount_value) }}">
