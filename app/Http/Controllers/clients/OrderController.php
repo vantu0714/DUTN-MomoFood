@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -69,13 +70,13 @@ class OrderController extends Controller
             return redirect()->back()->withErrors($errors);
         }
 
-        // ✅ Lấy danh sách tất cả địa chỉ của user
+        //Lấy danh sách tất cả địa chỉ của user
         $savedRecipients = Recipient::where('user_id', $userId)
             ->orderByDesc('is_default')
             ->latest()
             ->get();
 
-        // ✅ Không dùng session: lấy địa chỉ từ request (nếu có), không thì lấy mặc định
+        //Không dùng session: lấy địa chỉ từ request (nếu có), không thì lấy mặc định
         $recipient = null;
         if ($request->has('recipient_id')) {
             $recipient = $savedRecipients->where('id', $request->recipient_id)->first();
@@ -90,6 +91,25 @@ class OrderController extends Controller
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->get();
+
+        // Kiểm tra mã giảm giá đang lưu trong session
+        $promotionCode = session('promotion_code');
+        $discount = session('discount', 0);
+
+        if ($promotionCode) {
+            $promotion = Promotion::where('code', $promotionCode)
+                ->where('status', 1)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->first();
+
+            if (!$promotion || ($promotion->usage_limit !== null && $promotion->used_count >= $promotion->usage_limit)) {
+                // Nếu mã đã bị xóa / hết hạn / vượt lượt dùng → clear session
+                session()->forget(['promotion', 'promotion_code', 'discount']);
+                $promotionCode = null;
+                $discount = 0;
+            }
+        }
 
         //Đọc tree.json
         $json = file_get_contents(public_path('data/dist/tree.json'));
@@ -128,7 +148,9 @@ class OrderController extends Controller
             'recipient',
             'savedRecipients',
             'vouchers',
-            'locations'
+            'locations',
+            'promotionCode',
+            'discount'
         ));
     }
 
@@ -244,8 +266,14 @@ class OrderController extends Controller
                         ['promotion_id' => $promotion->id, 'user_id' => $userId],
                         ['used_count' => DB::raw('used_count + 1')]
                     );
+                } else {
+                    // Nếu mã không hợp lệ hoặc bị xóa thì clear session
+                    session()->forget(['promotion', 'promotion_code', 'discount']);
+                    $promotionCode = null;
+                    $discount = 0;
                 }
             }
+
 
             $grandTotal = $total + $request->shipping_fee - $discount;
 
@@ -439,6 +467,7 @@ class OrderController extends Controller
 
         // Kiểm tra giới hạn lượt dùng tổng
         if (!is_null($promotion->usage_limit) && $promotion->used_count >= $promotion->usage_limit) {
+            session()->forget(['promotion', 'promotion_code', 'discount']);
             return back()->with('error', 'Mã giảm giá đã hết lượt sử dụng!');
         }
 
