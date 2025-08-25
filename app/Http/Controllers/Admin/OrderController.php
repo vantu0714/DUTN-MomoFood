@@ -269,7 +269,7 @@ class OrderController extends Controller
             $order->save();
 
             UpdateOrderStatus::dispatch($order, 9)
-                ->delay(now()->addMinutes(1));
+                ->delay(now()->addSeconds(30));
 
             return back()->with('success', 'Đơn hàng đang được giao...');
         }
