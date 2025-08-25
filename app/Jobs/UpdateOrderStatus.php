@@ -65,8 +65,8 @@ class UpdateOrderStatus implements ShouldQueue
         // Lên lịch chuyển tiếp trạng thái chỉ khi không phải các trạng thái đặc biệt
         if ($this->targetStatus == 3 && !in_array($order->status, [5, 7, 8])) {
             UpdateOrderStatus::dispatch($order, 9)
-                ->delay(now()->addMinutes(1));
-            // ->delay(now()->addSeconds(30));
+                // ->delay(now()->addMinutes(1));
+            ->delay(now()->addSeconds(30));
         } elseif ($this->targetStatus == 9 && !in_array($order->status, [5, 7, 8])) {
             UpdateOrderStatus::dispatch($order, 4)
                 ->delay(now()->addSeconds(30));

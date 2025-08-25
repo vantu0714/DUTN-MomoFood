@@ -232,18 +232,9 @@
                                     ];
                                 }
 
-                                if ($order->shipping_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Đang giao hàng',
-                                        'time' => $order->shipping_at,
-                                        'icon' => 'fas fa-truck',
-                                        'color' => 'primary',
-                                    ];
-                                }
-
                                 if ($order->delivered_at) {
                                     $statusHistory[] = [
-                                        'label' => 'Đã giao hàng',
+                                        'label' => 'Đang giao hàng',
                                         'time' => $order->delivered_at,
                                         'icon' => 'fas fa-box-open',
                                         'color' => 'success',

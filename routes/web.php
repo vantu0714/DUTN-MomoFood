@@ -99,9 +99,9 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('carts/add', [CartClientController::class, 'addToCart'])->name('carts.add');
         Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
         Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
-        Route::get('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
+        Route::delete('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
         Route::post('/clear', [CartClientController::class, 'clearCart'])->name('carts.clear');
-        Route::post('/remove-selected', [CartClientController::class, 'removeSelected'])->name('carts.removeSelected');
+        Route::delete('/remove-selected', [CartClientController::class, 'removeSelected'])->name('carts.removeSelected');
     });
 
     // Checkout
