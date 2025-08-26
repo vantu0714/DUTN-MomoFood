@@ -6,16 +6,18 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Promotion;
+use App\Models\PromotionUser;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\Input;
 
 class VNPayController extends Controller
 {
-    public function create(Request $request, Order $order)
+    public function create(Request $request,$recipient)
     {
         $user = Auth::user();
 
@@ -24,10 +26,17 @@ class VNPayController extends Controller
         }
 
         $grandTotal = $request->grand_total;
+        $recipient_name = $recipient->recipient_name;
+        $recipient_phone = $recipient->recipient_phone;
+        $recipient_address = $recipient->recipient_address;
+        $note = $request->note ?? 0;
+        $shipping_fee = $request->shipping_fee;
+        $promotion = $request->promotion ?? 0;
 
         $orderInfo =
-            $user->id . '-' . $grandTotal . '-' . $order->id
-        ;
+            $user->id . '-' . $recipient_name . '-' . $recipient_phone . '-' .
+            $recipient_address . '-' . $note . '-' . $shipping_fee . '-' . $grandTotal . '-' . $promotion;
+
 
         // Bắt đầu xử lý redirect qua VNPAY
         $vnp_TmnCode = env('VNPAY_TMN_CODE');
@@ -140,7 +149,7 @@ class VNPayController extends Controller
 
             $orderParts = explode('-', $inputData['vnp_OrderInfo']);
 
-            if (count($orderParts) <= 1) {
+            if (count($orderParts) <= 7) {
                 return view('clients.vnpay_fail');
             }
 
@@ -152,20 +161,87 @@ class VNPayController extends Controller
                 return view('clients.vnpay_fail');
             }
 
-            $grandTotal = trim($orderParts[1], '"');
-            $order_id = $orderParts[2] == 0 ? '' : trim($orderParts[2], '"');
+            $grandTotal = trim($orderParts[6], '"');
+            $recipient_name = $orderParts[1];
+            $recipient_phone = trim($orderParts[2], '"');
+            $recipient_address = $orderParts[3];
+            $note = $orderParts[4] == 0 ? '' : $orderParts[4];
+            $shipping_fee = $orderParts[5] ?? 0;
+            $promotion = $orderParts[7] == 0 ? '' : trim($orderParts[7], '"');
+            $cart_user = Cart::with('items.product', 'items.productVariant')->where('user_id', $userId)->first();
+            $selectedIds = session()->has('selected_items') ? session('selected_items') : [];
 
-            if (!$order_id) {
+            $cartItems = !empty($selectedIds)
+                ? $cart_user->items->whereIn('id', $selectedIds)
+                : $cart_user->items;
+
+            if (!$cart_user) {
                 return view('clients.vnpay_fail');
-            } else {
-                $order = Order::where('id', $order_id)->where('user_id', $userId)->first();
-                if (!$order) {
-                    return view('clients.vnpay_fail');
+            }
+
+            $order = Order::query()->create([
+                'user_id' => $userId,
+                'total_price' => $grandTotal,
+                'recipient_name' => $recipient_name,
+                'recipient_phone' => $recipient_phone,
+                'recipient_address' => $recipient_address,
+                'note' => $note,
+                'shipping_fee' => $shipping_fee,
+                'promotion' => $promotion,
+                'payment_method' => 'vnpay',
+                'payment_status' => 'paid',
+                'status' => 1
+            ]);
+
+            Log::error('errror',$orderParts);
+            $dataOrderDetail = [];
+
+            foreach ($cartItems as $item) {
+                $dataOrderDetail[] = [
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->discounted_price,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+
+                $item->product->quantity_in_stock -= $item->quantity;
+                $item->product->save();
+
+                if (!is_null($item->productVariant)) {
+                    $item->productVariant->quantity_in_stock -= $item->quantity;
+                    $item->productVariant->save();
                 }
             }
 
-            $order->payment_status = 'paid';
-            $order->save();
+            OrderDetail::query()->insert($dataOrderDetail);
+
+            if ($promotion) {
+                $promotion = Promotion::where('code', $promotion)
+                    ->where('status', 1)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now())
+                    ->first();
+
+                if ($promotion && ($promotion->usage_limit === null || $promotion->used_count < $promotion->usage_limit)) {
+                    // Cập nhật số lần dùng
+                    $promotion->increment('used_count');
+                    PromotionUser::updateOrCreate(
+                        ['promotion_id' => $promotion->id, 'user_id' => $userId],
+                        ['used_count' => DB::raw('used_count + 1')]
+                    );
+                } else {
+                    // Nếu mã không hợp lệ hoặc bị xóa thì clear session
+                    session()->forget(['promotion', 'promotion_code', 'discount']);
+                    $promotionCode = null;
+                    $discount = 0;
+                }
+            }
+
+            // Xóa sản phẩm đã đặt khỏi giỏ hàng
+            $cart_user->items()->whereIn('id', $cartItems->pluck('id'))->delete();
 
             DB::commit();
 
@@ -173,6 +249,8 @@ class VNPayController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
 
+            Log::error($th->getMessage());
+            Log::error(session()->all());
             return view('clients.vnpay_fail');
         }
     }
