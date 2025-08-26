@@ -159,11 +159,7 @@
                                         if ($key == $order->status || $key == $order->status + 1) {
                                             $canSelect = true;
                                         }
-
-                                        if ($order->status == 3 && $key == 9) {
-                                            $canSelect = true;
-                                        }
-
+                                        
                                         // Không cho chuyển từ 5 (Hoàn hàng) → 6 (Hủy)
                                         if ($order->status == 5 && $key == 6) {
                                             $canSelect = false;
@@ -174,6 +170,9 @@
                                         }
 
                                         if ($order->status == 3 && $key == 10) {
+                                            $canSelect = false;
+                                        }
+                                        if ($order->status == 4 && in_array($key, [5, 7, 8])) {
                                             $canSelect = false;
                                         }
 
