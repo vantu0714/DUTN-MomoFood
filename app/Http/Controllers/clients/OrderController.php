@@ -161,6 +161,7 @@ class OrderController extends Controller
 
         // Lấy selected_ids từ request hoặc session
         $selectedIds = [];
+        $errors = [];
 
         if ($request->filled('selected_items')) {
             $selectedIds = is_array($request->selected_items)
@@ -218,6 +219,20 @@ class OrderController extends Controller
                 'note' => $request->note,
                 'is_default' => false,
             ]);
+        }
+
+        foreach ($cartItems as $item) {
+            $stock = $item->productVariant
+                ? $item->productVariant->quantity_in_stock
+                : ($item->product->quantity_in_stock ?? 0);
+
+            if ($stock <= 0) {
+                $errors[] = "Sản phẩm " . Str::lower($item->product->product_name) . " bạn chọn đã hết hàng";
+            }
+        }
+
+        if(!empty($errors)) {
+            return redirect()->route('carts.index')->withErrors($errors);
         }
 
         DB::beginTransaction();
@@ -303,6 +318,7 @@ class OrderController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->discounted_price,
                 ]);
+
 
                 $item->product->quantity_in_stock -= $item->quantity;
                 $item->product->save();
