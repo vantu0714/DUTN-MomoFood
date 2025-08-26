@@ -311,7 +311,7 @@
 
                             <!-- Biến thể -->
                             <div class="mb-3" id="variant-section">
-                                <label class="form-label fw-semibold">🍃 Chọn biến thể:</label>
+                                <label class="form-label fw-semibold">🍃 Chọn loại:</label>
                                 <div id="variant-options" class="d-flex flex-wrap gap-2">
                                     <!-- Biến thể sẽ được thêm bằng JavaScript -->
                                 </div>
@@ -576,7 +576,7 @@
                         // Hiển thị thông báo chọn biến thể
                         stockQuantityEl.textContent = '';
                         stockInfoEl.innerHTML =
-                            '<span class="text-warning">Vui lòng chọn biến thể</span>';
+                            '<span class="text-warning">Vui lòng chọn sản phẩm</span>';
 
                         variants.forEach(variant => {
                             const imageUrl = variant.image ? '{{ asset('storage/') }}/' +
@@ -683,7 +683,7 @@ ${!isAvailable ? '<span class="stock-badge">Hết hàng</span>' : ''}
                     // Hiển thị thông báo bằng Toastify nếu có, hoặc alert
                     if (typeof Toastify !== 'undefined') {
                         Toastify({
-                            text: "⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng",
+                            text: "⚠️ Vui lòng chọn sản phẩm trước khi thêm vào giỏ hàng",
                             duration: 3000,
                             gravity: "top",
                             position: "right",
@@ -691,7 +691,7 @@ ${!isAvailable ? '<span class="stock-badge">Hết hàng</span>' : ''}
                             stopOnFocus: true
                         }).showToast();
                     } else {
-                        alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+                        alert('⚠️ Vui lòng chọn sản phẩm trước khi thêm vào giỏ hàng.');
                     }
 
                     // Làm nổi bật phần chọn biến thể
