@@ -207,7 +207,7 @@
                         <img src="https://file.hstatic.net/200000700229/article/ga-ran-vi-kfc-1_0c2450efe15d4b6f9e6bd2637b71d88d.jpg"
                             alt="Gà rán truyền thống">
                         <div class="promo-content bg-success text-white">
-                            <h5>Gà rán truyền thống</h5>
+                            <h5 class="text-white">ĐỒ ĂN VẶT TRUYỀN THỐNG</h5>
                             <p class="mb-0">Giảm giá 20%</p>
                         </div>
                     </div>
@@ -218,7 +218,7 @@
                         <img src="https://cdn.tgdd.vn/Files/2019/07/14/1179531/nuoc-ep-tao-co-tac-dung-gi-ma-ai-cung-thi-nhau-uong-201907142251530613.jpg"
                             alt="Nước cam tươi">
                         <div class="promo-content bg-dark text-white">
-                            <h5>Nước ép táo</h5>
+                            <h5 class="text-white">TRÁI CÂY SẤY</h5>
                             <p class="mb-0">Miễn phí vận chuyển</p>
                         </div>
                     </div>
@@ -228,9 +228,9 @@
                     <div class="promo-box">
                         <img src="https://i.ytimg.com/vi/dZwJgX-IcH8/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLC38hYKpTlqHzCnJl-zQ7256hCeQQ"
                             alt="Pizza món chay">
-                        <div class="promo-content bg-warning text-dark">
-                            <h5>Bánh tráng trộn</h5>
-                            <p class="mb-0">Giảm giá 10vnđ</p>
+                        <div class="promo-content bg-warning text-white">
+                            <h5 class="text-white">ĐỒ ĂN NHANH</h5>
+                            <p class="mb-0">Giảm giá 10.000vnđ</p>
                         </div>
                     </div>
                 </div>
