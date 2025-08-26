@@ -480,13 +480,19 @@
                             $firstVariant = $item->variants->first();
 
                             if ($hasVariants) {
+                                // Nếu có biến thể -> lấy min-max giá từ variants
                                 $prices = $item->variants->pluck('price')->filter();
                                 $minPrice = $prices->min() ?? 0;
                                 $maxPrice = $prices->max() ?? 0;
                             } else {
-                                $price = $item->discounted_price ?? 0;
+                                // Nếu là sản phẩm đơn
                                 $original = $item->original_price ?? 0;
-                                $hasDiscount = $original > $price;
+                                $price =
+                                    $item->discounted_price && $item->discounted_price > 0
+                                        ? $item->discounted_price
+                                        : $original;
+
+                                $hasDiscount = $original > 0 && $price < $original;
                                 $discountPercent = $hasDiscount ? round((($original - $price) / $original) * 100) : 0;
                             }
                         @endphp
@@ -528,8 +534,9 @@
                                             </span>
                                         @else
                                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                <span
-                                                    class="text-danger fw-bold fs-6">{{ number_format($price, 0, ',', '.') }}đ</span>
+                                                <span class="text-danger fw-bold fs-6">
+                                                    {{ number_format($price, 0, ',', '.') }}đ
+                                                </span>
                                                 @if ($hasDiscount)
                                                     <div class="d-flex align-items-center gap-1">
                                                         <del
@@ -543,6 +550,7 @@
                                                 @endif
                                             </div>
                                         @endif
+
                                     </div>
 
                                     {{-- Ảnh các biến thể ở dưới giá --}}

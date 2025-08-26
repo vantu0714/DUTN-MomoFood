@@ -666,3 +666,34 @@
         });
     });
 </script>
+
+<script src="https://js.pusher.com/8.2/pusher.min.js"></script>
+{{-- <script src="{{ mix('js/app.js') }}"></script> --}}
+<script>
+    window.Echo.channel('promotions')
+        .listen('.promotion.updated', (e) => {
+            console.log("🔄 Promotion updated:", e.promotion);
+
+            // Xử lý format text giảm giá
+            let discountText = e.promotion.discount_type === 'percent' ?
+                `Giảm ${e.promotion.discount_value}%` :
+                `Giảm ${Number(e.promotion.discount_value).toLocaleString()}đ`;
+
+            // Cập nhật DOM hiển thị
+            document.getElementById('promotion-box').innerHTML = `
+            <strong>${e.promotion.promotion_name}</strong> <br>
+            ${discountText}<br>
+            <small>Đơn tối thiểu: ${Number(e.promotion.min_total_spent).toLocaleString()}đ</small><br>
+            <small>HSD: ${new Date(e.promotion.end_date).toLocaleString('vi-VN')}</small>
+        `;
+
+            // Thêm thông báo Toast
+            Toastify({
+                text: "Mã giảm giá đã được cập nhật!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#4caf50"
+            }).showToast();
+        });
+</script>

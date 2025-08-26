@@ -239,6 +239,9 @@ class PromotionController extends Controller
             'usage_limit'        => $validated['usage_limit'],
         ],);
 
+        event(new \App\Events\PromotionUpdated($promotion));
+
+
         return redirect()->route('admin.promotions.index')->with('success', 'Cập nhật mã giảm giá thành công!');
     }
 
