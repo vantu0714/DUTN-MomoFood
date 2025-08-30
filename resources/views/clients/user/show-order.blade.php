@@ -13,6 +13,7 @@
             8 => 'Hoàn hàng thất bại',
             9 => 'Đã giao hàng',
             10 => 'Không xác nhận',
+            11 => 'Giao hàng thất bại',
         ];
 
         $paymentStatusLabels = [
@@ -32,6 +33,7 @@
             8 => 'bg-danger text-white',
             9 => 'bg-primary text-white',
             10 => 'bg-danger text-white',
+            11 => 'bg-danger text-white',
         ];
 
         $paymentStatusClasses = [
@@ -189,6 +191,17 @@
                                 </div>
                             </div>
                         @endif
+
+                        @if ($order->status == 11)
+                            <div class="alert alert-danger d-flex align-items-center mb-4">
+                                <i class="fas fa-times-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Giao hàng không thành công</h5>
+                                    <p class="mb-0">Rất tiếc, đơn hàng của bạn không được giao đúng hẹn. Vui lòng liên hệ
+                                        với cửa hàng để biết thêm thông tin.</p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -227,6 +240,16 @@
                                         'label' => 'Không xác nhận',
                                         'time' => $order->updated_at,
                                         'icon' => 'fas fa-times-circle',
+                                        'color' => 'danger',
+                                        'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+                                    ];
+                                }
+
+                                if ($order->delivery_failed_at) {
+                                    $statusHistory[] = [
+                                        'label' => 'Giao hàng thất bại',
+                                        'time' => $order->delivery_failed_at,
+                                        'icon' => 'fas fa-exclamation-triangle',
                                         'color' => 'danger',
                                         'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
                                     ];
