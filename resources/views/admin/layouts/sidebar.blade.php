@@ -27,7 +27,6 @@
             </a>
             <ul>
                 <li><a href="{{ route('admin.users.index') }}">Danh sách người dùng</a></li>
-                <li><a href="{{ route('admin.users.create') }}">Thêm mới người dùng</a></li>
             </ul>
         </li>
         <li class>
@@ -39,7 +38,6 @@
             </a>
             <ul>
                 <li><a href="{{ route('admin.categories.index') }}">Danh sách danh mục</a></li>
-                <li><a href="">Thêm mới danh mục</a></li>
             </ul>
         </li>
 
@@ -52,7 +50,6 @@
             </a>
             <ul>
                 <li><a href="{{ route('admin.products.index') }}">Danh sách sản phẩm</a></li>
-                <li><a href="Groups.html">Thêm</a></li>
             </ul>
         </li>
         <li class>
@@ -64,7 +61,6 @@
             </a>
             <ul>
                 <li><a href="{{ route('admin.product_variants.index') }}">Danh sách thuộc tính</a></li>
-                <li><a href="Groups.html">Thêm</a></li>
             </ul>
         </li>
         {{-- <li class>
@@ -88,7 +84,6 @@
             </a>
             <ul>
                 <li><a href="{{ route('admin.promotions.index') }}">Danh sách mã giảm giá</a></li>
-                <li><a href="{{ route('admin.promotions.create') }}">Thêm mã giảm giá</a></li>
             </ul>
         </li>
         <li class>
@@ -100,7 +95,6 @@
             </a>
             <ul>
                 <li><a href="{{ route('admin.orders.index') }}">Danh sách đơn hàng</a></li>
-                <li><a href="#">Thêm đơn hàng</a></li>
             </ul>
         </li>
 
