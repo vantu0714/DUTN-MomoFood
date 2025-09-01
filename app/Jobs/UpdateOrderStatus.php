@@ -36,40 +36,40 @@ class UpdateOrderStatus implements ShouldQueue
             return;
         }
 
-        $order->status = $this->targetStatus;
+            $order->status = $this->targetStatus;
 
-        // Chỉ cập nhật thời gian nếu trạng thái thực sự thay đổi
-        if ($order->isDirty('status')) {
-            switch ($this->targetStatus) {
-                case 9: // Đã giao hàng
-                    $order->received_at = now();
-                    $order->payment_status = 'paid';
-                    break;
+            // Chỉ cập nhật thời gian nếu trạng thái thực sự thay đổi
+            if ($order->isDirty('status')) {
+                switch ($this->targetStatus) {
+                    case 9: // Đã giao hàng
+                        $order->received_at = now();
+                        $order->payment_status = 'paid';
+                        break;
 
-                case 4: // Hoàn thành
-                    $order->completed_at = now();
-                    $order->payment_status = 'paid';
+                    case 4: // Hoàn thành
+                        $order->completed_at = now();
+                        $order->payment_status = 'paid';
 
-                    foreach ($order->orderDetails as $detail) {
-                        $product = $detail->product;
-                        if ($product) {
-                            $product->increment('sold_count', $detail->quantity);
+                        foreach ($order->orderDetails as $detail) {
+                            $product = $detail->product;
+                            if ($product) {
+                                $product->increment('sold_count', $detail->quantity);
+                            }
                         }
-                    }
-                    break;
+                        break;
+                }
             }
-        }
 
-        $order->save();
+            $order->save();
 
         // Lên lịch chuyển tiếp trạng thái chỉ khi không phải các trạng thái đặc biệt
         if ($this->targetStatus == 3 && !in_array($order->status, [5, 7, 8])) {
             UpdateOrderStatus::dispatch($order, 9)
                 // ->delay(now()->addMinutes(1));
-            ->delay(now()->addMinutes(1));
+                ->delay(now()->addMinutes(1));
         } elseif ($this->targetStatus == 9 && !in_array($order->status, [5, 7, 8])) {
             UpdateOrderStatus::dispatch($order, 4)
-            ->delay(now()->addMinutes(1));
+                ->delay(now()->addMinutes(1));
         }
     }
 }
