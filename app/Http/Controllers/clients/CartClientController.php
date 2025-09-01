@@ -271,7 +271,9 @@ class CartClientController extends Controller
             return back()->with('error', 'Không tìm thấy giỏ hàng.');
         }
 
-        $selectedItems = $request->input('selected_items', []);
+        // Lấy selected_items (string: "1,2,3") và chuyển thành mảng
+        $selectedItems = $request->input('selected_items', '');
+        $selectedItems = $selectedItems ? explode(',', $selectedItems) : [];
 
         if (empty($selectedItems)) {
             return back()->with('error', 'Vui lòng chọn sản phẩm cần xóa.');
