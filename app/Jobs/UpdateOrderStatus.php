@@ -32,7 +32,7 @@ class UpdateOrderStatus implements ShouldQueue
         }
 
         // Kiểm tra nếu đơn hàng đang ở các trạng thái đặc biệt thì không chuyển tiếp
-        if (in_array($order->status, [5, 7, 8])) {
+        if (in_array($order->status, [5, 7, 8, 11])) {
             return;
         }
 

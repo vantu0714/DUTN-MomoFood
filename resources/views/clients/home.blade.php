@@ -545,7 +545,7 @@
                             <p id="modal-product-description" class="text-muted mb-3" style="min-height: 60px;"></p>
                             <!-- Biến thể -->
                             <div class="mb-3" id="variant-section">
-                                <label class="form-label fw-semibold">🍃 Chọn biến thể:</label>
+                                <label class="form-label fw-semibold">🍃 Chọn loại:</label>
                                 <div id="variant-options" class="d-flex flex-wrap gap-2">
                                     @foreach ($product->variants as $variant)
                                         @php
@@ -701,7 +701,7 @@
                     }
 
                     if (stockInfoEl) {
-                        stockInfoEl.textContent = 'Vui lòng chọn biến thể';
+                        stockInfoEl.textContent = 'Vui lòng chọn loại sản phẩm';
                     }
                 }
 
@@ -829,7 +829,7 @@
         document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
             if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
                 e.preventDefault();
-                alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+                alert('⚠️ Vui lòng chọn sản phẩm trước khi thêm vào giỏ hàng.');
             }
         });
     });

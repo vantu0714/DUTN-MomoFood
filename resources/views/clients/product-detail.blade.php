@@ -188,7 +188,7 @@
 
                                 {{-- Giá chính --}}
                                 <span id="variantPrice" class="price-amount fw-bold text-danger"
-                                    style="font-size: 2rem; line-height: 1;">
+                                    style="font-size: 1.7rem; line-height: 1;">
                                     đ{{ number_format($minPrice, 0, ',', '.') }}
                                     @if ($minPrice != $maxPrice)
                                         - đ{{ number_format($maxPrice, 0, ',', '.') }}
@@ -810,7 +810,7 @@
 
             if (priceElement) {
                 if (min && max && min !== max) {
-                    priceElement.textContent = `đ${formatCurrency(min)} - đ${formatCurrency(max)}`;
+                    priceElement.textContent = `${formatCurrency(min)} - ${formatCurrency(max)} VND`;
                 } else {
                     priceElement.textContent = `đ${formatCurrency(min)}`;
                 }

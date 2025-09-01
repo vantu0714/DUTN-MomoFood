@@ -167,6 +167,10 @@ class OrderController extends Controller
             $selectedIds = is_array($request->selected_items)
                 ? $request->selected_items
                 : explode(',', $request->selected_items);
+
+            session()->forget('selected_items');
+            session()->put('selected_items', $selectedIds);
+
         } elseif (session()->has('selected_items')) {
             $selectedIds = session('selected_items');
         }
@@ -231,8 +235,14 @@ class OrderController extends Controller
             }
         }
 
-        if(!empty($errors)) {
+        if (!empty($errors)) {
             return redirect()->route('carts.index')->withErrors($errors);
+        }
+
+        // Xử lý thanh toán
+        if ($request->payment_method === 'vnpay') {
+            $vnpay = new VNPayController();
+            return $vnpay->create($request, $recipient);
         }
 
         DB::beginTransaction();
@@ -346,13 +356,8 @@ class OrderController extends Controller
 
             DB::commit();
 
-            // Xử lý thanh toán
-            if ($request->payment_method === 'vnpay') {
-                $vnpay = new VNPayController();
-                return $vnpay->create($request, $order);
-            } else {
-                return redirect()->route('carts.index')->with('orderSuccess', $order->id);
-            }
+            return redirect()->route('carts.index')->with('orderSuccess', $order->id);
+
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
