@@ -170,7 +170,6 @@ class OrderController extends Controller
 
             session()->forget('selected_items');
             session()->put('selected_items', $selectedIds);
-
         } elseif (session()->has('selected_items')) {
             $selectedIds = session('selected_items');
         }
@@ -357,7 +356,6 @@ class OrderController extends Controller
             DB::commit();
 
             return redirect()->route('carts.index')->with('orderSuccess', $order->id);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
@@ -554,8 +552,13 @@ class OrderController extends Controller
 
     public function removeCoupon()
     {
-        session()->forget(['promotion', 'discount', 'promotion_code']);
-        return redirect()->route('carts.index')->with('success', 'Đã hủy mã giảm giá.');
+        if (session()->has('promotion')) {
+            session()->forget(['promotion', 'discount', 'promotion_code']);
+            return back()->with('success', 'Đã hủy mã giảm giá.');
+        }
+
+        // Nếu không có mã thì chỉ quay lại, không báo gì
+        return back();
     }
 
     public function requestReturn(Request $request, $id)
