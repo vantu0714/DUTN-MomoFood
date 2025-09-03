@@ -100,8 +100,7 @@
  <!-- Copyright End -->
 
 
-<script src="https://cdn.botpress.cloud/webchat/v3.2/inject.js"></script>
-<script src="https://files.bpcontent.cloud/2025/08/25/11/20250825110842-DH190MUN.js" defer></script>
+<script lang="javascript">var __vnp = {code : 25622,key:'', secret : '32ecf215a95c0d026f98f218b41d1326'};(function() {var ga = document.createElement('script');ga.type = 'text/javascript';ga.async=true; ga.defer=true;ga.src = '//core.vchat.vn/code/tracking.js?v=57078'; var s = document.getElementsByTagName('script');s[0].parentNode.insertBefore(ga, s[0]);})();</script>
     
 
  {{-- <script lang="javascript">
