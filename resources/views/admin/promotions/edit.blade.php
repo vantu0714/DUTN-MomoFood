@@ -23,7 +23,7 @@
 
                     {{-- Tên khuyến mãi --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Tên khuyến mãi</label>
+                        <label class="form-label fw-semibold">Tên mã giảm giá</label>
                         <input type="text" name="promotion_name"
                             class="form-control @error('promotion_name') is-invalid @enderror"
                             value="{{ old('promotion_name', $promotion->promotion_name) }}" required>
@@ -136,7 +136,7 @@
 
                     {{-- Giới hạn lượt sử dụng --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Giới hạn lượt sử dụng</label>
+                        <label class="form-label fw-semibold">Số lượng</label>
                         <input type="number" name="usage_limit" min="0"
                             class="form-control @error('usage_limit') is-invalid @enderror"
                             value="{{ old('usage_limit', $promotion->usage_limit) }}">

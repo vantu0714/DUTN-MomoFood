@@ -258,7 +258,7 @@
                                     value="{{ old('recipient_id', $recipient['id'] ?? '') }}">
 
                                 <button type="submit" class="btn btn-danger w-100 mb-3">Đặt Hàng</button>
-                                <a href="{{ route('order.removeCoupon') }}" class="text-decoration-none">Quay lại</a>
+                                <a href="{{ route('carts.index') }}" class="text-decoration-none">Quay lại</a>
 
                                 <div class="text-center mt-3">
                                     <small class="text-muted">
