@@ -188,17 +188,17 @@
 
                                 {{-- Giá chính --}}
                                 <span id="variantPrice" class="price-amount fw-bold text-danger"
-                                    style="font-size: 1.7rem; line-height: 1;">
-                                    đ{{ number_format($minPrice, 0, ',', '.') }}
+                                    style="font-size: 2rem; white-space: nowrap;">
+                                    {{ number_format($minPrice, 0, ',', '.') }} VND
                                     @if ($minPrice != $maxPrice)
-                                        - đ{{ number_format($maxPrice, 0, ',', '.') }}
+                                        -{{ number_format($maxPrice, 0, ',', '.') }} VND
                                     @endif
                                 </span>
 
                                 {{-- Giá gạch ngang và giảm giá ẩn đi nhưng vẫn giữ không gian --}}
                                 <span class="original-price text-muted text-decoration-line-through"
                                     style="font-size: 1.5rem; line-height: 1; visibility: hidden;">
-                                    đ0
+                                    0 VND
                                 </span>
                                 <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
                                     style="font-size: 1.5rem; line-height: 1; visibility: hidden;">
@@ -221,14 +221,14 @@
                                 <span id="variantPrice"
                                     class="price-amount fw-bold {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
                                     style="font-size: 2rem; line-height: 1;">
-                                    đ{{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
+                                    {{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }} VND
                                 </span>
 
                                 {{-- Giá gạch ngang nếu có --}}
                                 <span class="original-price text-muted text-decoration-line-through"
                                     id="originalPrice"
                                     style="font-size: 1.5rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
-                                    đ{{ number_format($product->original_price, 0, ',', '.') }}
+                                    {{ number_format($product->original_price, 0, ',', '.') }} VND
                                 </span>
 
                                 {{-- Badge giảm giá nếu có --}}
@@ -527,15 +527,15 @@
                                     <div class="mb-2">
                                         @if ($hasVariants)
                                             <span class="text-danger fw-bold">
-                                                {{ number_format($minPrice, 0, ',', '.') }}đ
+                                                {{ number_format($minPrice, 0, ',', '.') }} VND
                                                 @if ($minPrice !== $maxPrice)
-                                                    - {{ number_format($maxPrice, 0, ',', '.') }}đ
+                                                    - {{ number_format($maxPrice, 0, ',', '.') }} VND
                                                 @endif
                                             </span>
                                         @else
                                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                                 <span class="text-danger fw-bold fs-6">
-                                                    {{ number_format($price, 0, ',', '.') }}đ
+                                                    {{ number_format($price, 0, ',', '.') }} VND
                                                 </span>
                                                 @if ($hasDiscount)
                                                     <div class="d-flex align-items-center gap-1">
@@ -780,11 +780,11 @@
         }
 
         function updatePriceDisplay(price, original) {
-            if (priceElement) priceElement.textContent = 'đ' + formatCurrency(price);
+            if (priceElement) priceElement.textContent = formatCurrency(price) + ' VND';
 
             if (originalPriceElement && discountPercentElement) {
                 if (original > price) {
-                    originalPriceElement.textContent = 'đ' + formatCurrency(original);
+                    originalPriceElement.textContent = formatCurrency(original) + ' VND';
                     originalPriceElement.style.display = 'inline';
                     const percent = Math.round((1 - price / original) * 100);
                     discountPercentElement.textContent = `-${percent}%`;
@@ -812,7 +812,7 @@
                 if (min && max && min !== max) {
                     priceElement.textContent = `${formatCurrency(min)} - ${formatCurrency(max)} VND`;
                 } else {
-                    priceElement.textContent = `đ${formatCurrency(min)}`;
+                    priceElement.textContent = `${formatCurrency(min)} VND`;
                 }
             }
 
