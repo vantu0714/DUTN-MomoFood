@@ -289,6 +289,17 @@ class OrderController extends Controller
             $order->delivery_failed_at = now();
             $order->save();
 
+            // Hoàn kho
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
+            }
+
             return back()->with('success', 'Đã đánh dấu giao hàng thất bại.' . $refundMessage);
         }
         // Hoàn thành (4) → Xử lý tồn kho và VIP
@@ -399,6 +410,18 @@ class OrderController extends Controller
             $refundMessage = '';
             if ($order->payment_status === 'paid') {
                 $order->payment_status = 'refunded';
+            }
+
+            // ✅ Hoàn kho
+            $order->load('orderDetails.product', 'orderDetails.productVariant');
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
             }
 
             // Cập nhật trạng thái đơn hàng

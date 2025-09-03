@@ -75,6 +75,8 @@ Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.p
 Route::get('/vnpay-return', [VNPayController::class, 'vnpayReturn'])->name('vnpay.return');
 
 // ==================== CLIENT AUTHENTICATED ROUTES ====================
+Route::post('carts/add', [CartClientController::class, 'addToCart'])->name('carts.add');
+
 Route::middleware(['auth', 'client'])->group(function () {
     // Profile Management
     Route::prefix('clients')->name('clients.')->group(function () {
@@ -92,11 +94,11 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/orders/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
             ->name('request_return');
     });
-
+    
     // Cart Management
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
-        Route::post('carts/add', [CartClientController::class, 'addToCart'])->name('carts.add');
+       
         Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
         Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
         Route::delete('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
