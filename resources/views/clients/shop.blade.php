@@ -140,51 +140,85 @@
                             </div>
 
                             <div class="col-lg-12">
-                                <h4 class="mb-4 text-primary"><i class="bi bi-star-fill me-2 text-warning"></i>SẢN
-                                    PHẨM NỔI BẬT</h4>
+                                <h3 class="display-4"
+                                    style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:1.5rem;">
+                                    SIÊU PHẨM ĂN VẶT 5 ⭐
+                                </h3>
 
-                                @foreach ($featuredProducts->random(3) as $product)
+                                @foreach ($highRatedProducts->take(3) as $product)
                                     @php
-                                        $price = $product->discounted_price ?? $product->original_price;
+                                        $isVariant = $product->product_type === 'variant';
+
+                                        if ($isVariant && $product->variants->count() > 0) {
+                                            // Lấy giá min-max của tất cả biến thể
+                                            $prices = $product->variants->map(function ($v) {
+                                                return $v->discounted_price ?? $v->price;
+                                            });
+                                            $minPrice = $prices->min();
+                                            $maxPrice = $prices->max();
+                                        } else {
+                                            // Sản phẩm đơn
+                                            $minPrice = $product->discounted_price ?? $product->original_price;
+                                            $maxPrice = $product->original_price;
+                                        }
+
+                                        $avgRating = round($product->comments->avg('rating') ?? 0);
                                     @endphp
+
                                     <div class="d-flex align-items-center mb-4">
                                         <!-- Hình ảnh -->
                                         <div class="rounded me-3"
                                             style="width: 100px; height: 100px; overflow: hidden;">
-                                            <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                                class="img-fluid rounded h-100 w-100 object-fit-cover"
-                                                alt="{{ $product->product_name }}">
+                                            <a href="{{ route('product-detail.show', $product->id) }}">
+                                                <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
+                                                    class="img-fluid rounded h-100 w-100 object-fit-cover"
+                                                    alt="{{ $product->product_name }}">
+                                            </a>
                                         </div>
 
                                         <!-- Thông tin -->
                                         <div class="flex-grow-1">
                                             <h6 class="mb-1 text-dark text-truncate"
                                                 title="{{ $product->product_name }}">
-                                                {{ $product->product_name }}
+                                                <a href="{{ route('product-detail.show', $product->id) }}"
+                                                    class="text-dark">
+                                                    {{ $product->product_name }}
+                                                </a>
                                             </h6>
 
-                                            <!-- Đánh giá giả lập -->
+                                            <!-- Đánh giá -->
                                             <div class="d-flex mb-1">
-                                                @for ($i = 0; $i < 4; $i++)
-                                                    <i class="fa fa-star text-warning me-1"></i>
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    <i
+                                                        class="fas fa-star{{ $i <= $avgRating ? ' text-warning' : ' text-muted' }}"></i>
                                                 @endfor
-                                                <i class="fa fa-star text-secondary"></i>
+                                                <small
+                                                    class="ms-2 text-muted">({{ number_format($avgRating, 1) }}/5)</small>
                                             </div>
 
                                             <!-- Giá -->
-                                            <div class="d-flex align-items-center">
-                                                <h6 class="text-danger fw-bold mb-0 me-2">
-                                                    {{ number_format($price, 0, ',', '.') }}đ
-                                                </h6>
-                                                @if ($product->original_price && $product->discounted_price)
-                                                    <small class="text-muted text-decoration-line-through">
-                                                        {{ number_format($product->original_price, 0, ',', '.') }}đ
-                                                    </small>
+                                            <div class="d-flex align-items-baseline price-block">
+                                                @if ($isVariant)
+                                                    <span class="fw-bold text-danger">
+                                                        {{ number_format($minPrice, 0, ',', '.') }} -
+                                                        {{ number_format($maxPrice, 0, ',', '.') }} VND
+                                                    </span>
+                                                @else
+                                                    <span class="fw-bold text-danger">
+                                                        {{ number_format($minPrice, 0, ',', '.') }} VND
+                                                    </span>
+                                                    @if ($minPrice < $maxPrice)
+                                                        <small class="text-muted text-decoration-line-through ms-2">
+                                                            {{ number_format($maxPrice, 0, ',', '.') }} VND
+                                                        </small>
+                                                    @endif
                                                 @endif
                                             </div>
+
                                         </div>
                                     </div>
                                 @endforeach
+
 
                                 <div class="d-flex justify-content-center mt-3">
                                     <a href="{{ route('shop.index') }}"
@@ -219,10 +253,7 @@
                                             ? $product->variants->map(function ($v) {
                                                 $flavor = $v->attributeValues->firstWhere('attribute.name', 'Vị')
                                                     ?->value;
-                                                $weight = $v->attributeValues->firstWhere(
-                                                    'attribute.name',
-                                                    'Khối lượng',
-                                                )?->value;
+                                                $weight = $v->attributeValues->firstWhere('attribute.name')?->value;
 
                                                 return [
                                                     'id' => $v->id,
