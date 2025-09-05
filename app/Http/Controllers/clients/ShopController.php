@@ -12,9 +12,8 @@ class ShopController extends Controller
 {
     public function index(Request $request)
     {
- 
         $products = Product::with(['category', 'variants' => function ($q) {
-            $q->where('status', 1); 
+            $q->where('status', 1);
         }])
             ->where('status', 1)
             ->get();
@@ -25,6 +24,31 @@ class ShopController extends Controller
             ->where('status', 1)
             ->inRandomOrder()
             ->take(6)
+            ->get();
+
+        //  Thêm sản phẩm ăn vặt 5 sao
+       $highRatedProducts = Product::with([
+            'comments',
+            'category',
+            'variants.attributeValues.attribute',
+            'variants'
+        ])
+            ->where(function ($q) {
+                $q->where(function ($q1) {
+
+                    $q1->where('product_type', 'simple')
+                        ->where('status', 1)
+                        ->where('quantity_in_stock', '>', 0);
+                })->orWhere(function ($q2) {
+
+                    $q2->where('product_type', 'variant')
+                        ->where('status', 1);
+                });
+            })
+            ->withAvg('comments', 'rating')
+            ->having('comments_avg_rating', '>=', 4)
+            ->orderByDesc('comments_avg_rating')
+            ->take(3)
             ->get();
 
         $filtered = $products->filter(function ($product) use ($request) {
@@ -60,6 +84,7 @@ class ShopController extends Controller
 
             return true;
         });
+
         $page = $request->get('page', 1);
         $perPage = 9;
         $paginated = new LengthAwarePaginator(
@@ -69,6 +94,7 @@ class ShopController extends Controller
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
+
         $categories = Category::withCount([
             'products as available_products_count' => function ($query) {
                 $query->where('status', 1)
@@ -90,9 +116,11 @@ class ShopController extends Controller
         return view('clients.shop', [
             'products' => $paginated,
             'categories' => $categories,
-            'featuredProducts' => $featuredProducts
+            'featuredProducts' => $featuredProducts,
+            'highRatedProducts' => $highRatedProducts, // Truyền xuống view
         ]);
     }
+
 
 
     public function category(Request $request, $id)

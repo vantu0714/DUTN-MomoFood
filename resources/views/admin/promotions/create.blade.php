@@ -22,7 +22,7 @@
 
                     {{-- Tên chương trình --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Tên khuyến mãi</label>
+                        <label class="form-label fw-semibold">Tên mã giảm giá</label>
                         <input type="text" name="promotion_name" class="form-control" required
                             value="{{ old('promotion_name') }}">
                     </div>
@@ -50,7 +50,7 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Số tiền giảm(Số phần trăm 1-100)</label>
+                            <label class="form-label fw-semibold">Số tiền giảm hoặc (Số giảm theo phần trăm 1-100)</label>
                             <input type="number" step="1" name="discount_value" id="discount_value"
                                 class="form-control @error('discount_value') is-invalid @enderror" required
                                 value="{{ old('discount_value') }}">
@@ -94,7 +94,7 @@
 
                     {{-- Giới hạn lượt sử dụng --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Giới hạn lượt sử dụng</label>
+                        <label class="form-label fw-semibold">Số lượng</label>
                         <input type="number" name="usage_limit" class="form-control" value="{{ old('usage_limit') }}"
                             placeholder="VD: 100 (bỏ trống nếu không giới hạn)">
                     </div>
@@ -160,7 +160,7 @@
         let message = '';
 
         if (!value) {
-            if (name === 'promotion_name') message = 'Vui lòng nhập tên chương trình.';
+            if (name === 'promotion_name') message = 'Vui lòng nhập tên mã giảm giá.';
             if (name === 'code') message = 'Vui lòng nhập mã giảm giá.';
             if (name === 'discount_value') message = 'Vui lòng nhập giá trị giảm.';
             if (name === 'min_total_spent') message = 'Vui lòng nhập tổng đơn hàng tối thiểu.';

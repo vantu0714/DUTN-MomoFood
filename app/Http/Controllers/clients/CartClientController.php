@@ -286,7 +286,7 @@ class CartClientController extends Controller
         session()->forget('cart');
 
         // Nếu giỏ hàng lưu trong database:
-        \App\Models\Cart::where('user_id', $userId)->delete();
+        Cart::where('user_id', $userId)->delete();
 
         return redirect()->back()->with('success', 'Đã xóa toàn bộ sản phẩm trong giỏ hàng.');
     }
