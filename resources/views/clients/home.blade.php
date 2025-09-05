@@ -204,7 +204,7 @@
             <div class="row">
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="promo-box">
-                        <img src="https://file.hstatic.net/200000700229/article/ga-ran-vi-kfc-1_0c2450efe15d4b6f9e6bd2637b71d88d.jpg"
+                        <img src="https://nguyenninhhanoi.com/wp-content/uploads/2022/09/keo-lac-1.jpg"
                             alt="Gà rán truyền thống">
                         <div class="promo-content bg-success text-white">
                             <h5 class="text-white">ĐỒ ĂN VẶT TRUYỀN THỐNG</h5>
@@ -215,7 +215,7 @@
 
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="promo-box">
-                        <img src="https://cdn.tgdd.vn/Files/2019/07/14/1179531/nuoc-ep-tao-co-tac-dung-gi-ma-ai-cung-thi-nhau-uong-201907142251530613.jpg"
+                        <img src="https://nafoods.com/wp-content/uploads/2020/11/Trai-cay-say-1.png"
                             alt="Nước cam tươi">
                         <div class="promo-content bg-dark text-white">
                             <h5 class="text-white">TRÁI CÂY SẤY</h5>
@@ -226,7 +226,7 @@
 
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="promo-box">
-                        <img src="https://i.ytimg.com/vi/dZwJgX-IcH8/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLC38hYKpTlqHzCnJl-zQ7256hCeQQ"
+                        <img src="https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lz50ne7mjqz10a.webp"
                             alt="Pizza món chay">
                         <div class="promo-content bg-warning text-white">
                             <h5 class="text-white">ĐỒ ĂN NHANH</h5>
