@@ -115,7 +115,7 @@
                                             @enderror
                                         </div>
                                         <!-- Expiration Date -->
-                                    
+
                                         <div class="col-md-6">
                                             <label class="form-label fw-semibold text-dark">
                                                 <i class="fas fa-globe-asia text-primary me-2"></i>Xuất xứ
@@ -284,12 +284,13 @@
                             <div class="card shadow-sm border-0 h-100">
                                 <div class="card-header bg-white border-bottom py-3">
                                     <h5 class="mb-0 text-dark fw-semibold">
-                                        <i class="fas fa-image text-primary me-2"></i>Hình ảnh sản phẩm
+                                        <i class="fas fa-image text-primary me-2"></i>Hình ảnh & Video sản phẩm
                                     </h5>
                                 </div>
                                 <div class="card-body p-4">
+                                    <!-- Upload Ảnh -->
                                     <div
-                                        class="upload-area border-2 border-dashed border-light rounded-3 p-4 text-center position-relative bg-light">
+                                        class="upload-area border-2 border-dashed border-light rounded-3 p-4 text-center position-relative bg-light mb-4">
                                         <input type="file" name="image" class="form-control d-none" id="imageInput"
                                             accept="image/*">
                                         <label for="imageInput" class="cursor-pointer d-block h-100">
@@ -314,9 +315,41 @@
                                             <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
                                         </div>
                                     @enderror
+
+                                    <!-- Upload Video -->
+                                    <div
+                                        class="upload-area border-2 border-dashed border-light rounded-3 p-4 text-center position-relative bg-light">
+                                        <input type="file" name="video" class="form-control d-none" id="videoInput"
+                                            accept="video/*">
+                                        <label for="videoInput" class="cursor-pointer d-block h-100">
+                                            <div id="videoUploadPlaceholder">
+                                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                                <h6 class="text-muted mb-2">Chọn video</h6>
+                                                <p class="text-muted mb-0">Nhấp để chọn hoặc kéo thả video vào đây</p>
+                                                <small class="text-muted">MP4, MOV, AVI (Tối đa 20MB)</small>
+                                            </div>
+                                        </label>
+                                        <div id="videoPreview" class="d-none">
+                                            <video id="previewVideo" controls class="rounded-3 mb-3"
+                                                style="max-height: 300px; width: 100%;">
+                                                <source src="" type="video/mp4">
+                                                Trình duyệt không hỗ trợ video.
+                                            </video>
+                                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                                onclick="removeVideo()">
+                                                <i class="fas fa-trash me-1"></i>Xóa video
+                                            </button>
+                                        </div>
+                                    </div>
+                                    @error('video')
+                                        <div class="text-danger mt-2">
+                                            <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                        </div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
+
                     </div>
 
                     <!-- Action Buttons -->
@@ -427,6 +460,12 @@
             const imagePreview = document.getElementById('imagePreview');
             const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 
+            // >>> Video elements <<<
+            const videoInput = document.getElementById('videoInput');
+            const videoPreview = document.getElementById('videoPreview');
+            const previewVideo = document.getElementById('previewVideo');
+            const videoUploadPlaceholder = document.getElementById('videoUploadPlaceholder');
+
             // Lấy các wrapper cho pricing fields
             const pricingCard = document.getElementById('pricingCard');
             const originalPriceWrapper = originalInput.closest('.col-md-4');
@@ -440,10 +479,10 @@
                     new Intl.NumberFormat('vi-VN').format(amount) + ' VND';
             }
 
-            // Update discounted price based on original price and discount percentage
+            // Update discounted price
             function updateDiscountedPrice() {
                 const original = parseFloat(originalInput.value) || 0;
-                const percentRaw = percentInput.value; // lấy nguyên chuỗi để kiểm tra rỗng
+                const percentRaw = percentInput.value;
                 const percent = parseFloat(percentRaw) || 0;
 
                 originalDisplay.textContent = formatVND(original);
@@ -453,12 +492,12 @@
                     discountInput.value = Math.round(discounted);
                     discountedDisplay.textContent = formatVND(discounted);
                 } else {
-                    // Nếu phần trăm rỗng hoặc <= 0 → reset
                     discountInput.value = '';
                     discountedDisplay.textContent = '0 VND';
                 }
             }
-            // Toggle price and stock fields based on product type
+
+            // Toggle price & stock fields
             function togglePriceAndStockFields() {
                 const isVariant = productTypeSelect.value === 'variant';
 
@@ -484,7 +523,6 @@
                     }
                 ];
 
-                // Show/hide pricing card
                 if (isVariant) {
                     pricingCard.style.display = 'none';
                 } else {
@@ -561,7 +599,6 @@
                 }
             }
 
-            // Remove all images
             function removeAllImages() {
                 imageInput.value = '';
                 imagePreview.classList.add('d-none');
@@ -569,7 +606,27 @@
                 imagePreview.innerHTML = '';
             }
 
-            // Drag and drop functionality
+            // >>> Handle video upload with preview <<<
+            function handleVideoUpload(input) {
+                const file = input.files[0];
+                if (file) {
+                    const videoURL = URL.createObjectURL(file);
+                    previewVideo.src = videoURL;
+                    videoPreview.classList.remove('d-none');
+                    videoUploadPlaceholder.classList.add('d-none');
+                } else {
+                    removeVideo();
+                }
+            }
+
+            function removeVideo() {
+                videoInput.value = '';
+                previewVideo.src = '';
+                videoPreview.classList.add('d-none');
+                videoUploadPlaceholder.classList.remove('d-none');
+            }
+
+            // Drag & Drop for image
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -595,9 +652,8 @@
             // Form validation
             let allowSubmit = false;
 
-
             form.addEventListener('submit', function(e) {
-                if (allowSubmit) return true; // Cho submit nếu đã xác nhận
+                if (allowSubmit) return true;
 
                 const isVariant = productTypeSelect.value === 'variant';
                 const original = parseFloat(originalInput.value) || 0;
@@ -611,15 +667,14 @@
                 }
 
                 allowSubmit = true;
-                form.submit(); // Submit lại lần nữa
+                form.submit();
             });
 
-
-            // Reset form function
             window.resetForm = function() {
-                if (confirm('Bạn có chắc chắn muốn đặt lại form? Tất cả dữ liệu sẽ bị xóa.')) {
+                if (confirm('Bạn có chắc chắn muốn đặt lại form?')) {
                     form.reset();
                     removeAllImages();
+                    removeVideo();
                     originalDisplay.textContent = '0 VND';
                     discountedDisplay.textContent = '0 VND';
                     togglePriceAndStockFields();
@@ -630,6 +685,9 @@
             productTypeSelect.addEventListener('change', togglePriceAndStockFields);
             imageInput.addEventListener('change', function() {
                 handleImageUpload(this);
+            });
+            videoInput.addEventListener('change', function() {
+                handleVideoUpload(this);
             });
 
             // Drag and drop events
@@ -657,7 +715,7 @@
             updateDiscountedPrice();
         });
 
-        // Global remove image function (for backward compatibility)
+        // Global remove image (for backward compatibility)
         function removeImage() {
             const imageInput = document.getElementById('imageInput');
             const imagePreview = document.getElementById('imagePreview');
@@ -668,16 +726,21 @@
             uploadPlaceholder.classList.remove('d-none');
             imagePreview.innerHTML = '';
         }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const input = document.querySelector('input[name="expiration_date"]');
-            const today = new Date();
-            today.setDate(today.getDate() + 30); // +30 ngày
 
-            const minDate = today.toISOString().split('T')[0];
-            input.setAttribute('min', minDate);
-        });
+        // Global remove video
+        function removeVideo() {
+            const videoInput = document.getElementById('videoInput');
+            const videoPreview = document.getElementById('videoPreview');
+            const previewVideo = document.getElementById('previewVideo');
+            const videoUploadPlaceholder = document.getElementById('videoUploadPlaceholder');
+
+            videoInput.value = '';
+            previewVideo.src = '';
+            videoPreview.classList.add('d-none');
+            videoUploadPlaceholder.classList.remove('d-none');
+        }
     </script>
+
+
 
 @endsection
