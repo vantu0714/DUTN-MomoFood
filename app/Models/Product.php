@@ -26,6 +26,7 @@ class Product extends Model
         'quantity_in_stock',
         'product_type',
         'origin_id',
+        'video',
     ];
 
 

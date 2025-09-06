@@ -36,18 +36,38 @@
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-body text-center p-4">
                         <div class="position-relative d-inline-block">
-                            <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid rounded-3 shadow-lg"
-                                alt="Ảnh sản phẩm" style="max-height: 300px; object-fit: cover;">
+                            {{-- Ảnh sản phẩm --}}
+                            <img id="mainProductImage" src="{{ asset('storage/' . $product->image) }}"
+                                class="img-fluid rounded-3 shadow-lg mb-3" alt="Ảnh sản phẩm"
+                                style="max-height: 300px; object-fit: cover;">
+
+                            {{-- Video ẩn ban đầu --}}
+                            @if ($product->video)
+                                <video id="mainProductVideo" class="d-none" controls
+                                    style="width: 100%; max-height: 300px; border-radius: 10px; object-fit: cover;">
+                                    <source src="{{ asset('storage/' . $product->video) }}" type="video/mp4">
+                                </video>
+                            @endif
+
+                            {{-- Badge hết hàng --}}
                             @if ($product->quantity_in_stock <= 0)
                                 <div class="position-absolute top-0 end-0 m-2">
                                     <span class="badge bg-danger fs-6">Hết hàng</span>
                                 </div>
                             @endif
                         </div>
+
+                        {{-- Nút toggle video/ảnh --}}
+                        @if ($product->video)
+                            <div class="mt-3">
+                                <button class="btn btn-outline-primary" id="toggleMediaBtn">Xem video</button>
+                            </div>
+                        @endif
                     </div>
                 </div>
-            </div>
 
+
+            </div>
             <div class="col-lg-7 col-md-6">
                 <div class="card h-100 shadow-lg border-0 overflow-hidden">
                     <div class="card-header bg-gradient-primary text-white border-0 position-relative">
@@ -346,6 +366,27 @@
             </div>
         </div>
     </div>
+    <script>
+        document.getElementById('toggleMediaBtn')?.addEventListener('click', function() {
+            const img = document.getElementById('mainProductImage');
+            const video = document.getElementById('mainProductVideo');
+            const btn = document.getElementById('toggleMediaBtn');
 
-
+            if (img && video) {
+                if (video.classList.contains('d-none')) {
+                    // Đang xem ảnh -> chuyển sang video
+                    img.classList.add('d-none');
+                    video.classList.remove('d-none');
+                    video.play();
+                    btn.textContent = 'Xem ảnh';
+                } else {
+                    // Đang xem video -> chuyển sang ảnh
+                    video.pause();
+                    video.classList.add('d-none');
+                    img.classList.remove('d-none');
+                    btn.textContent = 'Xem video';
+                }
+            }
+        });
+    </script>
 @endsection
