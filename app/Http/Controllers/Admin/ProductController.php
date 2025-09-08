@@ -141,7 +141,7 @@ class ProductController extends Controller
             'quantity_in_stock' => 'exclude_if:product_type,variant|required|integer|min:1',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'video' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo|max:20480', // Video rule
+            'video' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo|max:20480',
             'origin_id' => 'required|exists:product_origins,id',
         ];
 
