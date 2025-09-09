@@ -51,12 +51,6 @@ class CartClientController extends Controller
 
     public function addToCart(Request $request)
     {
-        // Bắt buộc đăng nhập
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', '⚠️ Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.');
-        }
-
-        $userId = Auth::id();
 
         $productId = $request->input('product_id');
         $variantId = $request->input('product_variant_id');
@@ -80,7 +74,42 @@ class CartClientController extends Controller
             return redirect()->back()->with('error', '❌ Số lượng vượt quá tồn kho.');
         }
 
-        // Lấy hoặc tạo giỏ hàng
+        // Nếu chưa đăng nhập thì lưu session
+        if (!Auth::check()) {
+            $cart = session()->get('cart', []);
+    
+            $key = $productId . '-' . ($variant?->id ?? '0');
+    
+            if (isset($cart[$key])) {
+                $newQty = $cart[$key]['quantity'] + $quantity;
+                if ($newQty > $stock) {
+                    return redirect()->back()->with('error', '❌ Số lượng vượt quá tồn kho.');
+                }
+                $cart[$key]['quantity'] = $newQty;
+                $cart[$key]['total_price'] = $cart[$key]['discounted_price'] * $newQty;
+            } else {
+                $originalPrice   = $variant ? ($variant->original_price ?? $variant->price) : ($product->original_price ?? $product->price);
+                $discountedPrice = $variant ? ($variant->discounted_price ?? $originalPrice) : ($product->discounted_price ?? $originalPrice);
+    
+                $cart[$key] = [
+                    'product_id'         => $productId,
+                    'product_variant_id' => $variant?->id,
+                    'quantity'           => $quantity,
+                    'original_price'     => $originalPrice,
+                    'discounted_price'   => $discountedPrice,
+                    'total_price'        => $discountedPrice * $quantity,
+                ];
+            }
+    
+            session()->put('cart', $cart);
+            // dd(session()->get('cart'));
+
+    
+            return redirect()->route('login')->with('info', 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
+        }
+
+        // Nếu đã đăng nhập thì thêm thẳng vào DB như bạn đang làm
+        $userId = Auth::id();
         $cart = Cart::firstOrCreate(['user_id' => $userId]);
 
         // Tính giá gốc và giá khuyến mãi
@@ -257,7 +286,7 @@ class CartClientController extends Controller
         session()->forget('cart');
 
         // Nếu giỏ hàng lưu trong database:
-        \App\Models\Cart::where('user_id', $userId)->delete();
+        Cart::where('user_id', $userId)->delete();
 
         return redirect()->back()->with('success', 'Đã xóa toàn bộ sản phẩm trong giỏ hàng.');
     }
@@ -271,7 +300,9 @@ class CartClientController extends Controller
             return back()->with('error', 'Không tìm thấy giỏ hàng.');
         }
 
-        $selectedItems = $request->input('selected_items', []);
+        // Lấy selected_items (string: "1,2,3") và chuyển thành mảng
+        $selectedItems = $request->input('selected_items', '');
+        $selectedItems = $selectedItems ? explode(',', $selectedItems) : [];
 
         if (empty($selectedItems)) {
             return back()->with('error', 'Vui lòng chọn sản phẩm cần xóa.');

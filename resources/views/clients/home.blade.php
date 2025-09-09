@@ -58,11 +58,40 @@
 
 
 <!-- Hero Banner Fullscreen Start -->
-<div class="hero-banner-full" style="height: 700px; overflow: hidden;">
-    <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" alt="Banner MomoFood"
-        style="width: 100%; height: 100%; object-fit: cover;">
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+    <!-- Chấm tròn điều hướng -->
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+    </div>
+
+    <!-- Ảnh -->
+    <div class="carousel-inner" style="height: 700px; overflow: hidden;">
+        <div class="carousel-item active">
+            <img src="https://ipos.vn/wp-content/uploads/2022/05/kinh-nghiem-mo-quan-an-vat.jpg" class="d-block w-100"
+                style="height: 700px; object-fit: cover;" alt="Banner 1">
+        </div>
+        <div class="carousel-item">
+            <img src="{{ asset('clients/img/01.jpg') }}" class="d-block w-100" style="height: 700px; object-fit: cover;"
+                alt="Banner 2">
+        </div>
+        <div class="carousel-item">
+            <img src="{{ asset('clients/img/02.jpg') }}" class="d-block w-100" style="height: 700px; object-fit: cover;"
+                alt="Banner 3">
+        </div>
+    </div>
+
+    <!-- Nút điều hướng -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
 </div>
 <!-- Hero Banner Fullscreen End -->
+
 
 <!-- Featurs Section Start -->
 <div class="container-fluid featurs py-5">
@@ -89,16 +118,6 @@
                         <p class="mb-0">Thanh toán bảo mật 100%</p>
 
                     </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselId"
-                        data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselId"
-                        data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
                 </div>
             </div>
 
@@ -160,7 +179,8 @@
                 <div class="tab-class text-center mt-4" id="best-selling-section">
                     <div class="row g-4">
                         <div class="col-12 text-start">
-                            <h2 style="color: #e0806d;">MÓN ĂN NỔI BẬT</h2>
+                            <h2 style="color: #e0806d;">SẢN PHẨM MỚI</h2>
+
 
                         </div>
                     </div>
@@ -187,7 +207,7 @@
                         <img src="https://file.hstatic.net/200000700229/article/ga-ran-vi-kfc-1_0c2450efe15d4b6f9e6bd2637b71d88d.jpg"
                             alt="Gà rán truyền thống">
                         <div class="promo-content bg-success text-white">
-                            <h5>Gà rán truyền thống</h5>
+                            <h5 class="text-white">ĐỒ ĂN VẶT TRUYỀN THỐNG</h5>
                             <p class="mb-0">Giảm giá 20%</p>
                         </div>
                     </div>
@@ -198,7 +218,7 @@
                         <img src="https://cdn.tgdd.vn/Files/2019/07/14/1179531/nuoc-ep-tao-co-tac-dung-gi-ma-ai-cung-thi-nhau-uong-201907142251530613.jpg"
                             alt="Nước cam tươi">
                         <div class="promo-content bg-dark text-white">
-                            <h5>Nước ép táo</h5>
+                            <h5 class="text-white">TRÁI CÂY SẤY</h5>
                             <p class="mb-0">Miễn phí vận chuyển</p>
                         </div>
                     </div>
@@ -208,9 +228,9 @@
                     <div class="promo-box">
                         <img src="https://i.ytimg.com/vi/dZwJgX-IcH8/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLC38hYKpTlqHzCnJl-zQ7256hCeQQ"
                             alt="Pizza món chay">
-                        <div class="promo-content bg-warning text-dark">
-                            <h5>Bánh tráng trộn</h5>
-                            <p class="mb-0">Giảm giá 10vnđ</p>
+                        <div class="promo-content bg-warning text-white">
+                            <h5 class="text-white">ĐỒ ĂN NHANH</h5>
+                            <p class="mb-0">Giảm giá 10.000vnđ</p>
                         </div>
                     </div>
                 </div>
@@ -219,116 +239,21 @@
     </div>
 </div>
 <!-- Featurs End -->
+
 <!-- Vesitable Shop Start-->
 <div class="container-fluid vesitable py-5">
     <div class="container py-0">
         <h3 class="mb-4 fw-bold text-center text-primary">🔥 SẢN PHẨM BÁN CHẠY</h3>
 
-        <div class="row g-4">
-            @foreach ($bestSellingProducts as $product)
-                @php
-                    $firstVariant = null;
-                    $variants = [];
-                    $isVariant = $product->product_type === 'variant';
-
-                    if ($isVariant && $product->variants->count() > 0) {
-                        // Lấy giá thấp nhất và cao nhất
-                        $prices = $product->variants->map(function ($v) {
-                            return $v->discounted_price ?? $v->price;
-                        });
-
-                        $minPrice = $prices->min();
-                        $maxPrice = $prices->max();
-
-                        // Lấy biến thể đầu tiên còn hàng
-                        $firstVariant = $product->variants->firstWhere('quantity_in_stock', '>', 0);
-
-                        $variants = $product->variants->where('quantity_in_stock', '>', 0)->map(function ($v) {
-                            $flavor = $v->attributeValues->firstWhere('attribute.name', 'Vị')?->value;
-                            $weight = $v->attributeValues->firstWhere('attribute.name', 'Khối lượng')?->value;
-
-                            return [
-                                'id' => $v->id,
-                                'flavor' => $flavor,
-                                'weight' => $weight,
-                                'price' => $v->price,
-                                'discounted_price' => $v->discounted_price,
-                                'quantity_in_stock' => $v->quantity_in_stock,
-                                'status' => $v->status,
-                                'image' => $v->image ? asset('storage/' . $v->image) : asset('clients/img/default.jpg'),
-                            ];
-                        });
-                    } else {
-                        // Sản phẩm đơn
-                        $minPrice = $product->discounted_price ?? $product->original_price;
-                        $maxPrice = $product->original_price;
-                    }
-
-                    $avgRating = round($product->comments->avg('rating') ?? 0);
-                @endphp
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card shadow-sm border border-warning rounded-4 overflow-hidden h-100">
-                        <div class="position-relative">
-                            <a href="{{ route('product-detail.show', $product->id) }}">
-                                <div class="product-img-wrapper">
-                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                        alt="{{ $product->product_name }}"
-                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
-                                        class="img-fluid w-100">
-                                </div>
-                            </a>
-                            <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">
-                                {{ $product->category->category_name ?? 'Sản phẩm' }}
-                            </span>
-                        </div>
-
-                        <div class="card-body d-flex flex-column">
-                            <h6 class="fw-bold text-dark text-truncate">{{ $product->product_name }}</h6>
-                            <p class="text-muted small mb-2">{{ Str::limit($product->description, 60) }}</p>
-
-                            <div class="mt-auto d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="text-danger fw-bold fs-5">
-                                        @if ($isVariant)
-                                            {{ number_format($minPrice, 0, ',', '.') }} -
-                                            {{ number_format($maxPrice, 0, ',', '.') }} VND
-                                        @else
-                                            {{ number_format($minPrice, 0, ',', '.') }} VND
-                                            @if ($minPrice < $maxPrice)
-                                                <div class="text-muted text-decoration-line-through small">
-                                                    {{ number_format($maxPrice, 0, ',', '.') }} VND
-                                                </div>
-                                            @endif
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <div class="d-flex justify-content-end mt-auto">
-                                    <button type="button" class="btn btn-white open-cart-modal"
-                                        data-product-id="{{ $product->id }}"
-                                        data-product-name="{{ $product->product_name }}"
-                                        data-product-image="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                        data-product-category="{{ $product->category->category_name ?? 'Không rõ' }}"
-                                        data-product-price="{{ $minPrice ?? 0 }}"
-                                        data-product-original-price="{{ $maxPrice ?? 0 }}"
-                                        data-product-description="{{ $product->description }}"
-                                        data-total-stock="{{ $isVariant ? $firstVariant->quantity_in_stock ?? 0 : $product->quantity_in_stock }}"
-                                        data-variants='@json($variants)' data-bs-toggle="modal"
-                                        data-bs-target="#cartModal">
-                                        <i class="bi bi-cart3 fa-2x text-danger"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+        <div id="filtered-products">
+            <div id="filtered-products">
+                @include('clients.components.filtered-products', ['products' => $bestSellingProducts])
+            </div>
         </div>
-
     </div>
 </div>
 <!-- Banner Section Start-->
+
 <div class="container-fluid banner bg-secondary my-5">
     <div class="container py-5">
         <div class="row g-4 align-items-center">
@@ -361,9 +286,12 @@
 <div class="container-fluid py-5">
     <div class="container py-0">
         <div class="text-center mx-auto mb-5">
-            <h3 class="display-4" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">
+            <h3 class="display-4"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:2rem;">
                 SIÊU PHẨM ĂN VẶT 5 ⭐
+            </h3>
         </div>
+
         <div class="row g-4">
             @foreach ($highRatedProducts as $product)
                 @php
@@ -470,9 +398,10 @@
     <div class="container">
         <div class="bg-light p-3 rounded">
             <h1 class="display-4"
-                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700; text-align: center">
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 700; text-align: center; font-size: 2rem;">
                 TIN TỨC 📰
             </h1>
+
             <br>
             <div class="news-grid">
                 <!-- Card 4 -->
@@ -616,7 +545,7 @@
                             <p id="modal-product-description" class="text-muted mb-3" style="min-height: 60px;"></p>
                             <!-- Biến thể -->
                             <div class="mb-3" id="variant-section">
-                                <label class="form-label fw-semibold">🍃 Chọn biến thể:</label>
+                                <label class="form-label fw-semibold">🍃 Chọn loại:</label>
                                 <div id="variant-options" class="d-flex flex-wrap gap-2">
                                     @foreach ($product->variants as $variant)
                                         @php
@@ -723,7 +652,13 @@
                 const productPrice = parseInt(this.dataset.productPrice || 0);
                 const productOriginalPrice = parseInt(this.dataset.productOriginalPrice || 0);
                 const productDescription = this.dataset.productDescription || '';
-                const variants = JSON.parse(this.dataset.variants || '[]');
+                let variants;
+                try {
+                    const parsed = JSON.parse(this.dataset.variants || '[]');
+                    variants = Array.isArray(parsed) ? parsed : Object.values(parsed);
+                } catch (e) {
+                    variants = [];
+                }
                 // Reset modal
                 productIdInput.value = productId;
                 productNameEl.textContent = productName;
@@ -766,7 +701,7 @@
                     }
 
                     if (stockInfoEl) {
-                        stockInfoEl.textContent = 'Vui lòng chọn biến thể';
+                        stockInfoEl.textContent = 'Vui lòng chọn loại sản phẩm';
                     }
                 }
 
@@ -894,7 +829,7 @@
         document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
             if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
                 e.preventDefault();
-                alert('⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+                alert('⚠️ Vui lòng chọn sản phẩm trước khi thêm vào giỏ hàng.');
             }
         });
     });

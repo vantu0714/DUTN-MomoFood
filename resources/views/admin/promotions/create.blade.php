@@ -22,7 +22,7 @@
 
                     {{-- Tên chương trình --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Tên khuyến mãi</label>
+                        <label class="form-label fw-semibold">Tên mã giảm giá</label>
                         <input type="text" name="promotion_name" class="form-control" required
                             value="{{ old('promotion_name') }}">
                     </div>
@@ -50,7 +50,7 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">Số tiền giảm(Số phần trăm 1-100)</label>
+                            <label class="form-label fw-semibold">Số tiền giảm hoặc (Số giảm theo phần trăm 1-100)</label>
                             <input type="number" step="1" name="discount_value" id="discount_value"
                                 class="form-control @error('discount_value') is-invalid @enderror" required
                                 value="{{ old('discount_value') }}">
@@ -72,12 +72,12 @@
                         @error('min_total_spent')
                             <small class="text-danger d-block">{{ $message }}</small>
                         @enderror
+                        <small class="text-danger d-block client-error" id="discount-error" style="display: none;"></small>
                     </div>
-
                     {{-- Giảm tối đa nếu là phần trăm --}}
                     <div class="mb-3" id="max_discount_container"
                         style="{{ old('discount_type') === 'percent' ? '' : 'display: none;' }}">
-                        <label class="form-label fw-semibold">Số tiền giảm tối đa (Áp dụng cho phần trăm)</label>
+                        <label class="form-label fw-semibold">Số tiền giảm tối đa (Áp dụng cho giảm theo phần trăm)</label>
                         <input type="number" step="1" name="max_discount_value" class="form-control"
                             value="{{ old('max_discount_value') }}">
                         <small class="text-danger d-block client-error" id="max-discount-error"
@@ -86,15 +86,15 @@
 
 
                     {{-- Chỉ áp dụng cho VIP --}}
-                    <div class="form-check mb-3">
+                    {{-- <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="vip_only" id="vip_only" value="1"
                             {{ old('vip_only') ? 'checked' : '' }}>
                         <label class="form-check-label fw-semibold" for="vip_only">Chỉ áp dụng cho khách hàng VIP</label>
-                    </div>
+                    </div> --}}
 
                     {{-- Giới hạn lượt sử dụng --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Giới hạn lượt sử dụng</label>
+                        <label class="form-label fw-semibold">Số lượng</label>
                         <input type="number" name="usage_limit" class="form-control" value="{{ old('usage_limit') }}"
                             placeholder="VD: 100 (bỏ trống nếu không giới hạn)">
                     </div>
@@ -126,15 +126,18 @@
                         <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
                     </div>
 
-                    {{-- Nút submit --}}
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save me-1"></i> Lưu mã giảm giá
-                        </button>
-                    </div>
-                </form>
             </div>
+
+
+            {{-- Nút submit --}}
+            <div class="text-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-1"></i> Lưu mã giảm giá
+                </button>
+            </div>
+            </form>
         </div>
+    </div>
     </div>
 @endsection
 
@@ -157,7 +160,7 @@
         let message = '';
 
         if (!value) {
-            if (name === 'promotion_name') message = 'Vui lòng nhập tên chương trình.';
+            if (name === 'promotion_name') message = 'Vui lòng nhập tên mã giảm giá.';
             if (name === 'code') message = 'Vui lòng nhập mã giảm giá.';
             if (name === 'discount_value') message = 'Vui lòng nhập giá trị giảm.';
             if (name === 'min_total_spent') message = 'Vui lòng nhập tổng đơn hàng tối thiểu.';

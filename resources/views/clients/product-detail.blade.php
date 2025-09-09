@@ -40,37 +40,67 @@
                 <div class="row g-4">
                     <div class="col-lg-6">
                         {{-- Ảnh chính --}}
-                        <div class="product-image-container mb-3">
+                        <div class="product-image-container mb-3 position-relative">
+                            {{-- Ảnh chính --}}
                             <img id="mainProductImage"
                                 src="{{ $product->image ? asset('storage/' . $product->image) : $product->variants->first()?->image_url ?? '' }}"
-                                data-original-src="{{ $product->image ? asset('storage/' . $product->image) : $product->variants->first()?->image_url ?? '' }}"
                                 class="product-image img-fluid rounded shadow-sm" alt="{{ $product->product_name }}"
                                 style="width: 100%; max-height: 450px; object-fit: cover;">
+
+                            {{-- Video chính (ẩn ban đầu) --}}
+                            <video id="mainProductVideo" class="product-video img-fluid rounded shadow-sm d-none"
+                                style="width: 100%; max-height: 450px; object-fit: cover;" controls>
+                                <source id="mainVideoSource"
+                                    src="{{ $product->video ? asset('storage/' . $product->video) : '' }}"
+                                    type="video/mp4">
+                                Trình duyệt không hỗ trợ video.
+                            </video>
+
                             <div class="image-overlay"></div>
                             <div class="zoom-icon">
                                 <i class="fas fa-search-plus text-success"></i>
                             </div>
                         </div>
-                        {{-- Ảnh biến thể hiển thị bên dưới --}}
-                        <div class="variant-thumbnails d-flex gap-2 flex-wrap">
-                            {{-- Ảnh chính cũng là thumbnail đầu tiên --}}
+
+                        {{-- Thumbnail ảnh & video --}}
+                        <div class="variant-thumbnails d-flex gap-2 flex-wrap mt-3">
+                            {{-- Ảnh chính --}}
                             @if ($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}"
                                     alt="{{ $product->product_name }}"
-                                    class="variant-thumbnail img-thumbnail border border-primary"
-                                    data-full-image="{{ asset('storage/' . $product->image) }}"
+                                    class="variant-thumbnail img-thumbnail border border-primary" data-type="image"
+                                    data-src="{{ asset('storage/' . $product->image) }}"
                                     style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
                             @endif
+
+                            {{-- Video thumbnail --}}
+                            @if ($product->video)
+                                <div class="video-thumbnail"
+                                    style="width: 80px; height: 80px; cursor: pointer; position: relative;"
+                                    data-type="video" data-src="{{ asset('storage/' . $product->video) }}">
+                                    <video style="width: 100%; height: 100%; object-fit: cover;">
+                                        <source src="{{ asset('storage/' . $product->video) }}" type="video/mp4">
+                                    </video>
+                                    <div
+                                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                                            background: rgba(0,0,0,0.5); border-radius: 50%; padding: 5px;">
+                                        <i class="fas fa-play text-white"></i>
+                                    </div>
+                                </div>
+                            @endif
+
                             {{-- Ảnh từ biến thể --}}
                             @foreach ($product->variants as $variant)
                                 @if ($variant->image_url)
                                     <img src="{{ $variant->image_url }}" alt="{{ $variant->full_name }}"
-                                        class="variant-thumbnail img-thumbnail"
-                                        data-full-image="{{ $variant->image_url }}"
+                                        class="variant-thumbnail img-thumbnail" data-type="image"
+                                        data-src="{{ $variant->image_url }}"
                                         style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
                                 @endif
                             @endforeach
                         </div>
+
+
                         {{-- Chia sẻ mạng xã hội --}}
                         <strong>Chia sẻ:</strong>
                         <div class="d-flex gap-2 mt-2">
@@ -161,7 +191,8 @@
                                 @endfor
                             </div>
                             <div class="review-count border-end px-4">
-                                <span class="fw-bold text-dark">{{ number_format($product->comments->count()) }}</span>
+                                <span
+                                    class="fw-bold text-dark">{{ number_format($product->comments->count()) }}</span>
                                 <span class="text-muted">Đánh Giá</span>
                             </div>
                             <div class="sold-count ps-4">
@@ -188,17 +219,17 @@
 
                                 {{-- Giá chính --}}
                                 <span id="variantPrice" class="price-amount fw-bold text-danger"
-                                    style="font-size: 2rem; line-height: 1;">
-                                    đ{{ number_format($minPrice, 0, ',', '.') }}
+                                    style="font-size: 2rem; white-space: nowrap;">
+                                    {{ number_format($minPrice, 0, ',', '.') }} VND
                                     @if ($minPrice != $maxPrice)
-                                        - đ{{ number_format($maxPrice, 0, ',', '.') }}
+                                        -{{ number_format($maxPrice, 0, ',', '.') }} VND
                                     @endif
                                 </span>
 
                                 {{-- Giá gạch ngang và giảm giá ẩn đi nhưng vẫn giữ không gian --}}
                                 <span class="original-price text-muted text-decoration-line-through"
                                     style="font-size: 1.5rem; line-height: 1; visibility: hidden;">
-                                    đ0
+                                    0 VND
                                 </span>
                                 <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
                                     style="font-size: 1.5rem; line-height: 1; visibility: hidden;">
@@ -221,14 +252,15 @@
                                 <span id="variantPrice"
                                     class="price-amount fw-bold {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
                                     style="font-size: 2rem; line-height: 1;">
-                                    đ{{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
+                                    {{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
+                                    VND
                                 </span>
 
                                 {{-- Giá gạch ngang nếu có --}}
                                 <span class="original-price text-muted text-decoration-line-through"
                                     id="originalPrice"
                                     style="font-size: 1.5rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
-                                    đ{{ number_format($product->original_price, 0, ',', '.') }}
+                                    {{ number_format($product->original_price, 0, ',', '.') }} VND
                                 </span>
 
                                 {{-- Badge giảm giá nếu có --}}
@@ -300,7 +332,6 @@
                                         </button>
                                     </div>
                                 </div>
-
                             @endif
 
                             {{-- CHỌN SỐ LƯỢNG --}}
@@ -591,13 +622,19 @@
                             $firstVariant = $item->variants->first();
 
                             if ($hasVariants) {
+                                // Nếu có biến thể -> lấy min-max giá từ variants
                                 $prices = $item->variants->pluck('price')->filter();
                                 $minPrice = $prices->min() ?? 0;
                                 $maxPrice = $prices->max() ?? 0;
                             } else {
-                                $price = $item->discounted_price ?? 0;
+                                // Nếu là sản phẩm đơn
                                 $original = $item->original_price ?? 0;
-                                $hasDiscount = $original > $price;
+                                $price =
+                                    $item->discounted_price && $item->discounted_price > 0
+                                        ? $item->discounted_price
+                                        : $original;
+
+                                $hasDiscount = $original > 0 && $price < $original;
                                 $discountPercent = $hasDiscount ? round((($original - $price) / $original) * 100) : 0;
                             }
                         @endphp
@@ -632,15 +669,16 @@
                                     <div class="mb-2">
                                         @if ($hasVariants)
                                             <span class="text-danger fw-bold">
-                                                {{ number_format($minPrice, 0, ',', '.') }}đ
+                                                {{ number_format($minPrice, 0, ',', '.') }} VND
                                                 @if ($minPrice !== $maxPrice)
-                                                    - {{ number_format($maxPrice, 0, ',', '.') }}đ
+                                                    - {{ number_format($maxPrice, 0, ',', '.') }} VND
                                                 @endif
                                             </span>
                                         @else
                                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                <span
-                                                    class="text-danger fw-bold fs-6">{{ number_format($price, 0, ',', '.') }}đ</span>
+                                                <span class="text-danger fw-bold fs-6">
+                                                    {{ number_format($price, 0, ',', '.') }} VND
+                                                </span>
                                                 @if ($hasDiscount)
                                                     <div class="d-flex align-items-center gap-1">
                                                         <del
@@ -654,6 +692,7 @@
                                                 @endif
                                             </div>
                                         @endif
+
                                     </div>
 
                                     {{-- Ảnh các biến thể ở dưới giá --}}
@@ -875,6 +914,10 @@
         const quantityInput = document.getElementById('quantity');
         const cancelButton = document.getElementById('cancelVariantSelection');
         const selectedVariantIdInput = document.getElementById('selectedVariantId');
+        const mainVideo = document.getElementById('mainProductVideo'); // ✅ thêm
+        const mainVideoSource = mainVideo ? mainVideo.querySelector('source') :
+            null; // (tuỳ, dùng khi bật video)
+
         var selectedVariant = null;
         var totalStockQuantity = "{{ $totalStock }}";
 
@@ -883,11 +926,11 @@
         }
 
         function updatePriceDisplay(price, original) {
-            if (priceElement) priceElement.textContent = 'đ' + formatCurrency(price);
+            if (priceElement) priceElement.textContent = formatCurrency(price) + ' VND';
 
             if (originalPriceElement && discountPercentElement) {
                 if (original > price) {
-                    originalPriceElement.textContent = 'đ' + formatCurrency(original);
+                    originalPriceElement.textContent = formatCurrency(original) + ' VND';
                     originalPriceElement.style.display = 'inline';
                     const percent = Math.round((1 - price / original) * 100);
                     discountPercentElement.textContent = `-${percent}%`;
@@ -901,8 +944,18 @@
 
         function updateMainImage(imageUrl) {
             if (!mainImage || !imageUrl) return;
+
+            // ✅ Nếu đang xem video → dừng và ẩn video
+            if (mainVideo && !mainVideo.classList.contains('d-none')) {
+                mainVideo.pause();
+                mainVideo.classList.add('d-none');
+            }
+
+            // ✅ Hiện ảnh và đổi src
+            mainImage.classList.remove('d-none');
             mainImage.src = imageUrl;
         }
+
 
         function resetToDefault() {
             selectedVariantIdInput.value = '';
@@ -913,9 +966,9 @@
 
             if (priceElement) {
                 if (min && max && min !== max) {
-                    priceElement.textContent = `đ${formatCurrency(min)} - đ${formatCurrency(max)}`;
+                    priceElement.textContent = `${formatCurrency(min)} - ${formatCurrency(max)} VND`;
                 } else {
-                    priceElement.textContent = `đ${formatCurrency(min)}`;
+                    priceElement.textContent = `${formatCurrency(min)} VND`;
                 }
             }
 
@@ -923,7 +976,8 @@
             if (discountPercentElement) discountPercentElement.style.display = 'none';
 
             if (mainImage?.dataset.originalSrc) {
-                mainImage.src = mainImage.dataset.originalSrc;
+                // mainImage.src = mainImage.dataset.originalSrc;
+                updateMainImage(mainImage.dataset.originalSrc);
             }
 
             if (stockElement) {
@@ -1113,7 +1167,5 @@
         });
     });
 </script>
-
-
 
 @include('clients.layouts.footer')

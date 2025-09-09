@@ -95,6 +95,8 @@
                         7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
                         8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
                         9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
+                        10 => ['label' => 'Không xác nhận', 'class' => 'danger'],
+                        11 => ['label' => 'Giao hàng thất bại', 'class' => 'danger'],
                     ];
                     $status = $statusLabels[$order->status] ?? ['label' => 'Không rõ', 'class' => 'light'];
 
@@ -137,6 +139,7 @@
                             @php
                                 $statusOptions = [
                                     1 => ['label' => 'Chưa xác nhận', 'class' => 'secondary'],
+                                    10 => ['label' => 'Không xác nhận', 'class' => 'danger'],
                                     2 => ['label' => 'Đã xác nhận', 'class' => 'info'],
                                     3 => ['label' => 'Đang giao', 'class' => 'primary'],
                                     9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
@@ -145,22 +148,17 @@
                                     6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
                                     7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
                                     8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
+                                    11 => ['label' => 'Giao hàng thất bại', 'class' => 'danger'],
                                 ];
                             @endphp
 
                             <select name="status" id="order-status-select" class="form-select form-select-sm mt-2"
-                                onchange="handleStatusChange(this)"
-                                {{ in_array($order->status, [5, 6, 8]) ? 'disabled' : '' }}>
+                                onchange="handleStatusChange(this)">
                                 @foreach ($statusOptions as $key => $info)
                                     @php
                                         $canSelect = false;
                                         // Cho phép chuyển đến trạng thái kế tiếp
                                         if ($key == $order->status || $key == $order->status + 1) {
-                                            $canSelect = true;
-                                        }
-
-                                        // Cho phép chuyển từ Đang giao (3) → Hoàn hàng (5)
-                                        if ($order->status == 3 && $key == 5) {
                                             $canSelect = true;
                                         }
 
@@ -171,6 +169,18 @@
 
                                         if ($order->status == 3 && $key == 4) {
                                             $canSelect = false;
+                                        }
+
+                                        if ($order->status == 3 && $key == 10) {
+                                            $canSelect = false;
+                                        }
+                                        if ($order->status == 4 && in_array($key, [5, 7, 8, 11])) {
+                                            $canSelect = false;
+                                        }
+
+                                        // Cho phép giao hàng thất bại từ trạng thái đang giao
+                                        if ($order->status == 3 && $key == 11) {
+                                            $canSelect = true;
                                         }
 
                                     @endphp
@@ -189,47 +199,47 @@
                         <span class="badge bg-{{ $payment_method['class'] }}">{{ $payment_method['label'] }}</span>
                     </div>
 
-                    @if ($order->status == 6 && $order->reason)
-                        <div class="col-12"><strong>Lý do hủy:</strong> {{ $order->reason }}</div>
+                    @if (($order->status == 6 || $order->status == 10 || $order->status == 11) && $order->reason)
+                        <div class="col-12"><strong>Lý do:</strong> {{ $order->reason }}</div>
                     @endif
 
                     @if ($order->status == 1)
                         <div class="mt-3">
                             <button class="btn btn-danger"
-                                onclick="document.getElementById('cancel-form').classList.toggle('d-none')">
-                                Hủy đơn
+                                onclick="document.getElementById('reject-form').classList.toggle('d-none')">
+                                Không xác nhận đơn hàng
                             </button>
 
-                            <form action="{{ route('admin.orders.cancel', $order->id) }}" method="POST"
-                                class="mt-3 d-none" id="cancel-form">
+                            <form action="{{ route('admin.orders.reject', $order->id) }}" method="POST"
+                                class="mt-3 d-none" id="reject-form">
                                 @csrf
                                 @method('PUT')
                                 <div class="mb-3">
-                                    <label for="reason" class="form-label">Lý do hủy đơn</label>
+                                    <label for="reason" class="form-label">Lý do không xác nhận đơn hàng</label>
                                     <textarea name="reason" class="form-control" rows="3" required placeholder="Nhập lý do..."></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                                <button type="submit" class="btn btn-danger">Xác nhận</button>
                             </form>
                         </div>
                     @endif
 
                     @if ($order->status == 3)
                         <div class="mt-3">
-                            <button class="btn btn-dark"
-                                onclick="document.getElementById('return-form').classList.toggle('d-none')">
-                                Hoàn hàng
+                            <button class="btn btn-warning"
+                                onclick="document.getElementById('delivery-failed-form').classList.toggle('d-none')">
+                                Giao hàng thất bại
                             </button>
 
                             <form action="{{ route('admin.orders.update-status', $order->id) }}" method="POST"
-                                class="mt-3 d-none" id="return-form">
+                                class="mt-3 d-none" id="delivery-failed-form">
                                 @csrf
                                 @method('PATCH')
-                                <input type="hidden" name="status" value="5">
+                                <input type="hidden" name="status" value="11">
                                 <div class="mb-3">
-                                    <label for="reason" class="form-label">Lý do hoàn hàng</label>
-                                    <textarea name="reason" class="form-control" rows="3" required placeholder="Nhập lý do hoàn hàng..."></textarea>
+                                    <label for="reason" class="form-label">Lý do giao hàng thất bại</label>
+                                    <textarea name="reason" class="form-control" rows="3" required placeholder="Nhập lý do giao hàng thất bại..."></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-dark">Xác nhận hoàn hàng</button>
+                                <button type="submit" class="btn btn-warning">Xác nhận giao hàng thất bại</button>
                             </form>
                         </div>
                     @endif
@@ -245,7 +255,6 @@
                     @php
                         $statusHistory = [];
 
-                        // Luôn có trạng thái tạo đơn hàng
                         $statusHistory[] = [
                             'label' => 'Đơn hàng được tạo',
                             'time' => $order->created_at,
@@ -253,31 +262,22 @@
                             'color' => 'secondary',
                         ];
 
-                        // Thêm các trạng thái khác nếu có timestamp
-                        if ($order->confirmed_at) {
-                            $statusHistory[] = [
-                                'label' => 'Đã xác nhận',
-                                'time' => $order->confirmed_at,
-                                'icon' => 'fas fa-check-circle',
-                                'color' => 'info',
-                            ];
-                        }
-
-                        if ($order->shipping_at) {
-                            $statusHistory[] = [
-                                'label' => 'Đang giao hàng',
-                                'time' => $order->shipping_at,
-                                'icon' => 'fas fa-truck',
-                                'color' => 'primary',
-                            ];
-                        }
-
                         if ($order->delivered_at) {
                             $statusHistory[] = [
                                 'label' => 'Đang giao hàng',
                                 'time' => $order->delivered_at,
                                 'icon' => 'fas fa-box-open',
                                 'color' => 'success',
+                            ];
+                        }
+
+                        if ($order->delivery_failed_at) {
+                            $statusHistory[] = [
+                                'label' => 'Giao hàng thất bại',
+                                'time' => $order->delivery_failed_at,
+                                'icon' => 'fas fa-exclamation-triangle',
+                                'color' => 'danger',
+                                'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
                             ];
                         }
 
@@ -335,6 +335,16 @@
                                         : null,
                                 ];
                             }
+                        }
+
+                        if ($order->status == 10 && $order->updated_at) {
+                            $statusHistory[] = [
+                                'label' => 'Không xác nhận đơn hàng',
+                                'time' => $order->updated_at,
+                                'icon' => 'fas fa-ban',
+                                'color' => 'danger',
+                                'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+                            ];
                         }
 
                         if ($order->status == 6 && $order->updated_at) {
@@ -517,6 +527,9 @@
         const selectedValue = parseInt(select.value);
         if (selectedValue === 5) {
             alert("Vui lòng bấm nút 'Hoàn hàng' bên dưới để nhập lý do.");
+            select.value = "{{ $order->status }}";
+        } else if (selectedValue === 11) {
+            alert("Vui lòng bấm nút 'Giao hàng thất bại' bên dưới để nhập lý do.");
             select.value = "{{ $order->status }}";
         } else {
             select.form.submit();

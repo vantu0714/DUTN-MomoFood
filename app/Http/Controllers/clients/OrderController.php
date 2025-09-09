@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -69,13 +70,13 @@ class OrderController extends Controller
             return redirect()->back()->withErrors($errors);
         }
 
-        // ✅ Lấy danh sách tất cả địa chỉ của user
+        //Lấy danh sách tất cả địa chỉ của user
         $savedRecipients = Recipient::where('user_id', $userId)
             ->orderByDesc('is_default')
             ->latest()
             ->get();
 
-        // ✅ Không dùng session: lấy địa chỉ từ request (nếu có), không thì lấy mặc định
+        //Không dùng session: lấy địa chỉ từ request (nếu có), không thì lấy mặc định
         $recipient = null;
         if ($request->has('recipient_id')) {
             $recipient = $savedRecipients->where('id', $request->recipient_id)->first();
@@ -90,6 +91,25 @@ class OrderController extends Controller
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->get();
+
+        // Kiểm tra mã giảm giá đang lưu trong session
+        $promotionCode = session('promotion_code');
+        $discount = session('discount', 0);
+
+        if ($promotionCode) {
+            $promotion = Promotion::where('code', $promotionCode)
+                ->where('status', 1)
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->first();
+
+            if (!$promotion || ($promotion->usage_limit !== null && $promotion->used_count >= $promotion->usage_limit)) {
+                // Nếu mã đã bị xóa / hết hạn / vượt lượt dùng → clear session
+                session()->forget(['promotion', 'promotion_code', 'discount']);
+                $promotionCode = null;
+                $discount = 0;
+            }
+        }
 
         //Đọc tree.json
         $json = file_get_contents(public_path('data/dist/tree.json'));
@@ -128,7 +148,9 @@ class OrderController extends Controller
             'recipient',
             'savedRecipients',
             'vouchers',
-            'locations'
+            'locations',
+            'promotionCode',
+            'discount'
         ));
     }
 
@@ -139,11 +161,15 @@ class OrderController extends Controller
 
         // Lấy selected_ids từ request hoặc session
         $selectedIds = [];
+        $errors = [];
 
         if ($request->filled('selected_items')) {
             $selectedIds = is_array($request->selected_items)
                 ? $request->selected_items
                 : explode(',', $request->selected_items);
+
+            session()->forget('selected_items');
+            session()->put('selected_items', $selectedIds);
         } elseif (session()->has('selected_items')) {
             $selectedIds = session('selected_items');
         }
@@ -198,6 +224,26 @@ class OrderController extends Controller
             ]);
         }
 
+        foreach ($cartItems as $item) {
+            $stock = $item->productVariant
+                ? $item->productVariant->quantity_in_stock
+                : ($item->product->quantity_in_stock ?? 0);
+
+            if ($stock <= 0) {
+                $errors[] = "Sản phẩm " . Str::lower($item->product->product_name) . " bạn chọn đã hết hàng";
+            }
+        }
+
+        if (!empty($errors)) {
+            return redirect()->route('carts.index')->withErrors($errors);
+        }
+
+        // Xử lý thanh toán
+        if ($request->payment_method === 'vnpay') {
+            $vnpay = new VNPayController();
+            return $vnpay->create($request, $recipient);
+        }
+
         DB::beginTransaction();
 
         try {
@@ -244,8 +290,14 @@ class OrderController extends Controller
                         ['promotion_id' => $promotion->id, 'user_id' => $userId],
                         ['used_count' => DB::raw('used_count + 1')]
                     );
+                } else {
+                    // Nếu mã không hợp lệ hoặc bị xóa thì clear session
+                    session()->forget(['promotion', 'promotion_code', 'discount']);
+                    $promotionCode = null;
+                    $discount = 0;
                 }
             }
+
 
             $grandTotal = $total + $request->shipping_fee - $discount;
 
@@ -276,6 +328,7 @@ class OrderController extends Controller
                     'price' => $item->discounted_price,
                 ]);
 
+
                 $item->product->quantity_in_stock -= $item->quantity;
                 $item->product->save();
 
@@ -302,13 +355,7 @@ class OrderController extends Controller
 
             DB::commit();
 
-            // Xử lý thanh toán
-            if ($request->payment_method === 'vnpay') {
-                $vnpay = new VNPayController();
-                return $vnpay->create($request, $order);
-            } else {
-                return redirect()->route('carts.index')->with('orderSuccess', $order->id);
-            }
+            return redirect()->route('carts.index')->with('orderSuccess', $order->id);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Đặt hàng thất bại: ' . $e->getMessage());
@@ -386,10 +433,17 @@ class OrderController extends Controller
         try {
             $order->update([
                 'status' => 6,
-                'reason' => $request->reason,
-                'cancelled_at' => now()
+                'reason' => $request->reason
             ]);
 
+            // Xử lý hoàn tiền nếu đã thanh toán
+            if ($order->payment_status === 'paid') {
+                $order->update([
+                    'payment_status' => 'refunded'
+                ]);
+            }
+
+            // Hoàn lại số lượng tồn kho
             foreach ($order->orderDetails as $orderDetail) {
                 $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
                 $orderDetail->product->save();
@@ -401,7 +455,12 @@ class OrderController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');
+
+            if ($order->payment_status === 'refunded') {
+                return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công. Số tiền ' . number_format($order->total_price, 0, ',', '.') . 'đ sẽ được hoàn trả trong vòng 3-5 ngày làm việc.');
+            } else {
+                return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Hủy đơn hàng thất bại: ' . $e->getMessage());
@@ -427,6 +486,7 @@ class OrderController extends Controller
 
         // Kiểm tra giới hạn lượt dùng tổng
         if (!is_null($promotion->usage_limit) && $promotion->used_count >= $promotion->usage_limit) {
+            session()->forget(['promotion', 'promotion_code', 'discount']);
             return back()->with('error', 'Mã giảm giá đã hết lượt sử dụng!');
         }
 
@@ -492,8 +552,13 @@ class OrderController extends Controller
 
     public function removeCoupon()
     {
-        session()->forget(['promotion', 'discount', 'promotion_code']);
-        return redirect()->route('carts.index')->with('success', 'Đã hủy mã giảm giá.');
+        if (session()->has('promotion')) {
+            session()->forget(['promotion', 'discount', 'promotion_code']);
+            return back()->with('success', 'Đã hủy mã giảm giá.');
+        }
+
+        // Nếu không có mã thì chỉ quay lại, không báo gì
+        return back();
     }
 
     public function requestReturn(Request $request, $id)

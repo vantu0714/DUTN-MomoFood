@@ -154,12 +154,29 @@ class PromotionController extends Controller
             'discount_type' => $promotion->discount_type,
         ]);
 
+        $discountType = $request->discount_type;
+
         $validated = $request->validate(
             [
                 'promotion_name'      => 'required|string|max:255',
                 'code'                => 'required|string|max:50|unique:promotions,code,' . $promotion->id,
                 'discount_type'       => 'required|in:fixed,percent',
-                'discount_value'      => 'required|numeric|min:1',
+                // tùy theo discount_type mà thay đổi rule
+                'discount_value'      => [
+                    'required',
+                    'numeric',
+                    function ($attribute, $value, $fail) use ($discountType) {
+                        if ($discountType === 'percent') {
+                            if ($value < 1 || $value > 100) {
+                                $fail('Phần trăm giảm phải từ 1 đến 100.');
+                            }
+                        } elseif ($discountType === 'fixed') {
+                            if ($value < 1000) {
+                                $fail('Số tiền giảm tối thiểu là 1.000đ.');
+                            }
+                        }
+                    }
+                ],
                 'max_discount_value'  => 'nullable|numeric|min:0',
                 'min_total_spent'     => 'nullable|numeric|min:1000',
                 'start_date'          => ['required', 'date', 'after_or_equal:' . now()->format('Y-m-d')],
@@ -221,6 +238,9 @@ class PromotionController extends Controller
             'status'             => $validated['status'],
             'usage_limit'        => $validated['usage_limit'],
         ],);
+
+        event(new \App\Events\PromotionUpdated($promotion));
+
 
         return redirect()->route('admin.promotions.index')->with('success', 'Cập nhật mã giảm giá thành công!');
     }

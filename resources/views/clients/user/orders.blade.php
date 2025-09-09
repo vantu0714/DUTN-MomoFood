@@ -12,6 +12,8 @@
             7 => 'Chờ xử lý hoàn hàng',
             8 => 'Hoàn hàng thất bại',
             9 => 'Đã giao hàng',
+            10 => 'Không xác nhận',
+            11 => 'Giao hàng thất bại',
         ];
 
         $paymentStatusLabels = [
@@ -126,8 +128,10 @@
                                                 @elseif($order->status == 5) bg-secondary text-white
                                                 @elseif($order->status == 6) bg-danger text-white
                                                 @elseif($order->status == 7) bg-purple text-white
-                                                @elseif($order->status == 8) bg-dark text-white
-                                                @elseif ($order->status == 9) bg-primary text-white @endif">
+                                                @elseif($order->status == 8) bg-danger text-white
+                                                @elseif ($order->status == 9) bg-primary text-white
+                                                @elseif ($order->status == 10) bg-danger text-white
+                                                @elseif ($order->status == 11) bg-danger text-white @endif">
                                             {{ $statusLabels[$order->status] ?? 'Không xác định' }}
                                         </span>
                                     </div>

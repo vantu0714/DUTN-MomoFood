@@ -25,12 +25,12 @@
                 <table class="table table-borderless mb-0">
                     <tbody>
                         <tr>
-                            <th class="w-25 text-nowrap">Tên chương trình:</th>
+                            <th class="w-25 text-nowrap">Tên mã giảm giá:</th>
                             <td>{{ $promotion->promotion_name }}</td>
                         </tr>
 
                         <tr>
-                            <th>Mã giảm giá:</th>
+                            <th>Mã code:</th>
                             <td>{{ $promotion->code }}</td>
                         </tr>
 
@@ -58,7 +58,7 @@
                                 @if ($promotion->discount_type === 'percent' && $promotion->max_discount_value)
                                     {{ number_format($promotion->max_discount_value, 0, ',', '.') }}₫
                                 @else
-                                    Không giới hạn
+                                    Không có
                                 @endif
                             </td>
                         </tr>
@@ -75,17 +75,12 @@
                         </tr>
 
                         <tr>
-                            <th>Chỉ áp dụng cho khách VIP:</th>
-                            <td>{{ $promotion->vip_only ? 'Có' : 'Không' }}</td>
-                        </tr>
-
-                        <tr>
                             <th>Số lượt đã sử dụng:</th>
                             <td>{{ $promotion->used_count ?? 0 }}</td>
                         </tr>
 
                         <tr>
-                            <th>Giới hạn lượt sử dụng:</th>
+                            <th>Số lượng:</th>
                             <td>{{ $promotion->usage_limit ?? 'Không giới hạn' }}</td>
                         </tr>
 

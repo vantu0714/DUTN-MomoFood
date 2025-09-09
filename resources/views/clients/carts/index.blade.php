@@ -17,118 +17,125 @@
     </div>
 
     @php $total = 0; @endphp
-    <form action="{{ route('carts.removeSelected') }}" method="POST" id="delete-selected-form"
-        onsubmit="return checkSelectedItems()">
-        @csrf
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Danh sách sản phẩm trong giỏ</h5>
-            <button type="submit" class="btn btn-danger btn-sm" {{ count($carts) == 0 ? 'disabled' : '' }}>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Danh sách sản phẩm trong giỏ</h5>
+        <form action="{{ route('carts.removeSelected') }}" method="POST" id="delete-selected-form">
+            @csrf
+            @method('DELETE')
+            <input type="hidden" name="selected_items" id="selected-items">
+            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteSelected()"
+                {{ count($carts) == 0 ? 'disabled' : '' }}>
                 🗑️ Xóa các sản phẩm đã chọn
             </button>
-        </div>
+        </form>
+    </div>
 
-        <div class="table-responsive">
-            <table class="table align-middle text-center table-hover table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        <th><input type="checkbox" id="select-all"></th>
-                        <th>Ảnh</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Giá</th>
-                        <th>Số lượng</th>
-                        <th>Tạm tính</th>
-                        <th>Xử lý</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (count($carts) > 0)
-                        @foreach ($carts as $item)
-                            @php
-                                $product = $item->product;
-                                $variant = $item->productVariant;
+    <div class="table-responsive">
+        <table class="table align-middle text-center table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th>Ảnh</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Số lượng</th>
+                    <th>Tạm tính</th>
+                    <th>Xử lý</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (count($carts) > 0)
+                    @foreach ($carts as $item)
+                        @php
+                            $product = $item->product;
+                            $variant = $item->productVariant;
 
-                                $image = $product->image ?? 'clients/img/default.png';
-                                $productName = $product->product_name ?? 'Không có tên';
+                            $image = $product->image ?? 'clients/img/default.png';
+                            $productName = $product->product_name ?? 'Không có tên';
 
-                                // ✅ Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
-                                $variantName = '';
-                                if ($variant && $variant->attributeValues) {
-                                    $variantName = $variant->attributeValues
-                                        ->map(function ($val) {
-                                            return $val->attribute->name . ': ' . $val->value;
-                                        })
-                                        ->implode(', ');
-                                }
+                            // Ghép thông tin thuộc tính: Vị: Ngọt, Size: M
+                            $variantName = '';
+                            if ($variant && $variant->attributeValues) {
+                                $variantName = $variant->attributeValues
+                                    ->map(function ($val) {
+                                        return $val->attribute->name . ': ' . $val->value;
+                                    })
+                                    ->implode(', ');
+                            }
 
-                                $stock = $variant->quantity_in_stock ?? ($product->quantity_in_stock ?? 0);
-                                $price = $item->discounted_price ?? 0;
-                                $subTotal = $price * $item->quantity;
-                                $total += $subTotal;
-                            @endphp
+                            $stock = $variant->quantity_in_stock ?? ($product->quantity_in_stock ?? 0);
+                            $price = $item->discounted_price ?? 0;
+                            $subTotal = $price * $item->quantity;
+                            $total += $subTotal;
+                        @endphp
 
-                            <tr class="cart-item" data-id="{{ $item->id }}" data-stock="{{ $stock }}">
-                                <td>
-                                    <input type="checkbox" name="selected_items[]" value="{{ $item->id }}"
-                                        class="select-item" data-subtotal="{{ $subTotal ?? 0 }}"
-                                        {{ $stock <= 0 ? 'disabled' : '' }}>
+                        <tr class="cart-item" data-id="{{ $item->id }}" data-stock="{{ $stock }}">
+                            <td>
+                                <input type="checkbox" class="select-item" value="{{ $item->id }}"
+                                    data-subtotal="{{ $subTotal ?? 0 }}" {{ $stock <= 0 ? 'disabled' : '' }}>
 
-                                </td>
-                                <td>
-                                    <img src="{{ asset('storage/' . $image) }}" class="rounded"
-                                        style="width: 60px; height: 60px;" />
-                                </td>
-                                <td class="text-start">
-                                    <strong>{{ $productName }}</strong>
-                                    @if ($variant && $variant->attributeValues->count())
-                                        <div class="mt-1">
-                                            @foreach ($variant->attributeValues as $value)
-                                                <span class="badge bg-info text-dark me-1">
-                                                    {{ $value->attribute->name }}:
-                                                    <strong>{{ $value->value }}</strong>
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                    @if ($stock <= 0)
-                                        <div class="text-danger small fw-bold mt-1">Tạm thời hết hàng</div>
-                                    @endif
-                                </td>
-                                <td>{{ number_format($price, 0, ',', '.') }} đ</td>
-                                <td>
-                                    <div class="input-group input-group-sm quantity-control mx-auto"
-                                        style="max-width: 130px;">
-                                        <button type="button" class="btn btn-outline-secondary quantity-decrease"
-                                            {{ $stock <= 0 ? 'disabled' : '' }}>−</button>
-                                        <input type="number" class="form-control text-center quantity-input"
-                                            value="{{ $item->quantity }}" min="1"
-                                            data-old-value="{{ $item->quantity }}"
-                                            {{ $stock <= 0 ? 'disabled' : '' }}>
-                                        <button type="button" class="btn btn-outline-secondary quantity-increase"
-                                            {{ $stock <= 0 ? 'disabled' : '' }}>+</button>
+                            </td>
+
+                            <td>
+                                <img src="{{ asset('storage/' . $image) }}" class="rounded"
+                                    style="width: 60px; height: 60px;" />
+                            </td>
+                            <td class="text-start">
+                                <strong>{{ $productName }}</strong>
+                                @if ($variant && $variant->attributeValues->count())
+                                    <div class="mt-1">
+                                        @foreach ($variant->attributeValues as $value)
+                                            <span class="badge bg-info text-dark me-1">
+                                                {{ $value->attribute->name }}:
+                                                <strong>{{ $value->value }}</strong>
+                                            </span>
+                                        @endforeach
                                     </div>
-                                </td>
+                                @endif
+                                @if ($stock <= 0)
+                                    <div class="text-danger small fw-bold mt-1">Tạm thời hết hàng</div>
+                                @endif
+                            </td>
+                            <td>{{ number_format($price, 0, ',', '.') }} đ</td>
+                            <td>
+                                <div class="input-group input-group-sm quantity-control mx-auto"
+                                    style="max-width: 130px;">
+                                    <button type="button" class="btn btn-outline-secondary quantity-decrease"
+                                        {{ $stock <= 0 ? 'disabled' : '' }}>−</button>
+                                    <input type="number" class="form-control text-center quantity-input"
+                                        value="{{ $item->quantity }}" min="1"
+                                        data-old-value="{{ $item->quantity }}" {{ $stock <= 0 ? 'disabled' : '' }}>
+                                    <button type="button" class="btn btn-outline-secondary quantity-increase"
+                                        {{ $stock <= 0 ? 'disabled' : '' }}>+</button>
+                                </div>
+                            </td>
 
-                                <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
-                                <td>
-                                    <a href="{{ route('carts.remove', $item->id) }}"
-                                        class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                            <td class="sub-total">{{ number_format($subTotal, 0, ',', '.') }} đ</td>
+
+                            <td>
+                                <form action="{{ route('carts.remove', $item->id) }}" method="POST"
+                                    class="delete-form" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete">
                                         <i class="fa fa-times"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @else
-                        <tr>
-                            <td colspan="7" class="text-center text-muted">Giỏ hàng của bạn đang trống</td>
-                        </tr>
-                    @endif
-                </tbody>
+                                    </button>
+                                </form>
+                            </td>
 
-            </table>
-        </div>
-    </form>
+                        </tr>
+                    @endforeach
+                @else
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Giỏ hàng của bạn đang trống</td>
+                    </tr>
+                @endif
+            </tbody>
+
+        </table>
+    </div>
+
 </div>
 
 @php
@@ -172,8 +179,35 @@
         </div>
     </div>
 @endif
-</div>
-</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.btn-delete').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log("Clicked button for product:", this.closest('tr').dataset.id);
+
+                let form = this.closest('form');
+                console.log("Found form:", form);
+
+                Swal.fire({
+                    title: 'Bạn chắc chắn muốn xóa?',
+                    text: "Hành động này không thể hoàn tác!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit(); // 🔥 gửi form
+                    }
+                });
+            });
+        });
+    });
+</script>
 
 <!-- Modal chi tiết đơn hàng -->
 @if (session('orderSuccess'))
@@ -491,14 +525,14 @@
         }
     });
 
-    function checkSelectedItems() {
-        const selected = document.querySelectorAll('.select-item:checked');
-        if (selected.length === 0) {
-            alert('Vui lòng chọn ít nhất 1 sản phẩm để xóa!');
-            return false;
-        }
-        return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');
-    }
+    // function checkSelectedItems() {
+    //     const selected = document.querySelectorAll('.select-item:checked');
+    //     if (selected.length === 0) {
+    //         alert('Vui lòng chọn ít nhất 1 sản phẩm để xóa!');
+    //         return false;
+    //     }
+    //     return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');
+    // }
 
     document.addEventListener('DOMContentLoaded', function() {
         const alertBox = document.querySelector('.alert');
@@ -622,4 +656,51 @@
             @endforeach
         @endif
     @endisset
+</script>
+
+<script>
+    function confirmDeleteSelected() {
+        let selected = document.querySelectorAll('.select-item:checked');
+        if (selected.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Chưa chọn sản phẩm nào!',
+                text: 'Vui lòng chọn ít nhất một sản phẩm để xóa.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Bạn chắc chắn muốn xóa?',
+            text: "Các sản phẩm đã chọn sẽ bị xóa khỏi giỏ hàng.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Lấy tất cả id sản phẩm đã chọn
+                let ids = Array.from(selected).map(cb => cb.value);
+
+                // Gán vào input hidden trong form
+                document.getElementById('selected-items').value = ids.join(',');
+
+                // Submit form
+                document.getElementById('delete-selected-form').submit();
+            }
+        });
+    }
+
+    // Chọn tất cả
+    document.getElementById('select-all')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.select-item');
+        checkboxes.forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = this.checked;
+            }
+        });
+    });
 </script>

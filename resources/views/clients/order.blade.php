@@ -4,19 +4,33 @@
     <div class="container-fluid featurs py-5">
         <div class="container pt-5 mt-5">
             {{-- THÔNG BÁO --}}
+            {{-- Ở chỗ hiển thị thông báo --}}
             @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-                </div>
+                <script>
+                    Toastify({
+                        text: "{{ session('success') }}",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#4CAF50", // xanh lá cho success
+                        stopOnFocus: true
+                    }).showToast();
+                </script>
             @endif
 
             @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-                </div>
+                <script>
+                    Toastify({
+                        text: "{{ session('error') }}",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#f44336", // đỏ cho error
+                        stopOnFocus: true
+                    }).showToast();
+                </script>
             @endif
+
 
             @if ($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -244,7 +258,7 @@
                                     value="{{ old('recipient_id', $recipient['id'] ?? '') }}">
 
                                 <button type="submit" class="btn btn-danger w-100 mb-3">Đặt Hàng</button>
-                                <a href="{{ route('order.removeCoupon') }}" class="text-decoration-none">Quay lại</a>
+                                <a href="{{ route('carts.index') }}" class="text-decoration-none">Quay lại</a>
 
                                 <div class="text-center mt-3">
                                     <small class="text-muted">
@@ -651,4 +665,35 @@
             }, 5000);
         });
     });
+</script>
+
+<script src="https://js.pusher.com/8.2/pusher.min.js"></script>
+{{-- <script src="{{ mix('js/app.js') }}"></script> --}}
+<script>
+    window.Echo.channel('promotions')
+        .listen('.promotion.updated', (e) => {
+            console.log("🔄 Promotion updated:", e.promotion);
+
+            // Xử lý format text giảm giá
+            let discountText = e.promotion.discount_type === 'percent' ?
+                `Giảm ${e.promotion.discount_value}%` :
+                `Giảm ${Number(e.promotion.discount_value).toLocaleString()}đ`;
+
+            // Cập nhật DOM hiển thị
+            document.getElementById('promotion-box').innerHTML = `
+            <strong>${e.promotion.promotion_name}</strong> <br>
+            ${discountText}<br>
+            <small>Đơn tối thiểu: ${Number(e.promotion.min_total_spent).toLocaleString()}đ</small><br>
+            <small>HSD: ${new Date(e.promotion.end_date).toLocaleString('vi-VN')}</small>
+        `;
+
+            // Thêm thông báo Toast
+            Toastify({
+                text: "Mã giảm giá đã được cập nhật!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#4caf50"
+            }).showToast();
+        });
 </script>

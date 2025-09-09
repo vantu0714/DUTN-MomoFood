@@ -233,7 +233,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|integer|min:1|max:9',
+            'status' => 'required|integer|min:1|max:11',
         ]);
 
         $newStatus = (int) $request->status;
@@ -245,7 +245,7 @@ class OrderController extends Controller
             $allowedTransitions = [
                 1 => [2, 6], // Chưa xác nhận → Đã xác nhận hoặc Hủy
                 2 => [3], // Đã xác nhận → Đang giao hoặc Hủy
-                3 => [5, 9], // Đang giao → Hoàn hàng hoặc Đã giao
+                3 => [9, 11], // Đang giao → Đã giao hoặc Giao hàng thất bại
                 5 => [],    // Hoàn hàng → Không thể chuyển tiếp
                 6 => [],    // Hủy → Không thể chuyển tiếp
                 9 => [4],   // Đã giao → Hoàn thành
@@ -269,9 +269,38 @@ class OrderController extends Controller
             $order->save();
 
             UpdateOrderStatus::dispatch($order, 9)
-                ->delay(now()->addMinutes(1));
+                ->delay(now()->addSeconds(30));
 
             return back()->with('success', 'Đơn hàng đang được giao...');
+        }
+        // Giao hàng thất bại (11) → Xử lý với lý do
+        elseif ($newStatus == 11) {
+            $request->validate(['reason' => 'required|string|max:1000']);
+
+            // Nếu đã thanh toán thì chuyển sang trạng thái hoàn tiền
+            $refundMessage = '';
+            if ($order->payment_status === 'paid') {
+                $order->payment_status = 'refunded';
+                $refundMessage = ' Đã thực hiện hoàn tiền.';
+            }
+
+            $order->status = 11;
+            $order->reason = $request->reason;
+            $order->delivery_failed_at = now();
+            $order->save();
+
+            // Hoàn kho
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
+            }
+
+            return back()->with('success', 'Đã đánh dấu giao hàng thất bại.' . $refundMessage);
         }
         // Hoàn thành (4) → Xử lý tồn kho và VIP
         elseif ($newStatus == 4) {
@@ -317,7 +346,23 @@ class OrderController extends Controller
         // Hoàn hàng (5) → Yêu cầu lý do
         elseif ($newStatus == 5) {
             $request->validate(['reason' => 'required|string|max:1000']);
+
+            // Nếu đã thanh toán thì chuyển sang trạng thái hoàn tiền
+            if ($order->payment_status === 'paid') {
+                $order->payment_status = 'refunded';
+                $refundMessage = " Đã thực hiện hoàn tiền.";
+            } else {
+                $refundMessage = "";
+            }
+
+            $order->status = 5;
             $order->reason = $request->reason;
+
+            $order->return_processed_at = now();
+
+            $order->save();
+
+            return back()->with('success', 'Đã xác nhận hoàn hàng.' . $refundMessage);
         }
         // Các trường hợp khác
         else {
@@ -345,6 +390,58 @@ class OrderController extends Controller
         $order->save();
 
         return redirect()->route('admin.orders.index')->with('success', 'Đã hủy đơn hàng.');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        if ($order->status != 1) {
+            return back()->with('error', 'Chỉ có thể không xác nhận đơn hàng ở trạng thái chưa xác nhận.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Xử lý hoàn tiền nếu đã thanh toán
+            $refundMessage = '';
+            if ($order->payment_status === 'paid') {
+                $order->payment_status = 'refunded';
+            }
+
+            // ✅ Hoàn kho
+            $order->load('orderDetails.product', 'orderDetails.productVariant');
+            foreach ($order->orderDetails as $orderDetail) {
+                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                $orderDetail->product->save();
+
+                if (!is_null($orderDetail->productVariant)) {
+                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                    $orderDetail->productVariant->save();
+                }
+            }
+
+            // Cập nhật trạng thái đơn hàng
+            $order->update([
+                'status' => 10,
+                'reason' => $request->reason,
+                'payment_status' => $order->payment_status,
+            ]);
+
+            DB::commit();
+
+            if ($order->payment_status === 'refunded') {
+                return redirect()->route('admin.orders.index')->with('success', 'Đã không xác nhận đơn hàng. ' . $refundMessage);
+            } else {
+                return redirect()->route('admin.orders.index')->with('success', 'Đã không xác nhận đơn hàng.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 
     public function approveReturn($id)

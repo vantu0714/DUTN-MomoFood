@@ -4,7 +4,7 @@
     <div class="container mt-4">
         <h2 class="mb-4">Danh sách người dùng</h2>
 
-        @if (session('success'))
+        {{-- @if (session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
             </div>
@@ -14,7 +14,7 @@
             <div class="alert alert-danger">
                 {{ session('error') }}
             </div>
-        @endif
+        @endif --}}
 
         <a href="{{ route('admin.users.create') }}" class="btn btn-primary mb-3">Thêm người dùng</a>
 
@@ -50,19 +50,20 @@
                             </td>
                             <td> {{ $user->created_at->format('d-m-Y') }}</td>
                             <td> {{ $user->updated_at->format('d-m-Y') }}</td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-warning"
-                                    title="Sửa">
+                                    title="Sửa" style="display:inline-block;">
                                     <i class="fas fa-edit"></i>
                                 </a>
 
-                                <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-sm btn-outline-info" title="Xem">
+                                <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-sm btn-outline-info"
+                                    title="Xem" style="display:inline-block;">
                                     <i class="fas fa-eye"></i>
                                 </a>
 
                                 <form id="toggle-status-form-{{ $user->id }}"
                                     action="{{ route('admin.users.toggleStatus', $user->id) }}" method="POST"
-                                    style="display:inline-block;">
+                                    style="display:inline-block; margin:0;">
                                     @csrf
                                     @method('PATCH')
 
@@ -78,7 +79,6 @@
                                         </button>
                                     @endif
                                 </form>
-
                             </td>
                         </tr>
                     @empty
