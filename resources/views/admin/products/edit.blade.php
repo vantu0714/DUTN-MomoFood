@@ -301,15 +301,26 @@
                         <div class="card-header bg-white border-bottom py-3">
                             <h6 class="mb-0 fw-semibold">
                                 <i class="fas fa-image me-2 text-primary"></i>
-                                Hình ảnh sản phẩm
+                                Hình ảnh & Video sản phẩm
                             </h6>
                         </div>
                         <div class="card-body text-center">
+
+                            {{-- Hiển thị ảnh --}}
                             <div class="mb-3">
-                                <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid rounded shadow-sm"
-                                    id="imagePreview" style="max-width: 200px; max-height: 200px; object-fit: cover;"
-                                    alt="Product Image">
+                                @if ($product->image)
+                                    <img src="{{ asset('storage/' . $product->image) }}"
+                                        class="img-fluid rounded shadow-sm" id="imagePreview"
+                                        style="max-width: 200px; max-height: 200px; object-fit: cover;"
+                                        alt="Product Image">
+                                @else
+                                    <img src="https://via.placeholder.com/200" class="img-fluid rounded shadow-sm"
+                                        id="imagePreview" style="max-width: 200px; max-height: 200px; object-fit: cover;"
+                                        alt="No Image">
+                                @endif
                             </div>
+
+                            {{-- Upload ảnh --}}
                             <div class="mb-3">
                                 <label for="image" class="form-label fw-semibold">Thay đổi hình ảnh</label>
                                 <input type="file" class="form-control @error('image') is-invalid @enderror"
@@ -317,10 +328,39 @@
                                 @error('image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">Chỉ chấp nhận file ảnh (JPG, PNG, GIF)</small>
+                                <small class="text-muted">Chỉ chấp nhận file ảnh (JPG, PNG, WEBP)</small>
                             </div>
+
+                            <hr>
+
+                            {{-- Hiển thị video nếu có --}}
+                            <div class="mb-3">
+                                @if ($product->video)
+                                    <video id="videoPreview" controls style="max-width: 250px; max-height: 200px;"
+                                        class="rounded shadow-sm">
+                                        <source src="{{ asset('storage/' . $product->video) }}" type="video/mp4">
+                                        Trình duyệt của bạn không hỗ trợ video.
+                                    </video>
+                                @else
+                                    <p class="text-muted">Chưa có video sản phẩm</p>
+                                @endif
+                            </div>
+
+                            {{-- Upload video --}}
+                            <div class="mb-3">
+                                <label for="video" class="form-label fw-semibold">Thay đổi video</label>
+                                <input type="file" class="form-control @error('video') is-invalid @enderror"
+                                    id="video" name="video" accept="video/mp4,video/quicktime,video/x-msvideo"
+                                    onchange="previewVideo(this)">
+                                @error('video')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Định dạng chấp nhận: MP4, MOV, AVI (tối đa 20MB)</small>
+                            </div>
+
                         </div>
                     </div>
+
 
                     <!-- Product Statistics -->
                     <div class="card border-0 shadow-sm mb-4">
@@ -615,6 +655,35 @@
 <script>
     let globalProductCode = '';
 
+    function previewImage(input) {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function previewVideo(input) {
+        const file = input.files[0];
+        if (file) {
+            const videoPreview = document.getElementById('videoPreview');
+            if (!videoPreview) {
+                const newVideo = document.createElement('video');
+                newVideo.id = 'videoPreview';
+                newVideo.controls = true;
+                newVideo.style.maxWidth = '250px';
+                newVideo.style.maxHeight = '200px';
+                input.parentElement.insertAdjacentElement('beforebegin', newVideo);
+            }
+            const url = URL.createObjectURL(file);
+            document.getElementById('videoPreview').src = url;
+        }
+    }
+
+
     // Hiện/ẩn vùng biến thể
     window.toggleVariantSection = function() {
         const section = document.getElementById('variantSection');
@@ -800,8 +869,6 @@
                 });
         });
     }
-
-
     // sửa sản phẩm 
     document.addEventListener('DOMContentLoaded', function() {
         // ===== Xử lý sản phẩm đơn =====

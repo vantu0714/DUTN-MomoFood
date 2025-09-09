@@ -141,6 +141,7 @@ class ProductController extends Controller
             'quantity_in_stock' => 'exclude_if:product_type,variant|required|integer|min:1',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'video' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo|max:20480', // Video rule
             'origin_id' => 'required|exists:product_origins,id',
         ];
 
@@ -161,6 +162,8 @@ class ProductController extends Controller
             'discounted_price.lt' => 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
             'quantity_in_stock.required' => 'Vui lòng nhập số lượng tồn kho.',
             'quantity_in_stock.min' => 'Số lượng tồn kho phải lớn hơn 0.',
+            'video.mimetypes' => 'Định dạng video không hợp lệ. Chỉ chấp nhận MP4, MOV, AVI.',
+            'video.max' => 'Kích thước video tối đa là 20MB.',
             'origin_id.required' => 'Vui lòng chọn xuất xứ.',
             'origin_id.exists' => 'Xuất xứ không hợp lệ.',
         ];
@@ -185,9 +188,14 @@ class ProductController extends Controller
 
         $validated = $validator->validated();
 
+        // Trường hợp sản phẩm có biến thể
         if ($validated['product_type'] === 'variant') {
             if ($request->hasFile('image')) {
                 $validated['image'] = $request->file('image')->store('products/temp', 'public');
+            }
+
+            if ($request->hasFile('video')) {
+                $validated['video'] = $request->file('video')->store('products/videos/temp', 'public');
             }
 
             unset($validated['original_price'], $validated['discounted_price'], $validated['quantity_in_stock']);
@@ -197,8 +205,13 @@ class ProductController extends Controller
                 ->with('success', 'Tiếp tục thêm biến thể cho sản phẩm.');
         }
 
+        // Trường hợp sản phẩm đơn giản
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        if ($request->hasFile('video')) {
+            $validated['video'] = $request->file('video')->store('products/videos', 'public');
         }
 
         if (
@@ -215,6 +228,7 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công.');
     }
+
     public function edit($id)
     {
         $product = Product::with('variants.attributeValues.attribute', 'origin')->findOrFail($id);
@@ -250,10 +264,11 @@ class ProductController extends Controller
             'original_price' => 'nullable|numeric|min:0',
             'discount_percent' => 'nullable|numeric|min:0|max:99.99',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'video' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo|max:20480', // ✅ Video
             'quantity_in_stock' => 'nullable|integer|min:0',
         ]);
 
-        // Tính giá sau giảm
+        //  Tính giá sau giảm
         if (!empty($validated['original_price']) && !empty($validated['discount_percent'])) {
             $percent = $validated['discount_percent'];
             $discountAmount = $validated['original_price'] * ($percent / 100);
@@ -270,12 +285,20 @@ class ProductController extends Controller
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
 
+        //  Xử lý upload video
+        if ($request->hasFile('video')) {
+            if ($product->video && Storage::disk('public')->exists($product->video)) {
+                Storage::disk('public')->delete($product->video);
+            }
+            $validated['video'] = $request->file('video')->store('products/videos', 'public');
+        }
+
         unset($validated['discount_percent']);
 
-        // Cập nhật dữ liệu cơ bản
+        //  Cập nhật dữ liệu cơ bản
         $product->update($validated);
 
-        // Nếu có biến thể thì tổng hợp lại quantity
+        //  Nếu có biến thể thì tổng hợp lại quantity
         if ($product->variants()->exists()) {
             $totalVariantQty = $product->variants()->sum('quantity_in_stock');
             $product->update(['quantity_in_stock' => $totalVariantQty]);
@@ -283,18 +306,14 @@ class ProductController extends Controller
             $totalVariantQty = $product->quantity_in_stock;
         }
 
-        // ✅ Cập nhật trạng thái sản phẩm
-        // Nếu đang ẩn (status = 0) thì giữ nguyên
+        //  Cập nhật trạng thái sản phẩm
         if ($product->status != 0) {
-            if ($totalVariantQty > 0) {
-                $product->update(['status' => 1]); // còn hàng
-            } else {
-                $product->update(['status' => 2]); // hết hàng
-            }
+            $product->update(['status' => $totalVariantQty > 0 ? 1 : 2]);
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công.');
     }
+
     public function destroy(Request $request, $id)
     {
         $product = Product::with('variants')->findOrFail($id);
@@ -377,5 +396,4 @@ class ProductController extends Controller
             'totalStock' => $totalStock
         ]);
     }
-    
 }
