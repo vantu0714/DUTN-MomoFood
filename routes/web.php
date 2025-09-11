@@ -91,14 +91,14 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/create-payment', [ClientsOrderController::class, 'createPayment'])->name('create-payment');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
-        Route::post('/orders/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
+        Route::post('/order/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
             ->name('request_return');
     });
-    
+
     // Cart Management
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
-       
+
         Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
         Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
         Route::delete('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
@@ -183,6 +183,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
         Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
         Route::put('/{id}/reject', [OrderController::class, 'reject'])->name('reject');
+        Route::post('/return-items/{id}/approve', [OrderController::class, 'approveReturnItem'])
+            ->name('approve_return_item');
+        Route::post('/return-items/{id}/reject', [OrderController::class, 'rejectReturnItem'])
+            ->name('reject_return_item');
+
         Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])
             ->name('approve_return');
         Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])

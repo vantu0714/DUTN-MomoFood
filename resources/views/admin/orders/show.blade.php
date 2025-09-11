@@ -97,6 +97,7 @@
                         9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
                         10 => ['label' => 'Không xác nhận', 'class' => 'danger'],
                         11 => ['label' => 'Giao hàng thất bại', 'class' => 'danger'],
+                        12 => ['label' => 'Hoàn hàng một phần', 'class' => 'warning'],
                     ];
                     $status = $statusLabels[$order->status] ?? ['label' => 'Không rõ', 'class' => 'light'];
 
@@ -149,6 +150,7 @@
                                     7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
                                     8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
                                     11 => ['label' => 'Giao hàng thất bại', 'class' => 'danger'],
+                                    12 => ['label' => 'Hoàn hàng một phần', 'class' => 'warning'],
                                 ];
                             @endphp
 
@@ -174,6 +176,15 @@
                                         if ($order->status == 3 && $key == 10) {
                                             $canSelect = false;
                                         }
+
+                                        if ($order->status == 3 && $key == 9) {
+                                            $canSelect = true;
+                                        }
+
+                                        if ($order->status == 9 && $key == 4) {
+                                            $canSelect = true;
+                                        }
+
                                         if ($order->status == 4 && in_array($key, [5, 7, 8, 11])) {
                                             $canSelect = false;
                                         }
@@ -322,6 +333,10 @@
                                 $label = 'Yêu cầu bị từ chối';
                                 $icon = 'fas fa-times-circle';
                                 $color = 'danger';
+                            } elseif ($order->status == 12) {
+                                $label = 'Hoàn hàng một phần';
+                                $icon = 'fas fa-exclamation-triangle';
+                                $color = 'warning';
                             }
 
                             if ($label) {
@@ -397,107 +412,227 @@
         </div>
 
         {{-- Thông tin hoàn hàng --}}
-        @if (in_array($order->status, [5, 7, 8]))
-            <div
-                class="card mt-4 border-{{ $order->status == 5 ? 'success' : ($order->status == 7 ? 'warning' : 'danger') }}">
-                <div
-                    class="card-header bg-{{ $order->status == 5 ? 'success' : ($order->status == 7 ? 'warning' : 'danger') }} text-white d-flex justify-content-between align-items-center">
+        @if ($order->returnItems->count() > 0)
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">
-                        @if ($order->status == 5)
-                            <i class="fas fa-check-circle me-2"></i> Thông tin hoàn hàng thành công
-                        @elseif($order->status == 7)
-                            <i class="fas fa-clock me-2"></i> Yêu cầu hoàn hàng đang chờ xử lý
-                        @else
-                            <i class="fas fa-times-circle me-2"></i> Thông tin hoàn hàng thất bại
-                        @endif
+                        <i class="fas fa-undo me-2"></i> Chi tiết yêu cầu hoàn hàng
                     </h6>
-                    @if ($order->return_requested_at)
-                        <span
-                            class="badge bg-white text-{{ $order->status == 5 ? 'success' : ($order->status == 7 ? 'warning' : 'danger') }}">
-                            <i class="far fa-clock me-1"></i> {{ $order->return_requested_at }}
-                        </span>
-                    @endif
+                    <div>
+                        <span class="badge bg-success me-1">Đồng ý:
+                            {{ $order->returnItems->where('status', 'approved')->count() }}</span>
+                        <span class="badge bg-danger me-1">Từ chối:
+                            {{ $order->returnItems->where('status', 'rejected')->count() }}</span>
+                        <span class="badge bg-warning text-dark">Chờ xử lý:
+                            {{ $order->returnItems->where('status', 'pending')->count() }}</span>
+                    </div>
                 </div>
                 <div class="card-body">
-                    {{-- Lý do hoàn hàng --}}
-                    @if ($order->return_reason)
-                        <div class="mb-4">
-                            <h6 class="fw-bold text-dark mb-2">
-                                <i class="fas fa-comment-dots text-primary me-2"></i>Lý do hoàn hàng:
-                            </h6>
-                            <div class="p-3 bg-light rounded border-start border-4 border-primary">
-                                <p class="mb-0 text-dark">{{ $order->return_reason }}</p>
+                    @foreach ($order->returnItems as $returnItem)
+                        <div
+                            class="card mb-3 border-{{ $returnItem->status == 'pending' ? 'warning' : ($returnItem->status == 'approved' ? 'success' : 'danger') }}">
+                            <div
+                                class="card-header bg-{{ $returnItem->status == 'pending' ? 'warning' : ($returnItem->status == 'approved' ? 'success' : 'danger') }} text-white d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    @if ($returnItem->status == 'pending')
+                                        <i class="fas fa-clock me-1"></i> Chờ xử lý
+                                    @elseif($returnItem->status == 'approved')
+                                        <i class="fas fa-check-circle me-1"></i> Đã chấp nhận
+                                    @else
+                                        <i class="fas fa-times-circle me-1"></i> Đã từ chối
+                                    @endif
+                                </h6>
+                                <span class="badge bg-light text-dark">
+                                    ID: {{ $returnItem->id }}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <!-- Thông tin sản phẩm -->
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold">Thông tin sản phẩm</h6>
+                                        <div class="d-flex align-items-start mb-3">
+                                            @if ($returnItem->orderDetail->product->image)
+                                                <img src="{{ asset('storage/' . $returnItem->orderDetail->product->image) }}"
+                                                    alt="Ảnh sản phẩm" width="60" class="rounded me-3">
+                                            @else
+                                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
+                                                    style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                            @endif
+                                            <div>
+                                                <p class="mb-1 fw-semibold">
+                                                    {{ $returnItem->orderDetail->product->product_name }}</p>
+                                                @if ($returnItem->orderDetail->productVariant)
+                                                    <p class="mb-1 small text-muted">
+                                                        @foreach ($returnItem->orderDetail->productVariant->attributeValues as $value)
+                                                            <span class="badge bg-secondary me-1">
+                                                                {{ $value->attribute->name }}: {{ $value->value }}
+                                                            </span>
+                                                        @endforeach
+                                                    </p>
+                                                @endif
+                                                <p class="mb-0 small">Số lượng mua:
+                                                    {{ $returnItem->orderDetail->quantity }}</p>
+                                                <p class="mb-0 small">Số lượng yêu cầu hoàn: {{ $returnItem->quantity }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Thông tin hoàn hàng -->
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold">Thông tin hoàn hàng</h6>
+                                        <p class="mb-1"><strong>Lý do:</strong> {{ $returnItem->reason }}</p>
+                                        <p class="mb-1"><strong>Ngày yêu cầu:</strong>
+                                            {{ $returnItem->created_at->format('d/m/Y H:i') }}</p>
+
+                                        @if ($returnItem->admin_note)
+                                            <p class="mb-1"><strong>Ghi chú của admin:</strong>
+                                                {{ $returnItem->admin_note }}</p>
+                                        @endif
+
+                                        @if ($returnItem->status != 'pending')
+                                            <p class="mb-0">
+                                                <strong>Trạng thái:</strong>
+                                                <span
+                                                    class="badge bg-{{ $returnItem->status == 'approved' ? 'success' : 'danger' }}">
+                                                    {{ $returnItem->status == 'approved' ? 'Đã chấp nhận' : 'Đã từ chối' }}
+                                                </span>
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Hình ảnh/video đính kèm -->
+                                @if ($returnItem->attachments->count() > 0)
+                                    <div class="mt-3">
+                                        <h6 class="fw-bold">Hình ảnh/Video đính kèm:</h6>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach ($returnItem->attachments as $attachment)
+                                                @if ($attachment->file_type == 'image')
+                                                    <a href="{{ asset('storage/' . $attachment->file_path) }}"
+                                                        data-fancybox="gallery-{{ $returnItem->id }}">
+                                                        <img src="{{ asset('storage/' . $attachment->file_path) }}"
+                                                            alt="Attachment"
+                                                            style="width: 100px; height: 100px; object-fit: cover;"
+                                                            class="rounded border">
+                                                    </a>
+                                                @else
+                                                    <video width="100" height="100" controls class="rounded border">
+                                                        <source src="{{ asset('storage/' . $attachment->file_path) }}"
+                                                            type="video/mp4">
+                                                        Trình duyệt không hỗ trợ video
+                                                    </video>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Nút đồng ý/từ chối (chỉ hiện khi pending) -->
+                                @if ($returnItem->status == 'pending')
+                                    <div class="mt-3 pt-3 border-top">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <form
+                                                    action="{{ route('admin.orders.approve_return_item', $returnItem->id) }}"
+                                                    method="POST" class="mb-2">
+                                                    @csrf
+                                                    <div class="mb-2">
+                                                        <label for="admin_note_approve_{{ $returnItem->id }}"
+                                                            class="form-label small">Ghi chú (nếu có):</label>
+                                                        <textarea name="admin_note" id="admin_note_approve_{{ $returnItem->id }}" class="form-control form-control-sm"
+                                                            rows="2" placeholder="Nhập ghi chú..."></textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-check me-1"></i> Đồng ý
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <form
+                                                    action="{{ route('admin.orders.reject_return_item', $returnItem->id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    <div class="mb-2">
+                                                        <label for="admin_note_reject_{{ $returnItem->id }}"
+                                                            class="form-label small">Lý do từ chối:</label>
+                                                        <textarea name="admin_note" id="admin_note_reject_{{ $returnItem->id }}" class="form-control form-control-sm"
+                                                            rows="2" placeholder="Nhập lý do từ chối..." required></textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-times me-1"></i> Từ chối
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
-                    @endif
+                    @endforeach
 
-                    {{-- Thời gian xử lý --}}
-                    @if ($order->return_processed_at)
-                        <div class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-calendar-check text-muted me-2"></i>
-                            <span class="fw-medium">Xử lý lúc: <span
-                                    class="text-dark">{{ $order->return_processed_at }}</span></span>
-                        </div>
-                    @endif
-
-                    {{-- Lý do từ chối --}}
-                    @if ($order->return_rejection_reason)
-                        <div class="mb-4">
-                            <h6 class="fw-bold text-dark mb-2">
-                                <i class="fas fa-ban text-danger me-2"></i>Lý do từ chối:
-                            </h6>
-                            <div class="p-3 bg-light rounded border-start border-4 border-danger">
-                                <p class="mb-0 text-dark">{{ $order->return_rejection_reason }}</p>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Nút hành động cho trạng thái chờ xử lý --}}
+                    <!-- Nút xử lý toàn bộ đơn hàng -->
                     @if ($order->status == 7)
-                        <div class="row g-3 mt-4">
-                            <div class="col-md-6">
-                                <form id="approve-return-form"
-                                    action="{{ route('admin.orders.approve_return', $order->id) }}" method="POST"
-                                    class="flex-grow-1">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success w-100 py-2">
-                                        <i class="fas fa-check-circle me-2"></i> Chấp nhận hoàn hàng
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="fw-bold mb-3">Xử lý toàn bộ đơn hàng:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <form action="{{ route('admin.orders.approve_return', $order->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-check-circle me-1"></i> Đồng ý tất cả
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-outline-danger" id="show-reject-all-form">
+                                        <i class="fas fa-times-circle me-1"></i> Từ chối tất cả
                                     </button>
-                                </form>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-outline-danger w-100 py-2" id="show-reject-form-btn"
-                                    onclick="toggleRejectForm()">
-                                    <i class="fas fa-times-circle me-2"></i> Từ chối yêu cầu
-                                </button>
+
+                                    <form id="reject-all-form" class="mt-3 p-3 bg-light rounded border d-none"
+                                        action="{{ route('admin.orders.reject_return', $order->id) }}" method="POST">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Lý do từ chối tất cả:</label>
+                                            <textarea name="return_rejection_reason" class="form-control" rows="3"
+                                                placeholder="Nhập lý do từ chối tất cả yêu cầu..." required></textarea>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-secondary"
+                                                id="cancel-reject-all">Hủy</button>
+                                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-
-                        {{-- Form từ chối --}}
-                        <form id="reject-form" class="mt-4 p-4 bg-light rounded shadow-sm d-none"
-                            action="{{ route('admin.orders.reject_return', $order->id) }}" method="POST">
-                            @csrf
-                            <h6 class="fw-bold text-danger mb-3">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Nhập lý do từ chối
-                            </h6>
-                            <div class="mb-3">
-                                <textarea name="return_rejection_reason" id="return_rejection_reason" class="form-control" rows="4"
-                                    placeholder="Vui lòng nhập lý do từ chối yêu cầu hoàn hàng..." required></textarea>
-                            </div>
-
-                            <div class="d-flex justify-content-end gap-2">
-                                <button type="button" class="btn btn-outline-secondary px-4"
-                                    onclick="toggleRejectForm()">
-                                    <i class="fas fa-times me-1"></i> Hủy
-                                </button>
-                                <button type="submit" class="btn btn-danger px-4">
-                                    <i class="fas fa-paper-plane me-1"></i> Gửi
-                                </button>
-                            </div>
-                        </form>
                     @endif
                 </div>
             </div>
+
+            <!-- JavaScript cho form từ chối tất cả -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const showRejectAllBtn = document.getElementById('show-reject-all-form');
+                    const rejectAllForm = document.getElementById('reject-all-form');
+                    const cancelRejectAllBtn = document.getElementById('cancel-reject-all');
+
+                    if (showRejectAllBtn && rejectAllForm && cancelRejectAllBtn) {
+                        showRejectAllBtn.addEventListener('click', function() {
+                            rejectAllForm.classList.toggle('d-none');
+                            showRejectAllBtn.classList.toggle('d-none');
+                        });
+
+                        cancelRejectAllBtn.addEventListener('click', function() {
+                            rejectAllForm.classList.add('d-none');
+                            showRejectAllBtn.classList.remove('d-none');
+                        });
+                    }
+                });
+            </script>
         @endif
 
         {{-- Quay lại --}}
