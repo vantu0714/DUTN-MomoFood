@@ -259,14 +259,14 @@
                                 {{-- Giá gạch ngang nếu có --}}
                                 <span class="original-price text-muted text-decoration-line-through"
                                     id="originalPrice"
-                                    style="font-size: 1.5rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
+                                    style="font-size: 1rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
                                     {{ number_format($product->original_price, 0, ',', '.') }} VND
                                 </span>
 
                                 {{-- Badge giảm giá nếu có --}}
                                 <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
                                     id="discountPercent"
-                                    style="font-size: 1.5rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
+                                    style="font-size: 1rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
                                     -{{ $discountPercent }}%
                                 </span>
                             @endif

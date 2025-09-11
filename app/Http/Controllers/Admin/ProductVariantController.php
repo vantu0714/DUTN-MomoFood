@@ -263,17 +263,15 @@ class ProductVariantController extends Controller
             // Kiểm tra trùng biến thể
             $exists = ProductVariant::where('product_id', $product->id)
                 ->where('id', '<>', $variant->id)
-                ->whereHas('values.attribute', function ($q) use ($mainAttrName) {
-                    $q->where('name', 'Vị')
-                        ->whereHas('values', function ($q2) use ($mainAttrName) {
-                            $q2->where('value', $mainAttrName);
-                        });
+                ->whereHas('values', function ($q) use ($mainAttrName) {
+                    $q->whereHas('attribute', function ($q2) {
+                        $q2->where('name', 'Vị');
+                    })->where('value', $mainAttrName);
                 })
                 ->whereHas('values', function ($q) use ($subAttrId) {
                     $q->where('attribute_value_id', $subAttrId);
                 })
                 ->exists();
-
             if ($exists) {
                 $msg = 'Biến thể với Vị "' . $mainAttrName . '" Size đã tồn tại.';
                 return $request->ajax()
@@ -352,7 +350,7 @@ class ProductVariantController extends Controller
                 ]);
             }
 
-            // ✅ Cập nhật trạng thái và tồn kho của sản phẩm cha
+            //Cập nhật trạng thái và tồn kho của sản phẩm cha
             $this->updateProductStatus($variant->product_id);
             $product->refresh(); // lấy dữ liệu mới sau update
 
@@ -415,8 +413,6 @@ class ProductVariantController extends Controller
                 : 'Đã hiển thị biến thể thành công!'
         ]);
     }
-
-
     protected function updateProductStatus($productId)
     {
         $product = Product::find($productId);
