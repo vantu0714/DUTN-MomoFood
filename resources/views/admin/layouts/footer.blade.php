@@ -1,4 +1,4 @@
-<div class="footer_part">
+<div class="footer_part mt-4">
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12">
@@ -70,7 +70,6 @@
 
 <script src="{{ asset('admins/assets/js/dashboard_init.js') }}"></script>
 <script src="{{ asset('admins/assets/js/custom.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
      <script>
             @if (session('success'))
                 Swal.fire({

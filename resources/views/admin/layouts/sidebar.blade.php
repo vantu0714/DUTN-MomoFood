@@ -1,3 +1,4 @@
+@vite('resources/js/app.js')
 <nav class="sidebar vertical-scroll  ps-container ps-theme-default ps-active-y">
     <div class="logo text-center py-1 position-relative">
         <a href="{{ route('admin.dashboard') }}">
@@ -99,6 +100,15 @@
         </li>
 
         <li class>
+            <a href="{{ route('admin.messages.index') }}" aria-expanded="false">
+                <div class="icon_menu">
+                    <img src="{{ asset('admins/assets/img/menu-icon/chat.svg') }}" alt>
+                </div>
+                <span>Quản lí chat</span>
+            </a>
+        </li>
+
+        <li class>
             <a href="{{ route('admin.comments.index') }}" aria-expanded="false">
                 <div class="icon_menu">
                     <img src="{{ asset('admins/assets/img/menu-icon/8.svg') }}" alt>
@@ -108,3 +118,32 @@
         </li>
     </ul>
 </nav>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // admin có id = 5
+        let adminId = 5;
+
+        window.Echo.private(`chat.${adminId}`)
+            .listen('MessageSent', (e) => {
+                let chatBox = document.getElementById('chatMessages');
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Bạn có tin nhắn mới từ người dùng',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+                chatBox.innerHTML += `
+                <p>
+                    <b>${e.from_name}:</b> ${e.message}
+                </p>
+            `;
+
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+    });
+</script>
