@@ -89,17 +89,21 @@ class ProductController extends Controller
             });
         })->count();
 
-        $outOfStockProductsCount = Product::where('status', 1)->where(function ($q) {
+        $outOfStockProductsCount = Product::where(function ($q) {
+            // Simple hết hàng
             $q->where(function ($sub) {
                 $sub->where('product_type', 'simple')
                     ->where('quantity_in_stock', '=', 0);
-            })->orWhere(function ($sub) {
-                $sub->where('product_type', 'variant')
-                    ->whereDoesntHave('variants', function ($v) {
-                        $v->where('quantity_in_stock', '>', 0);
-                    });
-            });
+            })
+                // Variant hết hàng (không còn biến thể nào có hàng)
+                ->orWhere(function ($sub) {
+                    $sub->where('product_type', 'variant')
+                        ->whereDoesntHave('variants', function ($v) {
+                            $v->where('quantity_in_stock', '>', 0);
+                        });
+                });
         })->count();
+
 
         $totalStockQuantity = Product::where('product_type', 'simple')->sum('quantity_in_stock') +
             ProductVariant::sum('quantity_in_stock');
@@ -141,7 +145,7 @@ class ProductController extends Controller
             'quantity_in_stock' => 'exclude_if:product_type,variant|required|integer|min:1',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'video' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo|max:20480', // Video rule
+            'video' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo|max:20480',
             'origin_id' => 'required|exists:product_origins,id',
         ];
 

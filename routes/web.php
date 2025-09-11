@@ -1,30 +1,31 @@
 <?php
 
-use App\Http\Controllers\Admin\CommentController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VNPayController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ThongKeController;
+use App\Http\Controllers\RecipientController;
 use App\Http\Controllers\Admin\InfoController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Clients\AuthController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Clients\HomeController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Clients\NewsController;
+use App\Http\Controllers\Clients\ShopController;
+use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ComboItemController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
-use App\Http\Controllers\Clients\CartClientController;
-use App\Http\Controllers\Clients\ShopController;
-use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
-use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
-use App\Http\Controllers\Clients\ProductDetailController;
-use App\Http\Controllers\VNPayController;
-use App\Http\Controllers\clients\CommentController as ClientCommentController;
 use App\Http\Controllers\Clients\GioithieuController;
-use App\Http\Controllers\RecipientController;
-use App\Http\Controllers\ThongKeController;
+use App\Http\Controllers\Clients\CartClientController;
+use App\Http\Controllers\Admin\ProductVariantController;
+use App\Http\Controllers\Clients\ProductDetailController;
+use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
+use App\Http\Controllers\clients\CommentController as ClientCommentController;
 
 // ==================== PUBLIC ROUTES ====================
 
@@ -93,12 +94,16 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
         Route::post('/orders/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
             ->name('request_return');
+
+        //mess
+        Route::get('/messages/{userId}', [MessageController::class, 'index'])->name('messages.index');
+        Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
     });
-    
+
     // Cart Management
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
-       
+
         Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
         Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
         Route::delete('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
@@ -235,4 +240,10 @@ Route::middleware('auth')->group(function () {
         ->name('notifications.orders.index');
 });
 
+
+Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/messages', [MessageController::class, 'adminIndex'])->name('admin.messages.index');
+    Route::get('/messages/{userId}', [MessageController::class, 'getMessagesWithUser'])->name('admin.messages.user');
+    Route::post('/messages/send', [MessageController::class, 'adminSend'])->name('admin.messages.send');
+});
 

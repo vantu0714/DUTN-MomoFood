@@ -12,7 +12,9 @@ class Comment extends Model
         'product_id',
         'content',
         'rating',
-        'status', // Trạng thái bình luận: 1 - hiển thị, 0 - ẩn
+        'status',
+        'image',
+        'video', // Trạng thái bình luận: 1 - hiển thị, 0 - ẩn
     ];
     // Liên kết đến người dùng
     public function product()
@@ -29,5 +31,9 @@ class Comment extends Model
     public function scopeHasRating($query)
     {
         return $query->where('rating', '>', 0);
+    }
+    public function images()
+    {
+        return $this->hasMany(Image::class);
     }
 }

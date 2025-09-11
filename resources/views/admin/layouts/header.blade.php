@@ -43,7 +43,8 @@
     <link rel="stylesheet" href="{{ asset('admins/assets/css/style1.css') }}" />
     <link rel="stylesheet" href="{{ asset('admins/assets/css/colors/default.css') }}" id="colorSkinCSS">
     <link rel="stylesheet" href="{{ asset('admins/assets/css/products.css') }}">
-   <link rel="stylesheet" href="{{ asset('admins/assets/css/variants.css') }}">
+    <link rel="stylesheet" href="{{ asset('admins/assets/css/variants.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
 </head>
