@@ -11,6 +11,7 @@
         "laravel/sanctum": "^3.3",
         "laravel/socialite": "6.x-dev",
         "laravel/tinker": "^2.8",
+        "pusher/pusher-php-server": "^7.2",
         "symfony/yaml": "^6.0"
     },
     "require-dev": {
