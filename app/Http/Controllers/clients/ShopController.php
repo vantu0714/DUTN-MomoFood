@@ -27,7 +27,7 @@ class ShopController extends Controller
             ->get();
 
         //  Thêm sản phẩm ăn vặt 5 sao
-       $highRatedProducts = Product::with([
+        $highRatedProducts = Product::with([
             'comments',
             'category',
             'variants.attributeValues.attribute',
@@ -120,9 +120,6 @@ class ShopController extends Controller
             'highRatedProducts' => $highRatedProducts, // Truyền xuống view
         ]);
     }
-
-
-
     public function category(Request $request, $id)
     {
         $category = Category::findOrFail($id);
@@ -136,6 +133,28 @@ class ShopController extends Controller
             ->where('status', 1)
             ->inRandomOrder()
             ->take(6)
+            ->get();
+
+        $highRatedProducts = Product::with([
+            'comments',
+            'category',
+            'variants.attributeValues.attribute',
+            'variants'
+        ])
+            ->where(function ($q) {
+                $q->where(function ($q1) {
+                    $q1->where('product_type', 'simple')
+                        ->where('status', 1)
+                        ->where('quantity_in_stock', '>', 0);
+                })->orWhere(function ($q2) {
+                    $q2->where('product_type', 'variant')
+                        ->where('status', 1);
+                });
+            })
+            ->withAvg('comments', 'rating')
+            ->having('comments_avg_rating', '>=', 4)
+            ->orderByDesc('comments_avg_rating')
+            ->take(3)
             ->get();
 
         $filtered = $products->filter(function ($product) use ($request) {
@@ -198,7 +217,8 @@ class ShopController extends Controller
             'products' => $paginated,
             'categories' => $categories,
             'category' => $category,
-            'featuredProducts' => $featuredProducts
+            'featuredProducts' => $featuredProducts,
+            'highRatedProducts' => $highRatedProducts 
         ]);
     }
 }

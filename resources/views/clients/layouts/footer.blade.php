@@ -98,9 +98,6 @@
  </div>
 
  <!-- Copyright End -->
-
-
-<script lang="javascript">var __vnp = {code : 25622,key:'', secret : '32ecf215a95c0d026f98f218b41d1326'};(function() {var ga = document.createElement('script');ga.type = 'text/javascript';ga.async=true; ga.defer=true;ga.src = '//core.vchat.vn/code/tracking.js?v=57078'; var s = document.getElementsByTagName('script');s[0].parentNode.insertBefore(ga, s[0]);})();</script>
     
 
  {{-- <script lang="javascript">

@@ -107,4 +107,17 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+     public function Messages()
+    {
+        return $this->hasMany(Message::class, 'from_id');
+    }
+
+    /**
+     * Quan hệ: 1 user có nhiều tin nhắn nhận về
+     */
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'to_id');
+    }
 }
