@@ -89,17 +89,21 @@ class ProductController extends Controller
             });
         })->count();
 
-        $outOfStockProductsCount = Product::where('status', 1)->where(function ($q) {
+        $outOfStockProductsCount = Product::where(function ($q) {
+            // Simple hết hàng
             $q->where(function ($sub) {
                 $sub->where('product_type', 'simple')
                     ->where('quantity_in_stock', '=', 0);
-            })->orWhere(function ($sub) {
-                $sub->where('product_type', 'variant')
-                    ->whereDoesntHave('variants', function ($v) {
-                        $v->where('quantity_in_stock', '>', 0);
-                    });
-            });
+            })
+                // Variant hết hàng (không còn biến thể nào có hàng)
+                ->orWhere(function ($sub) {
+                    $sub->where('product_type', 'variant')
+                        ->whereDoesntHave('variants', function ($v) {
+                            $v->where('quantity_in_stock', '>', 0);
+                        });
+                });
         })->count();
+
 
         $totalStockQuantity = Product::where('product_type', 'simple')->sum('quantity_in_stock') +
             ProductVariant::sum('quantity_in_stock');
