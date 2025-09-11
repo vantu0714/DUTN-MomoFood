@@ -16,7 +16,7 @@
             <div class="top-link pe-2">
                 <a href="#" class="text-white me-3">Chính sách bảo mật</a>
                 <a href="#" class="text-white me-3">Điều khoản sử dụng</a>
-                <a href="#" class="text-white">Bán hàng và hoàn tiền</a>
+                <a href="#" class="text-white">Thông báo</a>
             </div>
         </div>
     </div>
@@ -90,6 +90,27 @@
                             {{ $cartCount }}
                         </span>
                     </a>
+<!-- Notifications -->
+<li class="nav-item dropdown me-4 list-unstyled">
+    <a class="nav-link position-relative" href="#" id="orderNotiDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa fa-bell fa-2x text-warning"></i>
+        <span id="order-noti-count"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            0
+        </span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end shadow"
+        aria-labelledby="orderNotiDropdown"
+        style="width: 350px; max-height: 400px; overflow-y: auto;">
+        <li class="dropdown-header fw-bold">Thông báo đơn hàng</li>
+        <div id="order-noti-items"></div>
+        <li>
+            <a class="dropdown-item text-center" href="{{ route('notifications.orders.index') }}">
+            Xem tất cả
+        </a>
+        </li>
+    </ul>
+</li>
 
                     @auth
                         <div class="position-relative d-flex">
@@ -564,3 +585,35 @@
     }
 }
 </style>
+
+
+<script>
+    function loadOrderNotifications() {
+    fetch("{{ route('order.notifications.fetch') }}")
+        .then(res => res.json())
+        .then(data => {
+            let html = "";
+            let count = data.length;
+
+            data.forEach(noti => {
+                html += `
+                    <li class="dropdown-item">
+                        <a href="${noti.link}">
+                            <div><strong>${noti.message}</strong></div>
+                            <small>${noti.time ?? ''}</small>
+                        </a>
+                    </li>
+                `;
+            });
+
+            document.getElementById("order-noti-items").innerHTML = html || '<li class="dropdown-item">Chưa có thông báo</li>';
+            document.getElementById("order-noti-count").innerText = count > 0 ? count : '';
+        });
+}
+
+// load ngay khi vào trang
+loadOrderNotifications();
+// load lại mỗi 10 giây
+setInterval(loadOrderNotifications, 10000);
+
+</script>

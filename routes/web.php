@@ -218,3 +218,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 Route::get('/filter-category', [HomeController::class, 'filterByCategory'])->name('home.filter.category');
+
+use App\Http\Controllers\clients\OrderNotificationController;
+
+Route::middleware('auth')->group(function () {
+    // Lấy danh sách thông báo (cho popup chuông)
+    Route::get('/order-notifications/fetch', [OrderNotificationController::class, 'fetch'])
+        ->name('order.notifications.fetch');
+
+    // Trang chi tiết thông báo đơn hàng
+    Route::get('/notifications/order/{orderId}', [OrderNotificationController::class, 'show'])
+        ->name('notifications.order.show');
+
+    // Trang xem tất cả thông báo đơn hàng
+    Route::get('/notifications/orders', [OrderNotificationController::class, 'index'])
+        ->name('notifications.orders.index');
+});
+
+
