@@ -63,6 +63,9 @@
                                 <option value="11" {{ request('order_status') == '11' ? 'selected' : '' }}>Giao hàng
                                     thất bại
                                 </option>
+                                <option value="12" {{ request('order_status') == '11' ? 'selected' : '' }}>Hoàn hàng
+                                    một phần
+                                </option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -148,6 +151,7 @@
                                                     9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
                                                     10 => ['label' => 'Không xác nhận', 'class' => 'danger'],
                                                     11 => ['label' => 'Giao hàng thất bại', 'class' => 'danger'],
+                                                    12 => ['label' => 'Hoàn hàng một phần', 'class' => 'warning'],
                                                 ];
                                             @endphp
 
