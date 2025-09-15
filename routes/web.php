@@ -70,6 +70,9 @@ Route::controller(AuthController::class)->group(function () {
 
 // Comments
 Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::post('/comments/store', [ClientCommentController::class, 'store'])->name('clients.comments.store');
+});
 
 //vn-pay
 Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.payment');
@@ -251,4 +254,3 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/messages/{userId}', [MessageController::class, 'getMessagesWithUser'])->name('admin.messages.user');
     Route::post('/messages/send', [MessageController::class, 'adminSend'])->name('admin.messages.send');
 });
-
