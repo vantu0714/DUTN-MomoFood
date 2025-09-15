@@ -25,22 +25,22 @@
 
         $statusClasses = [
             1 => 'bg-warning text-dark',
-            2 => 'bg-orange text-white',
-            3 => 'bg-info text-white',
+            2 => 'bg-info text-white',
+            3 => 'bg-primary text-white',
             4 => 'bg-success text-white',
             5 => 'bg-secondary text-white',
             6 => 'bg-danger text-white',
-            7 => 'bg-purple text-white',
+            7 => 'bg-primary text-white',
             8 => 'bg-danger text-white',
-            9 => 'bg-primary text-white',
+            9 => 'bg-success text-white',
             10 => 'bg-danger text-white',
             11 => 'bg-danger text-white',
-            12 => 'bg-warning text-white',
+            12 => 'bg-warning text-dark',
         ];
 
         $paymentStatusClasses = [
             'unpaid' => 'bg-warning text-dark',
-            'paid' => 'bg-success',
+            'paid' => 'bg-success text-white',
             'refunded' => 'bg-info text-white',
         ];
 
@@ -51,15 +51,147 @@
         $calculatedDiscount = max(0, $subtotal + $order->shipping_fee - $order->total_price);
 
         // Tính toán một lần cho form hoàn hàng
-        $returnDeadline = $order->received_at ? \Carbon\Carbon::parse($order->received_at)->addMinutes(30) : null;
+        $returnDeadline = $order->received_at ? \Carbon\Carbon::parse($order->received_at)->addHours(24) : null;
         $canReturn = $order->status == 9 && $returnDeadline && now()->lte($returnDeadline);
+
+        $statusHistory = [];
+
+        $statusHistory[] = [
+            'label' => 'Đơn hàng được tạo',
+            'time' => $order->created_at,
+            'icon' => 'fas fa-plus-circle',
+            'color' => 'secondary',
+        ];
+
+        if ($order->confirmed_at) {
+            $statusHistory[] = [
+                'label' => 'Đã xác nhận',
+                'time' => $order->confirmed_at,
+                'icon' => 'fas fa-check-circle',
+                'color' => 'info',
+            ];
+        }
+
+        if ($order->status == 10) {
+            $statusHistory[] = [
+                'label' => 'Không xác nhận',
+                'time' => $order->updated_at,
+                'icon' => 'fas fa-times-circle',
+                'color' => 'danger',
+                'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+            ];
+        }
+
+        if ($order->delivery_failed_at) {
+            $statusHistory[] = [
+                'label' => 'Giao hàng thất bại',
+                'time' => $order->delivery_failed_at,
+                'icon' => 'fas fa-exclamation-triangle',
+                'color' => 'danger',
+                'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+            ];
+        }
+
+        if ($order->delivered_at) {
+            $statusHistory[] = [
+                'label' => 'Đang giao hàng',
+                'time' => $order->delivered_at,
+                'icon' => 'fas fa-shipping-fast',
+                'color' => 'primary',
+            ];
+        }
+
+        if ($order->received_at) {
+            $statusHistory[] = [
+                'label' => 'Đã nhận hàng',
+                'time' => $order->received_at,
+                'icon' => 'fas fa-check-double',
+                'color' => 'success',
+            ];
+        }
+
+        if ($order->completed_at) {
+            $statusHistory[] = [
+                'label' => 'Hoàn thành',
+                'time' => $order->completed_at,
+                'icon' => 'fas fa-medal',
+                'color' => 'success',
+            ];
+        }
+
+        if ($order->return_requested_at) {
+            $statusHistory[] = [
+                'label' => 'Yêu cầu hoàn hàng',
+                'time' => $order->return_requested_at,
+                'icon' => 'fas fa-undo',
+                'color' => 'warning text-dark',
+                'note' => $order->return_reason ? 'Lý do: ' . $order->return_reason : null,
+            ];
+        }
+
+        if ($order->return_processed_at) {
+            $label = '';
+            $icon = '';
+            $color = '';
+
+            if ($order->status == 5) {
+                $label = 'Hoàn hàng thành công';
+                $icon = 'fas fa-check-double';
+                $color = 'success';
+            } elseif ($order->status == 8) {
+                $label = 'Yêu cầu bị từ chối';
+                $icon = 'fas fa-times-circle';
+                $color = 'danger';
+            } elseif ($order->status == 12) {
+                $label = 'Hoàn hàng một phần';
+                $icon = 'fas fa-exclamation-triangle';
+                $color = 'warning text-dark';
+            }
+
+            if ($label) {
+                $statusHistory[] = [
+                    'label' => $label,
+                    'time' => $order->return_processed_at,
+                    'icon' => $icon,
+                    'color' => $color,
+                    'note' => $order->return_rejection_reason ? 'Lý do: ' . $order->return_rejection_reason : null,
+                ];
+            }
+        }
+
+        if ($order->status == 5 && !$order->return_requested_at) {
+            $statusHistory[] = [
+                'label' => 'Đã hoàn hàng',
+                'time' => $order->return_processed_at ?? $order->updated_at,
+                'icon' => 'fas fa-check-double',
+                'color' => 'success',
+                'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+            ];
+        }
+
+        if ($order->status == 6 && $order->updated_at) {
+            $statusHistory[] = [
+                'label' => 'Đã hủy',
+                'time' => $order->updated_at,
+                'icon' => 'fas fa-ban',
+                'color' => 'danger',
+                'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
+            ];
+        }
+
+        // Sắp xếp theo thời gian
+        usort($statusHistory, function ($a, $b) {
+            return strtotime($a['time']) - strtotime($b['time']);
+        });
     @endphp
 
     <div class="container mb-5" style="margin-top: 150px">
         <nav class="nav nav-borders">
             <a class="nav-link text-dark" href="{{ route('clients.info') }}">Thông tin</a>
             <a class="nav-link text-dark" href="{{ route('clients.changepassword') }}">Đổi mật khẩu</a>
-            <a class="nav-link active fw-semibold" href="{{ route('clients.orders') }}">Đơn hàng</a>
+            <a class="nav-link active ms-0 fw-semibold text-decoration-none"
+                style="color: rgb(219, 115, 91); border-bottom: 2px solid rgb(219, 115, 91)"
+                href="{{ route('clients.orders') }}">Đơn hàng</a>
             <a href="#" class="nav-link text-dark"
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 Đăng xuất
@@ -70,17 +202,15 @@
         </nav>
         <hr class="mt-0 mb-4">
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom-0">
+        <div class="card shadow">
+            <div class="card-header bg-white py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="mb-0" style="font-family: 'Open Sans', sans-serif">Chi tiết đơn hàng
-                            #{{ $order->order_code }}</h4>
+                        <h4 class="mb-1">Chi tiết đơn hàng #{{ $order->order_code }}</h4>
                         <small class="text-muted">Ngày đặt: {{ $order->created_at->format('d/m/Y') }}</small>
                     </div>
                     <div class="d-flex align-items-center">
-                        <span class="badge {{ $statusClasses[$order->status] ?? 'bg-secondary' }} me-3"
-                            style="font-size: 1.1em;">
+                        <span class="badge {{ $statusClasses[$order->status] ?? 'bg-secondary' }} me-3 fs-6">
                             {{ $statusLabels[$order->status] ?? 'Không xác định' }}
                         </span>
                     </div>
@@ -100,34 +230,33 @@
 
                 <!-- Thông tin nhận hàng -->
                 <div class="card mb-4">
-                    <div class="card-header bg-light">
+                    <div class="card-header bg-light py-2">
                         <h6 class="mb-0 fw-semibold">Thông tin nhận hàng</h6>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
-                                <p><strong>Người nhận:</strong><br>{{ $order->recipient_name ?? Auth::user()->name }}</p>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1"><strong>Người nhận:</strong></p>
+                                <p>{{ $order->recipient_name ?? Auth::user()->name }}</p>
                             </div>
-                            <div class="col-md-3">
-                                <p><strong>Số điện thoại:</strong><br>{{ $order->recipient_phone ?? Auth::user()->phone }}
-                                </p>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1"><strong>Số điện thoại:</strong></p>
+                                <p>{{ $order->recipient_phone ?? Auth::user()->phone }}</p>
                             </div>
-                            <div class="col-md-3">
-                                <p><strong>Địa chỉ:</strong><br>{{ $order->recipient_address ?? Auth::user()->address }}
-                                </p>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1"><strong>Địa chỉ:</strong></p>
+                                <p>{{ $order->recipient_address ?? Auth::user()->address }}</p>
                             </div>
-                            <div class="col-md-3">
-                                <p><strong>Thanh toán:</strong><br>
-                                    <span
-                                        class="badge {{ $paymentStatusClasses[$order->payment_status] ?? 'bg-secondary' }}">
-                                        {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
-                                    </span>
-                                </p>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1"><strong>Thanh toán:</strong></p>
+                                <span class="badge {{ $paymentStatusClasses[$order->payment_status] ?? 'bg-secondary' }}">
+                                    {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
+                                </span>
                             </div>
                         </div>
 
                         @if ($order->status == 3)
-                            <div class="alert alert-info d-flex align-items-center mb-4">
+                            <div class="alert alert-info d-flex align-items-center mb-3">
                                 <i class="fas fa-truck fa-2x me-3"></i>
                                 <div>
                                     <h5 class="alert-heading mb-1">Đơn hàng đang được giao</h5>
@@ -138,7 +267,7 @@
                         @endif
 
                         @if ($order->status == 10)
-                            <div class="alert alert-danger d-flex align-items-center mb-4">
+                            <div class="alert alert-danger d-flex align-items-center mb-3">
                                 <i class="fas fa-times-circle fa-2x me-3"></i>
                                 <div>
                                     <h5 class="alert-heading mb-1">Đơn hàng không được xác nhận</h5>
@@ -149,7 +278,7 @@
                         @endif
 
                         @if ($order->status == 9)
-                            <div class="alert alert-success d-flex align-items-center mb-4">
+                            <div class="alert alert-success d-flex align-items-center mb-3">
                                 <i class="fas fa-check-circle fa-2x me-3"></i>
                                 <div>
                                     <h5 class="alert-heading mb-1">Đơn hàng đã giao thành công</h5>
@@ -164,7 +293,7 @@
                         @endif
 
                         @if ($order->status == 7)
-                            <div class="alert alert-warning d-flex align-items-center mb-4">
+                            <div class="alert alert-warning d-flex align-items-center mb-3">
                                 <i class="fas fa-info-circle fa-2x me-3"></i>
                                 <div>
                                     <p class="mb-0">Yêu cầu hoàn hàng của bạn đang được xử lý. Vui lòng chờ phản hồi từ
@@ -174,7 +303,7 @@
                         @endif
 
                         @if ($order->status == 6)
-                            <div class="alert alert-danger d-flex align-items-center mb-4">
+                            <div class="alert alert-danger d-flex align-items-center mb-3">
                                 <i class="fas fa-times-circle fa-2x me-3"></i>
                                 <div>
                                     <h5 class="alert-heading mb-1">Đã huỷ đơn hàng</h5>
@@ -185,7 +314,7 @@
                         @endif
 
                         @if ($order->status == 5)
-                            <div class="alert alert-success d-flex align-items-center mb-4">
+                            <div class="alert alert-success d-flex align-items-center mb-3">
                                 <i class="fas fa-check-circle fa-2x me-3"></i>
                                 <div>
                                     <h5 class="alert-heading mb-1">Đơn hàng đã được xác nhận hoàn trả</h5>
@@ -195,7 +324,7 @@
                         @endif
 
                         @if ($order->status == 11)
-                            <div class="alert alert-danger d-flex align-items-center mb-4">
+                            <div class="alert alert-danger d-flex align-items-center mb-3">
                                 <i class="fas fa-times-circle fa-2x me-3"></i>
                                 <div>
                                     <h5 class="alert-heading mb-1">Giao hàng không thành công</h5>
@@ -206,7 +335,7 @@
                         @endif
 
                         @if ($order->status == 12)
-                            <div class="alert alert-warning d-flex align-items-center mb-4">
+                            <div class="alert alert-warning d-flex align-items-center mb-3">
                                 <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
                                 <div>
                                     <h5 class="alert-heading mb-1">Đơn hàng đã được hoàn trả một phần</h5>
@@ -220,175 +349,42 @@
 
                 <!-- Lịch sử trạng thái đơn hàng -->
                 <div class="card mb-4">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0 fw-semibold">
-                            <i class="fas fa-history me-2 text-primary"></i>
-                            Lịch sử trạng thái đơn hàng
-                        </h6>
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-primary">
+                                <i class="fas fa-history me-2"></i>Lịch sử trạng thái đơn hàng
+                            </h5>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="timeline">
-                            @php
-                                $statusHistory = [];
-
-                                $statusHistory[] = [
-                                    'label' => 'Đơn hàng được tạo',
-                                    'time' => $order->created_at,
-                                    'icon' => 'fas fa-plus-circle',
-                                    'color' => 'secondary',
-                                ];
-
-                                if ($order->confirmed_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Đã xác nhận',
-                                        'time' => $order->confirmed_at,
-                                        'icon' => 'fas fa-check-circle',
-                                        'color' => 'info',
-                                    ];
-                                }
-
-                                if ($order->status == 10) {
-                                    $statusHistory[] = [
-                                        'label' => 'Không xác nhận',
-                                        'time' => $order->updated_at,
-                                        'icon' => 'fas fa-times-circle',
-                                        'color' => 'danger',
-                                        'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
-                                    ];
-                                }
-
-                                if ($order->delivery_failed_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Giao hàng thất bại',
-                                        'time' => $order->delivery_failed_at,
-                                        'icon' => 'fas fa-exclamation-triangle',
-                                        'color' => 'danger',
-                                        'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
-                                    ];
-                                }
-
-                                if ($order->delivered_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Đang giao hàng',
-                                        'time' => $order->delivered_at,
-                                        'icon' => 'fas fa-box-open',
-                                        'color' => 'success',
-                                    ];
-                                }
-
-                                if ($order->received_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Đã nhận hàng',
-                                        'time' => $order->received_at,
-                                        'icon' => 'fas fa-check-double',
-                                        'color' => 'success',
-                                    ];
-                                }
-
-                                if ($order->completed_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Hoàn thành',
-                                        'time' => $order->completed_at,
-                                        'icon' => 'fas fa-medal',
-                                        'color' => 'success',
-                                    ];
-                                }
-
-                                if ($order->return_requested_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Yêu cầu hoàn hàng',
-                                        'time' => $order->return_requested_at,
-                                        'icon' => 'fas fa-undo',
-                                        'color' => 'warning',
-                                        'note' => $order->return_reason ? 'Lý do: ' . $order->return_reason : null,
-                                    ];
-                                }
-
-                                if ($order->return_processed_at) {
-                                    $label = '';
-                                    $icon = '';
-                                    $color = '';
-
-                                    if ($order->status == 5) {
-                                        $label = 'Hoàn hàng thành công';
-                                        $icon = 'fas fa-check-double';
-                                        $color = 'success';
-                                    } elseif ($order->status == 8) {
-                                        $label = 'Yêu cầu bị từ chối';
-                                        $icon = 'fas fa-times-circle';
-                                        $color = 'danger';
-                                    } elseif ($order->status == 12) {
-                                        $label = 'Hoàn hàng một phần';
-                                        $icon = 'fas fa-exclamation-triangle';
-                                        $color = 'warning';
-                                    }
-
-                                    if ($label) {
-                                        $statusHistory[] = [
-                                            'label' => $label,
-                                            'time' => $order->return_processed_at,
-                                            'icon' => $icon,
-                                            'color' => $color,
-                                            'note' => $order->return_rejection_reason
-                                                ? 'Lý do: ' . $order->return_rejection_reason
-                                                : null,
-                                        ];
-                                    }
-                                }
-
-                                if ($order->status == 5 && !$order->return_requested_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Đã hoàn hàng',
-                                        'time' => $order->return_processed_at ?? $order->updated_at,
-                                        'icon' => 'fas fa-check-double',
-                                        'color' => 'success',
-                                        'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
-                                    ];
-                                }
-
-                                if ($order->status == 6 && $order->updated_at) {
-                                    $statusHistory[] = [
-                                        'label' => 'Đã hủy',
-                                        'time' => $order->updated_at,
-                                        'icon' => 'fas fa-ban',
-                                        'color' => 'danger',
-                                        'note' => $order->reason ? 'Lý do: ' . $order->reason : null,
-                                    ];
-                                }
-
-                                // Sắp xếp theo thời gian
-                                usort($statusHistory, function ($a, $b) {
-                                    return strtotime($a['time']) - strtotime($b['time']);
-                                });
-                            @endphp
-
+                    <div class="card-body p-3">
+                        <div class="timeline-compact">
                             @forelse ($statusHistory as $index => $item)
-                                <div class="timeline-item {{ $loop->last ? 'last' : '' }}">
-                                    <div class="timeline-marker bg-{{ $item['color'] }}">
-                                        <i class="{{ $item['icon'] }} text-white"></i>
+                                <div class="timeline-item d-flex align-items-start mb-2">
+                                    <div class="timeline-marker flex-shrink-0 me-3 mt-1">
+                                        <i class="{{ $item['icon'] }} text-{{ explode(' ', $item['color'])[0] }}"></i>
                                     </div>
-                                    <div class="timeline-content">
+                                    <div class="timeline-content flex-grow-1">
                                         <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1 fw-semibold">{{ $item['label'] }}</h6>
-                                                @if (isset($item['note']) && $item['note'])
-                                                    <p class="mb-0 small text-muted">{{ $item['note'] }}</p>
-                                                @endif
-                                            </div>
-                                            <small class="text-muted">
+                                            <span class="fw-medium">{{ $item['label'] }}</span>
+                                            <small class="text-muted ms-2">
                                                 @if ($item['time'])
-                                                    {{ \Carbon\Carbon::parse($item['time'])->format('d/m/Y H:i') }}
+                                                    {{ \Carbon\Carbon::parse($item['time'])->format('H:i d/m/Y') }}
                                                 @else
                                                     N/A
                                                 @endif
                                             </small>
                                         </div>
+                                        @if (isset($item['note']) && $item['note'])
+                                            <div class="small text-muted mt-1">
+                                                <i class="fas fa-sticky-note me-1"></i> {{ $item['note'] }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @empty
-                                <div class="text-center text-muted py-3">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    Không có lịch sử trạng thái
+                                <div class="text-center py-2">
+                                    <i class="fas fa-info-circle text-muted me-2"></i>
+                                    <span class="text-muted">Không có lịch sử trạng thái</span>
                                 </div>
                             @endforelse
                         </div>
@@ -397,7 +393,7 @@
 
                 @if ($order->returnItems->count() > 0)
                     <div class="card mb-4">
-                        <div class="card-header bg-light">
+                        <div class="card-header bg-light py-2">
                             <h6 class="mb-0 fw-semibold">
                                 <i class="fas fa-undo-alt me-2 text-warning"></i>
                                 Chi tiết yêu cầu hoàn hàng
@@ -453,9 +449,8 @@
                                                             <a href="{{ asset('storage/' . $attachment->file_path) }}"
                                                                 data-fancybox="gallery-{{ $returnItem->id }}">
                                                                 <img src="{{ asset('storage/' . $attachment->file_path) }}"
-                                                                    alt="Attachment"
-                                                                    style="width: 80px; height: 80px; object-fit: cover;"
-                                                                    class="rounded border">
+                                                                    alt="Attachment" class="img-thumbnail"
+                                                                    style="width: 80px; height: 80px; object-fit: cover;">
                                                             </a>
                                                         @else
                                                             <video width="80" height="80" controls
@@ -479,12 +474,12 @@
 
                 <!-- Sản phẩm -->
                 <div class="card mb-4">
-                    <div class="card-header bg-light">
+                    <div class="card-header bg-light py-2">
                         <h6 class="mb-0 fw-semibold">Sản phẩm</h6>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
-                            <thead class="bg-light">
+                            <thead class="table-light">
                                 <tr>
                                     <th width="5%">#</th>
                                     <th width="12%">Ảnh</th>
@@ -527,10 +522,10 @@
                                             @endforeach
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-orange text-white">{{ $item->quantity }}</span>
+                                            <span class="badge bg-warning text-dark">{{ $item->quantity }}</span>
                                         </td>
                                         <td class="text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
-                                        <td class="text-end fw-bold text-orange">
+                                        <td class="text-end fw-bold text-primary">
                                             {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫
                                         </td>
                                     </tr>
@@ -563,7 +558,7 @@
                                 <div class="d-flex justify-content-between mt-3 pt-2 border-top">
                                     <span class="fw-bold">Tổng thanh toán:</span>
                                     <span
-                                        class="fw-bold text-orange">{{ number_format($order->total_price, 0, ',', '.') }}₫</span>
+                                        class="fw-bold text-primary">{{ number_format($order->total_price, 0, ',', '.') }}₫</span>
                                 </div>
                             </div>
                         </div>
@@ -595,7 +590,7 @@
                 @if ($canReturn)
                     <div id="return-form" class="mt-3" style="display: none;">
                         <div class="card border-warning">
-                            <div class="card-header bg-warning text-white">
+                            <div class="card-header bg-warning text-white py-2">
                                 <h6 class="mb-0">Yêu cầu hoàn hàng</h6>
                             </div>
                             <div class="card-body">
@@ -630,7 +625,7 @@
 
                                         <div class="table-responsive">
                                             <table class="table table-bordered">
-                                                <thead>
+                                                <thead class="table-light">
                                                     <tr>
                                                         <th width="5%">Chọn</th>
                                                         <th width="40%">Sản phẩm</th>
@@ -680,7 +675,7 @@
                                                         <tr class="attachment-row" style="display: none;"
                                                             id="attachment_row_{{ $index }}">
                                                             <td colspan="5">
-                                                                <div class="attachment-section p-3 bg-light rounded">
+                                                                <div class="bg-light p-3 rounded">
                                                                     <label class="fw-bold mb-3">
                                                                         <i class="fas fa-paperclip me-2"></i>
                                                                         Đính kèm hình ảnh/video (tối đa 5 file, mỗi file ≤
@@ -688,15 +683,14 @@
                                                                     </label>
 
                                                                     <div id="attachment-container-{{ $index }}">
-                                                                        <div class="file-input-wrapper mb-3">
+                                                                        <div class="mb-3">
                                                                             <div class="d-flex align-items-center">
                                                                                 <input type="file"
                                                                                     name="return_items[{{ $index }}][attachments][]"
-                                                                                    class="form-control form-control-sm attachment-file me-2"
+                                                                                    class="form-control form-control-sm me-2"
                                                                                     accept="image/*,video/*"
                                                                                     data-index="{{ $index }}"
-                                                                                    onchange="validateAttachment(this)"
-                                                                                    style="flex: 1;">
+                                                                                    onchange="validateAttachment(this)">
 
                                                                                 <button type="button"
                                                                                     class="btn btn-sm btn-outline-danger remove-file-btn"
@@ -720,7 +714,7 @@
                                                                             Thêm file khác
                                                                         </button>
 
-                                                                        <div class="file-counter text-muted small">
+                                                                        <div class="text-muted small">
                                                                             <span
                                                                                 id="file-count-{{ $index }}">0</span>/5
                                                                             file
@@ -759,7 +753,7 @@
                 @if ($order->status == 1)
                     <div id="cancel-form" class="mt-3" style="display: none;">
                         <div class="card border-danger">
-                            <div class="card-header bg-danger text-white">
+                            <div class="card-header bg-danger text-white py-2">
                                 <h6 class="mb-0">Hủy đơn hàng</h6>
                             </div>
                             <div class="card-body">
@@ -782,231 +776,20 @@
         </div>
     </div>
 
-    @push('styles')
-        <style>
-            :root {
-                --orange-primary: rgb(219, 115, 91);
-                --orange-hover: rgb(190, 90, 68);
-            }
+    <style>
+        .timeline-compact .timeline-item {
+            border-left: 2px solid #dee2e6;
+            padding-left: 15px;
+            margin-left: 10px;
+        }
 
-            .bg-orange {
-                background-color: var(--orange-primary) !important;
-            }
-
-            .text-orange {
-                color: var(--orange-primary) !important;
-            }
-
-            .border-orange {
-                border-color: var(--orange-primary) !important;
-            }
-
-            .btn-orange {
-                background-color: var(--orange-primary);
-                border-color: var(--orange-primary);
-                color: white;
-            }
-
-            .btn-orange:hover {
-                background-color: var(--orange-hover);
-                border-color: var(--orange-hover);
-                color: white;
-            }
-
-            .nav-borders .nav-link.active {
-                color: var(--orange-primary) !important;
-                border-bottom: 2px solid var(--orange-primary);
-            }
-
-            .nav-borders .nav-link:hover {
-                color: var(--orange-primary);
-            }
-
-            .bg-purple {
-                background-color: #6f42c1 !important;
-            }
-        </style>
-    @endpush
-
-    @push('styles')
-        <style>
-            .timeline {
-                position: relative;
-                padding-left: 1.5rem;
-            }
-
-            .timeline-item {
-                position: relative;
-                padding-bottom: 1.5rem;
-            }
-
-            .timeline-item.last {
-                padding-bottom: 0;
-            }
-
-            .timeline-marker {
-                position: absolute;
-                left: -1.5rem;
-                width: 1rem;
-                height: 1rem;
-                border-radius: 50%;
-                top: 0.25rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid white;
-                box-shadow: 0 0 0 2px #dee2e6;
-            }
-
-            .timeline-marker i {
-                font-size: 0.5rem;
-            }
-
-            .timeline-content {
-                padding-left: 1rem;
-            }
-
-            .timeline-item:not(.last)::after {
-                content: '';
-                position: absolute;
-                left: -1rem;
-                top: 1.25rem;
-                height: calc(100% - 1rem);
-                width: 2px;
-                background-color: #dee2e6;
-            }
-
-            .attachment-section {
-                background: linear-gradient(145deg, #f8f9fa, #e9ecef);
-                border: 1px solid #dee2e6;
-                transition: all 0.3s ease;
-            }
-
-            .attachment-section:hover {
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .file-input-wrapper {
-                position: relative;
-                transition: all 0.3s ease;
-            }
-
-            .file-input-wrapper:hover {
-                transform: translateY(-1px);
-            }
-
-            .file-preview {
-                display: flex;
-                align-items-center;
-                gap: 10px;
-                padding: 8px;
-                background: white;
-                border-radius: 8px;
-                border: 1px solid #e3e6f0;
-            }
-
-            .file-preview img,
-            .file-preview video {
-                border: 2px solid #4e73df;
-                transition: transform 0.2s ease;
-            }
-
-            .file-preview img:hover,
-            .file-preview video:hover {
-                transform: scale(1.05);
-                cursor: pointer;
-            }
-
-            .add-more-btn {
-                border: 2px dashed #4e73df;
-                transition: all 0.3s ease;
-            }
-
-            .add-more-btn:hover {
-                background: #4e73df;
-                color: white;
-                border-color: #4e73df;
-                transform: translateY(-2px);
-            }
-
-            .remove-file-btn {
-                transition: all 0.2s ease;
-            }
-
-            .remove-file-btn:hover {
-                transform: scale(1.1);
-            }
-
-            .file-counter {
-                font-weight: 500;
-                padding: 5px 10px;
-                background: white;
-                border-radius: 15px;
-                border: 1px solid #dee2e6;
-            }
-
-            .attachment-file {
-                border-radius: 8px;
-                transition: border-color 0.3s ease;
-            }
-
-            .attachment-file:focus {
-                border-color: #4e73df;
-                box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-            }
-
-            /* Animation cho việc thêm/xóa file */
-            .file-input-wrapper {
-                animation: slideIn 0.3s ease-out;
-            }
-
-            @keyframes slideIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-10px);
-                }
-
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            .file-input-wrapper.removing {
-                animation: slideOut 0.3s ease-in forwards;
-            }
-
-            @keyframes slideOut {
-                from {
-                    opacity: 1;
-                    transform: translateY(0);
-                    max-height: 100px;
-                }
-
-                to {
-                    opacity: 0;
-                    transform: translateY(-10px);
-                    max-height: 0;
-                    margin: 0;
-                    padding: 0;
-                }
-            }
-
-            .upload-progress {
-                height: 4px;
-                background: #e9ecef;
-                border-radius: 2px;
-                overflow: hidden;
-                margin-top: 5px;
-            }
-
-            .upload-progress-bar {
-                height: 100%;
-                background: linear-gradient(45deg, #4e73df, #36b9cc);
-                transition: width 0.3s ease;
-            }
-        </style>
-    @endpush
+        .timeline-compact .timeline-marker {
+            margin-left: -23px;
+            background-color: white;
+            width: 20px;
+            text-align: center;
+        }
+    </style>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1025,7 +808,6 @@
             const checkboxes = document.querySelectorAll('.return-item-checkbox');
             const submitBtn = document.getElementById('submitReturnRequest');
 
-            // Vô hiệu hóa tất cả các trường input và textarea ban đầu
             document.querySelectorAll('.return-quantity, .return-reason').forEach(field => {
                 field.setAttribute('disabled', 'disabled');
             });
@@ -1044,7 +826,6 @@
                         reasonTextarea.removeAttribute('disabled');
                         if (attachmentRow) attachmentRow.style.display = 'table-row';
 
-                        // Đặt giá trị mặc định nếu chưa có
                         if (!quantityInput.value) {
                             quantityInput.value = 1;
                         }
@@ -1055,7 +836,6 @@
                         reasonTextarea.value = '';
                         if (attachmentRow) attachmentRow.style.display = 'none';
 
-                        // Xóa các file đã chọn
                         const fileInput = document.querySelector(
                             `input[name="return_items[${index}][attachments][]"]`);
                         if (fileInput) fileInput.value = '';
@@ -1065,7 +845,6 @@
                 });
             });
 
-            // Validate số lượng nhập
             document.querySelectorAll('.return-quantity').forEach(input => {
                 input.addEventListener('change', function() {
                     const max = parseInt(this.getAttribute('data-max'));
@@ -1082,12 +861,10 @@
                 input.addEventListener('input', validateForm);
             });
 
-            // Validate lý do nhập
             document.querySelectorAll('.return-reason').forEach(textarea => {
                 textarea.addEventListener('input', validateForm);
             });
 
-            // Validate form trước khi submit
             function validateForm() {
                 let hasSelected = false;
                 let allValid = true;
@@ -1104,7 +881,6 @@
                         if (!quantity || parseInt(quantity) < 1 || !reason.trim()) {
                             allValid = false;
 
-                            // Highlight trường bị lỗi
                             if (!quantity || parseInt(quantity) < 1) {
                                 document.querySelector(`.return-quantity[data-index="${index}"]`).classList
                                     .add('is-invalid');
@@ -1131,7 +907,6 @@
 
                 submitBtn.disabled = !(hasSelected && allValid);
 
-                // Hiển thị thông báo nếu có lỗi
                 if (hasSelected && !allValid) {
                     document.getElementById('validation-error').style.display = 'block';
                 } else {
@@ -1139,7 +914,6 @@
                 }
             }
 
-            // Validate file size và type
             document.getElementById('returnRequestForm').addEventListener('submit', function(e) {
                 const fileInputs = document.querySelectorAll('input[type="file"]');
                 let isValid = true;
@@ -1151,7 +925,6 @@
                             const file = fileInput.files[i];
                             const maxSize = 10 * 1024 * 1024; // 10MB
 
-                            // Kiểm tra kích thước file
                             if (file.size > maxSize) {
                                 isValid = false;
                                 errorMessage = 'File ' + file.name +
@@ -1159,7 +932,6 @@
                                 break;
                             }
 
-                            // Kiểm tra loại file
                             const validImageTypes = ['image/jpeg', 'image/png', 'image/gif',
                                 'image/jpg'
                             ];
@@ -1182,7 +954,6 @@
                     e.preventDefault();
                     alert(errorMessage);
                 } else {
-                    // Hiển thị thông báo loading
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
                 }
@@ -1197,34 +968,29 @@
 
             if (!file) return;
 
-            // Kiểm tra kích thước
             if (file.size > maxSize) {
                 alert(`File "${file.name}" vượt quá kích thước cho phép (10MB)`);
                 input.value = '';
                 return;
             }
 
-            // Kiểm tra loại file
             if (!validImageTypes.includes(file.type) && !validVideoTypes.includes(file.type)) {
                 alert(`File "${file.name}" không đúng định dạng cho phép (JPEG, PNG, GIF, MP4, MOV, AVI)`);
                 input.value = '';
                 return;
             }
 
-            // Hiển thị nút remove khi có file
             const removeBtn = input.parentElement.querySelector('.remove-file-btn');
             if (removeBtn) {
                 removeBtn.style.display = file ? 'inline-block' : 'none';
             }
 
-            // Hiển thị preview
             showFilePreview(input, file);
         }
 
         function showFilePreview(input, file) {
             const previewContainer = input.parentElement.querySelector('.file-preview');
             if (!previewContainer) {
-                // Tạo container preview nếu chưa có
                 const preview = document.createElement('div');
                 preview.className = 'file-preview mt-2';
                 input.parentElement.appendChild(preview);
@@ -1261,17 +1027,14 @@
             const container = document.getElementById(`attachment-container-${index}`);
             const currentInputs = container.querySelectorAll('.file-input-wrapper');
 
-            // Kiểm tra giới hạn 5 file
             if (currentInputs.length >= 5) {
                 alert('Chỉ được phép đính kèm tối đa 5 file');
                 return;
             }
 
-            // Tạo wrapper mới
             const newWrapper = document.createElement('div');
             newWrapper.className = 'file-input-wrapper mb-2 d-flex align-items-start';
 
-            // Tạo input file mới
             const newInput = document.createElement('input');
             newInput.type = 'file';
             newInput.name = `return_items[${index}][attachments][]`;
@@ -1282,7 +1045,6 @@
                 validateAttachment(this);
             };
 
-            // Tạo nút xóa
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'btn btn-sm btn-outline-danger ms-2 remove-file-btn';
@@ -1294,10 +1056,8 @@
             newWrapper.appendChild(newInput);
             newWrapper.appendChild(removeBtn);
 
-            // Thêm vào container
             container.appendChild(newWrapper);
 
-            // Ẩn nút "Thêm file" nếu đã đạt giới hạn
             if (container.querySelectorAll('.file-input-wrapper').length >= 5) {
                 button.style.display = 'none';
             }
@@ -1306,18 +1066,15 @@
         function removeFileInput(button) {
             const wrapper = button.parentElement;
             const container = wrapper.parentElement;
-            const index = container.id.split('-')[2]; // Lấy index từ ID
+            const index = container.id.split('-')[2];
 
-            // Xóa preview nếu có
             const preview = wrapper.querySelector('.file-preview');
             if (preview) {
                 preview.remove();
             }
 
-            // Xóa wrapper
             wrapper.remove();
 
-            // Hiện lại nút "Thêm file" nếu số lượng file < 5
             const addMoreBtn = document.querySelector(`.add-more-btn[data-index="${index}"]`);
             const remainingInputs = container.querySelectorAll('.file-input-wrapper');
             if (remainingInputs.length < 5 && addMoreBtn) {
@@ -1325,9 +1082,7 @@
             }
         }
 
-        // Thêm event listener cho các nút remove hiện tại
         document.addEventListener('DOMContentLoaded', function() {
-            // Xử lý nút remove cho file input ban đầu
             document.querySelectorAll('.remove-file-btn').forEach(btn => {
                 btn.onclick = function() {
                     const input = this.parentElement.querySelector('input[type="file"]');
@@ -1335,7 +1090,6 @@
                         input.value = '';
                         this.style.display = 'none';
 
-                        // Xóa preview
                         const preview = this.parentElement.querySelector('.file-preview');
                         if (preview) {
                             preview.innerHTML = '';
@@ -1376,21 +1130,18 @@
                 return;
             }
 
-            // Kiểm tra kích thước
             if (file.size > maxSize) {
                 showFileError(`File "${file.name}" vượt quá kích thước cho phép (10MB)`);
                 input.value = '';
                 return;
             }
 
-            // Kiểm tra loại file
             if (!validImageTypes.includes(file.type) && !validVideoTypes.includes(file.type)) {
                 showFileError(`File "${file.name}" không đúng định dạng cho phép`);
                 input.value = '';
                 return;
             }
 
-            // Kiểm tra tổng số file
             const container = document.getElementById(`attachment-container-${index}`);
             const allInputs = container.querySelectorAll('input[type="file"]');
             let totalFiles = 0;
@@ -1405,17 +1156,14 @@
                 return;
             }
 
-            // Hiển thị preview và cập nhật UI
             showFilePreview(input, file);
             updateFileCounter(index);
 
-            // Hiển thị nút remove
             const removeBtn = input.parentElement.querySelector('.remove-file-btn');
             if (removeBtn) {
                 removeBtn.style.display = 'inline-block';
             }
 
-            // Ẩn nút "Thêm file" nếu đã đạt giới hạn
             const addMoreBtn = document.querySelector(`.add-more-btn[data-index="${index}"]`);
             if (totalFiles >= 5 && addMoreBtn) {
                 addMoreBtn.style.display = 'none';
@@ -1436,11 +1184,9 @@
 
             preview.innerHTML = '';
 
-            // Tạo container chính
             const previewContent = document.createElement('div');
             previewContent.className = 'd-flex align-items-center gap-2 p-2';
 
-            // Tạo element hiển thị file
             if (file.type.startsWith('image/')) {
                 const img = document.createElement('img');
                 img.src = URL.createObjectURL(file);
@@ -1448,7 +1194,6 @@
                 img.className = 'rounded border shadow-sm';
                 img.onload = () => URL.revokeObjectURL(img.src);
 
-                // Thêm click để xem ảnh lớn
                 img.style.cursor = 'pointer';
                 img.onclick = () => showImageModal(img.src);
 
@@ -1464,7 +1209,6 @@
                 previewContent.appendChild(video);
             }
 
-            // Thông tin file
             const fileInfo = document.createElement('div');
             fileInfo.className = 'flex-grow-1';
             fileInfo.innerHTML = `
@@ -1478,7 +1222,6 @@
 
             previewContent.appendChild(fileInfo);
 
-            // Icon trạng thái
             const statusIcon = document.createElement('div');
             statusIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
             previewContent.appendChild(statusIcon);
@@ -1491,13 +1234,11 @@
             const container = document.getElementById(`attachment-container-${index}`);
             const currentInputs = container.querySelectorAll('.file-input-wrapper');
 
-            // Kiểm tra giới hạn 5 file
             if (currentInputs.length >= 5) {
                 showFileError('Chỉ được phép đính kèm tối đa 5 file');
                 return;
             }
 
-            // Tạo wrapper mới với animation
             const newWrapper = document.createElement('div');
             newWrapper.className = 'file-input-wrapper mb-3';
             newWrapper.style.opacity = '0';
@@ -1527,14 +1268,12 @@
 
             container.appendChild(newWrapper);
 
-            // Animation hiện ra
             setTimeout(() => {
                 newWrapper.style.transition = 'all 0.3s ease';
                 newWrapper.style.opacity = '1';
                 newWrapper.style.transform = 'translateY(0)';
             }, 10);
 
-            // Ẩn nút "Thêm file" nếu đã đạt giới hạn
             if (container.querySelectorAll('.file-input-wrapper').length >= 5) {
                 button.style.display = 'none';
             }
@@ -1547,7 +1286,6 @@
             const container = wrapper.parentElement;
             const index = container.id.split('-')[2];
 
-            // Animation biến mất
             wrapper.style.transition = 'all 0.3s ease';
             wrapper.style.opacity = '0';
             wrapper.style.transform = 'translateY(-10px)';
@@ -1562,7 +1300,6 @@
                 setTimeout(() => {
                     wrapper.remove();
 
-                    // Hiện lại nút "Thêm file"
                     const addMoreBtn = document.querySelector(`.add-more-btn[data-index="${index}"]`);
                     const remainingInputs = container.querySelectorAll('.file-input-wrapper');
                     if (remainingInputs.length < 5 && addMoreBtn) {
@@ -1583,17 +1320,14 @@
         }
 
         function showFileError(message) {
-            // Tạo toast notification lỗi
             showToast(message, 'error');
         }
 
         function showFileSuccess(message) {
-            // Tạo toast notification thành công
             showToast(message, 'success');
         }
 
         function showToast(message, type = 'info') {
-            // Tạo container cho toast nếu chưa có
             let toastContainer = document.getElementById('toast-container');
             if (!toastContainer) {
                 toastContainer = document.createElement('div');
@@ -1608,7 +1342,6 @@
                 document.body.appendChild(toastContainer);
             }
 
-            // Tạo toast element
             const toast = document.createElement('div');
             const bgColor = type === 'error' ? 'bg-danger' : type === 'success' ? 'bg-success' : 'bg-info';
             const icon = type === 'error' ? 'fa-exclamation-triangle' : type === 'success' ? 'fa-check-circle' :
@@ -1624,7 +1357,6 @@
 
             toastContainer.appendChild(toast);
 
-            // Tự động xóa sau 5 giây
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.remove();
@@ -1633,7 +1365,6 @@
         }
 
         function showImageModal(src) {
-            // Tạo modal để xem ảnh lớn
             const modal = document.createElement('div');
             modal.className = 'modal fade';
             modal.style.cssText = 'z-index: 10000;';
@@ -1653,24 +1384,20 @@
 
             document.body.appendChild(modal);
 
-            // Hiển thị modal
             const bsModal = new bootstrap.Modal(modal);
             bsModal.show();
 
-            // Xóa modal khi đóng
             modal.addEventListener('hidden.bs.modal', () => {
                 modal.remove();
             });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Khởi tạo file counter cho các row hiện có
             document.querySelectorAll('[id^="attachment-container-"]').forEach(container => {
                 const index = container.id.split('-')[2];
                 updateFileCounter(index);
             });
 
-            // Thêm event delegation cho các nút remove
             document.addEventListener('click', function(e) {
                 if (e.target.closest('.remove-file-btn')) {
                     const btn = e.target.closest('.remove-file-btn');
@@ -1678,7 +1405,6 @@
                     if (input && input.value) {
                         removeFileInput(btn);
                     } else {
-                        // Chỉ ẩn nút nếu không có file
                         input.value = '';
                         btn.style.display = 'none';
                         const preview = btn.parentElement.parentElement.querySelector('.file-preview');
