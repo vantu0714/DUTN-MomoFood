@@ -53,4 +53,9 @@ class OrderDetail extends Model
     {
         return $this->hasMany(OrderDetail::class);
     }
+
+    public function returnItems()
+    {
+        return $this->hasMany(OrderReturnItem::class);
+    }
 }

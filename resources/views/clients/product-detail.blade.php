@@ -40,37 +40,67 @@
                 <div class="row g-4">
                     <div class="col-lg-6">
                         {{-- Ảnh chính --}}
-                        <div class="product-image-container mb-3">
+                        <div class="product-image-container mb-3 position-relative">
+                            {{-- Ảnh chính --}}
                             <img id="mainProductImage"
                                 src="{{ $product->image ? asset('storage/' . $product->image) : $product->variants->first()?->image_url ?? '' }}"
-                                data-original-src="{{ $product->image ? asset('storage/' . $product->image) : $product->variants->first()?->image_url ?? '' }}"
                                 class="product-image img-fluid rounded shadow-sm" alt="{{ $product->product_name }}"
                                 style="width: 100%; max-height: 450px; object-fit: cover;">
+
+                            {{-- Video chính (ẩn ban đầu) --}}
+                            <video id="mainProductVideo" class="product-video img-fluid rounded shadow-sm d-none"
+                                style="width: 100%; max-height: 450px; object-fit: cover;" controls>
+                                <source id="mainVideoSource"
+                                    src="{{ $product->video ? asset('storage/' . $product->video) : '' }}"
+                                    type="video/mp4">
+                                Trình duyệt không hỗ trợ video.
+                            </video>
+
                             <div class="image-overlay"></div>
                             <div class="zoom-icon">
                                 <i class="fas fa-search-plus text-success"></i>
                             </div>
                         </div>
-                        {{-- Ảnh biến thể hiển thị bên dưới --}}
-                        <div class="variant-thumbnails d-flex gap-2 flex-wrap">
-                            {{-- Ảnh chính cũng là thumbnail đầu tiên --}}
+
+                        {{-- Thumbnail ảnh & video --}}
+                        <div class="variant-thumbnails d-flex gap-2 flex-wrap mt-3">
+                            {{-- Ảnh chính --}}
                             @if ($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}"
                                     alt="{{ $product->product_name }}"
-                                    class="variant-thumbnail img-thumbnail border border-primary"
-                                    data-full-image="{{ asset('storage/' . $product->image) }}"
+                                    class="variant-thumbnail img-thumbnail border border-primary" data-type="image"
+                                    data-src="{{ asset('storage/' . $product->image) }}"
                                     style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
                             @endif
+
+                            {{-- Video thumbnail --}}
+                            @if ($product->video)
+                                <div class="video-thumbnail"
+                                    style="width: 80px; height: 80px; cursor: pointer; position: relative;"
+                                    data-type="video" data-src="{{ asset('storage/' . $product->video) }}">
+                                    <video style="width: 100%; height: 100%; object-fit: cover;">
+                                        <source src="{{ asset('storage/' . $product->video) }}" type="video/mp4">
+                                    </video>
+                                    <div
+                                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                                            background: rgba(0,0,0,0.5); border-radius: 50%; padding: 5px;">
+                                        <i class="fas fa-play text-white"></i>
+                                    </div>
+                                </div>
+                            @endif
+
                             {{-- Ảnh từ biến thể --}}
                             @foreach ($product->variants as $variant)
                                 @if ($variant->image_url)
                                     <img src="{{ $variant->image_url }}" alt="{{ $variant->full_name }}"
-                                        class="variant-thumbnail img-thumbnail"
-                                        data-full-image="{{ $variant->image_url }}"
+                                        class="variant-thumbnail img-thumbnail" data-type="image"
+                                        data-src="{{ $variant->image_url }}"
                                         style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
                                 @endif
                             @endforeach
                         </div>
+
+
                         {{-- Chia sẻ mạng xã hội --}}
                         <strong>Chia sẻ:</strong>
                         <div class="d-flex gap-2 mt-2">
@@ -161,7 +191,8 @@
                                 @endfor
                             </div>
                             <div class="review-count border-end px-4">
-                                <span class="fw-bold text-dark">{{ number_format($product->comments->count()) }}</span>
+                                <span
+                                    class="fw-bold text-dark">{{ number_format($product->comments->count()) }}</span>
                                 <span class="text-muted">Đánh Giá</span>
                             </div>
                             <div class="sold-count ps-4">
@@ -221,20 +252,21 @@
                                 <span id="variantPrice"
                                     class="price-amount fw-bold {{ $isDiscounted ? 'text-danger' : 'text-dark' }}"
                                     style="font-size: 2rem; line-height: 1;">
-                                    {{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }} VND
+                                    {{ number_format($isDiscounted ? $product->discounted_price : $product->original_price, 0, ',', '.') }}
+                                    VND
                                 </span>
 
                                 {{-- Giá gạch ngang nếu có --}}
                                 <span class="original-price text-muted text-decoration-line-through"
                                     id="originalPrice"
-                                    style="font-size: 1.5rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
+                                    style="font-size: 1rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
                                     {{ number_format($product->original_price, 0, ',', '.') }} VND
                                 </span>
 
                                 {{-- Badge giảm giá nếu có --}}
                                 <span class="discount-percent badge bg-danger-subtle text-danger fw-semibold"
                                     id="discountPercent"
-                                    style="font-size: 1.5rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
+                                    style="font-size: 1rem; line-height: 1; {{ !$isDiscounted ? 'visibility: hidden;' : '' }}">
                                     -{{ $discountPercent }}%
                                 </span>
                             @endif
@@ -300,7 +332,6 @@
                                         </button>
                                     </div>
                                 </div>
-
                             @endif
 
                             {{-- CHỌN SỐ LƯỢNG --}}
@@ -367,43 +398,102 @@
                                 <h4 class="mb-4 fw-bold text-uppercase section-title" style="color: #1a202c;">
                                     Đánh giá của người dùng
                                 </h4>
-                                @forelse($product->comments->where('status', 1) as $comment)
-                                    <div class="d-flex mb-4 border rounded shadow-sm p-4 bg-white">
-                                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
-                                            class="img-fluid rounded-circle me-3" style="width: 60px; height: 60px;"
-                                            alt="Avatar">
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <h6 class="mb-0 fw-bold">{{ $comment->user->name ?? 'Ẩn danh' }}</h6>
-                                                <small
-                                                    class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
+                                @php
+                                    $comments = $product->comments->where('status', 1);
+                                @endphp
+
+                                <div id="comment-list">
+                                    @forelse ($comments->take(2) as $comment)
+                                        <div class="d-flex mb-4 border rounded shadow-sm p-3 bg-white comment-item">
+                                            <!-- Avatar -->
+                                            <div class="me-3">
+                                                <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                                                    class="rounded-circle border"
+                                                    style="width: 45px; height: 45px; object-fit: cover;"
+                                                    alt="Avatar">
                                             </div>
-                                            @php
-                                                $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0;
-                                            @endphp
-                                            <div class="mb-2">
-                                                @for ($i = 1; $i <= 5; $i++)
-                                                    <i class="fas fa-star"
-                                                        style="color: {{ $i <= $rating ? '#ffc107' : '#ccc' }}"></i>
-                                                @endfor
+
+                                            <!-- Nội dung bình luận -->
+                                            <div class="flex-grow-1">
+                                                <!-- Header: tên + sao + ngày -->
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <div>
+                                                        <h6 class="mb-0 fw-bold text-dark">
+                                                            {{ $comment->user->name ?? 'Ẩn danh' }}</h6>
+                                                        <!-- Số sao -->
+                                                        @php $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0; @endphp
+                                                        <div>
+                                                            @for ($i = 1; $i <= 5; $i++)
+                                                                <i class="fas fa-star"
+                                                                    style="color: {{ $i <= $rating ? '#ffc107' : '#ddd' }}; font-size: 13px;"></i>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                    <small
+                                                        class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
+                                                </div>
+
+                                                <!-- Nội dung text -->
+                                                <p class="mb-2 text-dark" style="font-size: 15px; line-height: 1.5;">
+                                                    {{ $comment->content }}
+                                                </p>
+
+                                                <!-- Media -->
+                                                @if ($comment->images->count() || $comment->video)
+                                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                                        {{-- Video trước --}}
+                                                        @if ($comment->video)
+                                                            <div class="media-item">
+                                                                <video class="rounded shadow-sm"
+                                                                    style="width: 140px; height: 140px; object-fit: cover;"
+                                                                    controls>
+                                                                    <source
+                                                                        src="{{ asset('storage/' . $comment->video) }}"
+                                                                        type="video/mp4">
+                                                                    Trình duyệt không hỗ trợ video.
+                                                                </video>
+                                                            </div>
+                                                        @endif
+
+                                                        {{-- Các ảnh --}}
+                                                        @foreach ($comment->images as $img)
+                                                            <div class="media-item">
+                                                                <img src="{{ asset('storage/' . $img->path) }}"
+                                                                    class="rounded shadow-sm"
+                                                                    style="width: 140px; height: 140px; object-fit: cover;">
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
                                             </div>
-                                            <p class="mb-0 text-dark">{{ $comment->content }}</p>
                                         </div>
+                                    @empty
+                                        <div class="text-center py-5">
+                                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                            <p class="text-muted">Chưa có bình luận nào cho sản phẩm này.</p>
+                                        </div>
+                                    @endforelse
+                                </div>
+
+
+                                {{-- Nút "Xem thêm" --}}
+                                @if ($comments->count() > 2)
+                                    <div class="text-center mt-3">
+                                        <button id="load-more-comments"
+                                            class="btn btn-outline-primary rounded-pill px-4">
+                                            Xem thêm bình luận
+                                        </button>
                                     </div>
-                                @empty
-                                    <div class="text-center py-5">
-                                        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
-                                        <p class="text-muted">Chưa có bình luận nào cho sản phẩm này.</p>
-                                    </div>
-                                @endforelse
+                                @endif
+
+
 
                             </div>
                         </div>
                     </div>
                     {{-- FORM BÌNH LUẬN --}}
-
                     @if (Auth::check() && $hasPurchased && !$hasReviewed)
-                        <form action="{{ route('comments.store') }}" method="POST"
+                        <form action="{{ route('comments.store') }}" method="POST" enctype="multipart/form-data"
                             class="bg-light p-4 p-md-5 rounded shadow-sm">
                             @csrf
                             <h4 class="mb-4 fw-bold text-uppercase text-primary section-title"
@@ -411,12 +501,14 @@
 
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
 
+                            <!-- Nội dung đánh giá -->
                             <div class="mb-4">
                                 <label for="content" class="form-label fw-semibold">Đánh giá của bạn *</label>
                                 <textarea id="content" name="content" class="form-control rounded-3" rows="6"
                                     placeholder="Hãy chia sẻ trải nghiệm của bạn về sản phẩm này..." required></textarea>
                             </div>
 
+                            <!-- Số sao -->
                             <div class="mb-4">
                                 <label class="form-label fw-semibold d-block">Chọn số sao:</label>
                                 <div class="rating d-flex gap-2">
@@ -428,14 +520,62 @@
                                 <input type="hidden" name="rating" id="rating-value" value="0">
                             </div>
 
+                            <!-- Upload ảnh -->
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Ảnh minh họa (tối đa 5 ảnh):</label>
+                                <input type="file" name="images[]" accept="image/*"
+                                    class="form-control rounded-3" id="imageInput" multiple>
+                                <div class="mt-2 d-flex flex-wrap gap-2" id="imagePreview"></div>
+                            </div>
+
+                            <!-- Upload video -->
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Video minh họa (tùy chọn):</label>
+                                <input type="file" name="video" accept="video/*" class="form-control rounded-3"
+                                    id="videoInput">
+                                <div class="mt-2" id="videoPreview" style="display:none;">
+                                    <video controls class="rounded shadow-sm"
+                                        style="max-width: 300px; max-height: 200px;">
+                                        <source src="" type="video/mp4">
+                                        Trình duyệt của bạn không hỗ trợ phát video.
+                                    </video>
+                                </div>
+                            </div>
+
+                            <!-- Submit -->
                             <div class="text-end">
                                 <button type="submit" class="btn px-5 py-2 rounded-pill"
                                     style="background-color: #e0806d; border-color: #e0806d; color: white;">
                                     <i class="fa fa-paper-plane me-2"></i> Gửi Đánh Giá
                                 </button>
-
                             </div>
                         </form>
+
+                        <!-- Script preview ảnh & video -->
+                        <script>
+                            document.getElementById('imageInput').addEventListener('change', function(e) {
+                                const preview = document.getElementById('imagePreview');
+                                const img = preview.querySelector('img');
+                                if (this.files && this.files[0]) {
+                                    img.src = URL.createObjectURL(this.files[0]);
+                                    preview.style.display = 'block';
+                                } else {
+                                    preview.style.display = 'none';
+                                }
+                            });
+
+                            document.getElementById('videoInput').addEventListener('change', function(e) {
+                                const preview = document.getElementById('videoPreview');
+                                const video = preview.querySelector('video source');
+                                if (this.files && this.files[0]) {
+                                    video.src = URL.createObjectURL(this.files[0]);
+                                    preview.querySelector('video').load();
+                                    preview.style.display = 'block';
+                                } else {
+                                    preview.style.display = 'none';
+                                }
+                            });
+                        </script>
                     @elseif (Auth::check() && $hasPurchased && $hasReviewed)
                         <div class="alert alert-info text-center py-4">
                             <i class="fas fa-info-circle me-2 text-info"></i>
@@ -455,6 +595,8 @@
                             </a>
                         </div>
                     @endif
+
+
                 </div>
             </div>
         </div>
@@ -772,6 +914,10 @@
         const quantityInput = document.getElementById('quantity');
         const cancelButton = document.getElementById('cancelVariantSelection');
         const selectedVariantIdInput = document.getElementById('selectedVariantId');
+        const mainVideo = document.getElementById('mainProductVideo'); // ✅ thêm
+        const mainVideoSource = mainVideo ? mainVideo.querySelector('source') :
+            null; // (tuỳ, dùng khi bật video)
+
         var selectedVariant = null;
         var totalStockQuantity = "{{ $totalStock }}";
 
@@ -798,8 +944,18 @@
 
         function updateMainImage(imageUrl) {
             if (!mainImage || !imageUrl) return;
+
+            // ✅ Nếu đang xem video → dừng và ẩn video
+            if (mainVideo && !mainVideo.classList.contains('d-none')) {
+                mainVideo.pause();
+                mainVideo.classList.add('d-none');
+            }
+
+            // ✅ Hiện ảnh và đổi src
+            mainImage.classList.remove('d-none');
             mainImage.src = imageUrl;
         }
+
 
         function resetToDefault() {
             selectedVariantIdInput.value = '';
@@ -820,7 +976,8 @@
             if (discountPercentElement) discountPercentElement.style.display = 'none';
 
             if (mainImage?.dataset.originalSrc) {
-                mainImage.src = mainImage.dataset.originalSrc;
+                // mainImage.src = mainImage.dataset.originalSrc;
+                updateMainImage(mainImage.dataset.originalSrc);
             }
 
             if (stockElement) {
@@ -925,4 +1082,90 @@
         });
     });
 </script>
+<script>
+    // js từ 2 sản phẩm trở lên mới hiện nút
+    document.addEventListener("DOMContentLoaded", function() {
+        const loadMoreBtn = document.getElementById("load-more-comments");
+        if (!loadMoreBtn) return;
+
+        loadMoreBtn.addEventListener("click", function() {
+            // Ẩn nút đi sau khi bấm
+            this.style.display = "none";
+
+            // Lấy HTML tất cả bình luận còn lại từ server (dùng Blade render sẵn)
+            const extraComments = `
+                @foreach ($comments->skip(2) as $comment)
+                    <div class="d-flex mb-4 border rounded shadow-sm p-4 bg-white comment-item">
+                        <img src="{{ $comment->user->avatar ? asset('storage/' . $comment->user->avatar) : asset('clients/img/avatar.jpg') }}"
+                            class="img-fluid rounded-circle me-3"
+                            style="width: 60px; height: 60px; object-fit: cover;" alt="Avatar">
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 fw-bold">{{ $comment->user->name ?? 'Ẩn danh' }}</h6>
+                                <small class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
+                            </div>
+
+                            @php $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0; @endphp
+                            <div class="mb-2">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <i class="fas fa-star" style="color: {{ $i <= $rating ? '#ffc107' : '#ccc' }}"></i>
+                                @endfor
+                            </div>
+
+                            <p class="mb-0 text-dark">{{ $comment->content }}</p>
+
+                            @if ($comment->image)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/' . $comment->image) }}"
+                                        class="img-thumbnail rounded"
+                                        style="max-width: 200px; height: auto; object-fit: cover;">
+                                </div>
+                            @endif
+
+                            @if ($comment->video)
+                                <div class="mt-3">
+                                    <video class="rounded shadow-sm" width="320" height="240" controls>
+                                        <source src="{{ asset('storage/' . $comment->video) }}" type="video/mp4">
+                                        Trình duyệt không hỗ trợ video.
+                                    </video>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            `;
+
+            // Append vào danh sách
+            document.getElementById("comment-list").insertAdjacentHTML("beforeend", extraComments);
+        });
+    });
+</script>
+<script>
+    // js giới hạn 5 ảnh
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = ""; // clear preview cũ
+        const files = Array.from(this.files);
+
+        if (files.length > 5) {
+            alert("⚠️ Bạn chỉ được chọn tối đa 5 ảnh!");
+            this.value = ""; // reset input
+            return;
+        }
+
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = "img-thumbnail rounded";
+                img.style = "width: 150px; height: 150px; object-fit: cover;";
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(file);
+        });
+    });
+</script>
+
 @include('clients.layouts.footer')
