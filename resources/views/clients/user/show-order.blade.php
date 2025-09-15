@@ -588,161 +588,160 @@
 
                 <!-- Form yêu cầu hoàn hàng -->
                 @if ($canReturn)
-                    <div id="return-form" class="mt-3" style="display: none;">
+                    <div id="return-form" class="collapse mt-3">
                         <div class="card border-warning">
                             <div class="card-header bg-warning text-white py-2">
                                 <h6 class="mb-0">Yêu cầu hoàn hàng</h6>
                             </div>
                             <div class="card-body">
                                 @if ($errors->any())
-                                    <div class="alert alert-danger">
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                         <ul class="mb-0">
                                             @foreach ($errors->all() as $error)
                                                 <li>{{ $error }}</li>
                                             @endforeach
                                         </ul>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                     </div>
                                 @endif
 
                                 @if (session('return_error'))
-                                    <div class="alert alert-danger alert-dismissible fade show">
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                         {{ session('return_error') }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                            aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                     </div>
                                 @endif
-
-                                <div id="validation-error" class="alert alert-warning" style="display: none;">
-                                    Vui lòng điền đầy đủ thông tin cho các sản phẩm bạn đã chọn.
-                                </div>
 
                                 <form action="{{ route('clients.request_return', $order->id) }}" method="POST"
                                     enctype="multipart/form-data" id="returnRequestForm">
                                     @csrf
 
-                                    <div class="mb-3">
+                                    <div class="mb-4">
                                         <label class="form-label fw-bold">Chọn sản phẩm cần hoàn trả:</label>
 
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th width="5%">Chọn</th>
-                                                        <th width="40%">Sản phẩm</th>
-                                                        <th width="15%">Số lượng mua</th>
-                                                        <th width="15%">Số lượng trả</th>
-                                                        <th width="25%">Lý do</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($order->orderDetails as $index => $detail)
-                                                        <tr>
-                                                            <td class="text-center">
+                                        @foreach ($order->orderDetails as $index => $detail)
+                                            <div class="card mb-3 product-item">
+                                                <div class="card-body">
+                                                    <div class="row align-items-center">
+                                                        <div class="col-auto">
+                                                            <div class="form-check">
                                                                 <input type="checkbox"
+                                                                    class="form-check-input return-item-checkbox"
                                                                     name="return_items[{{ $index }}][selected]"
-                                                                    value="1" class="return-item-checkbox"
-                                                                    data-index="{{ $index }}"
+                                                                    value="1" data-index="{{ $index }}"
                                                                     id="return_item_{{ $index }}">
-                                                            </td>
-                                                            <td>
-                                                                <label for="return_item_{{ $index }}">
-                                                                    {{ $detail->product->product_name }}
-                                                                </label>
-                                                                @if ($detail->productVariant)
-                                                                    <div class="small text-muted">
-                                                                        {{ $detail->productVariant->variant_values ? implode(', ', json_decode($detail->productVariant->variant_values, true)) : '' }}
-                                                                    </div>
-                                                                @endif
-                                                                <input type="hidden"
-                                                                    name="return_items[{{ $index }}][order_detail_id]"
-                                                                    value="{{ $detail->id }}">
-                                                            </td>
-                                                            <td class="text-center">{{ $detail->quantity }}</td>
-                                                            <td>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-4">
+                                                            <label for="return_item_{{ $index }}"
+                                                                class="form-check-label fw-semibold">
+                                                                {{ $detail->product->product_name }}
+                                                            </label>
+                                                            @if ($detail->productVariant)
+                                                                <div class="small text-muted">
+                                                                    {{ $detail->productVariant->variant_values ? implode(', ', json_decode($detail->productVariant->variant_values, true)) : '' }}
+                                                                </div>
+                                                            @endif
+                                                            <input type="hidden"
+                                                                name="return_items[{{ $index }}][order_detail_id]"
+                                                                value="{{ $detail->id }}">
+                                                        </div>
+
+                                                        <div class="col-md-2 text-center">
+                                                            <div class="small text-muted">Đã mua</div>
+                                                            <span class="fw-bold">{{ $detail->quantity }}</span>
+                                                        </div>
+
+                                                        <div class="col-md-2">
+                                                            <label class="form-label small">Số lượng trả</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <button type="button"
+                                                                    class="btn btn-outline-secondary quantity-btn"
+                                                                    data-action="decrease"
+                                                                    data-index="{{ $index }}" disabled>
+                                                                    <i class="fas fa-minus"></i>
+                                                                </button>
                                                                 <input type="number"
+                                                                    class="form-control text-center return-quantity"
                                                                     name="return_items[{{ $index }}][quantity]"
-                                                                    class="form-control form-control-sm return-quantity"
                                                                     min="1" max="{{ $detail->quantity }}"
                                                                     data-max="{{ $detail->quantity }}"
-                                                                    data-index="{{ $index }}" disabled
-                                                                    placeholder="0">
-                                                            </td>
-                                                            <td>
-                                                                <textarea name="return_items[{{ $index }}][reason]" class="form-control form-control-sm return-reason"
-                                                                    rows="2" disabled placeholder="Lý do hoàn trả..." data-index="{{ $index }}"></textarea>
-                                                            </td>
-                                                        </tr>
-                                                        <tr class="attachment-row" style="display: none;"
-                                                            id="attachment_row_{{ $index }}">
-                                                            <td colspan="5">
-                                                                <div class="bg-light p-3 rounded">
-                                                                    <label class="fw-bold mb-3">
+                                                                    data-index="{{ $index }}" value="1"
+                                                                    disabled>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-secondary quantity-btn"
+                                                                    data-action="increase"
+                                                                    data-index="{{ $index }}" disabled>
+                                                                    <i class="fas fa-plus"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="invalid-feedback quantity-error"
+                                                                style="display: none;">
+                                                                Số lượng trả không được vượt quá số lượng đã mua
+                                                            </div>
+                                                        </div>
+
+                                                        \ <div class="col-md-4">
+                                                            <label class="form-label small">Lý do hoàn trả</label>
+                                                            <textarea name="return_items[{{ $index }}][reason]" class="form-control form-control-sm return-reason"
+                                                                rows="2" disabled placeholder="Nhập lý do hoàn trả..." data-index="{{ $index }}"></textarea>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="attachment-section mt-3" style="display: none;"
+                                                        id="attachment_section_{{ $index }}">
+                                                        <hr>
+                                                        <div class="row">
+                                                            <div class="col-12">
+                                                                <div
+                                                                    class="d-flex justify-content-between align-items-center mb-2">
+                                                                    <label class="form-label fw-semibold mb-0">
                                                                         <i class="fas fa-paperclip me-2"></i>
-                                                                        Đính kèm hình ảnh/video (tối đa 5 file, mỗi file ≤
-                                                                        10MB)
+                                                                        Đính kèm hình ảnh/video
                                                                     </label>
-
-                                                                    <div id="attachment-container-{{ $index }}">
-                                                                        <div class="mb-3">
-                                                                            <div class="d-flex align-items-center">
-                                                                                <input type="file"
-                                                                                    name="return_items[{{ $index }}][attachments][]"
-                                                                                    class="form-control form-control-sm me-2"
-                                                                                    accept="image/*,video/*"
-                                                                                    data-index="{{ $index }}"
-                                                                                    onchange="validateAttachment(this)">
-
-                                                                                <button type="button"
-                                                                                    class="btn btn-sm btn-outline-danger remove-file-btn"
-                                                                                    style="display: none;"
-                                                                                    title="Xóa file này">
-                                                                                    <i class="fas fa-times"></i>
-                                                                                </button>
-                                                                            </div>
-
-                                                                            <div class="file-preview mt-2"></div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div
-                                                                        class="d-flex justify-content-between align-items-center">
-                                                                        <button type="button"
-                                                                            class="btn btn-sm btn-outline-primary add-more-btn"
-                                                                            data-index="{{ $index }}"
-                                                                            onclick="addMoreAttachment(this)">
-                                                                            <i class="fas fa-plus me-1"></i>
-                                                                            Thêm file khác
-                                                                        </button>
-
-                                                                        <div class="text-muted small">
-                                                                            <span
-                                                                                id="file-count-{{ $index }}">0</span>/5
-                                                                            file
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div class="form-text mt-2">
-                                                                        <i class="fas fa-info-circle me-1"></i>
-                                                                        <strong>Chấp nhận:</strong> JPEG, PNG, GIF (ảnh) và
-                                                                        MP4, MOV, AVI (video)<br>
-                                                                        <i
-                                                                            class="fas fa-exclamation-triangle me-1 text-warning"></i>
-                                                                        <strong>Lưu ý:</strong> Kích thước tối đa mỗi file:
-                                                                        10MB, tối đa 5 file
-                                                                    </div>
+                                                                    <span class="text-muted small">
+                                                                        <span class="file-counter"
+                                                                            data-index="{{ $index }}">0</span>/5
+                                                                        file
+                                                                    </span>
                                                                 </div>
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                                <div class="text-muted small mb-3">
+                                                                    Tối đa 5 file, mỗi file ≤ 10MB. Hỗ trợ: JPG, PNG, GIF,
+                                                                    MP4, MOV, AVI
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <input type="file" class="d-none multi-file-input"
+                                                                        id="multi-file-input-{{ $index }}"
+                                                                        name="return_items[{{ $index }}][attachments][]"
+                                                                        accept="image/*,video/*"
+                                                                        data-index="{{ $index }}" multiple>
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-primary btn-sm"
+                                                                        onclick="document.getElementById('multi-file-input-{{ $index }}').click()">
+                                                                        <i class="fas fa-cloud-upload-alt me-2"></i>Chọn
+                                                                        file
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="file-previews row g-2"
+                                                                    id="file-previews-{{ $index }}">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
 
-                                    <button type="submit" class="btn btn-warning text-white w-100"
-                                        id="submitReturnRequest" disabled>
-                                        <i class="fas fa-paper-plane me-2"></i>Xác nhận yêu cầu hoàn hàng
-                                    </button>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-warning text-white"
+                                            id="submitReturnRequest" disabled>
+                                            <i class="fas fa-paper-plane me-2"></i>Xác nhận yêu cầu hoàn hàng
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -776,20 +775,7 @@
         </div>
     </div>
 
-    <style>
-        .timeline-compact .timeline-item {
-            border-left: 2px solid #dee2e6;
-            padding-left: 15px;
-            margin-left: 10px;
-        }
-
-        .timeline-compact .timeline-marker {
-            margin-left: -23px;
-            background-color: white;
-            width: 20px;
-            text-align: center;
-        }
-    </style>
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -805,510 +791,312 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            initializeReturnForm();
+        });
+
+        function initializeReturnForm() {
             const checkboxes = document.querySelectorAll('.return-item-checkbox');
             const submitBtn = document.getElementById('submitReturnRequest');
 
-            document.querySelectorAll('.return-quantity, .return-reason').forEach(field => {
-                field.setAttribute('disabled', 'disabled');
-            });
-
             checkboxes.forEach(checkbox => {
+                const index = checkbox.dataset.index;
+                toggleProductFields(index, false);
+
                 checkbox.addEventListener('change', function() {
-                    const index = this.getAttribute('data-index');
-                    const quantityInput = document.querySelector(
-                        `.return-quantity[data-index="${index}"]`);
-                    const reasonTextarea = document.querySelector(
-                        `.return-reason[data-index="${index}"]`);
-                    const attachmentRow = document.getElementById(`attachment_row_${index}`);
-
-                    if (this.checked) {
-                        quantityInput.removeAttribute('disabled');
-                        reasonTextarea.removeAttribute('disabled');
-                        if (attachmentRow) attachmentRow.style.display = 'table-row';
-
-                        if (!quantityInput.value) {
-                            quantityInput.value = 1;
-                        }
-                    } else {
-                        quantityInput.setAttribute('disabled', 'disabled');
-                        reasonTextarea.setAttribute('disabled', 'disabled');
-                        quantityInput.value = '';
-                        reasonTextarea.value = '';
-                        if (attachmentRow) attachmentRow.style.display = 'none';
-
-                        const fileInput = document.querySelector(
-                            `input[name="return_items[${index}][attachments][]"]`);
-                        if (fileInput) fileInput.value = '';
-                    }
-
+                    toggleProductFields(index, this.checked);
                     validateForm();
                 });
+            });
+
+            document.querySelectorAll('.quantity-btn').forEach(btn => {
+                btn.addEventListener('click', handleQuantityChange);
             });
 
             document.querySelectorAll('.return-quantity').forEach(input => {
-                input.addEventListener('change', function() {
-                    const max = parseInt(this.getAttribute('data-max'));
-                    if (this.value > max) {
-                        this.value = max;
-                        alert('Số lượng hoàn trả không được vượt quá số lượng đã mua (' + max +
-                            ')');
-                    } else if (this.value < 1) {
-                        this.value = 1;
-                    }
+                input.addEventListener('input', function() {
+                    validateQuantity(this);
                     validateForm();
                 });
-
-                input.addEventListener('input', validateForm);
+                input.addEventListener('blur', function() {
+                    validateQuantity(this);
+                    validateForm();
+                });
+                input.addEventListener('change', function() {
+                    validateQuantity(this);
+                    validateForm();
+                });
             });
 
             document.querySelectorAll('.return-reason').forEach(textarea => {
                 textarea.addEventListener('input', validateForm);
             });
 
-            function validateForm() {
-                let hasSelected = false;
-                let allValid = true;
-
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.checked) {
-                        hasSelected = true;
-                        const index = checkbox.getAttribute('data-index');
-                        const quantity = document.querySelector(`.return-quantity[data-index="${index}"]`)
-                            .value;
-                        const reason = document.querySelector(`.return-reason[data-index="${index}"]`)
-                            .value;
-
-                        if (!quantity || parseInt(quantity) < 1 || !reason.trim()) {
-                            allValid = false;
-
-                            if (!quantity || parseInt(quantity) < 1) {
-                                document.querySelector(`.return-quantity[data-index="${index}"]`).classList
-                                    .add('is-invalid');
-                            } else {
-                                document.querySelector(`.return-quantity[data-index="${index}"]`).classList
-                                    .remove('is-invalid');
-                            }
-
-                            if (!reason.trim()) {
-                                document.querySelector(`.return-reason[data-index="${index}"]`).classList
-                                    .add('is-invalid');
-                            } else {
-                                document.querySelector(`.return-reason[data-index="${index}"]`).classList
-                                    .remove('is-invalid');
-                            }
-                        } else {
-                            document.querySelector(`.return-quantity[data-index="${index}"]`).classList
-                                .remove('is-invalid');
-                            document.querySelector(`.return-reason[data-index="${index}"]`).classList
-                                .remove('is-invalid');
-                        }
-                    }
+            document.querySelectorAll('.multi-file-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    handleMultipleFileSelect(this);
                 });
+            });
 
-                submitBtn.disabled = !(hasSelected && allValid);
+            document.getElementById('returnRequestForm').addEventListener('submit', handleFormSubmit);
+        }
 
-                if (hasSelected && !allValid) {
-                    document.getElementById('validation-error').style.display = 'block';
+        function toggleProductFields(index, enabled) {
+            const quantityInput = document.querySelector(`.return-quantity[data-index="${index}"]`);
+            const reasonTextarea = document.querySelector(`.return-reason[data-index="${index}"]`);
+            const quantityBtns = document.querySelectorAll(`.quantity-btn[data-index="${index}"]`);
+            const attachmentSection = document.getElementById(`attachment_section_${index}`);
+
+            if (enabled) {
+                quantityInput.disabled = false;
+                reasonTextarea.disabled = false;
+                quantityBtns.forEach(btn => btn.disabled = false);
+                attachmentSection.style.display = 'block';
+
+                if (!quantityInput.value || quantityInput.value < 1) {
+                    quantityInput.value = 1;
+                }
+            } else {
+                quantityInput.disabled = true;
+                reasonTextarea.disabled = true;
+                reasonTextarea.value = '';
+                quantityBtns.forEach(btn => btn.disabled = true);
+                attachmentSection.style.display = 'none';
+
+                const fileInput = document.getElementById(`multi-file-input-${index}`);
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                const previewContainer = document.getElementById(`file-previews-${index}`);
+                if (previewContainer) {
+                    previewContainer.innerHTML = '';
+                }
+                updateFileCounter(index, 0);
+            }
+        }
+
+        function handleQuantityChange(e) {
+            const action = e.currentTarget.dataset.action;
+            const index = e.currentTarget.dataset.index;
+            const quantityInput = document.querySelector(`.return-quantity[data-index="${index}"]`);
+            const max = parseInt(quantityInput.dataset.max);
+            let currentValue = parseInt(quantityInput.value) || 1;
+
+            if (action === 'increase') {
+                if (currentValue < max) {
+                    quantityInput.value = currentValue + 1;
                 } else {
-                    document.getElementById('validation-error').style.display = 'none';
+                    showToast('Số lượng trả không được vượt quá số lượng đã mua', 'error');
+                    return;
+                }
+            } else if (action === 'decrease') {
+                if (currentValue > 1) {
+                    quantityInput.value = currentValue - 1;
                 }
             }
 
-            document.getElementById('returnRequestForm').addEventListener('submit', function(e) {
-                const fileInputs = document.querySelectorAll('input[type="file"]');
-                let isValid = true;
-                let errorMessage = '';
-
-                fileInputs.forEach(fileInput => {
-                    if (fileInput.files.length > 0) {
-                        for (let i = 0; i < fileInput.files.length; i++) {
-                            const file = fileInput.files[i];
-                            const maxSize = 10 * 1024 * 1024; // 10MB
-
-                            if (file.size > maxSize) {
-                                isValid = false;
-                                errorMessage = 'File ' + file.name +
-                                    ' vượt quá kích thước cho phép (10MB)';
-                                break;
-                            }
-
-                            const validImageTypes = ['image/jpeg', 'image/png', 'image/gif',
-                                'image/jpg'
-                            ];
-                            const validVideoTypes = ['video/mp4', 'video/quicktime',
-                                'video/x-msvideo', 'video/avi'
-                            ];
-
-                            if (!validImageTypes.includes(file.type) && !validVideoTypes.includes(
-                                    file.type)) {
-                                isValid = false;
-                                errorMessage = 'File ' + file.name +
-                                    ' không đúng định dạng cho phép';
-                                break;
-                            }
-                        }
-                    }
-                });
-
-                if (!isValid) {
-                    e.preventDefault();
-                    alert(errorMessage);
-                } else {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
-                }
-            });
-        });
-
-        function validateAttachment(input) {
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-            const validVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/avi'];
-            const file = input.files[0];
-
-            if (!file) return;
-
-            if (file.size > maxSize) {
-                alert(`File "${file.name}" vượt quá kích thước cho phép (10MB)`);
-                input.value = '';
-                return;
-            }
-
-            if (!validImageTypes.includes(file.type) && !validVideoTypes.includes(file.type)) {
-                alert(`File "${file.name}" không đúng định dạng cho phép (JPEG, PNG, GIF, MP4, MOV, AVI)`);
-                input.value = '';
-                return;
-            }
-
-            const removeBtn = input.parentElement.querySelector('.remove-file-btn');
-            if (removeBtn) {
-                removeBtn.style.display = file ? 'inline-block' : 'none';
-            }
-
-            showFilePreview(input, file);
+            validateQuantity(quantityInput);
+            validateForm();
         }
 
-        function showFilePreview(input, file) {
-            const previewContainer = input.parentElement.querySelector('.file-preview');
-            if (!previewContainer) {
-                const preview = document.createElement('div');
-                preview.className = 'file-preview mt-2';
-                input.parentElement.appendChild(preview);
-            }
+        function validateQuantity(input) {
+            const max = parseInt(input.dataset.max);
+            const value = parseInt(input.value) || 0;
+            const errorElement = input.closest('.col-md-2').querySelector('.quantity-error');
 
-            const preview = input.parentElement.querySelector('.file-preview');
-            preview.innerHTML = '';
-
-            if (file.type.startsWith('image/')) {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(file);
-                img.style.cssText = 'width: 60px; height: 60px; object-fit: cover;';
-                img.className = 'rounded border';
-                img.onload = () => URL.revokeObjectURL(img.src);
-                preview.appendChild(img);
-            } else if (file.type.startsWith('video/')) {
-                const video = document.createElement('video');
-                video.src = URL.createObjectURL(file);
-                video.style.cssText = 'width: 60px; height: 60px;';
-                video.className = 'rounded border';
-                video.controls = false;
-                video.muted = true;
-                preview.appendChild(video);
-            }
-
-            const fileName = document.createElement('small');
-            fileName.className = 'd-block text-muted mt-1';
-            fileName.textContent = file.name;
-            preview.appendChild(fileName);
-        }
-
-        function addMoreAttachment(button) {
-            const index = button.getAttribute('data-index');
-            const container = document.getElementById(`attachment-container-${index}`);
-            const currentInputs = container.querySelectorAll('.file-input-wrapper');
-
-            if (currentInputs.length >= 5) {
-                alert('Chỉ được phép đính kèm tối đa 5 file');
-                return;
-            }
-
-            const newWrapper = document.createElement('div');
-            newWrapper.className = 'file-input-wrapper mb-2 d-flex align-items-start';
-
-            const newInput = document.createElement('input');
-            newInput.type = 'file';
-            newInput.name = `return_items[${index}][attachments][]`;
-            newInput.className = 'form-control form-control-sm attachment-file';
-            newInput.accept = 'image/*,video/*';
-            newInput.setAttribute('data-index', index);
-            newInput.onchange = function() {
-                validateAttachment(this);
-            };
-
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'btn btn-sm btn-outline-danger ms-2 remove-file-btn';
-            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-            removeBtn.onclick = function() {
-                removeFileInput(this);
-            };
-
-            newWrapper.appendChild(newInput);
-            newWrapper.appendChild(removeBtn);
-
-            container.appendChild(newWrapper);
-
-            if (container.querySelectorAll('.file-input-wrapper').length >= 5) {
-                button.style.display = 'none';
-            }
-        }
-
-        function removeFileInput(button) {
-            const wrapper = button.parentElement;
-            const container = wrapper.parentElement;
-            const index = container.id.split('-')[2];
-
-            const preview = wrapper.querySelector('.file-preview');
-            if (preview) {
-                preview.remove();
-            }
-
-            wrapper.remove();
-
-            const addMoreBtn = document.querySelector(`.add-more-btn[data-index="${index}"]`);
-            const remainingInputs = container.querySelectorAll('.file-input-wrapper');
-            if (remainingInputs.length < 5 && addMoreBtn) {
-                addMoreBtn.style.display = 'inline-block';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.remove-file-btn').forEach(btn => {
-                btn.onclick = function() {
-                    const input = this.parentElement.querySelector('input[type="file"]');
-                    if (input) {
-                        input.value = '';
-                        this.style.display = 'none';
-
-                        const preview = this.parentElement.querySelector('.file-preview');
-                        if (preview) {
-                            preview.innerHTML = '';
-                        }
-                    }
-                };
-            });
-        });
-
-        function updateFileCounter(index) {
-            const container = document.getElementById(`attachment-container-${index}`);
-            const inputs = container.querySelectorAll('input[type="file"]');
-            const counter = document.getElementById(`file-count-${index}`);
-
-            let fileCount = 0;
-            inputs.forEach(input => {
-                if (input.files && input.files.length > 0) {
-                    fileCount++;
-                }
-            });
-
-            if (counter) {
-                counter.textContent = fileCount;
-                counter.parentElement.className = fileCount >= 5 ? 'file-counter text-danger small fw-bold' :
-                    'file-counter text-muted small';
-            }
-        }
-
-        function validateAttachment(input) {
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-            const validVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/avi', 'video/webm'];
-            const file = input.files[0];
-            const index = input.getAttribute('data-index');
-
-            if (!file) {
-                updateFileCounter(index);
-                return;
-            }
-
-            if (file.size > maxSize) {
-                showFileError(`File "${file.name}" vượt quá kích thước cho phép (10MB)`);
-                input.value = '';
-                return;
-            }
-
-            if (!validImageTypes.includes(file.type) && !validVideoTypes.includes(file.type)) {
-                showFileError(`File "${file.name}" không đúng định dạng cho phép`);
-                input.value = '';
-                return;
-            }
-
-            const container = document.getElementById(`attachment-container-${index}`);
-            const allInputs = container.querySelectorAll('input[type="file"]');
-            let totalFiles = 0;
-
-            allInputs.forEach(inp => {
-                if (inp.files && inp.files.length > 0) totalFiles++;
-            });
-
-            if (totalFiles > 5) {
-                showFileError('Chỉ được phép đính kèm tối đa 5 file');
-                input.value = '';
-                return;
-            }
-
-            showFilePreview(input, file);
-            updateFileCounter(index);
-
-            const removeBtn = input.parentElement.querySelector('.remove-file-btn');
-            if (removeBtn) {
-                removeBtn.style.display = 'inline-block';
-            }
-
-            const addMoreBtn = document.querySelector(`.add-more-btn[data-index="${index}"]`);
-            if (totalFiles >= 5 && addMoreBtn) {
-                addMoreBtn.style.display = 'none';
-            }
-
-            showFileSuccess(`Đã thêm file "${file.name}" thành công`);
-        }
-
-        function showFilePreview(input, file) {
-            const wrapper = input.closest('.file-input-wrapper');
-            let preview = wrapper.querySelector('.file-preview');
-
-            if (!preview) {
-                preview = document.createElement('div');
-                preview.className = 'file-preview mt-2';
-                wrapper.appendChild(preview);
-            }
-
-            preview.innerHTML = '';
-
-            const previewContent = document.createElement('div');
-            previewContent.className = 'd-flex align-items-center gap-2 p-2';
-
-            if (file.type.startsWith('image/')) {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(file);
-                img.style.cssText = 'width: 50px; height: 50px; object-fit: cover;';
-                img.className = 'rounded border shadow-sm';
-                img.onload = () => URL.revokeObjectURL(img.src);
-
-                img.style.cursor = 'pointer';
-                img.onclick = () => showImageModal(img.src);
-
-                previewContent.appendChild(img);
-            } else if (file.type.startsWith('video/')) {
-                const video = document.createElement('video');
-                video.src = URL.createObjectURL(file);
-                video.style.cssText = 'width: 50px; height: 50px; object-fit: cover;';
-                video.className = 'rounded border shadow-sm';
-                video.muted = true;
-                video.preload = 'metadata';
-
-                previewContent.appendChild(video);
-            }
-
-            const fileInfo = document.createElement('div');
-            fileInfo.className = 'flex-grow-1';
-            fileInfo.innerHTML = `
-        <div class="fw-semibold text-truncate" style="max-width: 200px;" title="${file.name}">
-            ${file.name}
-        </div>
-        <div class="small text-muted">
-            ${formatFileSize(file.size)} • ${file.type.split('/')[1].toUpperCase()}
-        </div>
-    `;
-
-            previewContent.appendChild(fileInfo);
-
-            const statusIcon = document.createElement('div');
-            statusIcon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
-            previewContent.appendChild(statusIcon);
-
-            preview.appendChild(previewContent);
-        }
-
-        function addMoreAttachment(button) {
-            const index = button.getAttribute('data-index');
-            const container = document.getElementById(`attachment-container-${index}`);
-            const currentInputs = container.querySelectorAll('.file-input-wrapper');
-
-            if (currentInputs.length >= 5) {
-                showFileError('Chỉ được phép đính kèm tối đa 5 file');
-                return;
-            }
-
-            const newWrapper = document.createElement('div');
-            newWrapper.className = 'file-input-wrapper mb-3';
-            newWrapper.style.opacity = '0';
-            newWrapper.style.transform = 'translateY(-10px)';
-
-            newWrapper.innerHTML = `
-        <div class="d-flex align-items-center">
-            <input
-                type="file"
-                name="return_items[${index}][attachments][]"
-                class="form-control form-control-sm attachment-file me-2"
-                accept="image/*,video/*"
-                data-index="${index}"
-                onchange="validateAttachment(this)"
-                style="flex: 1;">
-
-            <button
-                type="button"
-                class="btn btn-sm btn-outline-danger remove-file-btn"
-                onclick="removeFileInput(this)"
-                title="Xóa file này">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="file-preview mt-2"></div>
-    `;
-
-            container.appendChild(newWrapper);
-
-            setTimeout(() => {
-                newWrapper.style.transition = 'all 0.3s ease';
-                newWrapper.style.opacity = '1';
-                newWrapper.style.transform = 'translateY(0)';
-            }, 10);
-
-            if (container.querySelectorAll('.file-input-wrapper').length >= 5) {
-                button.style.display = 'none';
-            }
-
-            updateFileCounter(index);
-        }
-
-        function removeFileInput(button) {
-            const wrapper = button.closest('.file-input-wrapper');
-            const container = wrapper.parentElement;
-            const index = container.id.split('-')[2];
-
-            wrapper.style.transition = 'all 0.3s ease';
-            wrapper.style.opacity = '0';
-            wrapper.style.transform = 'translateY(-10px)';
-            wrapper.style.maxHeight = wrapper.offsetHeight + 'px';
-
-            setTimeout(() => {
-                wrapper.style.maxHeight = '0';
-                wrapper.style.marginBottom = '0';
-                wrapper.style.paddingTop = '0';
-                wrapper.style.paddingBottom = '0';
+            if (value > max) {
+                input.classList.add('is-invalid');
+                errorElement.style.display = 'block';
+                showToast('Số lượng trả không được vượt quá số lượng đã mua', 'error');
 
                 setTimeout(() => {
-                    wrapper.remove();
+                    input.value = max;
+                    input.classList.remove('is-invalid');
+                    errorElement.style.display = 'none';
+                }, 1000);
 
-                    const addMoreBtn = document.querySelector(`.add-more-btn[data-index="${index}"]`);
-                    const remainingInputs = container.querySelectorAll('.file-input-wrapper');
-                    if (remainingInputs.length < 5 && addMoreBtn) {
-                        addMoreBtn.style.display = 'inline-block';
-                    }
+                return false;
+            } else if (value < 1) {
+                input.classList.add('is-invalid');
+                errorElement.textContent = 'Số lượng trả phải lớn hơn 0';
+                errorElement.style.display = 'block';
+                showToast('Số lượng trả phải lớn hơn 0', 'error');
 
-                    updateFileCounter(index);
-                }, 300);
-            }, 100);
+                setTimeout(() => {
+                    input.value = 1;
+                    input.classList.remove('is-invalid');
+                    errorElement.style.display = 'none';
+                }, 1000);
+
+                return false;
+            } else {
+                input.classList.remove('is-invalid');
+                errorElement.style.display = 'none';
+                return true;
+            }
+        }
+
+        function validateForm() {
+            const checkboxes = document.querySelectorAll('.return-item-checkbox:checked');
+            const submitBtn = document.getElementById('submitReturnRequest');
+            let isValid = true;
+
+            checkboxes.forEach(checkbox => {
+                const index = checkbox.dataset.index;
+                const quantityInput = document.querySelector(`.return-quantity[data-index="${index}"]`);
+                const reasonTextarea = document.querySelector(`.return-reason[data-index="${index}"]`);
+
+                if (!validateQuantity(quantityInput)) {
+                    isValid = false;
+                }
+
+                const reason = reasonTextarea.value.trim();
+                if (!reason) {
+                    reasonTextarea.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    reasonTextarea.classList.remove('is-invalid');
+                }
+            });
+
+            submitBtn.disabled = checkboxes.length === 0 || !isValid;
+        }
+
+        const selectedFiles = {};
+
+        function handleMultipleFileSelect(input) {
+            const files = input.files;
+            const index = input.dataset.index;
+            const previewContainer = document.getElementById(`file-previews-${index}`);
+
+            if (!files || files.length === 0) return;
+
+            if (!selectedFiles[index]) {
+                selectedFiles[index] = [];
+            }
+
+            let validFilesCount = 0;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                if (validateFile(file) && selectedFiles[index].length < 5) {
+                    selectedFiles[index].push(file);
+                    validFilesCount++;
+
+                    showFilePreview(previewContainer, file, index);
+                } else if (selectedFiles[index].length >= 5) {
+                    showToast('Chỉ được phép tải lên tối đa 5 file', 'error');
+                    break;
+                }
+            }
+
+            updateFileCounter(index, selectedFiles[index].length);
+
+            updateFileInput(index);
+
+            if (validFilesCount > 0) {
+                showToast(`Đã thêm ${validFilesCount} file thành công`, 'success');
+            }
+        }
+
+        function validateFile(file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const validTypes = [
+                'image/jpeg', 'image/png', 'image/gif', 'image/jpg',
+                'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/avi', 'video/webm'
+            ];
+
+            if (file.size > maxSize) {
+                showToast(`File "${file.name}" vượt quá kích thước cho phép (10MB)`, 'error');
+                return false;
+            }
+
+            if (!validTypes.includes(file.type)) {
+                showToast(`File "${file.name}" không đúng định dạng cho phép`, 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        function showFilePreview(container, file, index) {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'col-6 col-md-4 col-lg-3 file-preview';
+            previewDiv.dataset.fileName = file.name;
+
+            const previewCard = document.createElement('div');
+            previewCard.className = 'card h-100';
+
+            let previewContent = '';
+
+            if (file.type.startsWith('image/')) {
+                previewContent = `
+                    <img src="${URL.createObjectURL(file)}" class="card-img-top" style="height: 120px; object-fit: cover;" alt="${file.name}">
+                `;
+            } else {
+                previewContent = `
+                    <div class="card-body d-flex align-items-center justify-content-center" style="height: 120px;">
+                        <i class="fas fa-video text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                `;
+            }
+
+            previewCard.innerHTML = previewContent + `
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-truncate small" title="${file.name}">${file.name}</div>
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeFilePreview(this, '${index}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="text-muted small">${formatFileSize(file.size)}</div>
+                </div>
+            `;
+
+            previewDiv.appendChild(previewCard);
+            container.appendChild(previewDiv);
+        }
+
+        function removeFilePreview(button, index) {
+            const previewCard = button.closest('.file-preview');
+            const fileName = previewCard.dataset.fileName;
+
+            if (selectedFiles[index]) {
+                selectedFiles[index] = selectedFiles[index].filter(file => file.name !== fileName);
+                updateFileInput(index);
+            }
+
+            previewCard.remove();
+
+            const fileCount = selectedFiles[index] ? selectedFiles[index].length : 0;
+            updateFileCounter(index, fileCount);
+        }
+
+        function updateFileInput(index) {
+            const fileInput = document.getElementById(`multi-file-input-${index}`);
+
+            const dataTransfer = new DataTransfer();
+
+            if (selectedFiles[index]) {
+                selectedFiles[index].forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+            }
+
+            fileInput.files = dataTransfer.files;
+        }
+
+        function updateFileCounter(index, count) {
+            const counter = document.querySelector(`.file-counter[data-index="${index}"]`);
+            if (counter) {
+                counter.textContent = count;
+            }
+        }
+
+        function handleFormSubmit(e) {
+            const submitBtn = document.getElementById('submitReturnRequest');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Đang xử lý...';
         }
 
         function formatFileSize(bytes) {
@@ -1319,104 +1107,36 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
-        function showFileError(message) {
-            showToast(message, 'error');
-        }
-
-        function showFileSuccess(message) {
-            showToast(message, 'success');
-        }
-
         function showToast(message, type = 'info') {
-            let toastContainer = document.getElementById('toast-container');
-            if (!toastContainer) {
-                toastContainer = document.createElement('div');
-                toastContainer.id = 'toast-container';
-                toastContainer.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            max-width: 350px;
-        `;
-                document.body.appendChild(toastContainer);
-            }
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
 
-            const toast = document.createElement('div');
-            const bgColor = type === 'error' ? 'bg-danger' : type === 'success' ? 'bg-success' : 'bg-info';
-            const icon = type === 'error' ? 'fa-exclamation-triangle' : type === 'success' ? 'fa-check-circle' :
+            const bgClass = type === 'error' ? 'bg-danger' : type === 'success' ? 'bg-success' : 'bg-info';
+            const icon = type === 'error' ? 'fa-exclamation-circle' : type === 'success' ? 'fa-check-circle' :
                 'fa-info-circle';
 
-            toast.className = `alert ${bgColor} text-white alert-dismissible fade show mb-2`;
-            toast.style.cssText = 'box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: none;';
-            toast.innerHTML = `
-        <i class="fas ${icon} me-2"></i>
-        ${message}
-        <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.remove()"></button>
-    `;
-
-            toastContainer.appendChild(toast);
-
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.remove();
-                }
-            }, 5000);
-        }
-
-        function showImageModal(src) {
-            const modal = document.createElement('div');
-            modal.className = 'modal fade';
-            modal.style.cssText = 'z-index: 10000;';
-            modal.innerHTML = `
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Xem ảnh</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas ${icon} me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
                 </div>
-                <div class="modal-body text-center">
-                    <img src="${src}" class="img-fluid rounded" alt="Preview">
-                </div>
-            </div>
-        </div>
-    `;
+            `;
 
-            document.body.appendChild(modal);
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
 
-            const bsModal = new bootstrap.Modal(modal);
-            bsModal.show();
+            const toastElement = document.getElementById(toastId);
+            const bsToast = new bootstrap.Toast(toastElement, {
+                delay: 5000
+            });
+            bsToast.show();
 
-            modal.addEventListener('hidden.bs.modal', () => {
-                modal.remove();
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
             });
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('[id^="attachment-container-"]').forEach(container => {
-                const index = container.id.split('-')[2];
-                updateFileCounter(index);
-            });
-
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.remove-file-btn')) {
-                    const btn = e.target.closest('.remove-file-btn');
-                    const input = btn.parentElement.querySelector('input[type="file"]');
-                    if (input && input.value) {
-                        removeFileInput(btn);
-                    } else {
-                        input.value = '';
-                        btn.style.display = 'none';
-                        const preview = btn.parentElement.parentElement.querySelector('.file-preview');
-                        if (preview) {
-                            preview.innerHTML = '';
-                        }
-
-                        const index = input.getAttribute('data-index');
-                        updateFileCounter(index);
-                    }
-                }
-            });
-        });
     </script>
 @endsection
