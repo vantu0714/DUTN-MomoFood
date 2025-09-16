@@ -72,6 +72,9 @@ Route::controller(AuthController::class)->group(function () {
 
 // Comments
 Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::post('/comments/store', [ClientCommentController::class, 'store'])->name('clients.comments.store');
+});
 
 //vn-pay
 Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.payment');
@@ -94,7 +97,7 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/create-payment', [ClientsOrderController::class, 'createPayment'])->name('create-payment');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
-        Route::post('/orders/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
+        Route::post('/order/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
             ->name('request_return');
 
         //mess
@@ -190,6 +193,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
         Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
         Route::put('/{id}/reject', [OrderController::class, 'reject'])->name('reject');
+        Route::post('/return-items/{id}/approve', [OrderController::class, 'approveReturnItem'])
+            ->name('approve_return_item');
+        Route::post('/return-items/{id}/reject', [OrderController::class, 'rejectReturnItem'])
+            ->name('reject_return_item');
+
         Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])
             ->name('approve_return');
         Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])
@@ -243,4 +251,3 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/messages/{userId}', [MessageController::class, 'getMessagesWithUser'])->name('admin.messages.user');
     Route::post('/messages/send', [MessageController::class, 'adminSend'])->name('admin.messages.send');
 });
-

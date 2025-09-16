@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Jobs\UpdateOrderStatus;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\OrderReturnItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Promotion;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -167,8 +169,13 @@ class OrderController extends Controller
      */
     public function show(string $id)
     {
-        //
-        $order = Order::with('orderDetails.product', 'orderDetails.productVariant.product')->find($id);
+        $order = Order::with([
+            'orderDetails.product',
+            'orderDetails.productVariant.attributeValues.attribute',
+            'returnItems.orderDetail.product',
+            'returnItems.orderDetail.productVariant.attributeValues.attribute',
+            'returnItems.attachments'
+        ])->find($id);
 
         return view('admin.orders.show', compact('order'));
     }
@@ -249,6 +256,8 @@ class OrderController extends Controller
                 5 => [],    // Hoàn hàng → Không thể chuyển tiếp
                 6 => [],    // Hủy → Không thể chuyển tiếp
                 9 => [4],   // Đã giao → Hoàn thành
+                10 => [],   // Không xác nhận → Không thể chuyển tiếp
+                11 => [],   // Giao hàng thất bại → Không thể chuyển tiếp
             ];
 
             // Kiểm tra tính hợp lệ của chuyển trạng thái
@@ -262,16 +271,19 @@ class OrderController extends Controller
             }
         }
 
-        // Đang giao (3) → Lên lịch chuyển sang Đã giao (9)
+        // Đang giao (3) →  Đã giao (9)
         if ($newStatus == 3) {
             $order->status = 3;
             $order->delivered_at = now();
             $order->save();
 
-            UpdateOrderStatus::dispatch($order, 9)
-                ->delay(now()->addSeconds(30));
-
             return back()->with('success', 'Đơn hàng đang được giao...');
+        } elseif ($newStatus == 9) {
+            $order->status = 9;
+            $order->received_at = now();
+            $order->save();
+
+            return back()->with('success', 'Đã cập nhật trạng thái đã giao hàng.');
         }
         // Giao hàng thất bại (11) → Xử lý với lý do
         elseif ($newStatus == 11) {
@@ -330,18 +342,6 @@ class OrderController extends Controller
             }
 
             $order->save();
-
-            // Chỉ tính đơn hàng Hoàn thành (4) để xét VIP
-            $userId = $order->user_id;
-            $totalSpent = Order::where('user_id', $userId)
-                ->where('status', 4) // chỉ tính đơn hoàn thành
-                ->sum('total_price');
-
-            if ($totalSpent >= 5000000) {
-                User::where('id', $userId)->update(['is_vip' => true]);
-            }
-
-            return back()->with('success', 'Trạng thái đơn hàng đã được cập nhật và kiểm tra VIP.');
         }
         // Hoàn hàng (5) → Yêu cầu lý do
         elseif ($newStatus == 5) {
@@ -444,36 +444,142 @@ class OrderController extends Controller
         }
     }
 
-    public function approveReturn($id)
+    private function updateOrderReturnStatus($orderId)
     {
-        $order = Order::with('orderDetails.product', 'orderDetails.productVariant')->findOrFail($id);
+        $order = Order::with('returnItems')->findOrFail($orderId);
 
-        // Kiểm tra trạng thái hiện tại phải là "Chờ xử lý hoàn hàng" (7)
-        if ($order->status != 7) {
-            return back()->with('error', 'Đơn hàng không ở trạng thái chờ xử lý hoàn hàng.');
+        $pendingCount = $order->returnItems->where('status', 'pending')->count();
+        $approvedCount = $order->returnItems->where('status', 'approved')->count();
+        $rejectedCount = $order->returnItems->where('status', 'rejected')->count();
+        $totalCount = $order->returnItems->count();
+
+        // Nếu vẫn còn sản phẩm chờ xử lý, giữ nguyên trạng thái
+        if ($pendingCount > 0) {
+            return;
         }
+
+        if ($approvedCount > 0 && $rejectedCount > 0) {
+            // Có cả sản phẩm được chấp nhận và từ chối - Hoàn hàng một phần
+            $updateData = [
+                'status' => 12, // Hoàn hàng một phần
+                'return_processed_at' => now()
+            ];
+
+            // Nếu đã thanh toán thì chuyển thành hoàn tiền
+            if ($order->payment_status === 'paid') {
+                $updateData['payment_status'] = 'refunded';
+            }
+
+            $order->update($updateData);
+
+        } elseif ($approvedCount === $totalCount) {
+            // Tất cả sản phẩm được chấp nhận - Hoàn hàng toàn bộ
+            $updateData = [
+                'status' => 5, // Hoàn hàng toàn bộ
+                'return_processed_at' => now()
+            ];
+
+            // Nếu đã thanh toán thì chuyển thành hoàn tiền
+            if ($order->payment_status === 'paid') {
+                $updateData['payment_status'] = 'refunded';
+            }
+
+            $order->update($updateData);
+
+        } elseif ($rejectedCount === $totalCount) {
+            // Tất cả sản phẩm bị từ chối - Hoàn hàng thất bại
+            $order->update([
+                'status' => 8, // Hoàn hàng thất bại
+                'return_processed_at' => now()
+            ]);
+            // Không thay đổi trạng thái thanh toán khi từ chối hoàn hàng
+        }
+    }
+
+    public function approveReturnItem(Request $request, $id)
+    {
+        $returnItem = OrderReturnItem::with(['orderDetail', 'order'])->findOrFail($id);
 
         DB::beginTransaction();
         try {
-            $order->update([
-                'status' => 5,
-                'payment_status' => 'refunded',
-                'return_approved' => true,
-                'return_processed_at' => now(),
+            $returnItem->update([
+                'status' => 'approved',
+                'admin_note' => $request->admin_note
             ]);
 
-            foreach ($order->orderDetails as $orderDetail) {
-                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
-                $orderDetail->product->save();
+            // Cập nhật trạng thái tổng thể của đơn hàng
+            $this->updateOrderReturnStatus($returnItem->order_id);
 
-                if (!is_null($orderDetail->productVariant)) {
-                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
-                    $orderDetail->productVariant->save();
+            DB::commit();
+
+            return back()->with('success', 'Đã chấp nhận yêu cầu hoàn hàng cho sản phẩm: ' . $returnItem->orderDetail->product->product_name);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    // Từ chối từng sản phẩm
+    public function rejectReturnItem(Request $request, $id)
+    {
+        $request->validate([
+            'admin_note' => 'required|string|max:1000'
+        ]);
+
+        $returnItem = OrderReturnItem::with(['orderDetail', 'order'])->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            $returnItem->update([
+                'status' => 'rejected',
+                'admin_note' => $request->admin_note
+            ]);
+
+            // Cập nhật trạng thái tổng thể của đơn hàng
+            $this->updateOrderReturnStatus($returnItem->order_id);
+
+            DB::commit();
+
+            return back()->with('success', 'Đã từ chối yêu cầu hoàn hàng cho sản phẩm: ' . $returnItem->orderDetail->product->product_name);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    public function approveReturn($id)
+    {
+        $order = Order::with('returnItems')->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            foreach ($order->returnItems as $returnItem) {
+                if ($returnItem->status == 'pending') {
+                    $returnItem->update([
+                        'status' => 'approved'
+                    ]);
                 }
             }
 
+            $updateData = [
+                'status' => 5, // Hoàn hàng
+                'return_processed_at' => now()
+            ];
+
+            if ($order->payment_status === 'paid') {
+                $updateData['payment_status'] = 'refunded';
+            }
+
+            $order->update($updateData);
+
             DB::commit();
-            return back()->with('success', 'Đã chấp nhận yêu cầu hoàn hàng và cập nhật trạng thái hoàn tiền.');
+
+            $message = 'Đã chấp nhận tất cả yêu cầu hoàn hàng.';
+            if ($order->payment_status === 'paid') {
+                $message .= ' Đã thực hiện hoàn tiền.';
+            }
+
+            return back()->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
@@ -483,31 +589,32 @@ class OrderController extends Controller
     public function rejectReturn(Request $request, $id)
     {
         $request->validate([
-            'return_rejection_reason' => 'required|string|min:10|max:1000',
+            'return_rejection_reason' => 'required|string|max:1000'
         ]);
 
-        if ($request->has('return_rejection_reason')) {
-            $request->validate([
-                'return_rejection_reason' => 'required|string|min:10|max:1000',
-            ]);
-        }
-
-        $order = Order::findOrFail($id);
-
-        if ($order->status != 7) {
-            return back()->with('error', 'Đơn hàng không ở trạng thái chờ xử lý hoàn hàng.');
-        }
+        $order = Order::with('returnItems')->findOrFail($id);
 
         DB::beginTransaction();
         try {
+            foreach ($order->returnItems as $returnItem) {
+                if ($returnItem->status == 'pending') {
+                    $returnItem->update([
+                        'status' => 'rejected',
+                        'admin_note' => $request->return_rejection_reason
+                    ]);
+                }
+            }
+
+            // Cập nhật trạng thái đơn hàng
             $order->update([
-                'status' => 8,
+                'status' => 8, // Hoàn hàng thất bại
                 'return_rejection_reason' => $request->return_rejection_reason,
-                'return_processed_at' => now(),
+                'return_processed_at' => now()
             ]);
 
             DB::commit();
-            return back()->with('success', 'Đã từ chối yêu cầu hoàn hàng.');
+
+            return back()->with('success', 'Đã từ chối tất cả yêu cầu hoàn hàng.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());

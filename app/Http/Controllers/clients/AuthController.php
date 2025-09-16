@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -20,66 +21,69 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
-        $credentials['status'] = 1; // Chỉ cho phép tài khoản được kích hoạt
-    
-        $user = User::where('email', $credentials['email'])->first();
-        if ($user && $user->status == 0) {
-            return back()->with('error', 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.')->withInput();
-        }
-    
-        if (Auth::attempt($credentials)) {
-            //Lấy giỏ hàng session TRƯỚC khi regenerate
-            $sessionCart = session()->get('cart', []);
-        
-            $request->session()->regenerate();
-        
-            $user = Auth::user();
-        
-            // Merge giỏ hàng
-            if (!empty($sessionCart)) {
-                $cart = Cart::firstOrCreate(['user_id' => $user->id]);
-        
-                foreach ($sessionCart as $item) {
-                    $existing = CartItem::where('cart_id', $cart->id)
-                        ->where('product_id', $item['product_id'])
-                        ->when($item['product_variant_id'], fn($q) => $q->where('product_variant_id', $item['product_variant_id']))
-                        ->when(!$item['product_variant_id'], fn($q) => $q->whereNull('product_variant_id'))
-                        ->first();
-        
-                    if ($existing) {
-                        $newQty = $existing->quantity + $item['quantity'];
-                        $existing->update([
-                            'quantity'    => $newQty,
-                            'total_price' => $item['discounted_price'] * $newQty,
-                        ]);
-                    } else {
-                        CartItem::create([
-                            'cart_id'            => $cart->id,
-                            'product_id'         => $item['product_id'],
-                            'product_variant_id' => $item['product_variant_id'],
-                            'quantity'           => $item['quantity'],
-                            'original_price'     => $item['original_price'],
-                            'discounted_price'   => $item['discounted_price'],
-                            'total_price'        => $item['total_price'],
-                        ]);
+        try {
+            $credentials = $request->only('email', 'password');
+            $credentials['status'] = 1; // Chỉ cho phép tài khoản được kích hoạt
+
+            $user = User::where('email', $credentials['email'])->first();
+            if ($user && $user->status == 0) {
+                return back()->with('error', 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.')->withInput();
+            }
+
+            if (Auth::attempt($credentials)) {
+                //Lấy giỏ hàng session TRƯỚC khi regenerate
+                $sessionCart = session()->get('cart', []);
+
+                $request->session()->regenerate();
+
+                $user = Auth::user();
+
+                // Merge giỏ hàng
+                if (!empty($sessionCart)) {
+                    $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+
+                    foreach ($sessionCart as $item) {
+                        $existing = CartItem::where('cart_id', $cart->id)
+                            ->where('product_id', $item['product_id'])
+                            ->when($item['product_variant_id'], fn($q) => $q->where('product_variant_id', $item['product_variant_id']))
+                            ->when(!$item['product_variant_id'], fn($q) => $q->whereNull('product_variant_id'))
+                            ->first();
+
+                        if ($existing) {
+                            $newQty = $existing->quantity + $item['quantity'];
+                            $existing->update([
+                                'quantity' => $newQty,
+                                'total_price' => $item['discounted_price'] * $newQty,
+                            ]);
+                        } else {
+                            CartItem::create([
+                                'cart_id' => $cart->id,
+                                'product_id' => $item['product_id'],
+                                'product_variant_id' => $item['product_variant_id'],
+                                'quantity' => $item['quantity'],
+                                'original_price' => $item['original_price'],
+                                'discounted_price' => $item['discounted_price'],
+                                'total_price' => $item['total_price'],
+                            ]);
+                        }
                     }
+
+                    session()->forget('cart'); // Xóa giỏ hàng tạm
                 }
-        
-                session()->forget('cart'); // Xóa giỏ hàng tạm
+                // Điều hướng theo role
+                if ($user->role && $user->role->name === 'admin') {
+                    return redirect()->intended('/admin/dashboard');
+                } elseif ($user->role && $user->role->name === 'user') {
+                    return redirect()->intended('/');
+                } else {
+                    Auth::logout();
+                    return back()->with('error', 'Tài khoản không có quyền truy cập hợp lệ.')->withInput();
+                }
             }
-        
-            // Điều hướng theo role
-            if ($user->role && $user->role->name === 'admin') {
-                return redirect()->intended('/admin/dashboard');
-            } elseif ($user->role && $user->role->name === 'user') {
-                return redirect()->intended('/');
-            } else {
-                Auth::logout();
-                return back()->with('error', 'Tài khoản không có quyền truy cập hợp lệ.')->withInput();
-            }
+            return back()->with('error', 'Email hoặc mật khẩu không chính xác.')->withInput();
+        } catch (\Throwable $th) {
+            return back()->with('error', 'Đăng nhập khó tạo. Vui lý liên hệ quản trị viên.')->withInput();
         }
-        return back()->with('error', 'Email hoặc mật khẩu không chính xác.')->withInput();
     }
 
     public function showRegister()
