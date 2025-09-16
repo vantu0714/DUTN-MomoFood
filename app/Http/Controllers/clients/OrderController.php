@@ -7,6 +7,8 @@ use App\Http\Controllers\VNPayController;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\OrderReturnAttachment;
+use App\Models\OrderReturnItem;
 use App\Models\Promotion;
 use App\Models\PromotionUser;
 use App\Models\User;
@@ -16,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -402,6 +405,7 @@ class OrderController extends Controller
         } else {
             $order = Order::where('id', $id)
                 ->where('user_id', auth()->id())
+                ->with(['orderDetails.product', 'orderDetails.productVariant', 'returnItems.orderDetail.product', 'returnItems.attachments'])
                 ->firstOrFail();
         }
 
@@ -565,35 +569,115 @@ class OrderController extends Controller
     {
         $order = Order::where('id', $id)
             ->where('user_id', auth()->id())
+            ->with('orderDetails.product', 'orderDetails.productVariant')
             ->firstOrFail();
 
         // Kiểm tra điều kiện hoàn hàng
-        if ($order->status == 5) {
-            return back()->with('error', 'Đơn hàng đã được hoàn trả');
+        if ($order->status != 4 && $order->status != 9) {
+            return back()->with('error', 'Chỉ có thể yêu cầu hoàn hàng cho đơn hàng đã hoàn thành hoặc đã giao.');
         }
 
-        if ($order->status == 7) {
-            return back()->with('info', 'Yêu cầu hoàn hàng đang chờ xử lý');
+        $returnDeadline = Carbon::parse($order->completed_at ?? $order->received_at)->addHours(24);
+        if (now()->gt($returnDeadline)) {
+            return back()->with('error', 'Đã quá thời hạn 24 giờ để yêu cầu hoàn hàng.');
         }
 
-        if ($order->status != 9 || ($order->completed_at && now()->gt(Carbon::parse($order->completed_at)->addHours(24)))) {
-            return back()->with('error', 'Không đủ điều kiện hoàn hàng');
+        // Kiểm tra xem có ít nhất một sản phẩm được chọn không
+        $hasSelectedItem = false;
+        $selectedIndexes = [];
+
+        if ($request->has('return_items')) {
+            foreach ($request->return_items as $index => $item) {
+                if (isset($item['selected']) && $item['selected'] == '1') {
+                    $hasSelectedItem = true;
+                    $selectedIndexes[] = $index;
+                }
+            }
         }
 
-        $request->validate([
-            'return_reason' => 'required|string'
-        ], [
-            'return_reason.required' => 'Vui lòng nhập lý do hoàn hàng'
-        ]);
+        if (!$hasSelectedItem) {
+            return back()->with('error', 'Vui lòng chọn ít nhất một sản phẩm để hoàn trả.');
+        }
+
+        // Tạo validation rules động chỉ cho các sản phẩm được chọn
+        $validationRules = [
+            'return_items' => 'required|array|min:1',
+        ];
+
+        $customMessages = [
+            'return_items.required' => 'Vui lòng chọn ít nhất một sản phẩm để hoàn trả.',
+        ];
+
+        // Chỉ thêm rules validation cho các sản phẩm được chọn
+        foreach ($selectedIndexes as $index) {
+            $validationRules["return_items.{$index}.order_detail_id"] = 'required|exists:order_details,id';
+            $validationRules["return_items.{$index}.quantity"] = 'required|integer|min:1';
+            $validationRules["return_items.{$index}.reason"] = 'required|string|max:1000';
+            $validationRules["return_items.{$index}.attachments.*"] = 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:10240';
+
+            $customMessages["return_items.{$index}.quantity.required"] = 'Vui lòng nhập số lượng cho sản phẩm được chọn.';
+            $customMessages["return_items.{$index}.reason.required"] = 'Vui lòng nhập lý do cho sản phẩm được chọn.';
+        }
+
+        $validator = Validator::make($request->all(), $validationRules, $customMessages);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         DB::beginTransaction();
 
         try {
+            // Cập nhật trạng thái đơn hàng
             $order->update([
-                'status' => 7,
-                'return_reason' => $request->return_reason,
+                'status' => 7, // Chờ xử lý hoàn hàng
                 'return_requested_at' => now()
             ]);
+
+            // Xử lý từng sản phẩm yêu cầu hoàn hàng
+            foreach ($request->return_items as $index => $returnItem) {
+                // Kiểm tra xem sản phẩm có được chọn không
+                if (!isset($returnItem['selected']) || $returnItem['selected'] != '1') {
+                    continue;
+                }
+
+                $orderDetail = OrderDetail::find($returnItem['order_detail_id']);
+
+                if (!$orderDetail) {
+                    throw new \Exception("Chi tiết đơn hàng không tồn tại.");
+                }
+
+                // Kiểm tra số lượng hợp lệ
+                if ($returnItem['quantity'] > $orderDetail->quantity) {
+                    throw new \Exception("Số lượng yêu cầu hoàn trả vượt quá số lượng đã mua cho sản phẩm: " .
+                        ($orderDetail->product->product_name ?? ''));
+                }
+
+                $returnItemRecord = OrderReturnItem::create([
+                    'order_id' => $order->id,
+                    'order_detail_id' => $returnItem['order_detail_id'],
+                    'quantity' => $returnItem['quantity'],
+                    'reason' => $returnItem['reason'],
+                    'status' => 'pending'
+                ]);
+
+                // Xử lý file đính kèm nếu có
+                if ($request->hasFile("return_items.{$index}.attachments")) {
+                    foreach ($request->file("return_items.{$index}.attachments") as $file) {
+                        if ($file->isValid()) {
+                            $path = $file->store('returns/attachments', 'public');
+
+                            OrderReturnAttachment::create([
+                                'order_return_item_id' => $returnItemRecord->id,
+                                'file_path' => $path,
+                                'file_type' => strpos($file->getMimeType(), 'image') !== false ? 'image' : 'video'
+                            ]);
+                        }
+                    }
+                }
+            }
 
             DB::commit();
 
@@ -601,6 +685,7 @@ class OrderController extends Controller
                 ->with('success', 'Yêu cầu hoàn hàng đã được gửi thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Lỗi khi xử lý yêu cầu hoàn hàng: ' . $e->getMessage());
             return back()->with('error', 'Xử lý yêu cầu thất bại: ' . $e->getMessage());
         }
     }

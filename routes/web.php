@@ -1,30 +1,31 @@
 <?php
 
-use App\Http\Controllers\Admin\CommentController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VNPayController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ThongKeController;
+use App\Http\Controllers\RecipientController;
 use App\Http\Controllers\Admin\InfoController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Clients\AuthController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Clients\HomeController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Clients\NewsController;
+use App\Http\Controllers\Clients\ShopController;
+use App\Http\Controllers\Admin\CommentController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ComboItemController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
-use App\Http\Controllers\Clients\CartClientController;
-use App\Http\Controllers\Clients\ShopController;
-use App\Http\Controllers\Clients\NewsController;
 use App\Http\Controllers\Clients\ContactsController;
-use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
-use App\Http\Controllers\Clients\ProductDetailController;
-use App\Http\Controllers\VNPayController;
-use App\Http\Controllers\clients\CommentController as ClientCommentController;
 use App\Http\Controllers\Clients\GioithieuController;
-use App\Http\Controllers\RecipientController;
-use App\Http\Controllers\ThongKeController;
+use App\Http\Controllers\Clients\CartClientController;
+use App\Http\Controllers\Admin\ProductVariantController;
+use App\Http\Controllers\Clients\ProductDetailController;
+use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
+use App\Http\Controllers\clients\CommentController as ClientCommentController;
 
 // ==================== PUBLIC ROUTES ====================
 
@@ -69,6 +70,9 @@ Route::controller(AuthController::class)->group(function () {
 
 // Comments
 Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::post('/comments/store', [ClientCommentController::class, 'store'])->name('clients.comments.store');
+});
 
 //vn-pay
 Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.payment');
@@ -91,14 +95,18 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/create-payment', [ClientsOrderController::class, 'createPayment'])->name('create-payment');
         Route::get('/order/{id}', [ClientsOrderController::class, 'orderDetail'])->name('orderdetail');
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
-        Route::post('/orders/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
+        Route::post('/order/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
             ->name('request_return');
+
+        //mess
+        Route::get('/messages/{userId}', [MessageController::class, 'index'])->name('messages.index');
+        Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
     });
-    
+
     // Cart Management
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartClientController::class, 'index'])->name('carts.index');
-       
+
         Route::post('/update/{id}', [CartClientController::class, 'updateQuantity'])->name('carts.updateQuantity');
         Route::post('/update-ajax', [CartClientController::class, 'updateAjax'])->name('carts.updateAjax');
         Route::delete('/remove/{id}', [CartClientController::class, 'removeFromCart'])->name('carts.remove');
@@ -183,6 +191,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::patch('{order}/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
         Route::put('/{id}/cancel', [OrderController::class, 'cancel'])->name('cancel');
         Route::put('/{id}/reject', [OrderController::class, 'reject'])->name('reject');
+        Route::post('/return-items/{id}/approve', [OrderController::class, 'approveReturnItem'])
+            ->name('approve_return_item');
+        Route::post('/return-items/{id}/reject', [OrderController::class, 'rejectReturnItem'])
+            ->name('reject_return_item');
+
         Route::post('/{id}/approve-return', [OrderController::class, 'approveReturn'])
             ->name('approve_return');
         Route::post('/{id}/reject-return', [OrderController::class, 'rejectReturn'])
@@ -218,3 +231,26 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 Route::get('/filter-category', [HomeController::class, 'filterByCategory'])->name('home.filter.category');
+
+use App\Http\Controllers\clients\OrderNotificationController;
+
+Route::middleware('auth')->group(function () {
+    // Lấy danh sách thông báo (cho popup chuông)
+    Route::get('/order-notifications/fetch', [OrderNotificationController::class, 'fetch'])
+        ->name('order.notifications.fetch');
+
+    // Trang chi tiết thông báo đơn hàng
+    Route::get('/notifications/order/{orderId}', [OrderNotificationController::class, 'show'])
+        ->name('notifications.order.show');
+
+    // Trang xem tất cả thông báo đơn hàng
+    Route::get('/notifications/orders', [OrderNotificationController::class, 'index'])
+        ->name('notifications.orders.index');
+});
+
+
+Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/messages', [MessageController::class, 'adminIndex'])->name('admin.messages.index');
+    Route::get('/messages/{userId}', [MessageController::class, 'getMessagesWithUser'])->name('admin.messages.user');
+    Route::post('/messages/send', [MessageController::class, 'adminSend'])->name('admin.messages.send');
+});

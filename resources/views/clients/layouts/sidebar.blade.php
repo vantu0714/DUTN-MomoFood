@@ -1,4 +1,5 @@
 <!-- Navbar với active state động -->
+@vite('resources/js/app.js')
 <div class="container-fluid fixed-top">
     <!-- Topbar -->
     <div class="bg-momo-gradient py-2 border-bottom border-white border-opacity-25">
@@ -16,7 +17,7 @@
             <div class="top-link pe-2">
                 <a href="#" class="text-white me-3">Chính sách bảo mật</a>
                 <a href="#" class="text-white me-3">Điều khoản sử dụng</a>
-                <a href="#" class="text-white">Bán hàng và hoàn tiền</a>
+                <a href="#" class="text-white">Thông báo</a>
             </div>
         </div>
     </div>
@@ -90,6 +91,35 @@
                             {{ $cartCount }}
                         </span>
                     </a>
+<!-- Notifications -->
+<li class="nav-item dropdown me-4 list-unstyled">
+    <a class="nav-link position-relative" href="#" id="orderNotiDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa fa-bell fa-2x text-warning"></i>
+        <span id="order-noti-count"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            0
+        </span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end shadow"
+        aria-labelledby="orderNotiDropdown"
+        style="width: 350px; max-height: 400px; overflow-y: auto;">
+        <li class="dropdown-header fw-bold">Thông báo đơn hàng</li>
+        <div id="order-noti-items"></div>
+        <li>
+            <a class="dropdown-item text-center" href="{{ route('notifications.orders.index') }}">
+            Xem tất cả
+        </a>
+        </li>
+    </ul>
+</li>
+
+                    <!-- Nút mở chat -->
+                    {{-- <li class="nav-item position-relative">
+                        <a href="javascript:void(0)" id="chatToggle" class="nav-link">
+                            <i class="fas fa-comments"></i>
+                        </a>
+                    </li> --}}
+
 
                     @auth
                         <div class="position-relative d-flex">
@@ -212,14 +242,14 @@
         }
 
         function displayResults(products) {
-    if (products.length === 0) {
-        searchResults.innerHTML =
-            '<div class="search-item no-results">Không tìm thấy sản phẩm nào</div>';
-    } else {
-        searchResults.innerHTML = products.map(product => {
-            const hasDiscount = product.has_discount;
+            if (products.length === 0) {
+                searchResults.innerHTML =
+                    '<div class="search-item no-results">Không tìm thấy sản phẩm nào</div>';
+            } else {
+                searchResults.innerHTML = products.map(product => {
+                    const hasDiscount = product.has_discount;
 
-            return `
+                    return `
         <div class="search-item" onclick="window.location.href='${product.url}'">
             <div class="search-item-image-container">
                 <img src="${product.image}"
@@ -243,10 +273,10 @@
             </div>
         </div>
         `;
-        }).join('');
-    }
-    showDropdown();
-}
+                }).join('');
+            }
+            showDropdown();
+        }
 
         function showDropdown() {
             searchDropdown.style.display = 'block';
@@ -339,228 +369,609 @@
 
     /* Dropdown tìm kiếm */
     .search-container {
-    position: relative;
-}
-
-.search-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    max-height: 450px;
-    overflow-y: auto;
-    z-index: 1000;
-    display: none;
-    margin-top: 5px;
-}
-
-.search-results {
-    padding: 4px 0;
-}
-
-.search-item {
-    display: flex;
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    border-bottom: 1px solid #f1f3f4;
-    gap: 12px;
-    align-items: flex-start;
-}
-
-.search-item:hover {
-    background-color: #f8f9fa;
-}
-
-.search-item:last-child {
-    border-bottom: none;
-}
-
-.search-item-image-container {
-    flex-shrink: 0;
-    width: 60px;
-    height: 60px;
-}
-
-.search-item-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-}
-
-.search-item-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-}
-
-.search-item-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: #1f2937;
-    margin: 0;
-    line-height: 1.3;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-.search-item-category {
-    font-size: 12px;
-    color: #6b7280;
-    background: #f0f0f0;
-    padding: 2px 6px;
-    border-radius: 4px;
-    display: inline-block;
-    width: fit-content;
-}
-
-.search-item-price-section {
-    margin-top: auto;
-}
-
-.search-item-price-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.search-item-price.current {
-    font-weight: 600;
-    color: #d56a58;
-    font-size: 14px;
-}
-
-.search-item-price.original {
-    font-size: 12px;
-    color: #9ca3af;
-    text-decoration: line-through;
-    font-weight: 400;
-}
-
-.no-results {
-    text-align: center;
-    color: #6b7280;
-    font-style: italic;
-    padding: 24px 20px;
-    border-bottom: none !important;
-    cursor: default !important;
-}
-
-.no-results:hover {
-    background-color: transparent !important;
-}
-
-/* Scrollbar styling */
-.search-dropdown::-webkit-scrollbar {
-    width: 6px;
-}
-
-.search-dropdown::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.search-dropdown::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.search-dropdown::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .search-container {
-        min-width: 250px !important;
+        position: relative;
     }
 
     .search-dropdown {
-        left: -20px;
-        right: -20px;
-        max-height: 350px;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        max-height: 450px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        margin-top: 5px;
+    }
+
+    .search-results {
+        padding: 4px 0;
     }
 
     .search-item {
-        padding: 10px 12px;
-        gap: 10px;
+        display: flex;
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        border-bottom: 1px solid #f1f3f4;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .search-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .search-item:last-child {
+        border-bottom: none;
     }
 
     .search-item-image-container {
-        width: 50px;
-        height: 50px;
+        flex-shrink: 0;
+        width: 60px;
+        height: 60px;
+    }
+
+    .search-item-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .search-item-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
     }
 
     .search-item-name {
-        font-size: 13px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #1f2937;
+        margin: 0;
+        line-height: 1.3;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
     }
 
-    .search-item-code {
-        font-size: 11px;
-        padding: 1px 4px;
+    .search-item-category {
+        font-size: 12px;
+        color: #6b7280;
+        background: #f0f0f0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+        width: fit-content;
     }
 
-    .search-item-header {
-        gap: 4px;
-        align-items: flex-start;
+    .search-item-price-section {
+        margin-top: auto;
     }
 
     .search-item-price-group {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-
-    .search-item-price.current {
-        font-size: 13px;
-    }
-
-    .search-item-category {
-        font-size: 11px;
-    }
-}
-
-@media (max-width: 480px) {
-    .search-dropdown {
-        left: -30px;
-        right: -30px;
-        max-height: 300px;
-    }
-
-    .search-item {
-        padding: 8px 10px;
+        display: flex;
+        align-items: center;
         gap: 8px;
     }
 
-    .search-item-image-container {
-        width: 45px;
-        height: 45px;
-    }
-
-    .search-item-name {
-        font-size: 12px;
-    }
-
-    .search-item-category {
-        font-size: 10px;
-    }
-
     .search-item-price.current {
-        font-size: 12px;
+        font-weight: 600;
+        color: #d56a58;
+        font-size: 14px;
     }
 
     .search-item-price.original {
-        font-size: 11px;
+        font-size: 12px;
+        color: #9ca3af;
+        text-decoration: line-through;
+        font-weight: 400;
     }
-}
+
+    .no-results {
+        text-align: center;
+        color: #6b7280;
+        font-style: italic;
+        padding: 24px 20px;
+        border-bottom: none !important;
+        cursor: default !important;
+    }
+
+    .no-results:hover {
+        background-color: transparent !important;
+    }
+
+    /* Scrollbar styling */
+    .search-dropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .search-dropdown::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .search-dropdown::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    .search-dropdown::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .search-container {
+            min-width: 250px !important;
+        }
+
+        .search-dropdown {
+            left: -20px;
+            right: -20px;
+            max-height: 350px;
+        }
+
+        .search-item {
+            padding: 10px 12px;
+            gap: 10px;
+        }
+
+        .search-item-image-container {
+            width: 50px;
+            height: 50px;
+        }
+
+        .search-item-name {
+            font-size: 13px;
+        }
+
+        .search-item-code {
+            font-size: 11px;
+            padding: 1px 4px;
+        }
+
+        .search-item-header {
+            gap: 4px;
+            align-items: flex-start;
+        }
+
+        .search-item-price-group {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .search-item-price.current {
+            font-size: 13px;
+        }
+
+        .search-item-category {
+            font-size: 11px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .search-dropdown {
+            left: -30px;
+            right: -30px;
+            max-height: 300px;
+        }
+
+        .search-item {
+            padding: 8px 10px;
+            gap: 8px;
+        }
+
+        .search-item-image-container {
+            width: 45px;
+            height: 45px;
+        }
+
+        .search-item-name {
+            font-size: 12px;
+        }
+
+        .search-item-category {
+            font-size: 10px;
+        }
+
+        .search-item-price.current {
+            font-size: 12px;
+        }
+
+        .search-item-price.original {
+            font-size: 11px;
+        }
+    }
 </style>
+
+
+<script>
+    function loadOrderNotifications() {
+    fetch("{{ route('order.notifications.fetch') }}")
+        .then(res => res.json())
+        .then(data => {
+            let html = "";
+            let count = data.length;
+
+            data.forEach(noti => {
+                html += `
+                    <li class="dropdown-item">
+                        <a href="${noti.link}">
+                            <div><strong>${noti.message}</strong></div>
+                            <small>${noti.time ?? ''}</small>
+                        </a>
+                    </li>
+                `;
+            });
+
+            document.getElementById("order-noti-items").innerHTML = html || '<li class="dropdown-item">Chưa có thông báo</li>';
+            document.getElementById("order-noti-count").innerText = count > 0 ? count : '';
+        });
+}
+
+// load ngay khi vào trang
+loadOrderNotifications();
+// load lại mỗi 10 giây
+setInterval(loadOrderNotifications, 10000);
+
+</script>
+<!-- Sidebar Chat -->
+
+<div id="chatSidebar" class="chat-sidebar">
+    <div class="chat-header">
+        <div class="header-info">
+            <div class="status-indicator"></div>
+            <span>Hỗ trợ trực tuyến</span>
+        </div>
+        <button id="closeChat">×</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <!-- Welcome message -->
+        <div class="welcome-message">
+            <img src="{{ asset('/admins/assets/img/avt_admin.png') }}" alt="Admin">
+            <p>Xin chào! Tôi có thể giúp gì cho bạn?</p>
+        </div>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="chatMessageInput" placeholder="Aa...">
+        <button id="sendMessage">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<style>
+    .chat-sidebar {
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        width: 380px;
+        height: 550px;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        z-index: 10000;
+        transform: translateY(110%);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        opacity: 0;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .chat-sidebar.open {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .chat-header {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #FFE5B4 0%, #F08080 100%);
+        color: #ffffff;
+        border-radius: 20px 20px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .header-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        background: #10b981;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+
+    .chat-header button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: #ffffff;
+        font-size: 24px;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .chat-header button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+
+    .welcome-message {
+        text-align: center;
+        padding: 20px;
+        opacity: 0.7;
+    }
+
+    .welcome-message img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-bottom: 10px;
+    }
+
+    .welcome-message p {
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .message-container {
+        display: flex;
+        align-items: flex-end;
+        margin: 12px 0;
+        width: 100%;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message-container.me {
+        justify-content: flex-end;
+    }
+
+    .message-container.other {
+        justify-content: flex-start;
+    }
+
+    .message {
+        max-width: 75%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        line-height: 1.5;
+        font-size: 14px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .message:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .me .message {
+        background: linear-gradient(135deg, #FFE5B4 0%, #F08080 100%);
+        color: #ffffff;
+        border-bottom-right-radius: 6px;
+    }
+
+    .other .message {
+        background: #f3f4f6;
+        color: #1f2937;
+        border-bottom-left-radius: 6px;
+    }
+
+    .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 8px;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .me .avatar {
+        order: 1;
+    }
+
+    .other .avatar {
+        order: -1;
+    }
+
+    .chat-input {
+        display: flex;
+        padding: 12px;
+        border-top: 1px solid #e5e7eb;
+        background: #ffffff;
+        border-radius: 0 0 20px 20px;
+        gap: 10px;
+    }
+
+    .chat-input input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 25px;
+        outline: none;
+        font-size: 14px;
+        background: #f9fafb;
+        transition: all 0.3s ease;
+    }
+
+    .chat-input input:focus {
+        background: #ffffff;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .chat-input button {
+        padding: 0 16px;
+        border: none;
+        background: linear-gradient(135deg, #FFE5B4 0%, #F08080 100%);
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 50%;
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .chat-input button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .chat-input button:active {
+        transform: scale(0.95);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+        .chat-sidebar {
+            width: 100%;
+            height: 100%;
+            right: 0;
+            bottom: 0;
+            border-radius: 0;
+        }
+
+        .chat-header {
+            border-radius: 0;
+        }
+
+        .chat-input {
+            border-radius: 0;
+        }
+    }
+
+    /* Animation for typing indicator */
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 16px;
+        background: #f3f4f6;
+        border-radius: 18px;
+        border-bottom-left-radius: 6px;
+        width: fit-content;
+    }
+
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        background: #9ca3af;
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+        }
+        30% {
+            transform: translateY(-10px);
+        }
+    }
+
+    /* Time stamp */
+    .message-time {
+        font-size: 11px;
+        color: #9ca3af;
+        margin-top: 4px;
+        text-align: right;
+    }
+
+    .me .message-time {
+        color: rgba(255, 255, 255, 0.7);
+    }
+</style>
+
