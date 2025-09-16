@@ -156,3 +156,56 @@
          margin-bottom: 2rem;
      }
  </style>
+<script>
+    function loadOrderNotifications(showAll = false) {
+        let url = '/order-notifications/fetch';
+        if (showAll) url += '?all=true'; // nếu muốn lấy tất cả
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                // Badge trên chuông
+                const badge = document.getElementById('order-noti-count');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.innerText = data.count;
+                        badge.style.display = "inline-block";
+                    } else {
+                        badge.style.display = "none";
+                    }
+                }
+
+                // Danh sách thông báo trong dropdown
+                let container = document.getElementById('order-noti-items');
+                if (container) {
+                    container.innerHTML = '';
+
+                    if (data.notifications.length === 0) {
+                        container.innerHTML = '<li class="dropdown-item text-muted">Chưa có thông báo nào.</li>';
+                    } else {
+                        data.notifications.forEach(item => {
+                            container.innerHTML += `
+                                <li>
+                                    <a href="${item.link}" class="dropdown-item d-flex align-items-start">
+                                        <img src="${item.product_image}" width="40" height="40" class="me-2 rounded">
+                                        <div>
+                                            <div>${item.message}</div>
+                                            <small class="text-muted">${item.time}</small>
+                                        </div>
+                                    </a>
+                                </li>
+                            `;
+                        });
+                    }
+                }
+            })
+            .catch(err => console.error('Error load notifications:', err));
+    }
+
+    // Gọi khi load trang → mặc định lấy tất cả
+    loadOrderNotifications(true);
+
+    // Tự động refresh mỗi 30 giây → cũng lấy tất cả
+    setInterval(() => loadOrderNotifications(true), 30000);
+</script>
+
