@@ -217,6 +217,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('comments', CommentController::class)->only('index');
     Route::get('comments/{product}', [CommentController::class, 'show'])->name('comments.show');
     Route::put('comments/{comment}/toggle-status', [CommentController::class, 'toggleStatus'])->name('comments.toggle');
+    Route::post('comments/{comment}/reply', [CommentController::class, 'reply'])
+    ->name('comments.reply');
+
 
 
 
