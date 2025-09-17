@@ -12,6 +12,10 @@
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 Đăng xuất
             </a>
+            <a class="nav-link text-dark {{ request()->routeIs('notifications.orders.index') ? 'active' : '' }}"
+                href="{{ route('notifications.orders.index') }}">
+                Thông báo
+            </a>
         </nav>
         <hr class="mt-0 mb-4">
 
@@ -129,7 +133,6 @@
     @endif
 
     @if ($errors->any())
-        )
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             Swal.fire({

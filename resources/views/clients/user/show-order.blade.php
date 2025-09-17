@@ -14,7 +14,6 @@
             9 => 'Đã giao hàng',
             10 => 'Không xác nhận',
             11 => 'Giao hàng thất bại',
-            12 => 'Hoàn hàng một phần',
         ];
 
         $paymentStatusLabels = [
@@ -199,6 +198,11 @@
             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                 @csrf
             </form>
+            <a class="nav-link text-dark {{ request()->routeIs('notifications.orders.index') ? 'active' : '' }}"
+                href="{{ route('notifications.orders.index') }}"
+                style="text-black">
+                Thông báo
+            </a>
         </nav>
         <hr class="mt-0 mb-4">
 
@@ -477,6 +481,7 @@
                                     <th width="8%" class="text-center">SL</th>
                                     <th width="20%" class="text-end">Đơn giá</th>
                                     <th width="20%" class="text-end">Thành tiền</th>
+                                    <th width="20%" class="text-end">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -489,6 +494,14 @@
                                                 ->map(fn($value) => $value->attribute->name . ': ' . $value->value)
                                                 ->toArray()
                                             : [];
+
+                                        // ✅ Kiểm tra đã đánh giá chưa (theo product_id + variant_id)
+                                        $alreadyRated = \App\Models\Comment::where('user_id', Auth::id())
+                                            ->where('product_id', $product->id)
+                                            ->when($variant, function ($q) use ($variant) {
+                                                $q->where('product_variant_id', $variant->id);
+                                            })
+                                            ->exists();
                                     @endphp
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
@@ -518,9 +531,102 @@
                                         <td class="text-end fw-bold text-primary">
                                             {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫
                                         </td>
+                                        <td>
+                                            {{-- Chỉ hiển thị nút nếu đơn hoàn thành --}}
+                                            @if ($order->status == 4 && !$alreadyRated)
+                                                <button type="button" class="btn btn-danger btn-danh-gia"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#reviewModal{{ $item->id }}">
+                                                    Đánh giá
+                                                </button>
+                                            @elseif ($order->status == 4 && $alreadyRated)
+                                                <span class="badge bg-success">✅ Đã đánh giá</span>
+                                            @endif
+                                        </td>
                                     </tr>
+
+                                    {{-- Modal chỉ render khi chưa đánh giá --}}
+                                    @if ($order->status == 4 && !$alreadyRated)
+                                        <div class="modal fade" id="reviewModal{{ $item->id }}" tabindex="-1"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <form action="{{ route('clients.comments.store') }}" method="POST"
+                                                        enctype="multipart/form-data">
+                                                        @csrf
+                                                        <input type="hidden" name="product_id"
+                                                            value="{{ $product->id }}">
+                                                        <input type="hidden" name="product_variant_id"
+                                                            value="{{ $variant->id ?? '' }}">
+                                                        <input type="hidden" name="order_id"
+                                                            value="{{ $order->id }}">
+
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Đánh giá: {{ $product->product_name }}
+                                                            </h5>
+                                                            @if ($variantAttributes)
+                                                                <div>
+                                                                    @foreach ($variantAttributes as $attr)
+                                                                        <span
+                                                                            class="badge bg-secondary">{{ $attr }}</span>
+                                                                    @endforeach
+                                                                </div>
+                                                            @endif
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal"></button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <!-- Rating -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Chấm sao:</label>
+                                                                <select name="rating" class="form-select" required>
+                                                                    <option value="">-- Chọn sao --</option>
+                                                                    @for ($i = 1; $i <= 5; $i++)
+                                                                        <option value="{{ $i }}">
+                                                                            {{ $i }} ⭐</option>
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+
+                                                            <!-- Nội dung -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Nội dung:</label>
+                                                                <textarea name="content" class="form-control" rows="3" required></textarea>
+                                                            </div>
+
+                                                            <!-- Ảnh -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Ảnh (tối đa 5, ảnh + video ≤
+                                                                    5):</label>
+                                                                <input type="file" name="images[]"
+                                                                    class="form-control media-input" accept="image/*"
+                                                                    multiple>
+                                                            </div>
+
+                                                            <!-- Video -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Video (1 video, tổng ảnh + video
+                                                                    ≤ 5):</label>
+                                                                <input type="file" name="video"
+                                                                    class="form-control media-input" accept="video/*">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-primary">Gửi đánh
+                                                                giá</button>
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Đóng</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endforeach
                             </tbody>
+
                         </table>
                     </div>
 
@@ -557,10 +663,15 @@
 
                 <!-- Các nút hành động -->
                 <div class="d-flex justify-content-between mt-4">
-                    <a href="{{ route('clients.orders') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Quay lại
-                    </a>
+                    <!-- Bên trái -->
+                    <div>
+                        <a href="{{ route('clients.orders') }}" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i> Quay lại
+                        </a>
+                    </div>
 
+
+                    <!-- Bên phải -->
                     <div>
                         @if ($canReturn)
                             <button type="button" class="btn btn-warning ms-2" data-toggle-form="return-form">
@@ -570,7 +681,7 @@
 
                         @if ($order->status == 1)
                             <button type="button" class="btn btn-danger ms-2" data-toggle-form="cancel-form">
-                                <i class="fas fa-trash-alt me-2"></i>Hủy đơn hàng
+                                <i class="fas fa-trash-alt me-2"></i> Hủy đơn hàng
                             </button>
                         @endif
 
@@ -581,6 +692,7 @@
                         @endif
                     </div>
                 </div>
+
 
                 <!-- Form yêu cầu hoàn hàng -->
                 @if ($canReturn)
@@ -602,7 +714,7 @@
                                 @endif
 
                                 <form action="{{ route('clients.request_return', $order->id) }}" method="POST"
-                                    enctype="multipart/form-data" id="returnRequestForm">
+                                    data-confirm="Bạn chắc chắn muốn yêu cầu hoàn hàng này?">
                                     @csrf
 
                                     <div class="mb-4">
@@ -763,6 +875,23 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+        <script>
+            function setRating(rating, itemId) {
+                let stars = document.querySelectorAll(`#reviewModal-${itemId} .star`);
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.remove('text-muted');
+                        star.classList.add('text-warning');
+                    } else {
+                        star.classList.remove('text-warning');
+                        star.classList.add('text-muted');
+                    }
+                });
+                document.getElementById(`rating-value-${itemId}`).value = rating;
+            }
+        </script>
+    @endpush
 
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
 

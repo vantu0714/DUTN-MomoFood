@@ -6,7 +6,6 @@
             <h3 class="fw-bold text-info">
                 💬 Bình luận cho sản phẩm: <span class="text-dark">{{ $product->product_name }}</span>
             </h3>
-
             <a href="{{ route('admin.comments.index') }}" class="btn btn-outline-secondary rounded-pill shadow-sm">
                 ⬅ Quay lại
             </a>
@@ -20,44 +19,41 @@
             <div class="card mb-4 shadow-sm border-0 rounded-4">
                 <div class="card-body p-4">
                     <div class="row align-items-start">
-                        {{-- Nội dung bình luận --}}
                         <div class="col-md-9">
                             <p class="mb-2"><strong>👤 Người dùng:</strong> {{ $comment->user->email ?? 'Ẩn danh' }}</p>
-
                             <p class="mb-2"><strong>✍ Nội dung:</strong> {{ $comment->content }}</p>
 
-                            {{-- Hiển thị video + hình ảnh nếu có --}}
-                            @if ($comment->video || $comment->images->count() > 0)
-                                <div class="mb-3">
-                                    <strong>🎥 Video & 🖼 Hình ảnh:</strong><br>
-                                    <div class="d-grid gap-2 mt-2"
-                                        style="grid-template-columns: repeat(5, 1fr); max-width: 1000px;">
-
-                                        {{-- Video trước --}}
-                                        @if ($comment->video)
-                                            <video controls class="rounded shadow-sm w-100"
-                                                style="height: 120px; object-fit: cover;">
-                                                <source src="{{ asset('storage/' . $comment->video) }}" type="video/mp4">
-                                                Trình duyệt của bạn không hỗ trợ video.
-                                            </video>
-                                        @endif
-
-                                        {{-- Sau đó đến ảnh --}}
-                                        @foreach ($comment->images as $img)
-                                            <img src="{{ asset('storage/' . $img->path) }}" alt="Hình ảnh bình luận"
-                                                class="img-thumbnail rounded w-100"
-                                                style="height: 120px; object-fit: cover;">
-                                        @endforeach
+                            {{-- Form trả lời --}}
+                            <div class="mt-3">
+                                <form action="{{ route('admin.comments.reply', $comment->id) }}" method="POST">
+                                    @csrf
+                                    <div class="input-group">
+                                        <input type="text" name="content" class="form-control"
+                                            placeholder="Nhập câu trả lời của admin...">
+                                        <button type="submit" class="btn btn-primary">Trả lời</button>
                                     </div>
+                                </form>
+                            </div>
+
+                            {{-- Replies --}}
+                            @if ($comment->replies->count() > 0)
+                                <div class="mt-3 ms-4 border-start ps-3">
+                                    <h6 class="fw-bold">Phản hồi:</h6>
+                                    @foreach ($comment->replies as $reply)
+                                        <div class="mb-2">
+                                            <strong>{{ $reply->user->name ?? 'Admin' }}</strong>:
+                                            {{ $reply->content }}
+                                            <br>
+                                            <small class="text-muted">{{ $reply->created_at->format('d/m/Y H:i') }}</small>
+                                        </div>
+                                    @endforeach
                                 </div>
                             @endif
 
-
+                            {{-- ⭐ Số sao --}}
                             <p class="mb-2"><strong>⭐ Số sao:</strong></p>
                             <div class="mb-3">
-                                @php
-                                    $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0;
-                                @endphp
+                                @php $rating = (int) ($comment->rating ?? 0); @endphp
                                 @for ($i = 1; $i <= 5; $i++)
                                     <i class="fas fa-star fa-lg"
                                         style="color: {{ $i <= $rating ? '#ffc107' : '#e4e5e9' }}"></i>
@@ -74,7 +70,6 @@
                             </p>
                         </div>
 
-                        {{-- Nút toggle --}}
                         <div class="col-md-3 text-end">
                             <form action="{{ route('admin.comments.toggle', $comment->id) }}" method="POST">
                                 @csrf
@@ -88,7 +83,6 @@
                     </div>
                 </div>
             </div>
-
         @empty
             <div class="alert alert-info rounded-3 shadow-sm">
                 Không có bình luận nào cho sản phẩm này.

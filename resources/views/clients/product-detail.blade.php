@@ -190,9 +190,11 @@
                                         class="fa fa-star {{ $i <= round($averageRating) ? 'text-warning' : 'text-muted' }}"></i>
                                 @endfor
                             </div>
+
                             <div class="review-count border-end px-4">
-                                <span
-                                    class="fw-bold text-dark">{{ number_format($product->comments->count()) }}</span>
+                                <span class="fw-bold text-dark">
+                                    {{ $product->comments->whereNull('parent_id')->count() }}
+                                </span>
                                 <span class="text-muted">Đánh Giá</span>
                             </div>
                             <div class="sold-count ps-4">
@@ -399,7 +401,13 @@
                                     Đánh giá của người dùng
                                 </h4>
                                 @php
-                                    $comments = $product->comments->where('status', 1);
+                                    $comments = $product
+                                        ->comments()
+                                        ->where('status', 1)
+                                        ->whereNull('parent_id')
+                                        ->with(['replies.user', 'images'])
+                                        ->latest()
+                                        ->get();
                                 @endphp
 
                                 <div id="comment-list">
@@ -415,13 +423,12 @@
 
                                             <!-- Nội dung bình luận -->
                                             <div class="flex-grow-1">
-                                                <!-- Header: tên + sao + ngày -->
+                                                <!-- Header -->
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <div>
                                                         <h6 class="mb-0 fw-bold text-dark">
                                                             {{ $comment->user->name ?? 'Ẩn danh' }}</h6>
-                                                        <!-- Số sao -->
-                                                        @php $rating = is_numeric($comment->rating) ? (int) $comment->rating : 0; @endphp
+                                                        @php $rating = (int) ($comment->rating ?? 0); @endphp
                                                         <div>
                                                             @for ($i = 1; $i <= 5; $i++)
                                                                 <i class="fas fa-star"
@@ -441,26 +448,38 @@
                                                 <!-- Media -->
                                                 @if ($comment->images->count() || $comment->video)
                                                     <div class="d-flex flex-wrap gap-2 mt-2">
-                                                        {{-- Video trước --}}
                                                         @if ($comment->video)
-                                                            <div class="media-item">
-                                                                <video class="rounded shadow-sm"
-                                                                    style="width: 140px; height: 140px; object-fit: cover;"
-                                                                    controls>
-                                                                    <source
-                                                                        src="{{ asset('storage/' . $comment->video) }}"
-                                                                        type="video/mp4">
-                                                                    Trình duyệt không hỗ trợ video.
-                                                                </video>
-                                                            </div>
+                                                            <video class="rounded shadow-sm"
+                                                                style="width: 140px; height: 140px; object-fit: cover;"
+                                                                controls>
+                                                                <source
+                                                                    src="{{ asset('storage/' . $comment->video) }}"
+                                                                    type="video/mp4">
+                                                                Trình duyệt không hỗ trợ video.
+                                                            </video>
                                                         @endif
-
-                                                        {{-- Các ảnh --}}
                                                         @foreach ($comment->images as $img)
-                                                            <div class="media-item">
-                                                                <img src="{{ asset('storage/' . $img->path) }}"
-                                                                    class="rounded shadow-sm"
-                                                                    style="width: 140px; height: 140px; object-fit: cover;">
+                                                            <img src="{{ asset('storage/' . $img->path) }}"
+                                                                class="rounded shadow-sm"
+                                                                style="width: 140px; height: 140px; object-fit: cover;">
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+
+                                                <!-- Replies (admin trả lời) -->
+                                                @if ($comment->replies->count() > 0)
+                                                    <div class="mt-3 ms-4 border-start ps-3">
+                                                        @foreach ($comment->replies as $reply)
+                                                            <div class="mb-2">
+                                                                <img src="http://127.0.0.1:8000/clients/img/logo_datn.png"
+                                                                    class="rounded-circle border"
+                                                                    style="width: 45px; height: 45px; object-fit: cover;"
+                                                                    alt="Avatar">
+                                                                <strong class="text-primary">MOMOFOOD</strong>:
+                                                                {{ $reply->content }}
+                                                                <br>
+                                                                <small
+                                                                    class="text-muted">{{ $reply->created_at->format('d/m/Y H:i') }}</small>
                                                             </div>
                                                         @endforeach
                                                     </div>
@@ -473,9 +492,8 @@
                                             <p class="text-muted">Chưa có bình luận nào cho sản phẩm này.</p>
                                         </div>
                                     @endforelse
+
                                 </div>
-
-
                                 {{-- Nút "Xem thêm" --}}
                                 @if ($comments->count() > 2)
                                     <div class="text-center mt-3">
@@ -485,9 +503,6 @@
                                         </button>
                                     </div>
                                 @endif
-
-
-
                             </div>
                         </div>
                     </div>

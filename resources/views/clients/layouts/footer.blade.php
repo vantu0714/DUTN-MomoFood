@@ -156,3 +156,397 @@
          margin-bottom: 2rem;
      }
  </style>
+<script>
+    function loadOrderNotifications(showAll = false) {
+        let url = '/order-notifications/fetch';
+        if (showAll) url += '?all=true'; // nếu muốn lấy tất cả
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                // Badge trên chuông
+                const badge = document.getElementById('order-noti-count');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.innerText = data.count;
+                        badge.style.display = "inline-block";
+                    } else {
+                        badge.style.display = "none";
+                    }
+                }
+
+                // Danh sách thông báo trong dropdown
+                let container = document.getElementById('order-noti-items');
+                if (container) {
+                    container.innerHTML = '';
+
+                    if (data.notifications.length === 0) {
+                        container.innerHTML = '<li class="dropdown-item text-muted">Chưa có thông báo nào.</li>';
+                    } else {
+                        data.notifications.forEach(item => {
+                            container.innerHTML += `
+                                <li>
+                                    <a href="${item.link}" class="dropdown-item d-flex align-items-start">
+                                        <img src="${item.product_image}" width="40" height="40" class="me-2 rounded">
+                                        <div>
+                                            <div>${item.message}</div>
+                                            <small class="text-muted">${item.time}</small>
+                                        </div>
+                                    </a>
+                                </li>
+                            `;
+                        });
+                    }
+                }
+            })
+            .catch(err => console.error('Error load notifications:', err));
+    }
+
+    // Gọi khi load trang → mặc định lấy tất cả
+    loadOrderNotifications(true);
+
+    // Tự động refresh mỗi 30 giây → cũng lấy tất cả
+    setInterval(() => loadOrderNotifications(true), 30000);
+</script>
+
+
+ 
+
+<!-- Floating Chat Button -->
+<div class="floating-chat-button" id="chatToggle">
+    <div class="chat-icon-wrapper">
+        <i class="fas fa-comments"></i>
+        <span class="notification-badge" id="unreadCount" style="display: none;">0</span>
+    </div>
+    <div class="chat-tooltip">Cần hỗ trợ?</div>
+</div>
+
+<style>
+    .floating-chat-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #FFE5B4 0%, #F08080 100%);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        z-index: 9999;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .floating-chat-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .floating-chat-button:active {
+        transform: scale(0.95);
+    }
+
+    .chat-icon-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .floating-chat-button i {
+        font-size: 26px;
+        color: #ffffff;
+        transition: all 0.3s ease;
+    }
+
+    .floating-chat-button:hover i {
+        transform: rotate(10deg);
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ef4444;
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-weight: 600;
+        min-width: 18px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+        animation: pulse-badge 2s infinite;
+        border: 2px solid #ffffff;
+    }
+
+    @keyframes pulse-badge {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    /* Tooltip */
+    .chat-tooltip {
+        position: absolute;
+        bottom: 70px;
+        right: 0;
+        background: #1f2937;
+        color: #ffffff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .chat-tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        right: 20px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #1f2937 transparent transparent transparent;
+    }
+
+    .floating-chat-button:hover .chat-tooltip {
+        opacity: 1;
+        bottom: 80px;
+    }
+
+    .floating-chat-button.chat-open {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        transform: rotate(90deg);
+    }
+
+    .floating-chat-button.chat-open i::before {
+        content: "\f00d"; 
+    }
+
+    .floating-chat-button::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #FFE5B4 0%, #F08080 100%);
+        border-radius: 50%;
+        z-index: -1;
+        animation: pulse-ring 2s infinite;
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .floating-chat-button {
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+        }
+        
+        .floating-chat-button i {
+            font-size: 24px;
+        }
+    }
+
+    .messenger-style {
+        background: linear-gradient(135deg, #0084ff 0%, #0066cc 100%);
+    }
+
+    .whatsapp-style {
+        background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    }
+
+    .modern-gradient {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .chat-sidebar.open ~ .floating-chat-button {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0);
+    }
+
+    .chat-sidebar {
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        width: 380px;
+        height: 550px;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        z-index: 10000;
+        transform: translateY(110%) scale(0.8);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        opacity: 0;
+        transform-origin: bottom right;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .chat-sidebar.open {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const adminId = 5;
+        const userId = "{{ auth()->id() }}";
+        const userAvatar = "{{ auth()->user() && auth()->user()->avatar ? Storage::url(auth()->user()->avatar) : '/admins/assets/img/avt_admin.png' }}";
+        const adminAvatar = "{{ asset('/admins/assets/img/avt_admin.png') }}";
+        
+        const chatToggle = document.getElementById('chatToggle');
+        const chatSidebar = document.getElementById('chatSidebar');
+        
+        chatToggle.addEventListener('click', () => {
+            const isOpen = chatSidebar.classList.contains('open');
+            
+            if (isOpen) {
+                chatSidebar.classList.remove('open');
+                chatToggle.classList.remove('chat-open');
+            } else {
+                chatSidebar.classList.add('open');
+                chatToggle.classList.add('chat-open');
+                loadMessages();
+                document.getElementById('unreadCount').style.display = 'none';
+                document.getElementById('unreadCount').textContent = '0';
+            }
+        });
+
+        document.getElementById('closeChat').addEventListener('click', () => {
+            chatSidebar.classList.remove('open');
+            chatToggle.classList.remove('chat-open');
+        });
+
+        document.getElementById('chatMessageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('sendMessage').click();
+            }
+        });
+
+        document.getElementById('sendMessage').addEventListener('click', () => {
+            let msg = document.getElementById('chatMessageInput').value;
+            if (!msg.trim()) return;
+
+            fetch('/clients/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        to_id: adminId,
+                        message: msg
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    let chatBox = document.getElementById('chatMessages');
+                    chatBox.innerHTML +=
+                        `<div class="message-container me">
+                            <div class="message"> ${data.message.message}</div>
+                            <img src="${userAvatar}" class="avatar">
+                        </div>`;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+
+                    document.getElementById('chatMessageInput').value = '';
+                });
+        });
+
+        function loadMessages() {
+            fetch(`/clients/messages/${adminId}`)
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    data.forEach(msg => {
+                        if (msg.from_id == userId) {
+                            html += `<div class="message-container me">
+                                        <div class="message">${msg.message}</div>
+                                        <img src="${userAvatar}" class="avatar">
+                                     </div>`;
+                        } else {
+                            html += `<div class="message-container other">
+                                        <img src="${adminAvatar}" class="avatar">
+                                        <div class="message">${msg.message}</div>
+                                     </div>`;
+                        }
+                    });
+                    let chatBox = document.getElementById('chatMessages');
+                    chatBox.innerHTML = html;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                });
+        }
+
+        let unreadCount = 0;
+        
+        window.Echo.private(`chat.${userId}`)
+            .listen('MessageSent', (e) => {
+                let chatBox = document.getElementById('chatMessages');
+                const isChatOpen = chatSidebar.classList.contains('open');
+
+                if (e.message.to_id == userId) {
+                    chatBox.innerHTML += `<div class="message-container me">
+                                            <div class="message">Bạn: ${e.message}</div>
+                                            <img src="${userAvatar}" class="avatar">
+                                         </div>`;
+                } else {
+                    chatBox.innerHTML += `<div class="message-container other">
+                                            <img src="${adminAvatar}" class="avatar">
+                                            <div class="message"> ${e.message}</div>
+                                         </div>`;
+
+                    if (!isChatOpen) {
+                        unreadCount++;
+                        const badge = document.getElementById('unreadCount');
+                        badge.textContent = unreadCount;
+                        badge.style.display = 'block';
+                    }
+
+                    Toastify({
+                        text: "Bạn có tin nhắn mới từ quản trị viên",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        stopOnFocus: true
+                    }).showToast();
+                }
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+    });
+</script>

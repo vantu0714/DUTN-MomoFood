@@ -52,6 +52,7 @@ class HomeController extends Controller
         $bestSellingProducts = Product::with('category')
             ->where('status', 1)
             ->where('quantity_in_stock', '>', 0)
+            ->where('sold_count', '>', 5)
             ->orderByDesc('sold_count')
             ->take(8)
             ->get();
@@ -177,11 +178,11 @@ class HomeController extends Controller
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
-                        $q2->where('product_type', 'variant')
-                            ->whereHas('variants', function ($q3) {
-                                $q3->where('quantity_in_stock', '>', 0);
-                            });
-                    });
+                    $q2->where('product_type', 'variant')
+                        ->whereHas('variants', function ($q3) {
+                            $q3->where('quantity_in_stock', '>', 0);
+                        });
+                });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()
