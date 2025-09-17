@@ -94,6 +94,8 @@ Route::middleware(['auth', 'client'])->group(function () {
         Route::post('/orders/{id}/cancel', [ClientsOrderController::class, 'cancel'])->name('ordercancel');
         Route::post('/order/{id}/request-return', [ClientsOrderController::class, 'requestReturn'])
             ->name('request_return');
+        Route::get('/orders/{id}/edit-return', [ClientsOrderController::class, 'editReturn'])->name('edit_return');
+        Route::put('/orders/{id}/update-return', [ClientsOrderController::class, 'updateReturn'])->name('update_return');
 
         //mess
         Route::get('/messages/{userId}', [MessageController::class, 'index'])->name('messages.index');

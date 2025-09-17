@@ -218,16 +218,6 @@
             </div>
 
             <div class="card-body">
-                <!-- Thông báo -->
-                @foreach (['info', 'success', 'error'] as $type)
-                    @if (session($type))
-                        <div class="alert alert-{{ $type }} alert-dismissible fade show">
-                            {{ session($type) }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-                @endforeach
-
                 <!-- Thông tin nhận hàng -->
                 <div class="card mb-4">
                     <div class="card-header bg-light py-2">
@@ -583,6 +573,12 @@
                                 <i class="fas fa-trash-alt me-2"></i>Hủy đơn hàng
                             </button>
                         @endif
+
+                        @if ($order->status == 7)
+                            <a href="{{ route('clients.edit_return', $order->id) }}" class="btn btn-info ms-2">
+                                <i class="fas fa-edit me-2"></i> Chỉnh sửa yêu cầu hoàn hàng
+                            </a>
+                        @endif
                     </div>
                 </div>
 
@@ -601,13 +597,6 @@
                                                 <li>{{ $error }}</li>
                                             @endforeach
                                         </ul>
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                    </div>
-                                @endif
-
-                                @if (session('return_error'))
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        {{ session('return_error') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                     </div>
                                 @endif
@@ -779,6 +768,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            @foreach (['info', 'success', 'error'] as $type)
+                @if (session($type))
+                    showToast('{{ session($type) }}', '{{ $type }}');
+                @endif
+            @endforeach
+
             document.querySelectorAll('[data-toggle-form]').forEach(button => {
                 button.addEventListener('click', function() {
                     const formId = this.getAttribute('data-toggle-form');
@@ -788,9 +783,7 @@
                     }
                 });
             });
-        });
 
-        document.addEventListener('DOMContentLoaded', function() {
             initializeReturnForm();
         });
 
