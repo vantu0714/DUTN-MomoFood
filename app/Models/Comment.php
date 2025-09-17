@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Comment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'product_id',
@@ -15,14 +17,17 @@ class Comment extends Model
         'rating',
         'status',
         'image',
-        'video', // Trạng thái bình luận: 1 - hiển thị, 0 - ẩn
+        'video',
+        'parent_id',
     ];
-    // Liên kết đến người dùng
+
+    // Liên kết đến sản phẩm
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
+    // Liên kết đến người dùng
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -33,8 +38,19 @@ class Comment extends Model
     {
         return $query->where('rating', '>', 0);
     }
+
     public function images()
     {
         return $this->hasMany(Image::class);
+    }
+
+    public function replies()
+    {
+        return $this->hasMany(Comment::class, 'parent_id')->where('status', 1);
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Comment::class, 'parent_id');
     }
 }
