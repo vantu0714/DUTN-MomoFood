@@ -306,28 +306,6 @@ class OrderController extends Controller
         elseif ($newStatus == 4) {
             $order->status = 4;
             $order->completed_at = now();
-
-            foreach ($order->orderDetails as $detail) {
-                $product = Product::find($detail->product_id);
-
-                if ($product) {
-                    // Nếu là sản phẩm đơn (simple) → trừ tồn kho trực tiếp
-                    if ($product->product_type === 'simple') {
-                        $product->decrement('quantity_in_stock', $detail->quantity);
-                    }
-
-                    // Nếu là sản phẩm có biến thể → trừ tồn kho ở bảng product_variants
-                    elseif ($product->product_type === 'variant' && $detail->product_variant_id) {
-                        DB::table('product_variants')
-                            ->where('id', $detail->product_variant_id)
-                            ->decrement('quantity_in_stock', $detail->quantity);
-                    }
-
-                    // Tăng số lượng đã bán cho sản phẩm chính
-                    $product->increment('sold_count', $detail->quantity);
-                }
-            }
-
             $order->save();
         }
         // Hoàn hàng (5) → Yêu cầu lý do
