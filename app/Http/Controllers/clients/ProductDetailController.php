@@ -17,7 +17,7 @@ class ProductDetailController extends Controller
                 $q->select('id', 'product_id', 'price', 'quantity_in_stock', 'image', 'status');
             },
             'variants.attributeValues.attribute',
-            'comments' => fn($q) => $q->latest(),
+            'comments' => fn($q) => $q->whereNull('parent_id')->latest(),
             'comments.user'
         ])->findOrFail($id);
 
@@ -60,7 +60,11 @@ class ProductDetailController extends Controller
         }
 
         // Trung bình rating
-        $averageRating = round($product->comments->avg('rating'), 1) ?? 0;
+        $averageRating = round(
+            $product->comments->whereNull('parent_id')->avg('rating'),
+            1
+        ) ?? 0;
+
 
         $hasPurchased = false;
         $hasReviewed = false;

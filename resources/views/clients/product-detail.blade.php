@@ -190,9 +190,11 @@
                                         class="fa fa-star {{ $i <= round($averageRating) ? 'text-warning' : 'text-muted' }}"></i>
                                 @endfor
                             </div>
+
                             <div class="review-count border-end px-4">
-                                <span
-                                    class="fw-bold text-dark">{{ number_format($product->comments->count()) }}</span>
+                                <span class="fw-bold text-dark">
+                                    {{ $product->comments->whereNull('parent_id')->count() }}
+                                </span>
                                 <span class="text-muted">Đánh Giá</span>
                             </div>
                             <div class="sold-count ps-4">
