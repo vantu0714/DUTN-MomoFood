@@ -54,12 +54,12 @@
                     <li class="nav-item">
                         <a href="{{ route('gioithieu.index') }}" class="nav-link"> GIỚI THIỆU </a>
                     </li>
-                    <li class="nav-item">
+                    {{-- <li class="nav-item">
                         <a href="{{ route('contacts.index') }}"
                             class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}">
                             LIÊN HỆ
                         </a>
-                    </li>
+                    </li> --}}
                 </ul>
 
                 <!-- Right side icons -->
