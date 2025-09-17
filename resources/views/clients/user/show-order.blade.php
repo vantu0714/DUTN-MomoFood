@@ -394,6 +394,7 @@
                                     <th width="8%" class="text-center">SL</th>
                                     <th width="20%" class="text-end">Đơn giá</th>
                                     <th width="20%" class="text-end">Thành tiền</th>
+                                    <th width="20%" class="text-end">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -406,6 +407,14 @@
                                                 ->map(fn($value) => $value->attribute->name . ': ' . $value->value)
                                                 ->toArray()
                                             : [];
+
+                                        // ✅ Kiểm tra đã đánh giá chưa (theo product_id + variant_id)
+                                        $alreadyRated = \App\Models\Comment::where('user_id', Auth::id())
+                                            ->where('product_id', $product->id)
+                                            ->when($variant, function ($q) use ($variant) {
+                                                $q->where('product_variant_id', $variant->id);
+                                            })
+                                            ->exists();
                                     @endphp
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
@@ -435,9 +444,102 @@
                                         <td class="text-end fw-bold text-orange">
                                             {{ number_format($item->price * $item->quantity, 0, ',', '.') }}₫
                                         </td>
+                                        <td>
+                                            {{-- Chỉ hiển thị nút nếu đơn hoàn thành --}}
+                                            @if ($order->status == 4 && !$alreadyRated)
+                                                <button type="button" class="btn btn-danger btn-danh-gia"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#reviewModal{{ $item->id }}">
+                                                    Đánh giá
+                                                </button>
+                                            @elseif ($order->status == 4 && $alreadyRated)
+                                                <span class="badge bg-success">✅ Đã đánh giá</span>
+                                            @endif
+                                        </td>
                                     </tr>
+
+                                    {{-- Modal chỉ render khi chưa đánh giá --}}
+                                    @if ($order->status == 4 && !$alreadyRated)
+                                        <div class="modal fade" id="reviewModal{{ $item->id }}" tabindex="-1"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <form action="{{ route('clients.comments.store') }}" method="POST"
+                                                        enctype="multipart/form-data">
+                                                        @csrf
+                                                        <input type="hidden" name="product_id"
+                                                            value="{{ $product->id }}">
+                                                        <input type="hidden" name="product_variant_id"
+                                                            value="{{ $variant->id ?? '' }}">
+                                                        <input type="hidden" name="order_id"
+                                                            value="{{ $order->id }}">
+
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Đánh giá: {{ $product->product_name }}
+                                                            </h5>
+                                                            @if ($variantAttributes)
+                                                                <div>
+                                                                    @foreach ($variantAttributes as $attr)
+                                                                        <span
+                                                                            class="badge bg-secondary">{{ $attr }}</span>
+                                                                    @endforeach
+                                                                </div>
+                                                            @endif
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal"></button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <!-- Rating -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Chấm sao:</label>
+                                                                <select name="rating" class="form-select" required>
+                                                                    <option value="">-- Chọn sao --</option>
+                                                                    @for ($i = 1; $i <= 5; $i++)
+                                                                        <option value="{{ $i }}">
+                                                                            {{ $i }} ⭐</option>
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+
+                                                            <!-- Nội dung -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Nội dung:</label>
+                                                                <textarea name="content" class="form-control" rows="3" required></textarea>
+                                                            </div>
+
+                                                            <!-- Ảnh -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Ảnh (tối đa 5, ảnh + video ≤
+                                                                    5):</label>
+                                                                <input type="file" name="images[]"
+                                                                    class="form-control media-input" accept="image/*"
+                                                                    multiple>
+                                                            </div>
+
+                                                            <!-- Video -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Video (1 video, tổng ảnh + video
+                                                                    ≤ 5):</label>
+                                                                <input type="file" name="video"
+                                                                    class="form-control media-input" accept="video/*">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-primary">Gửi đánh
+                                                                giá</button>
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Đóng</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endforeach
                             </tbody>
+
                         </table>
                     </div>
 
@@ -479,100 +581,6 @@
                         <a href="{{ route('clients.orders') }}" class="btn btn-secondary me-2">
                             <i class="fas fa-arrow-left me-2"></i> Quay lại
                         </a>
-
-                        @foreach ($order->orderDetails as $orderItem)
-                            <div class="mb-3">
-                                <p>{{ $orderItem->product->name }}</p>
-
-                                @php
-                                    $alreadyRated = $orderItem->product->comments
-                                        ->where('user_id', Auth::id())
-                                        ->count();
-                                @endphp
-
-                                {{-- Chỉ hiển thị nút nếu đơn hoàn thành và chưa đánh giá --}}
-                                @if ($order->status == 4 && !$alreadyRated)
-                                    <button type="button" class="btn btn-danger btn-danh-gia" data-bs-toggle="modal"
-                                        data-bs-target="#reviewModal{{ $orderItem->id }}">
-                                        Đánh giá
-                                    </button>
-                                @elseif ($order->status == 4 && $alreadyRated)
-                                    <span class="badge bg-danger">✅ Đã đánh giá</span>
-                                @endif
-                            </div>
-
-                            {{-- Modal chỉ render khi chưa đánh giá --}}
-                            @if ($order->status == 4 && !$alreadyRated)
-                                <div class="modal fade" id="reviewModal{{ $orderItem->id }}" tabindex="-1"
-                                    aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <form action="{{ route('clients.comments.store') }}" method="POST"
-                                                enctype="multipart/form-data">
-                                                @csrf
-                                                <input type="hidden" name="product_id"
-                                                    value="{{ $orderItem->product->id }}">
-                                                <input type="hidden" name="order_id" value="{{ $order->id }}">
-
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Đánh giá: {{ $orderItem->product->name }}</h5>
-                                                    <button type="button" class="btn-close"
-                                                        data-bs-dismiss="modal"></button>
-                                                </div>
-
-                                                <div class="modal-body">
-                                                    <!-- Rating -->
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Chấm sao:</label>
-                                                        <select name="rating" class="form-select" required>
-                                                            <option value="">-- Chọn sao --</option>
-                                                            @for ($i = 1; $i <= 5; $i++)
-                                                                <option value="{{ $i }}">{{ $i }} ⭐
-                                                                </option>
-                                                            @endfor
-                                                        </select>
-                                                    </div>
-
-                                                    <!-- Nội dung -->
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Nội dung:</label>
-                                                        <textarea name="content" class="form-control" rows="3" required></textarea>
-                                                    </div>
-
-                                                    <!-- Ảnh -->
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Ảnh (tối đa 5, ảnh + video ≤ 5):</label>
-                                                        <input type="file" name="images[]"
-                                                            id="imageInput{{ $orderItem->id }}"
-                                                            class="form-control media-input" accept="image/*" multiple>
-                                                    </div>
-
-                                                    <!-- Video -->
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Video (1 video, tổng ảnh + video ≤
-                                                            5):</label>
-                                                        <input type="file" name="video"
-                                                            id="videoInput{{ $orderItem->id }}"
-                                                            class="form-control media-input" accept="video/*">
-                                                    </div>
-                                                </div>
-
-                                                <div class="modal-footer">
-                                                    <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Đóng</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        @endforeach
-
-
-
-
-
                     </div>
 
 
