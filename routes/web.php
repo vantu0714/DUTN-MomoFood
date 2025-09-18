@@ -26,6 +26,8 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Clients\ProductDetailController;
 use App\Http\Controllers\Clients\OrderController as ClientsOrderController;
 use App\Http\Controllers\clients\CommentController as ClientCommentController;
+use App\Http\Controllers\clients\OrderNotificationController;
+
 
 // ==================== PUBLIC ROUTES ====================
 
@@ -70,6 +72,9 @@ Route::controller(AuthController::class)->group(function () {
 
 // Comments
 Route::post('/comments', [ClientCommentController::class, 'store'])->name('comments.store');
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::post('/comments/store', [ClientCommentController::class, 'store'])->name('clients.comments.store');
+});
 
 //vn-pay
 Route::post('/vnpay/payment', [VNPayController::class, 'create'])->name('vnpay.payment');
@@ -214,6 +219,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('comments', CommentController::class)->only('index');
     Route::get('comments/{product}', [CommentController::class, 'show'])->name('comments.show');
     Route::put('comments/{comment}/toggle-status', [CommentController::class, 'toggleStatus'])->name('comments.toggle');
+    Route::post('comments/{comment}/reply', [CommentController::class, 'reply'])
+    ->name('comments.reply');
+
 
 
 
@@ -229,21 +237,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 Route::get('/filter-category', [HomeController::class, 'filterByCategory'])->name('home.filter.category');
 
-use App\Http\Controllers\clients\OrderNotificationController;
 
-Route::middleware('auth')->group(function () {
+
     // Lấy danh sách thông báo (cho popup chuông)
     Route::get('/order-notifications/fetch', [OrderNotificationController::class, 'fetch'])
         ->name('order.notifications.fetch');
 
-    // Trang chi tiết thông báo đơn hàng
-    Route::get('/notifications/order/{orderId}', [OrderNotificationController::class, 'show'])
-        ->name('notifications.order.show');
-
     // Trang xem tất cả thông báo đơn hàng
     Route::get('/notifications/orders', [OrderNotificationController::class, 'index'])
         ->name('notifications.orders.index');
-});
+
 
 
 Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
@@ -251,4 +254,3 @@ Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/messages/{userId}', [MessageController::class, 'getMessagesWithUser'])->name('admin.messages.user');
     Route::post('/messages/send', [MessageController::class, 'adminSend'])->name('admin.messages.send');
 });
-
