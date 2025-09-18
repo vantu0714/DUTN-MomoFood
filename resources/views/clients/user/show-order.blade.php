@@ -473,6 +473,9 @@
                                                             value="{{ $variant->id ?? '' }}">
                                                         <input type="hidden" name="order_id"
                                                             value="{{ $order->id }}">
+                                                        <input type="hidden" name="order_detail_id"
+                                                            value="{{ $item->id }}">
+
 
                                                         <div class="modal-header">
                                                             <h5 class="modal-title">Đánh giá: {{ $product->product_name }}
@@ -513,7 +516,7 @@
                                                                 <label class="form-label">Ảnh (tối đa 5, ảnh + video ≤
                                                                     5):</label>
                                                                 <input type="file" name="images[]"
-                                                                    class="form-control media-input" accept="image/*"
+                                                                    class="form-control image-input" accept="image/*"
                                                                     multiple>
                                                             </div>
 
@@ -522,8 +525,9 @@
                                                                 <label class="form-label">Video (1 video, tổng ảnh + video
                                                                     ≤ 5):</label>
                                                                 <input type="file" name="video"
-                                                                    class="form-control media-input" accept="video/*">
+                                                                    class="form-control video-input" accept="video/*">
                                                             </div>
+
                                                         </div>
 
                                                         <div class="modal-footer">
@@ -661,6 +665,75 @@
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            function showError(title, text) {
+                Swal.fire({
+                    icon: 'error',
+                    title: title,
+                    text: text,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33'
+                });
+            }
+
+            // Lặp qua từng modal
+            document.querySelectorAll('.modal').forEach(modal => {
+                const imageInput = modal.querySelector('.image-input');
+                const videoInput = modal.querySelector('.video-input');
+
+                if (!imageInput || !videoInput) return;
+
+                // Check ảnh
+                imageInput.addEventListener('change', function() {
+                    if (this.files.length > 5) {
+                        showError('Quá số lượng ảnh!', 'Bạn chỉ được chọn tối đa 5 ảnh.');
+                        this.value = "";
+                    }
+                    checkTotal();
+                });
+
+                // Check video
+                videoInput.addEventListener('change', function() {
+                    if (this.files.length > 1) {
+                        showError('Quá số lượng video!', 'Bạn chỉ được chọn 1 video.');
+                        this.value = "";
+                    }
+                    checkTotal();
+                });
+
+                // Check tổng ảnh + video
+                function checkTotal() {
+                    let imageCount = imageInput.files.length;
+                    let videoCount = videoInput.files.length;
+
+                    if (imageCount + videoCount > 5) {
+                        showError('Vượt quá giới hạn!', 'Tổng số ảnh + video không được vượt quá 5.');
+                        imageInput.value = "";
+                        videoInput.value = "";
+                    }
+                }
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: "{{ session('success') }}",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            })
+        </script>
+    @endif
+
+
     @push('scripts')
         <script>
             function setRating(rating, itemId) {

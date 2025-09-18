@@ -51,7 +51,11 @@
                             $product = $item->product;
                             $variant = $item->productVariant;
 
-                            $image = $product->image ?? 'clients/img/default.png';
+                            $image =
+                                $variant && $variant->image
+                                    ? $variant->image
+                                    : $product->image ?? 'clients/img/default.png';
+
                             $productName = $product->product_name ?? 'Không có tên';
 
                             // Ghép thông tin thuộc tính: Vị: Ngọt, Size: M

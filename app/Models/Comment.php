@@ -9,8 +9,10 @@ class Comment extends Model
 {
     protected $fillable = [
         'user_id',
+        'order_id',
         'product_id',
-         'product_variant_id', 
+        'order_detail_id',
+        'product_variant_id',
         'content',
         'rating',
         'status',

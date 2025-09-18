@@ -111,8 +111,7 @@ class DashboardController extends Controller
             }
         }
 
-
-        // Sản phẩm bán chạy (tính theo biến thể nếu có)
+         // sản phẩm bán chạy nhất
         $bestSellingProducts = DB::table('order_details as od')
             ->join('products as p', 'p.id', '=', 'od.product_id')
             ->leftJoin('product_variants as pv', 'pv.id', '=', 'od.product_variant_id')
@@ -123,16 +122,16 @@ class DashboardController extends Controller
             ->select(
                 'p.id as product_id',
                 'p.product_name',
-                'p.image',
-                'pv.sku as variant_name',
+                DB::raw("COALESCE(pv.image, p.image) as image"), // Ưu tiên ảnh biến thể
                 DB::raw("GROUP_CONCAT(DISTINCT CONCAT(a.name, ': ', av.value) ORDER BY a.name SEPARATOR ', ') as variant_attributes"),
                 DB::raw('SUM(od.quantity) as total_quantity'),
-                DB::raw('MAX(od.price) as latest_price')
+                DB::raw('MAX(od.price) as latest_price') // Có thể đổi thành pv.price nếu muốn giá chính xác
             )
-            ->groupBy('p.id', 'p.product_name', 'p.image', 'pv.sku')
+            ->groupBy('p.id', 'p.product_name', 'pv.id', 'pv.image')
             ->orderByDesc('total_quantity')
             ->limit(10)
             ->get();
+
 
         // Tổng tồn kho
         $totalStock = Product::sum('quantity_in_stock');

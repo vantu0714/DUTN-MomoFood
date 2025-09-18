@@ -499,7 +499,12 @@
                             <h4 class="mb-4 fw-bold text-uppercase text-primary section-title"
                                 style="color: #1a202c !important;">Để lại đánh giá</h4>
 
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <input type="hidden" name="order_id" value="{{ $order->id }}">
+                            <input type="hidden" name="order_detail_id" value="{{ $orderDetail->id }}">
+                            <input type="hidden" name="product_id" value="{{ $orderDetail->product_id }}">
+                            <input type="hidden" name="product_variant_id"
+                                value="{{ $orderDetail->product_variant_id }}">
+
 
                             <!-- Nội dung đánh giá -->
                             <div class="mb-4">
@@ -518,6 +523,7 @@
                                     @endfor
                                 </div>
                                 <input type="hidden" name="rating" id="rating-value" value="0">
+
                             </div>
 
                             <!-- Upload ảnh -->
