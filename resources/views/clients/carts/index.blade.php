@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="{{ asset('clients/css/shop.css') }}">
 <div class="main_content_iner overly_inner">
     <div class="container-fluid page-header py-5 text-white d-flex align-items-center justify-content-center"
-        style="background: url('{{ asset('clients/img/bannergiohang.jpg') }}') center/cover no-repeat; height: 250px; position: relative;">
+        style="background: url('{{ asset('clients/img/banner gio hang.jpg') }}') center/cover no-repeat; height: 250px; position: relative;;">
 
         <!-- lớp phủ làm tối ảnh để chữ rõ hơn -->
         <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4);"></div>
