@@ -14,7 +14,7 @@
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 Đăng xuất
             </a>
-            <a class="nav-link {{ request()->routeIs('notifications.orders.index') ? 'active' : '' }}"
+            <a class="nav-link text-dark {{ request()->routeIs('notifications.orders.index') ? 'active' : '' }}"
                 href="{{ route('notifications.orders.index') }}">
                 Thông báo
             </a>

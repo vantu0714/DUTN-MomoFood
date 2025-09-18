@@ -17,9 +17,6 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $query = Order::query();
@@ -164,9 +161,6 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $order = Order::with([
@@ -180,9 +174,6 @@ class OrderController extends Controller
         return view('admin.orders.show', compact('order'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         //
@@ -194,9 +185,6 @@ class OrderController extends Controller
         // return view('admin.orders.edit', compact('order'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         //
@@ -246,7 +234,6 @@ class OrderController extends Controller
         $newStatus = (int) $request->status;
         $currentStatus = $order->status;
 
-        // Chỉ kiểm tra logic nghiệp vụ nếu request đến từ giao diện admin
         if ($request->update_source === 'admin_ui') {
             // Danh sách các trạng thái được phép chuyển đổi từ trạng thái hiện tại
             $allowedTransitions = [
@@ -281,6 +268,7 @@ class OrderController extends Controller
         } elseif ($newStatus == 9) {
             $order->status = 9;
             $order->received_at = now();
+            $order->payment_status = 'paid';
             $order->save();
 
             return back()->with('success', 'Đã cập nhật trạng thái đã giao hàng.');
@@ -318,29 +306,6 @@ class OrderController extends Controller
         elseif ($newStatus == 4) {
             $order->status = 4;
             $order->completed_at = now();
-            $order->payment_status = 'paid';
-
-            foreach ($order->orderDetails as $detail) {
-                $product = Product::find($detail->product_id);
-
-                if ($product) {
-                    // Nếu là sản phẩm đơn (simple) → trừ tồn kho trực tiếp
-                    if ($product->product_type === 'simple') {
-                        $product->decrement('quantity_in_stock', $detail->quantity);
-                    }
-
-                    // Nếu là sản phẩm có biến thể → trừ tồn kho ở bảng product_variants
-                    elseif ($product->product_type === 'variant' && $detail->product_variant_id) {
-                        DB::table('product_variants')
-                            ->where('id', $detail->product_variant_id)
-                            ->decrement('quantity_in_stock', $detail->quantity);
-                    }
-
-                    // Tăng số lượng đã bán cho sản phẩm chính
-                    $product->increment('sold_count', $detail->quantity);
-                }
-            }
-
             $order->save();
         }
         // Hoàn hàng (5) → Yêu cầu lý do
