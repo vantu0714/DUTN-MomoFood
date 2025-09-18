@@ -32,4 +32,29 @@ class OrderReturnItem extends Model
     {
         return $this->hasMany(OrderReturnAttachment::class);
     }
+
+    public function scopeProcessed($query)
+    {
+        return $query->where('status', '!=', 'pending');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    public function isProcessed()
+    {
+        return $this->status != 'pending';
+    }
+
+    public function isApproved()
+    {
+        return $this->status == 'approved';
+    }
+
+    public function isRejected()
+    {
+        return $this->status == 'rejected';
+    }
 }

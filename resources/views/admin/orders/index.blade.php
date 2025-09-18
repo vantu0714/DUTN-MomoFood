@@ -1,11 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
+   
 
     <div class="container-fluid px-4">
         <!-- Order Stats -->

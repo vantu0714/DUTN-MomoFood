@@ -417,11 +417,20 @@ class ProductVariantController extends Controller
     {
         $product = Product::find($productId);
 
-        if ($product) {
-            $hasStock = $product->variants()->where('quantity_in_stock', '>', 0)->exists();
-            $product->update(['status' => $hasStock ? 1 : 0]);
+        if (!$product) {
+            return;
         }
+
+        if ($product->product_type === 'variant') {
+            $hasStock = $product->variants()->where('quantity_in_stock', '>', 0)->exists();
+            $product->status = $hasStock ? 1 : 0;
+        } else {
+            $product->status = $product->quantity_in_stock > 0 ? 1 : 0;
+        }
+
+        $product->save();
     }
+
     // thêm biến thể cho sản phẩm có sẳn
     public function createMultiple()
     {
@@ -552,9 +561,13 @@ class ProductVariantController extends Controller
                 }
 
                 //  Cập nhật tổng số lượng từ các biến thể sau khi thêm xong
-                $totalQuantity = ProductVariant::where('product_id', $product->id)->sum('quantity_in_stock');
-                $product->quantity_in_stock = $totalQuantity;
-                $product->save();
+
+                if ($product->product_type === 'variant') {
+                    $totalQuantity = ProductVariant::where('product_id', $product->id)->sum('quantity_in_stock');
+                    $product->quantity_in_stock = $totalQuantity;
+                    $product->save();
+                }
+
 
                 // Cập nhật trạng thái sản phẩm nếu có
                 $this->updateProductStatus($productId);

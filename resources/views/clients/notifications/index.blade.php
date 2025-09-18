@@ -1,7 +1,7 @@
 @extends('clients.layouts.app')
 
 @section('content')
-    <div class="container py-4">
+    <div class="container py-4" style="margin-top: 150px;">
         <h4 class="mb-4">Thông báo đơn hàng</h4>
 
         @forelse($orders as $order)
@@ -10,13 +10,13 @@
                     <!-- Ảnh sản phẩm đầu tiên -->
                     @php
                         $firstProduct = $order->orderDetails->first();
-                        $productImage = $firstProduct && $firstProduct->product && $firstProduct->product->image
-                            ? asset('storage/' . $firstProduct->product->image)
-                            : asset('clients/img/no-image.png');
+                        $productImage =
+                            $firstProduct && $firstProduct->product && $firstProduct->product->image
+                                ? asset('storage/' . $firstProduct->product->image)
+                                : asset('clients/img/no-image.png');
                     @endphp
 
-                    <img src="{{ $productImage }}" alt="Ảnh sản phẩm"
-                        class="me-3 rounded"
+                    <img src="{{ $productImage }}" alt="Ảnh sản phẩm" class="me-3 rounded"
                         style="width: 80px; height: 80px; object-fit: cover;">
 
                     <!-- Nội dung -->
@@ -30,9 +30,10 @@
                     </div>
 
                     <!-- Link xem chi tiết -->
-                    <a href="{{ route('notifications.order.show', $order->id) }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ route('clients.orderdetail', $order->id) }}" class="btn btn-sm btn-outline-primary">
                         Xem chi tiết
                     </a>
+
                 </div>
             </div>
         @empty

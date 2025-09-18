@@ -102,7 +102,8 @@
         <li class>
             <a href="{{ route('admin.messages.index') }}" aria-expanded="false">
                 <div class="icon_menu">
-                    <img src="{{ asset('admins/assets/img/menu-icon/chat.svg') }}" alt>
+                    <i class="fa fa-comment-dots" style="color: #20c997; font-size: 15px; margin-left: 10px;"></i>
+ 
                 </div>
                 <span>Quản lí chat</span>
             </a>

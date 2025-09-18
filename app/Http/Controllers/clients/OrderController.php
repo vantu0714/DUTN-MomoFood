@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -599,7 +600,6 @@ class OrderController extends Controller
             return back()->with('error', 'Vui lòng chọn ít nhất một sản phẩm để hoàn trả.');
         }
 
-        // Tạo validation rules động chỉ cho các sản phẩm được chọn
         $validationRules = [
             'return_items' => 'required|array|min:1',
         ];
@@ -608,7 +608,6 @@ class OrderController extends Controller
             'return_items.required' => 'Vui lòng chọn ít nhất một sản phẩm để hoàn trả.',
         ];
 
-        // Chỉ thêm rules validation cho các sản phẩm được chọn
         foreach ($selectedIndexes as $index) {
             $validationRules["return_items.{$index}.order_detail_id"] = 'required|exists:order_details,id';
             $validationRules["return_items.{$index}.quantity"] = 'required|integer|min:1';
@@ -638,7 +637,6 @@ class OrderController extends Controller
 
             // Xử lý từng sản phẩm yêu cầu hoàn hàng
             foreach ($request->return_items as $index => $returnItem) {
-                // Kiểm tra xem sản phẩm có được chọn không
                 if (!isset($returnItem['selected']) || $returnItem['selected'] != '1') {
                     continue;
                 }
@@ -687,6 +685,248 @@ class OrderController extends Controller
             DB::rollBack();
             Log::error('Lỗi khi xử lý yêu cầu hoàn hàng: ' . $e->getMessage());
             return back()->with('error', 'Xử lý yêu cầu thất bại: ' . $e->getMessage());
+        }
+    }
+
+    public function editReturn($id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->with(['orderDetails.product', 'orderDetails.productVariant', 'returnItems.orderDetail', 'returnItems.attachments'])
+            ->firstOrFail();
+
+        // Kiểm tra xem đơn hàng có yêu cầu hoàn hàng không
+        if ($order->status != 7) {
+            return redirect()->route('clients.orderdetail', $order->id)
+                ->with('error', 'Chỉ có thể chỉnh sửa yêu cầu hoàn hàng đang chờ xử lý.');
+        }
+
+        // Kiểm tra thời hạn chỉnh sửa (24h sau khi nhận hàng)
+        $returnDeadline = Carbon::parse($order->received_at)->addHours(24);
+        if (now()->gt($returnDeadline)) {
+            return redirect()->route('clients.orderdetail', $order->id)
+                ->with('error', 'Đã quá thời hạn 24 giờ để chỉnh sửa yêu cầu hoàn hàng.');
+        }
+
+        return view('clients.user.edit-return', compact('order'));
+    }
+
+    public function updateReturn(Request $request, $id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->with(['orderDetails.product', 'orderDetails.productVariant', 'returnItems'])
+            ->firstOrFail();
+
+        // Kiểm tra điều kiện chỉnh sửa
+        if ($order->status != 7) {
+            return back()->with('error', 'Chỉ có thể chỉnh sửa yêu cầu hoàn hàng đang chờ xử lý.');
+        }
+
+        $returnDeadline = Carbon::parse($order->received_at)->addHours(24);
+        if (now()->gt($returnDeadline)) {
+            return back()->with('error', 'Đã quá thời hạn 24 giờ để chỉnh sửa yêu cầu hoàn hàng.');
+        }
+
+        $processedItems = $order->returnItems->where('status', '!=', 'pending')->count();
+        if ($processedItems > 0) {
+            return back()->with('error', 'Không thể cập nhật yêu cầu hoàn hàng vì quản trị viên đã bắt đầu xử lý.');
+        }
+
+        $hasSelectedItem = false;
+        $selectedIndexes = [];
+
+        if ($request->has('return_items')) {
+            foreach ($request->return_items as $index => $item) {
+                if (isset($item['selected']) && $item['selected'] == '1') {
+                    $hasSelectedItem = true;
+                    $selectedIndexes[] = $index;
+                }
+            }
+        }
+
+        if (!$hasSelectedItem) {
+            return back()->with('error', 'Vui lòng chọn ít nhất một sản phẩm để hoàn trả.');
+        }
+
+        $validationRules = [
+            'return_items' => 'required|array|min:1',
+        ];
+
+        $customMessages = [
+            'return_items.required' => 'Vui lòng chọn ít nhất một sản phẩm để hoàn trả.',
+        ];
+
+        foreach ($selectedIndexes as $index) {
+            $validationRules["return_items.{$index}.order_detail_id"] = 'required|exists:order_details,id';
+            $validationRules["return_items.{$index}.quantity"] = 'required|integer|min:1';
+            $validationRules["return_items.{$index}.reason"] = 'required|string|max:1000';
+            $validationRules["return_items.{$index}.attachments.*"] = 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:10240';
+            $validationRules["return_items.{$index}.existing_attachments.*"] = 'nullable|string';
+
+            $customMessages["return_items.{$index}.quantity.required"] = 'Vui lòng nhập số lượng cho sản phẩm được chọn.';
+            $customMessages["return_items.{$index}.reason.required"] = 'Vui lòng nhập lý do cho sản phẩm được chọn.';
+        }
+
+        $validator = Validator::make($request->all(), $validationRules, $customMessages);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Lấy tất cả các yêu cầu hoàn hàng hiện có
+            $existingReturnItems = OrderReturnItem::where('order_id', $order->id)->get();
+
+            $itemsToKeep = [];
+
+            // Xử lý từng sản phẩm trong request
+            foreach ($request->return_items as $index => $returnItem) {
+                if (!isset($returnItem['selected']) || $returnItem['selected'] != '1') {
+                    continue;
+                }
+
+                $orderDetail = OrderDetail::find($returnItem['order_detail_id']);
+
+                if (!$orderDetail) {
+                    throw new \Exception('Chi tiết đơn hàng không tồn tại.');
+                }
+
+                // Kiểm tra số lượng hợp lệ
+                if ($returnItem['quantity'] > $orderDetail->quantity) {
+                    throw new \Exception('Số lượng yêu cầu hoàn trả vượt quá số lượng đã mua cho sản phẩm: ' . ($orderDetail->product->product_name ?? ''));
+                }
+
+                // Tìm xem đã có yêu cầu hoàn hàng cho sản phẩm này chưa
+                $existingReturnItem = $existingReturnItems->where('order_detail_id', $returnItem['order_detail_id'])->first();
+
+                if ($existingReturnItem) {
+                    $existingReturnItem->update([
+                        'quantity' => $returnItem['quantity'],
+                        'reason' => $returnItem['reason'],
+                    ]);
+
+                    $returnItemRecord = $existingReturnItem;
+                    $itemsToKeep[] = $existingReturnItem->id;
+                } else {
+                    $returnItemRecord = OrderReturnItem::create([
+                        'order_id' => $order->id,
+                        'order_detail_id' => $returnItem['order_detail_id'],
+                        'quantity' => $returnItem['quantity'],
+                        'reason' => $returnItem['reason'],
+                        'status' => 'pending',
+                    ]);
+
+                    $itemsToKeep[] = $returnItemRecord->id;
+                }
+
+                // Xử lý file đính kèm đã tồn tại (nếu có)
+                if (isset($returnItem['existing_attachments'])) {
+                    foreach ($returnItem['existing_attachments'] as $attachmentId) {
+                        $attachment = OrderReturnAttachment::find($attachmentId);
+                        if ($attachment && $attachment->order_return_item_id == $returnItemRecord->id) {
+                        }
+                    }
+
+                    $existingAttachments = OrderReturnAttachment::where('order_return_item_id', $returnItemRecord->id)->get();
+                    foreach ($existingAttachments as $attachment) {
+                        if (!in_array($attachment->id, $returnItem['existing_attachments'])) {
+                            Storage::disk('public')->delete($attachment->file_path);
+                            $attachment->delete();
+                        }
+                    }
+                } else {
+                    $existingAttachments = OrderReturnAttachment::where('order_return_item_id', $returnItemRecord->id)->get();
+                    foreach ($existingAttachments as $attachment) {
+                        Storage::disk('public')->delete($attachment->file_path);
+                        $attachment->delete();
+                    }
+                }
+
+                // Xử lý file đính kèm mới (nếu có)
+                if ($request->hasFile("return_items.{$index}.attachments")) {
+                    foreach ($request->file("return_items.{$index}.attachments") as $file) {
+                        if ($file->isValid()) {
+                            $path = $file->store('returns/attachments', 'public');
+
+                            OrderReturnAttachment::create([
+                                'order_return_item_id' => $returnItemRecord->id,
+                                'file_path' => $path,
+                                'file_type' => strpos($file->getMimeType(), 'image') !== false ? 'image' : 'video',
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Xóa các yêu cầu hoàn hàng không còn được chọn
+            $itemsToDelete = OrderReturnItem::where('order_id', $order->id)
+                ->whereNotIn('id', $itemsToKeep)
+                ->get();
+
+            foreach ($itemsToDelete as $itemToDelete) {
+                foreach ($itemToDelete->attachments as $attachment) {
+                    Storage::disk('public')->delete($attachment->file_path);
+                    $attachment->delete();
+                }
+                $itemToDelete->delete();
+            }
+
+            DB::commit();
+
+            return redirect()->route('clients.orderdetail', $order->id)
+                ->with('success', 'Yêu cầu hoàn hàng đã được cập nhật thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Cập nhật yêu cầu thất bại: ' . $e->getMessage());
+        }
+    }
+
+    public function cancelReturn(Request $request, $id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->with('returnItems')
+            ->firstOrFail();
+
+        // Kiểm tra điều kiện hủy yêu cầu hoàn hàng
+        if ($order->status != 7) {
+            return back()->with('error', 'Chỉ có thể hủy yêu cầu hoàn hàng đang chờ xử lý.');
+        }
+
+        // Kiểm tra xem có sản phẩm nào đã được xử lý chưa
+        $processedItems = $order->returnItems->where('status', '!=', 'pending')->count();
+        if ($processedItems > 0) {
+            return back()->with('error', 'Không thể hủy yêu cầu hoàn hàng vì quản trị viên đã bắt đầu xử lý.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($order->returnItems as $returnItem) {
+                foreach ($returnItem->attachments as $attachment) {
+                    Storage::disk('public')->delete($attachment->file_path);
+                    $attachment->delete();
+                }
+            }
+
+            OrderReturnItem::where('order_id', $order->id)->delete();
+
+            $previousStatus = $order->received_at ? 4 : 3;
+            $order->update([
+                'status' => $previousStatus,
+                'return_requested_at' => null
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('clients.orderdetail', $order->id)
+                ->with('success', 'Yêu cầu hoàn hàng đã được hủy thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Hủy yêu cầu thất bại: ' . $e->getMessage());
         }
     }
 }
