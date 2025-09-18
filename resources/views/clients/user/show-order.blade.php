@@ -199,8 +199,7 @@
                 @csrf
             </form>
             <a class="nav-link text-dark {{ request()->routeIs('notifications.orders.index') ? 'active' : '' }}"
-                href="{{ route('notifications.orders.index') }}"
-                style="text-black">
+                href="{{ route('notifications.orders.index') }}" style="text-black">
                 Thông báo
             </a>
         </nav>
@@ -552,7 +551,7 @@
                                             <div class="modal-dialog modal-lg">
                                                 <div class="modal-content">
                                                     <form action="{{ route('clients.comments.store') }}" method="POST"
-                                                        enctype="multipart/form-data">
+                                                        enctype="multipart/form-data" id="reviewForm{{ $item->id }}">
                                                         @csrf
                                                         <input type="hidden" name="product_id"
                                                             value="{{ $product->id }}">
@@ -595,21 +594,36 @@
                                                                 <textarea name="content" class="form-control" rows="3" required></textarea>
                                                             </div>
 
-                                                            <!-- Ảnh -->
+                                                            <!-- Media upload -->
                                                             <div class="mb-3">
-                                                                <label class="form-label">Ảnh (tối đa 5, ảnh + video ≤
-                                                                    5):</label>
-                                                                <input type="file" name="images[]"
-                                                                    class="form-control media-input" accept="image/*"
-                                                                    multiple>
-                                                            </div>
+                                                                <label class="form-label">Hình ảnh/Video (tối đa 5
+                                                                    file):</label>
+                                                                <div
+                                                                    class="d-flex justify-content-between align-items-center mb-2">
+                                                                    <span class="text-muted small">
+                                                                        <span class="file-counter"
+                                                                            data-index="{{ $item->id }}">0</span>/5
+                                                                        file
+                                                                    </span>
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-primary btn-sm"
+                                                                        onclick="document.getElementById('multi-file-input-{{ $item->id }}').click()">
+                                                                        <i class="fas fa-cloud-upload-alt me-2"></i>Chọn
+                                                                        file
+                                                                    </button>
+                                                                </div>
+                                                                <div class="text-muted small mb-3">
+                                                                    Tối đa 5 file, mỗi file ≤ 10MB. Hỗ trợ: JPG, PNG, GIF,
+                                                                    MP4, MOV, AVI
+                                                                </div>
 
-                                                            <!-- Video -->
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Video (1 video, tổng ảnh + video
-                                                                    ≤ 5):</label>
-                                                                <input type="file" name="video"
-                                                                    class="form-control media-input" accept="video/*">
+                                                                <input type="file" class="d-none multi-file-input"
+                                                                    id="multi-file-input-{{ $item->id }}"
+                                                                    name="media[]" accept="image/*,video/*"
+                                                                    data-index="{{ $item->id }}" multiple>
+
+                                                                <div class="file-previews row g-2"
+                                                                    id="file-previews-{{ $item->id }}"></div>
                                                             </div>
                                                         </div>
 
@@ -626,7 +640,6 @@
                                     @endif
                                 @endforeach
                             </tbody>
-
                         </table>
                     </div>
 
@@ -714,6 +727,7 @@
                                 @endif
 
                                 <form action="{{ route('clients.request_return', $order->id) }}" method="POST"
+                                    enctype="multipart/form-data"
                                     data-confirm="Bạn chắc chắn muốn yêu cầu hoàn hàng này?">
                                     @csrf
 
@@ -875,23 +889,22 @@
             </div>
         </div>
     </div>
-    @push('scripts')
-        <script>
-            function setRating(rating, itemId) {
-                let stars = document.querySelectorAll(`#reviewModal-${itemId} .star`);
-                stars.forEach((star, index) => {
-                    if (index < rating) {
-                        star.classList.remove('text-muted');
-                        star.classList.add('text-warning');
-                    } else {
-                        star.classList.remove('text-warning');
-                        star.classList.add('text-muted');
-                    }
-                });
-                document.getElementById(`rating-value-${itemId}`).value = rating;
-            }
-        </script>
-    @endpush
+
+    <script>
+        function setRating(rating, itemId) {
+            let stars = document.querySelectorAll(`#reviewModal-${itemId} .star`);
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('text-muted');
+                    star.classList.add('text-warning');
+                } else {
+                    star.classList.remove('text-warning');
+                    star.classList.add('text-muted');
+                }
+            });
+            document.getElementById(`rating-value-${itemId}`).value = rating;
+        }
+    </script>
 
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
 
@@ -914,6 +927,8 @@
             });
 
             initializeReturnForm();
+
+            initializeReviewForms();
         });
 
         function initializeReturnForm() {
@@ -1259,6 +1274,124 @@
             toastElement.addEventListener('hidden.bs.toast', () => {
                 toastElement.remove();
             });
+        }
+
+        function initializeReviewForms() {
+            document.querySelectorAll('.multi-file-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    handleReviewFileSelect(this);
+                });
+            });
+        }
+
+        const reviewSelectedFiles = {};
+
+        function handleReviewFileSelect(input) {
+            const files = input.files;
+            const index = input.dataset.index;
+            const previewContainer = document.getElementById(`file-previews-${index}`);
+
+            if (!files || files.length === 0) return;
+
+            if (!reviewSelectedFiles[index]) {
+                reviewSelectedFiles[index] = [];
+            }
+
+            let validFilesCount = 0;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                if (validateFile(file) && reviewSelectedFiles[index].length < 5) {
+                    reviewSelectedFiles[index].push(file);
+                    validFilesCount++;
+
+                    showReviewFilePreview(previewContainer, file, index);
+                } else if (reviewSelectedFiles[index].length >= 5) {
+                    showToast('Chỉ được phép tải lên tối đa 5 file', 'error');
+                    break;
+                }
+            }
+
+            updateReviewFileCounter(index, reviewSelectedFiles[index].length);
+            updateReviewFileInput(index);
+
+            if (validFilesCount > 0) {
+                showToast(`Đã thêm ${validFilesCount} file thành công`, 'success');
+            }
+        }
+
+        function showReviewFilePreview(container, file, index) {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'col-6 col-md-4 col-lg-3 file-preview';
+            previewDiv.dataset.fileName = file.name;
+
+            const previewCard = document.createElement('div');
+            previewCard.className = 'card h-100';
+
+            let previewContent = '';
+
+            if (file.type.startsWith('image/')) {
+                previewContent = `
+                    <img src="${URL.createObjectURL(file)}" class="card-img-top" style="height: 120px; object-fit: cover;" alt="${file.name}">
+                `;
+            } else {
+                previewContent = `
+                    <div class="card-body d-flex align-items-center justify-content-center" style="height: 120px;">
+                        <i class="fas fa-video text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                `;
+            }
+
+            previewCard.innerHTML = previewContent + `
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-truncate small" title="${file.name}">${file.name}</div>
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeReviewFilePreview(this, '${index}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="text-muted small">${formatFileSize(file.size)}</div>
+                </div>
+            `;
+
+            previewDiv.appendChild(previewCard);
+            container.appendChild(previewDiv);
+        }
+
+        function removeReviewFilePreview(button, index) {
+            const previewCard = button.closest('.file-preview');
+            const fileName = previewCard.dataset.fileName;
+
+            if (reviewSelectedFiles[index]) {
+                reviewSelectedFiles[index] = reviewSelectedFiles[index].filter(file => file.name !== fileName);
+                updateReviewFileInput(index);
+            }
+
+            previewCard.remove();
+
+            const fileCount = reviewSelectedFiles[index] ? reviewSelectedFiles[index].length : 0;
+            updateReviewFileCounter(index, fileCount);
+        }
+
+        function updateReviewFileInput(index) {
+            const fileInput = document.getElementById(`multi-file-input-${index}`);
+
+            const dataTransfer = new DataTransfer();
+
+            if (reviewSelectedFiles[index]) {
+                reviewSelectedFiles[index].forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+            }
+
+            fileInput.files = dataTransfer.files;
+        }
+
+        function updateReviewFileCounter(index, count) {
+            const counter = document.querySelector(`.file-counter[data-index="${index}"]`);
+            if (counter) {
+                counter.textContent = count;
+            }
         }
     </script>
 @endsection

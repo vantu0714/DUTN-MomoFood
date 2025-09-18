@@ -183,97 +183,128 @@
                                             </div>
                                         </div>
 
-                                        @if ($isSelected && !$isItemProcessed)
-                                            <div class="attachment-section mt-3"
-                                                id="attachment_section_{{ $index }}">
-                                                <hr>
-                                                <div class="row">
-                                                    <div class="col-12">
-                                                        <div
-                                                            class="d-flex justify-content-between align-items-center mb-2">
-                                                            <label class="form-label fw-semibold mb-0">
-                                                                <i class="fas fa-paperclip me-2"></i>
-                                                                Đính kèm hình ảnh/video
-                                                            </label>
-                                                            <span class="text-muted small">
-                                                                <span class="file-counter"
-                                                                    data-index="{{ $index }}">{{ $existingReturnItem ? $existingReturnItem->attachments->count() : 0 }}</span>/5
-                                                                file
-                                                            </span>
-                                                        </div>
-                                                        <div class="text-muted small mb-3">
-                                                            Tối đa 5 file, mỗi file ≤ 10MB. Hỗ trợ: JPG, PNG, GIF,
-                                                            MP4, MOV, AVI
-                                                        </div>
+                                        <!-- Phần đính kèm file - Luôn hiển thị nhưng ẩn đi nếu không được chọn -->
+                                        <div class="attachment-section mt-3" id="attachment_section_{{ $index }}"
+                                            style="{{ $isSelected ? '' : 'display: none;' }}">
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <label class="form-label fw-semibold mb-0">
+                                                            <i class="fas fa-paperclip me-2"></i>
+                                                            Đính kèm hình ảnh/video
+                                                        </label>
+                                                        <span class="text-muted small">
+                                                            <span class="file-counter"
+                                                                data-index="{{ $index }}">{{ $existingReturnItem ? $existingReturnItem->attachments->count() : 0 }}</span>/5
+                                                            file
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-muted small mb-3">
+                                                        Tối đa 5 file, mỗi file ≤ 10MB. Hỗ trợ: JPG, PNG, GIF,
+                                                        MP4, MOV, AVI
+                                                    </div>
 
-                                                        <!-- Hiển thị file đính kèm hiện có -->
-                                                        @if ($existingReturnItem && $existingReturnItem->attachments->count() > 0)
-                                                            <div class="mb-3">
-                                                                <p class="small fw-semibold mb-2">File đã đính kèm:</p>
-                                                                <div class="d-flex flex-wrap gap-2 mb-3">
-                                                                    @foreach ($existingReturnItem->attachments as $attachment)
-                                                                        <div class="existing-attachment position-relative"
-                                                                            style="width: 80px; height: 80px;">
-                                                                            @if ($attachment->file_type == 'image')
-                                                                                <img src="{{ asset('storage/' . $attachment->file_path) }}"
-                                                                                    class="img-thumbnail w-100 h-100"
-                                                                                    style="object-fit: cover;"
-                                                                                    alt="Attachment">
-                                                                            @else
-                                                                                <div
-                                                                                    class="bg-light d-flex align-items-center justify-content-center w-100 h-100 rounded border">
-                                                                                    <i
-                                                                                        class="fas fa-video text-primary"></i>
-                                                                                </div>
-                                                                            @endif
-                                                                            <div
-                                                                                class="form-check position-absolute top-0 start-0 m-1">
-                                                                                <input type="checkbox"
-                                                                                    class="form-check-input"
-                                                                                    name="return_items[{{ $index }}][existing_attachments][]"
-                                                                                    value="{{ $attachment->id }}" checked>
-                                                                            </div>
-                                                                            <button type="button"
-                                                                                class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-1 remove-existing-attachment"
-                                                                                style="width: 20px; height: 20px; line-height: 1; font-size: 10px;">
-                                                                                <i class="fas fa-times"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    @endforeach
-                                                                </div>
-                                                            </div>
-                                                        @endif
-
+                                                    <!-- Hiển thị file đính kèm hiện có -->
+                                                    @if ($existingReturnItem && $existingReturnItem->attachments->count() > 0)
                                                         <div class="mb-3">
-                                                            <input type="file" class="d-none multi-file-input"
-                                                                id="multi-file-input-{{ $index }}"
-                                                                name="return_items[{{ $index }}][attachments][]"
-                                                                accept="image/*,video/*" data-index="{{ $index }}"
-                                                                multiple>
-                                                            <button type="button" class="btn btn-outline-primary btn-sm"
-                                                                onclick="document.getElementById('multi-file-input-{{ $index }}').click()">
-                                                                <i class="fas fa-cloud-upload-alt me-2"></i>Thêm file mới
-                                                            </button>
+                                                            <p class="small fw-semibold mb-2">File đã đính kèm:</p>
+                                                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                                                @foreach ($existingReturnItem->attachments as $attachment)
+                                                                    <div class="existing-attachment position-relative"
+                                                                        style="width: 80px; height: 80px;">
+                                                                        @if ($attachment->file_type == 'image')
+                                                                            <img src="{{ asset('storage/' . $attachment->file_path) }}"
+                                                                                class="img-thumbnail w-100 h-100"
+                                                                                style="object-fit: cover;"
+                                                                                alt="Attachment">
+                                                                        @else
+                                                                            <div
+                                                                                class="bg-light d-flex align-items-center justify-content-center w-100 h-100 rounded border">
+                                                                                <i class="fas fa-video text-primary"></i>
+                                                                            </div>
+                                                                        @endif
+                                                                        <div
+                                                                            class="form-check position-absolute top-0 start-0 m-1">
+                                                                            <input type="checkbox"
+                                                                                class="form-check-input"
+                                                                                name="return_items[{{ $index }}][existing_attachments][]"
+                                                                                value="{{ $attachment->id }}" checked>
+                                                                        </div>
+                                                                        <button type="button"
+                                                                            class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-1 remove-existing-attachment"
+                                                                            style="width: 20px; height: 20px; line-height: 1; font-size: 10px;">
+                                                                            <i class="fas fa-times"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
                                                         </div>
+                                                    @endif
 
-                                                        <div class="file-previews row g-2"
-                                                            id="file-previews-{{ $index }}">
-                                                        </div>
+                                                    <div class="mb-3">
+                                                        <input type="file" class="d-none multi-file-input"
+                                                            id="multi-file-input-{{ $index }}"
+                                                            name="return_items[{{ $index }}][attachments][]"
+                                                            accept="image/*,video/*" data-index="{{ $index }}"
+                                                            multiple>
+                                                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                                            onclick="document.getElementById('multi-file-input-{{ $index }}').click()">
+                                                            <i class="fas fa-cloud-upload-alt me-2"></i>Thêm file mới
+                                                        </button>
+                                                    </div>
+
+                                                    <div class="file-previews row g-2"
+                                                        id="file-previews-{{ $index }}">
                                                     </div>
                                                 </div>
                                             </div>
-                                        @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
 
-                        <div class="d-grid">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <!-- Nút hủy yêu cầu hoàn hàng -->
+                            <button type="button" class="btn btn-danger me-md-2" data-bs-toggle="modal"
+                                data-bs-target="#cancelReturnModal">
+                                <i class="fas fa-times me-2"></i>Hủy yêu cầu
+                            </button>
+
+                            <!-- Nút cập nhật yêu cầu hoàn hàng -->
                             <button type="submit" class="btn btn-warning text-white" id="submitReturnRequest">
-                                <i class="fas fa-save me-2"></i>Cập nhật yêu cầu hoàn hàng
+                                <i class="fas fa-save me-2"></i>Cập nhật yêu cầu
                             </button>
                         </div>
                     </form>
+
+                    <!-- Modal xác nhận hủy yêu cầu hoàn hàng -->
+                    <div class="modal fade" id="cancelReturnModal" tabindex="-1"
+                        aria-labelledby="cancelReturnModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="cancelReturnModalLabel">Xác nhận hủy yêu cầu</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Bạn có chắc chắn muốn hủy yêu cầu hoàn hàng này không?</p>
+                                    <p class="text-danger"><small>Hành động này không thể hoàn tác.</small></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Quay
+                                        lại</button>
+                                    <form action="{{ route('clients.cancel_return', $order->id) }}" method="POST">
+                                        @csrf
+                                        @method('POST')
+                                        <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endif
             </div>
         </div>
@@ -657,127 +688,6 @@
             toastElement.addEventListener('hidden.bs.toast', () => {
                 toastElement.remove();
             });
-        }
-
-        // Khởi tạo form chỉnh sửa
-        function initializeReturnForm() {
-            const checkboxes = document.querySelectorAll('.return-item-checkbox');
-            const submitBtn = document.getElementById('submitReturnRequest');
-
-            checkboxes.forEach(checkbox => {
-                const index = checkbox.dataset.index;
-                const isChecked = checkbox.checked;
-
-                toggleProductFields(index, isChecked);
-
-                checkbox.addEventListener('change', function() {
-                    toggleProductFields(index, this.checked);
-                    validateForm();
-                });
-            });
-
-            // Khởi tạo selectedFiles với các file hiện có
-            document.querySelectorAll('.existing-attachment').forEach(attachment => {
-                const checkbox = attachment.querySelector('input[type="checkbox"]');
-                if (checkbox.checked) {
-                    const index = checkbox.name.match(/\[(\d+)\]/)[1];
-                    if (!selectedFiles[index]) {
-                        selectedFiles[index] = [];
-                    }
-                    selectedFiles[index].push({
-                        name: attachment.dataset.fileName,
-                        size: attachment.dataset.fileSize,
-                        type: attachment.dataset.fileType,
-                        isExisting: true,
-                        id: checkbox.value
-                    });
-                }
-            });
-
-            document.querySelectorAll('.quantity-btn').forEach(btn => {
-                btn.addEventListener('click', handleQuantityChange);
-            });
-
-            document.querySelectorAll('.return-quantity').forEach(input => {
-                input.addEventListener('input', function() {
-                    validateQuantity(this);
-                    validateForm();
-                });
-                input.addEventListener('blur', function() {
-                    validateQuantity(this);
-                    validateForm();
-                });
-                input.addEventListener('change', function() {
-                    validateQuantity(this);
-                    validateForm();
-                });
-            });
-
-            document.querySelectorAll('.return-reason').forEach(textarea => {
-                textarea.addEventListener('input', validateForm);
-            });
-
-            document.querySelectorAll('.multi-file-input').forEach(input => {
-                input.addEventListener('change', function() {
-                    handleMultipleFileSelect(this);
-                });
-            });
-
-            document.getElementById('returnRequestForm').addEventListener('submit', handleFormSubmit);
-
-            validateForm();
-        }
-
-        // Xử lý chọn nhiều file
-        function handleMultipleFileSelect(input) {
-            const files = input.files;
-            const index = input.dataset.index;
-            const previewContainer = document.getElementById(`file-previews-${index}`);
-
-            if (!files || files.length === 0) return;
-
-            if (!selectedFiles[index]) {
-                selectedFiles[index] = [];
-            }
-
-            let validFilesCount = 0;
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-
-                if (validateFile(file) && selectedFiles[index].length < 5) {
-                    selectedFiles[index].push(file);
-                    validFilesCount++;
-
-                    showFilePreview(previewContainer, file, index);
-                } else if (selectedFiles[index].length >= 5) {
-                    showToast('Chỉ được phép tải lên tối đa 5 file', 'error');
-                    break;
-                }
-            }
-
-            updateFileCounter(index, selectedFiles[index].length);
-            updateFileInput(index);
-
-            if (validFilesCount > 0) {
-                showToast(`Đã thêm ${validFilesCount} file thành công`, 'success');
-            }
-        }
-
-        // Cập nhật input file
-        function updateFileInput(index) {
-            const fileInput = document.getElementById(`multi-file-input-${index}`);
-
-            const dataTransfer = new DataTransfer();
-
-            if (selectedFiles[index]) {
-                selectedFiles[index].forEach(file => {
-                    if (!file.isExisting) {
-                        dataTransfer.items.add(file);
-                    }
-                });
-            }
-
-            fileInput.files = dataTransfer.files;
         }
     </script>
 @endsection

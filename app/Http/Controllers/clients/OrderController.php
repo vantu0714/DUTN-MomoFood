@@ -883,4 +883,50 @@ class OrderController extends Controller
             return back()->with('error', 'Cập nhật yêu cầu thất bại: ' . $e->getMessage());
         }
     }
+
+    public function cancelReturn(Request $request, $id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->with('returnItems')
+            ->firstOrFail();
+
+        // Kiểm tra điều kiện hủy yêu cầu hoàn hàng
+        if ($order->status != 7) {
+            return back()->with('error', 'Chỉ có thể hủy yêu cầu hoàn hàng đang chờ xử lý.');
+        }
+
+        // Kiểm tra xem có sản phẩm nào đã được xử lý chưa
+        $processedItems = $order->returnItems->where('status', '!=', 'pending')->count();
+        if ($processedItems > 0) {
+            return back()->with('error', 'Không thể hủy yêu cầu hoàn hàng vì quản trị viên đã bắt đầu xử lý.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($order->returnItems as $returnItem) {
+                foreach ($returnItem->attachments as $attachment) {
+                    Storage::disk('public')->delete($attachment->file_path);
+                    $attachment->delete();
+                }
+            }
+
+            OrderReturnItem::where('order_id', $order->id)->delete();
+
+            $previousStatus = $order->received_at ? 4 : 3;
+            $order->update([
+                'status' => $previousStatus,
+                'return_requested_at' => null
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('clients.orderdetail', $order->id)
+                ->with('success', 'Yêu cầu hoàn hàng đã được hủy thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Hủy yêu cầu thất bại: ' . $e->getMessage());
+        }
+    }
 }
