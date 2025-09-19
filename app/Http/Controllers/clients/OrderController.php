@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\VNPayController;
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\OrderCancellation;
+use App\Models\OrderCancellationItem;
 use App\Models\OrderDetail;
 use App\Models\OrderReturnAttachment;
 use App\Models\OrderReturnItem;
@@ -18,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -406,9 +409,25 @@ class OrderController extends Controller
         } else {
             $order = Order::where('id', $id)
                 ->where('user_id', auth()->id())
-                ->with(['orderDetails.product', 'orderDetails.productVariant', 'returnItems.orderDetail.product', 'returnItems.attachments'])
+                ->with([
+                    'orderDetails.product',
+                    'orderDetails.productVariant',
+                    'activeOrderDetails.product',
+                    'activeOrderDetails.productVariant',
+                    'cancelledOrderDetails.product',
+                    'cancelledOrderDetails.productVariant',
+                    'returnItems.orderDetail.product',
+                    'returnItems.attachments',
+                    'cancellation.items.orderDetail.product',
+                    'cancellation.items.orderDetail.productVariant'
+                ])
                 ->firstOrFail();
         }
+
+        // Tính tổng giá trị sản phẩm còn lại
+        $subtotal = $order->activeOrderDetails->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
 
         // Thêm logic kiểm tra thời gian hoàn hàng
         $canReturn = false;
@@ -417,57 +436,133 @@ class OrderController extends Controller
             $canReturn = now()->lte($returnDeadline);
         }
 
-        return view('clients.user.show-order', compact('order', 'canReturn'));
+        return view('clients.user.show-order', compact('order', 'canReturn', 'subtotal'));
     }
 
     public function cancel(Request $request, $id)
     {
         $request->validate([
             'reason' => 'required|string|max:1000',
+            'cancelled_items' => 'required|array|min:1',
+            'cancelled_items.*' => 'exists:order_details,id',
         ]);
 
-        $order = Order::where('id', $id)->with('orderDetails.product', 'orderDetails.productVariant')
+        $order = Order::where('id', $id)
             ->where('user_id', auth()->id())
+            ->with(['orderDetails.product', 'orderDetails.productVariant'])
             ->firstOrFail();
 
-        if ($order->status != 1) {
-            return back()->with('error', 'Chỉ có thể hủy đơn hàng khi chưa được xác nhận.');
+        // Kiểm tra nếu đơn hàng đã được hủy một phần/toàn bộ trước đó
+        if ($order->cancellation) {
+            return back()->with('error', 'Đơn hàng này đã được hủy một phần trước đó và không thể hủy thêm.');
+        }
+
+        // Kiểm tra trạng thái đơn hàng
+        if (!in_array($order->status, [1, 2])) {
+            return back()->with('error', 'Chỉ có thể hủy đơn hàng khi chưa được xác nhận hoặc đang chuẩn bị.');
         }
 
         DB::beginTransaction();
         try {
-            $order->update([
-                'status' => 6,
-                'reason' => $request->reason
-            ]);
+            // Tạo bản ghi hủy đơn hàng
+            $cancellationData = [
+                'order_id' => $order->id,
+                'user_id' => auth()->id(),
+                'reason' => $request->reason,
+                'cancelled_at' => now(),
+            ];
 
-            // Xử lý hoàn tiền nếu đã thanh toán
-            if ($order->payment_status === 'paid') {
-                $order->update([
-                    'payment_status' => 'refunded'
-                ]);
+            // Thêm refund_amount nếu cột tồn tại
+            if (Schema::hasColumn('order_cancellations', 'refund_amount')) {
+                $cancellationData['refund_amount'] = 0;
             }
 
-            // Hoàn lại số lượng tồn kho
-            foreach ($order->orderDetails as $orderDetail) {
-                $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
-                $orderDetail->product->save();
+            $cancellation = OrderCancellation::create($cancellationData);
 
-                if (!is_null($orderDetail->productVariant)) {
-                    $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
-                    $orderDetail->productVariant->save();
+            $totalCancelledAmount = 0;
+            $cancelledItemsCount = 0;
+            $cancelledItemsIds = [];
+
+            // Xử lý từng sản phẩm bị hủy
+            foreach ($request->cancelled_items as $orderDetailId) {
+                $orderDetail = OrderDetail::find($orderDetailId);
+
+                if ($orderDetail && $orderDetail->order_id == $order->id) {
+                    // Tạo bản ghi hủy sản phẩm
+                    OrderCancellationItem::create([
+                        'order_cancellation_id' => $cancellation->id,
+                        'order_detail_id' => $orderDetailId,
+                    ]);
+
+                    // Tính tổng tiền sản phẩm bị hủy
+                    $totalCancelledAmount += $orderDetail->price * $orderDetail->quantity;
+                    $cancelledItemsCount++;
+                    $cancelledItemsIds[] = $orderDetailId;
+
+                    // Xóa mềm sản phẩm (ẩn khỏi đơn hàng)
+                    $orderDetail->delete();
+
+                    // Hoàn lại số lượng tồn kho
+                    if ($orderDetail->product) {
+                        $orderDetail->product->quantity_in_stock += $orderDetail->quantity;
+                        $orderDetail->product->save();
+                    }
+
+                    if ($orderDetail->productVariant) {
+                        $orderDetail->productVariant->quantity_in_stock += $orderDetail->quantity;
+                        $orderDetail->productVariant->save();
+                    }
                 }
             }
 
+            // Cập nhật tổng tiền đơn hàng
+            $order->total_price -= $totalCancelledAmount;
+
+            // Cập nhật refund_amount nếu cột tồn tại
+            if (Schema::hasColumn('order_cancellations', 'refund_amount')) {
+                $cancellation->refund_amount = $totalCancelledAmount;
+                $cancellation->save();
+            }
+
+            // Kiểm tra nếu hủy tất cả sản phẩm
+            $remainingItemsCount = OrderDetail::where('order_id', $order->id)
+                ->whereNotIn('id', $cancelledItemsIds)
+                ->count();
+
+            if ($remainingItemsCount === 0) {
+                // Hủy toàn bộ đơn hàng
+                $order->status = 6; // Hủy đơn
+                $order->reason = $request->reason;
+
+                // Xử lý hoàn tiền nếu đã thanh toán
+                if ($order->payment_status === 'paid') {
+                    $order->payment_status = 'refunded';
+                }
+
+                $message = 'Đơn hàng đã được hủy thành công' .
+                    ($order->payment_status === 'refunded' ?
+                        '. Số tiền ' . number_format($order->total_price + $totalCancelledAmount, 0, ',', '.') .
+                        'đ sẽ được hoàn trả trong vòng 3-5 ngày làm việc.' : '.');
+            } else {
+                // Đánh dấu đơn hàng đã hủy một phần - chỉ nếu cột tồn tại
+                if (Schema::hasColumn('orders', 'has_partial_cancellation')) {
+                    $order->has_partial_cancellation = true;
+                }
+                $message = 'Đã hủy ' . $cancelledItemsCount . ' sản phẩm trong đơn hàng. Tổng tiền đã được cập nhật.';
+            }
+
+            $order->save();
+
             DB::commit();
 
-            if ($order->payment_status === 'refunded') {
-                return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công. Số tiền ' . number_format($order->total_price, 0, ',', '.') . 'đ sẽ được hoàn trả trong vòng 3-5 ngày làm việc.');
+            if ($remainingItemsCount === 0) {
+                return redirect()->route('clients.orders')->with('success', $message);
             } else {
-                return redirect()->route('clients.orders')->with('success', 'Đơn hàng đã được hủy thành công.');
+                return redirect()->route('clients.orderdetail', $order->id)->with('success', $message);
             }
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Lỗi hủy đơn hàng: ' . $e->getMessage());
             return back()->with('error', 'Hủy đơn hàng thất bại: ' . $e->getMessage());
         }
     }

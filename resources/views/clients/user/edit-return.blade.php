@@ -95,6 +95,38 @@
 
                             @foreach ($order->orderDetails as $index => $detail)
                                 @php
+                                    $product = $detail->product;
+                                    $variant = $detail->productVariant;
+
+                                    // Xử lý hiển thị biến thể
+                                    $variantDisplay = '';
+                                    if ($variant) {
+                                        if (
+                                            $variant->variant_values &&
+                                            is_array(json_decode($variant->variant_values, true))
+                                        ) {
+                                            $variantValues = json_decode($variant->variant_values, true);
+                                            $variantDisplay = implode(', ', $variantValues);
+                                        } elseif ($variant->variant_name) {
+                                            $variantDisplay = $variant->variant_name;
+                                        }
+
+                                        // Lấy thông tin chi tiết biến thể từ relationship nếu có
+                                        if ($variant->attributeValues && $variant->attributeValues->count() > 0) {
+                                            $attributeDetails = $variant->attributeValues
+                                                ->map(function ($attrValue) {
+                                                    return $attrValue->attribute->name . ': ' . $attrValue->value;
+                                                })
+                                                ->implode(', ');
+                                            $variantDisplay = $attributeDetails;
+                                        }
+                                    }
+
+                                    // Kiểm tra xem sản phẩm đã bị hủy chưa
+                                    $isCancelled =
+                                        $order->cancellation &&
+                                        $order->cancellation->items->contains('order_detail_id', $detail->id);
+
                                     $existingReturnItem = $order->returnItems
                                         ->where('order_detail_id', $detail->id)
                                         ->first();
@@ -104,164 +136,188 @@
                                     $isItemProcessed = $existingReturnItem && $existingReturnItem->status != 'pending';
                                 @endphp
 
-                                <div class="card mb-3 product-item {{ $isItemProcessed ? 'border-danger' : '' }}">
-                                    <div class="card-body">
-                                        @if ($isItemProcessed)
-                                            <div class="alert alert-warning py-2 mb-3">
-                                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                                Sản phẩm này đã được xử lý và không thể chỉnh sửa
-                                            </div>
-                                        @endif
-
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <div class="form-check">
-                                                    <input type="checkbox" class="form-check-input return-item-checkbox"
-                                                        name="return_items[{{ $index }}][selected]" value="1"
-                                                        data-index="{{ $index }}"
-                                                        id="return_item_{{ $index }}"
-                                                        {{ $isSelected ? 'checked' : '' }}
-                                                        {{ $isItemProcessed ? 'disabled' : '' }}>
+                                {{-- Ẩn sản phẩm đã hủy --}}
+                                @if (!$isCancelled)
+                                    <div class="card mb-3 product-item {{ $isItemProcessed ? 'border-danger' : '' }}">
+                                        <div class="card-body">
+                                            @if ($isItemProcessed)
+                                                <div class="alert alert-warning py-2 mb-3">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                                    Sản phẩm này đã được xử lý và không thể chỉnh sửa
                                                 </div>
-                                            </div>
+                                            @endif
 
-                                            <div class="col-md-4">
-                                                <label for="return_item_{{ $index }}"
-                                                    class="form-check-label fw-semibold {{ $isItemProcessed ? 'text-muted' : '' }}">
-                                                    {{ $detail->product->product_name }}
-                                                    @if ($isItemProcessed)
-                                                        <span class="badge bg-secondary ms-1">Đã xử lý</span>
-                                                    @endif
-                                                </label>
-                                                @if ($detail->productVariant)
-                                                    <div class="small text-muted">
-                                                        {{ $detail->productVariant->variant_values ? implode(', ', json_decode($detail->productVariant->variant_values, true)) : '' }}
+                                            <div class="row align-items-center">
+                                                <div class="col-auto">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input return-item-checkbox"
+                                                            name="return_items[{{ $index }}][selected]"
+                                                            value="1" data-index="{{ $index }}"
+                                                            id="return_item_{{ $index }}"
+                                                            {{ $isSelected ? 'checked' : '' }}
+                                                            {{ $isItemProcessed ? 'disabled' : '' }}>
                                                     </div>
-                                                @endif
-                                                <input type="hidden"
-                                                    name="return_items[{{ $index }}][order_detail_id]"
-                                                    value="{{ $detail->id }}">
-                                            </div>
-
-                                            <div class="col-md-2 text-center">
-                                                <div class="small text-muted">Đã mua</div>
-                                                <span class="fw-bold">{{ $detail->quantity }}</span>
-                                            </div>
-
-                                            <div class="col-md-2">
-                                                <label class="form-label small">Số lượng trả</label>
-                                                <div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary quantity-btn"
-                                                        data-action="decrease" data-index="{{ $index }}"
-                                                        {{ $isSelected && !$isItemProcessed ? '' : 'disabled' }}>
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                    <input type="number"
-                                                        class="form-control text-center return-quantity {{ $isItemProcessed ? 'bg-light' : '' }}"
-                                                        name="return_items[{{ $index }}][quantity]" min="1"
-                                                        max="{{ $detail->quantity }}" data-max="{{ $detail->quantity }}"
-                                                        data-index="{{ $index }}" value="{{ $returnQuantity }}"
-                                                        {{ $isSelected && !$isItemProcessed ? '' : 'disabled' }}
-                                                        {{ $isItemProcessed ? 'readonly' : '' }}>
-                                                    <button type="button" class="btn btn-outline-secondary quantity-btn"
-                                                        data-action="increase" data-index="{{ $index }}"
-                                                        {{ $isSelected && !$isItemProcessed ? '' : 'disabled' }}>
-                                                        <i class="fas fa-plus"></i>
-                                                    </button>
                                                 </div>
-                                                <div class="invalid-feedback quantity-error" style="display: none;">
-                                                    Số lượng trả không được vượt quá số lượng đã mua
-                                                </div>
-                                            </div>
 
-                                            <div class="col-md-4">
-                                                <label class="form-label small">Lý do hoàn trả</label>
-                                                <textarea name="return_items[{{ $index }}][reason]"
-                                                    class="form-control form-control-sm return-reason {{ $isItemProcessed ? 'bg-light' : '' }}" rows="2"
-                                                    {{ $isSelected && !$isItemProcessed ? '' : 'disabled' }} placeholder="Nhập lý do hoàn trả..."
-                                                    data-index="{{ $index }}" {{ $isItemProcessed ? 'readonly' : '' }}>{{ $returnReason }}</textarea>
-                                            </div>
-                                        </div>
+                                                <div class="col-md-4">
+                                                    <label for="return_item_{{ $index }}"
+                                                        class="form-check-label fw-semibold {{ $isItemProcessed ? 'text-muted' : '' }}">
+                                                        {{ $product->product_name ?? '[Đã xoá]' }}
+                                                        @if ($isItemProcessed)
+                                                            <span class="badge bg-secondary ms-1">Đã xử lý</span>
+                                                        @endif
+                                                    </label>
 
-                                        <!-- Phần đính kèm file - Luôn hiển thị nhưng ẩn đi nếu không được chọn -->
-                                        <div class="attachment-section mt-3" id="attachment_section_{{ $index }}"
-                                            style="{{ $isSelected ? '' : 'display: none;' }}">
-                                            <hr>
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <label class="form-label fw-semibold mb-0">
-                                                            <i class="fas fa-paperclip me-2"></i>
-                                                            Đính kèm hình ảnh/video
-                                                        </label>
-                                                        <span class="text-muted small">
-                                                            <span class="file-counter"
-                                                                data-index="{{ $index }}">{{ $existingReturnItem ? $existingReturnItem->attachments->count() : 0 }}</span>/5
-                                                            file
-                                                        </span>
-                                                    </div>
-                                                    <div class="text-muted small mb-3">
-                                                        Tối đa 5 file, mỗi file ≤ 10MB. Hỗ trợ: JPG, PNG, GIF,
-                                                        MP4, MOV, AVI
-                                                    </div>
-
-                                                    <!-- Hiển thị file đính kèm hiện có -->
-                                                    @if ($existingReturnItem && $existingReturnItem->attachments->count() > 0)
-                                                        <div class="mb-3">
-                                                            <p class="small fw-semibold mb-2">File đã đính kèm:</p>
-                                                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                                                @foreach ($existingReturnItem->attachments as $attachment)
-                                                                    <div class="existing-attachment position-relative"
-                                                                        style="width: 80px; height: 80px;">
-                                                                        @if ($attachment->file_type == 'image')
-                                                                            <img src="{{ asset('storage/' . $attachment->file_path) }}"
-                                                                                class="img-thumbnail w-100 h-100"
-                                                                                style="object-fit: cover;"
-                                                                                alt="Attachment">
-                                                                        @else
-                                                                            <div
-                                                                                class="bg-light d-flex align-items-center justify-content-center w-100 h-100 rounded border">
-                                                                                <i class="fas fa-video text-primary"></i>
-                                                                            </div>
-                                                                        @endif
-                                                                        <div
-                                                                            class="form-check position-absolute top-0 start-0 m-1">
-                                                                            <input type="checkbox"
-                                                                                class="form-check-input"
-                                                                                name="return_items[{{ $index }}][existing_attachments][]"
-                                                                                value="{{ $attachment->id }}" checked>
-                                                                        </div>
-                                                                        <button type="button"
-                                                                            class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-1 remove-existing-attachment"
-                                                                            style="width: 20px; height: 20px; line-height: 1; font-size: 10px;">
-                                                                            <i class="fas fa-times"></i>
-                                                                        </button>
-                                                                    </div>
+                                                    {{-- Hiển thị biến thể --}}
+                                                    @if ($variantDisplay)
+                                                        <div class="small text-muted mt-1">
+                                                            <span class="text-muted">Biến thể:</span>
+                                                            <div class="mt-1">
+                                                                @foreach (explode(', ', $variantDisplay) as $variantItem)
+                                                                    <span
+                                                                        class="badge bg-info text-white me-1 mb-1">{{ trim($variantItem) }}</span>
                                                                 @endforeach
                                                             </div>
                                                         </div>
+                                                    @elseif ($variant && $variant->sku)
+                                                        <div class="small mt-1">
+                                                            <span class="text-muted">SKU:</span>
+                                                            <span class="badge bg-secondary">{{ $variant->sku }}</span>
+                                                        </div>
                                                     @endif
 
-                                                    <div class="mb-3">
-                                                        <input type="file" class="d-none multi-file-input"
-                                                            id="multi-file-input-{{ $index }}"
-                                                            name="return_items[{{ $index }}][attachments][]"
-                                                            accept="image/*,video/*" data-index="{{ $index }}"
-                                                            multiple>
-                                                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                                            onclick="document.getElementById('multi-file-input-{{ $index }}').click()">
-                                                            <i class="fas fa-cloud-upload-alt me-2"></i>Thêm file mới
+                                                    <input type="hidden"
+                                                        name="return_items[{{ $index }}][order_detail_id]"
+                                                        value="{{ $detail->id }}">
+                                                </div>
+
+                                                <div class="col-md-2 text-center">
+                                                    <div class="small text-muted">Đã mua</div>
+                                                    <span class="fw-bold">{{ $detail->quantity }}</span>
+                                                </div>
+
+                                                <div class="col-md-2">
+                                                    <label class="form-label small">Số lượng trả</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <button type="button"
+                                                            class="btn btn-outline-secondary quantity-btn"
+                                                            data-action="decrease" data-index="{{ $index }}"
+                                                            {{ $isSelected && !$isItemProcessed ? '' : 'disabled' }}>
+                                                            <i class="fas fa-minus"></i>
+                                                        </button>
+                                                        <input type="number"
+                                                            class="form-control text-center return-quantity {{ $isItemProcessed ? 'bg-light' : '' }}"
+                                                            name="return_items[{{ $index }}][quantity]"
+                                                            min="1" max="{{ $detail->quantity }}"
+                                                            data-max="{{ $detail->quantity }}"
+                                                            data-index="{{ $index }}"
+                                                            value="{{ $returnQuantity }}"
+                                                            {{ $isSelected && !$isItemProcessed ? '' : 'disabled' }}
+                                                            {{ $isItemProcessed ? 'readonly' : '' }}>
+                                                        <button type="button"
+                                                            class="btn btn-outline-secondary quantity-btn"
+                                                            data-action="increase" data-index="{{ $index }}"
+                                                            {{ $isSelected && !$isItemProcessed ? '' : 'disabled' }}>
+                                                            <i class="fas fa-plus"></i>
                                                         </button>
                                                     </div>
+                                                    <div class="invalid-feedback quantity-error" style="display: none;">
+                                                        Số lượng trả không được vượt quá số lượng đã mua
+                                                    </div>
+                                                </div>
 
-                                                    <div class="file-previews row g-2"
-                                                        id="file-previews-{{ $index }}">
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Lý do hoàn trả</label>
+                                                    <textarea name="return_items[{{ $index }}][reason]"
+                                                        class="form-control form-control-sm return-reason {{ $isItemProcessed ? 'bg-light' : '' }}" rows="2"
+                                                        {{ $isSelected && !$isItemProcessed ? '' : 'disabled' }} placeholder="Nhập lý do hoàn trả..."
+                                                        data-index="{{ $index }}" {{ $isItemProcessed ? 'readonly' : '' }}>{{ $returnReason }}</textarea>
+                                                </div>
+                                            </div>
+
+                                            <!-- Phần đính kèm file -->
+                                            <div class="attachment-section mt-3"
+                                                id="attachment_section_{{ $index }}"
+                                                style="{{ $isSelected ? '' : 'display: none;' }}">
+                                                <hr>
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div
+                                                            class="d-flex justify-content-between align-items-center mb-2">
+                                                            <label class="form-label fw-semibold mb-0">
+                                                                <i class="fas fa-paperclip me-2"></i>
+                                                                Đính kèm hình ảnh/video
+                                                            </label>
+                                                            <span class="text-muted small">
+                                                                <span class="file-counter"
+                                                                    data-index="{{ $index }}">{{ $existingReturnItem ? $existingReturnItem->attachments->count() : 0 }}</span>/5
+                                                                file
+                                                            </span>
+                                                        </div>
+                                                        <div class="text-muted small mb-3">
+                                                            Tối đa 5 file, mỗi file ≤ 10MB. Hỗ trợ: JPG, PNG, GIF,
+                                                            MP4, MOV, AVI
+                                                        </div>
+
+                                                        <!-- Hiển thị file đính kèm hiện có -->
+                                                        @if ($existingReturnItem && $existingReturnItem->attachments->count() > 0)
+                                                            <div class="mb-3">
+                                                                <p class="small fw-semibold mb-2">File đã đính kèm:</p>
+                                                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                                                    @foreach ($existingReturnItem->attachments as $attachment)
+                                                                        <div class="existing-attachment position-relative"
+                                                                            style="width: 80px; height: 80px;">
+                                                                            @if ($attachment->file_type == 'image')
+                                                                                <img src="{{ asset('storage/' . $attachment->file_path) }}"
+                                                                                    class="img-thumbnail w-100 h-100"
+                                                                                    style="object-fit: cover;"
+                                                                                    alt="Attachment">
+                                                                            @else
+                                                                                <div
+                                                                                    class="bg-light d-flex align-items-center justify-content-center w-100 h-100 rounded border">
+                                                                                    <i
+                                                                                        class="fas fa-video text-primary"></i>
+                                                                                </div>
+                                                                            @endif
+                                                                            <div
+                                                                                class="form-check position-absolute top-0 start-0 m-1">
+                                                                                <input type="checkbox"
+                                                                                    class="form-check-input"
+                                                                                    name="return_items[{{ $index }}][existing_attachments][]"
+                                                                                    value="{{ $attachment->id }}" checked>
+                                                                            </div>
+                                                                            <button type="button"
+                                                                                class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-1 remove-existing-attachment"
+                                                                                style="width: 20px; height: 20px; line-height: 1; font-size: 10px;">
+                                                                                <i class="fas fa-times"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        <div class="mb-3">
+                                                            <input type="file" class="d-none multi-file-input"
+                                                                id="multi-file-input-{{ $index }}"
+                                                                name="return_items[{{ $index }}][attachments][]"
+                                                                accept="image/*,video/*" data-index="{{ $index }}"
+                                                                multiple>
+                                                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                                                onclick="document.getElementById('multi-file-input-{{ $index }}').click()">
+                                                                <i class="fas fa-cloud-upload-alt me-2"></i>Thêm file mới
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="file-previews row g-2"
+                                                            id="file-previews-{{ $index }}">
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
                             @endforeach
                         </div>
 
@@ -331,7 +387,7 @@
 
         // Khởi tạo form chỉnh sửa
         function initializeReturnForm() {
-            const checkboxes = document.querySelectorAll('.return-item-checkbox');
+            const checkboxes = document.querySelectorAll('.return-item-checkbox:not(:disabled)');
             const submitBtn = document.getElementById('submitReturnRequest');
 
             checkboxes.forEach(checkbox => {
