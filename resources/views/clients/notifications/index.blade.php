@@ -22,8 +22,10 @@
                     <!-- Nội dung -->
                     <div class="flex-grow-1">
                         <p class="mb-1">
-                            Đơn hàng <strong>#{{ $order->order_code }}</strong> của bạn đã hoàn tất.
+                            Đơn hàng <strong>#{{ $order->order_code }}</strong> của bạn {{ $order->status_text }}.
                         </p>
+
+
                         <small class="text-muted">
                             {{ $order->updated_at ? \Carbon\Carbon::parse($order->updated_at)->format('H:i d-m-Y') : '' }}
                         </small>
@@ -46,3 +48,23 @@
         </div>
     </div>
 @endsection
+
+<style>
+    .pagination {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center;
+        gap: 6px;
+        padding-left: 0;
+        margin: 0;
+    }
+
+    .page-item {
+        list-style: none;
+    }
+
+    .page-link {
+        border-radius: 6px;
+        padding: 6px 12px;
+    }
+</style>

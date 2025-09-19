@@ -244,6 +244,10 @@ Route::get('/filter-category', [HomeController::class, 'filterByCategory'])->nam
     Route::get('/notifications/orders', [OrderNotificationController::class, 'index'])
         ->name('notifications.orders.index');
 
+    Route::post('/notifications/read/{id}', [OrderNotificationController::class, 'markAsRead'])
+    ->name('order.notifications.read');
+
+
 
 
 Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {

@@ -81,4 +81,18 @@ class Order extends Model
     {
         return $this->hasMany(OrderReturnItem::class);
     }
+
+    public function getStatusTextAttribute()
+{
+    return match($this->status) {
+        0 => 'chờ xác nhận',
+        1 => 'không được xác nhận',
+        2 => 'đã xác nhận',
+        3 => 'đang được giao',
+        4 => 'đã hoàn thành',
+        5 => 'đã hoàn thành',
+        default => 'không xác định',
+    };
+}
+
 }
