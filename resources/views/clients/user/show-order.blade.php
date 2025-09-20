@@ -524,7 +524,7 @@
                                     <th width="8%" class="text-center">SL</th>
                                     <th width="15%" class="text-end">Đơn giá</th>
                                     <th width="15%" class="text-end">Thành tiền</th>
-                                    <th width="17%" class="text-center">Trạng thái</th>
+                                    <th width="17%" class="text-center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -636,6 +636,84 @@
                                             @endif
                                         </td>
                                     </tr>
+
+                                    {{-- Modal chỉ render khi chưa đánh giá --}}
+                                    @if ($order->status == 4 && !$alreadyRated)
+                                        <div class="modal fade" id="reviewModal{{ $item->id }}" tabindex="-1"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <form action="{{ route('clients.comments.store') }}" method="POST"
+                                                        enctype="multipart/form-data">
+                                                        @csrf
+
+                                                        {{-- hidden inputs --}}
+                                                        <input type="hidden" name="product_id"
+                                                            value="{{ $product->id }}">
+                                                        <input type="hidden" name="product_variant_id"
+                                                            value="{{ $variant->id ?? '' }}">
+                                                        <input type="hidden" name="order_id"
+                                                            value="{{ $order->id }}">
+                                                        <input type="hidden" name="order_detail_id"
+                                                            value="{{ $item->id }}">
+
+                                                        {{-- Header --}}
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Đánh giá: {{ $product->product_name }}
+                                                            </h5>
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal"></button>
+                                                        </div>
+
+                                                        {{-- Body --}}
+                                                        <div class="modal-body">
+                                                            <!-- Rating -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Chấm sao:</label>
+                                                                <select name="rating" class="form-select" required>
+                                                                    <option value="">-- Chọn sao --</option>
+                                                                    @for ($i = 1; $i <= 5; $i++)
+                                                                        <option value="{{ $i }}">
+                                                                            {{ $i }} ⭐</option>
+                                                                    @endfor
+                                                                </select>
+                                                            </div>
+
+                                                            <!-- Nội dung -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Nội dung:</label>
+                                                                <textarea name="content" class="form-control" rows="3" required></textarea>
+                                                            </div>
+
+                                                            <!-- Ảnh -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Ảnh (tối đa 5, ảnh + video ≤
+                                                                    5):</label>
+                                                                <input type="file" name="images[]"
+                                                                    class="form-control image-input" accept="image/*"
+                                                                    multiple>
+                                                            </div>
+
+                                                            <!-- Video -->
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Video (1 video, tổng ảnh + video
+                                                                    ≤ 5):</label>
+                                                                <input type="file" name="video"
+                                                                    class="form-control video-input" accept="video/*">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-primary">Gửi đánh
+                                                                giá</button>
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Đóng</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endforeach
 
                                 <!-- Hiển thị sản phẩm đã hủy -->
@@ -709,7 +787,6 @@
                                                                 <span
                                                                     class="badge bg-secondary me-1 mb-1">{{ trim($variantItem) }}</span>
                                                             @endforeach
-
                                                         </div>
                                                     </div>
                                                 @elseif ($variant && $variant->sku)
@@ -722,12 +799,8 @@
                                             <td class="text-center">
                                                 <span class="badge bg-secondary">{{ $item->quantity }}</span>
                                             </td>
-                                            <td class="text-end">
-                                                {{ number_format($item->price, 0, ',', '.') }}₫
-                                            </td>
-                                            <td class="text-end">
-                                                {{ number_format($itemTotal, 0, ',', '.') }}₫
-                                            </td>
+                                            <td class="text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
+                                            <td class="text-end">{{ number_format($itemTotal, 0, ',', '.') }}₫</td>
                                             <td class="text-center">
                                                 <span class="badge bg-danger">
                                                     <i class="fas fa-ban me-1"></i>Đã hủy
@@ -739,6 +812,8 @@
                                         </tr>
                                     @endforeach
                                 @endif
+
+
                             </tbody>
                         </table>
                     </div>
