@@ -411,29 +411,36 @@ class OrderController extends Controller
                 ->where('user_id', auth()->id())
                 ->with([
                     'orderDetails.product',
-                    'orderDetails.productVariant',
+                    'orderDetails.productVariant.attributeValues.attribute',
                     'activeOrderDetails.product',
-                    'activeOrderDetails.productVariant',
+                    'activeOrderDetails.productVariant.attributeValues.attribute',
                     'cancelledOrderDetails.product',
-                    'cancelledOrderDetails.productVariant',
+                    'cancelledOrderDetails.productVariant.attributeValues.attribute',
                     'returnItems.orderDetail.product',
+                    'returnItems.orderDetail.productVariant.attributeValues.attribute',
                     'returnItems.attachments',
                     'cancellation.items.orderDetail.product',
-                    'cancellation.items.orderDetail.productVariant'
+                    'cancellation.items.orderDetail.productVariant.attributeValues.attribute',
+                    'cancellation.items',
+                    'cancellation'
                 ])
                 ->firstOrFail();
         }
 
-        // Tính tổng giá trị sản phẩm còn lại
-        $subtotal = $order->activeOrderDetails->sum(function ($item) {
-            return $item->price * $item->quantity;
-        });
+        $subtotal = 0;
+        if ($order->activeOrderDetails) {
+            $subtotal = $order->activeOrderDetails->sum(function ($item) {
+                return $item->price * $item->quantity;
+            });
+        }
 
-        // Thêm logic kiểm tra thời gian hoàn hàng
         $canReturn = false;
-        if ($order->status == 4 && $order->completed_at) {
-            $returnDeadline = Carbon::parse($order->completed_at)->addHours(24);
-            $canReturn = now()->lte($returnDeadline);
+        if (in_array($order->status, [4, 9])) {
+            $referenceTime = $order->completed_at ?? $order->received_at;
+            if ($referenceTime) {
+                $returnDeadline = Carbon::parse($referenceTime)->addHours(24);
+                $canReturn = now()->lte($returnDeadline);
+            }
         }
 
         return view('clients.user.show-order', compact('order', 'canReturn', 'subtotal'));

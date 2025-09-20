@@ -1,6 +1,31 @@
 @extends('admin.layouts.app')
 
 @section('content')
+    @php
+        $cancelledItemIds = [];
+        if ($order->cancellation) {
+            $cancelledItemIds = $order->cancellation->items->pluck('order_detail_id')->toArray();
+        }
+
+        $pendingReturnItems = [];
+        $completedReturnItems = [];
+        $rejectedReturnItems = [];
+
+        if ($order->returnItems->count() > 0) {
+            foreach ($order->returnItems as $returnItem) {
+                if ($returnItem->status == 'pending') {
+                    $pendingReturnItems[] = $returnItem->order_detail_id;
+                } elseif ($returnItem->status == 'approved') {
+                    $completedReturnItems[] = $returnItem->order_detail_id;
+                } elseif ($returnItem->status == 'rejected') {
+                    $rejectedReturnItems[] = $returnItem->order_detail_id;
+                }
+            }
+        }
+
+        $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+    @endphp
+
     <div class="container-fluid my-4">
         <h3 class="text-center text-primary">Chi tiết đơn hàng #{{ $order->id }}</h3>
         <h5 class="text-center">{{ $order->order_code }}</h5>
@@ -104,15 +129,80 @@
                                     ₫{{ number_format($lineTotal, 0, ',', '.') }}
                                 </td>
                                 <td class="text-center">
-                                    @if ($isCancelled)
-                                        <span class="badge bg-danger">
-                                            <i class="fas fa-ban me-1"></i>Đã hủy
-                                        </span>
-                                        <div class="mt-1 small">
-                                            {{ $order->cancellation->cancelled_at->format('d/m/Y') }}
-                                        </div>
+                                    @php
+                                        $isItemCancelled = in_array($detail->id, $cancelledItemIds);
+                                        $isOrderRejected = $order->status == 10; // Không xác nhận
+                                        $isOrderFullyCancelled = $order->status == 6; // Hủy toàn bộ
+
+                                        $showAsRejected = $isOrderRejected && !$isItemCancelled;
+                                        $showAsCancelled = $isItemCancelled || $isOrderFullyCancelled;
+
+                                        $isItemPendingReturn = in_array($detail->id, $pendingReturnItems);
+                                        $isItemCompletedReturn = in_array($detail->id, $completedReturnItems);
+                                        $isItemRejectedReturn = in_array($detail->id, $rejectedReturnItems);
+                                    @endphp
+
+                                    @if ($isReturnStatus)
+                                        @if ($isItemPendingReturn)
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
+                                            </span>
+                                        @elseif ($isItemCompletedReturn)
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>Đã hoàn hàng
+                                            </span>
+                                        @elseif ($isItemRejectedReturn)
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle me-1"></i>Không được hoàn hàng
+                                            </span>
+                                        @else
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>Giao thành công
+                                            </span>
+                                        @endif
                                     @else
-                                        <span class="badge bg-success">Đang hoạt động</span>
+                                        @if ($isItemPendingReturn)
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
+                                            </span>
+                                        @elseif ($isItemCompletedReturn)
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>Đã hoàn hàng
+                                            </span>
+                                        @elseif ($isItemRejectedReturn)
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle me-1"></i>Không được hoàn hàng
+                                            </span>
+                                        @elseif ($showAsCancelled)
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-ban me-1"></i>Đã hủy
+                                            </span>
+                                        @elseif ($showAsRejected)
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle me-1"></i>Không xác nhận
+                                            </span>
+                                            <div class="mt-1 small">
+                                                {{ $order->updated_at->format('d/m/Y') }}
+                                            </div>
+                                        @elseif ($isOrderFullyCancelled)
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-ban me-1"></i>Đã hủy
+                                            </span>
+                                        @else
+                                            @if ($order->status == 9 && $order->received_at)
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Giao thành công
+                                                </span>
+                                            @elseif ($order->status == 11 && $order->delivery_failed_at)
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times-circle me-1"></i>Giao thất bại
+                                                </span>
+                                            @elseif ($order->status == 4)
+                                                <span class="badge bg-success">Giao thành công</span>
+                                            @else
+                                                <span class="badge bg-success">Đang hoạt động</span>
+                                            @endif
+                                        @endif
                                     @endif
                                 </td>
                             </tr>
@@ -248,7 +338,7 @@
                                 <small class="text-muted">
                                     <i class="fas fa-info-circle me-1"></i>
                                     Tổng thanh toán đã được điều chỉnh từ {{ number_format($expectedTotal) }}đ
-                                    xuống {{ number_format($order->total_price) }}đ do hủy sản phẩm
+                                    xuống {{ number_format($order->total_price) }}đ
                                 </small>
                             </div>
                         @endif
