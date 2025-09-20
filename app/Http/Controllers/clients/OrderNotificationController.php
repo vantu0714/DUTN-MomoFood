@@ -9,59 +9,70 @@ use Carbon\Carbon;
 
 class OrderNotificationController extends Controller
 {
-   
+
     public function fetch(Request $request)
     {
         $totalCount = Order::where('user_id', auth()->id())
-                       ->where('status', 4)
-                       ->count();
+            ->whereIn('status', [0, 1, 2, 3, 4])
+            ->where('is_read', 0)
+            ->count();
 
-    $orders = Order::with('orderDetails.product')
-                   ->where('user_id', auth()->id())
-                   ->where('status', 4)
-                   ->latest('created_at')
-                   ->get(); 
+        $orders = Order::with('orderDetails.product')
+            ->where('user_id', auth()->id())
+            ->whereIn('status', [0, 1, 2, 3, 4])
+            ->where('is_read', 0)
+            ->latest('updated_at')
+            ->get();
 
         $notifications = $orders->map(function ($order) {
+            $statusMessages = match ($order->status) {
+                0 => "Đơn hàng {$order->order_code} chờ xác nhận.",
+                1 => "Đơn hàng {$order->order_code} đang được xác nhận.",
+                2 => "Đơn hàng {$order->order_code} đã được xác nhận.",
+                3 => "Đơn hàng {$order->order_code} đang được giao.",
+                4 => "Đơn hàng {$order->order_code} đã hoàn thành.",
+                default => "Đơn hàng {$order->order_code} có cập nhật mới."
+            };
+
             return [
                 'id'           => $order->id,
                 'order_code'   => $order->order_code,
-                'product_image' => $order->orderDetails->first()->product->image 
-                          ?? asset('clients/img/no-image.png'),
-                'message'      => "Đơn hàng {$order->order_code} đã hoàn thành.",
-                'time'         => $order->created_at
-                                  ? Carbon::parse($order->created_at)->diffForHumans()
-                                  : '',
+                'product_image' => $order->orderDetails->first()->product->image
+                    ? asset('storage/' . $order->orderDetails->first()->product->image)
+                    : asset('clients/img/no-image.png'),
+                'message'      => $statusMessages,
+                'time'         => $order->updated_at
+                    ? Carbon::parse($order->updated_at)->diffForHumans()
+                    : '',
                 'link' => route('clients.orderdetail', $order->id),
+                'is_read'      => $order->is_read,
+
 
             ];
         });
 
         return response()->json([
-        'count' => $totalCount,        
-        'notifications' => $notifications
-    ]);
+            'count' => $totalCount,
+            'notifications' => $notifications
+        ]);
     }
-
-    // // Trang chi tiết thông báo đơn hàng
-    // public function show($orderId)
-    // {
-    //     $order = Order::with('orderDetails.product')
-    //         ->where('user_id', auth()->id())
-    //         ->findOrFail($orderId);
-
-    //     return view('clients.notifications.order', compact('order'));
-    // }
-
-    // Trang hiển thị tất cả thông báo đơn hàng
     public function index()
     {
         $orders = Order::with('orderDetails.product')
             ->where('user_id', auth()->id())
-            ->where('status', 1) // kiểm tra lại status
+            ->whereIn('status', [0, 1, 2, 3, 4])
             ->latest('created_at')
             ->paginate(10);
 
         return view('clients.notifications.index', compact('orders'));
+    }
+
+    public function markAsRead($id)
+    {
+        $order = Order::where('user_id', auth()->id())->findOrFail($id);
+        $order->is_read = 1;
+        $order->save();
+
+        return response()->json(['success' => true]);
     }
 }

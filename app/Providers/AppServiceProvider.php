@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
-        Paginator::useBootstrap();
+       Paginator::useBootstrapFive();
 
         // Tự động chia sẻ biến $cartCount đến tất cả các view
         View::composer('*', function ($view) {

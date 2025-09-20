@@ -598,34 +598,67 @@
 
 <script>
     function loadOrderNotifications() {
-    fetch("{{ route('order.notifications.fetch') }}")
+        fetch("{{ route('order.notifications.fetch') }}?ts=" + new Date().getTime())
+            .then(res => res.json())
+            .then(data => {
+                let html = "";
+
+                if (data.notifications && data.notifications.length > 0) {
+                    data.notifications.forEach(noti => {
+                        html += `
+                            <li class="dropdown-item">
+                                <a href="javascript:void(0)" onclick="markNotificationAsRead(${noti.id}, '${noti.link}')">
+                                    <div><strong>${noti.message}</strong></div>
+                                    <small>${noti.time ?? ''}</small>
+                                </a>
+                            </li>
+                        `;
+                    });
+                } else {
+                    html = '<li class="dropdown-item">Chưa có thông báo</li>';
+                }
+
+                document.getElementById("order-noti-items").innerHTML = html;
+
+                // cập nhật số badge
+                const count = data.count ?? 0;
+                document.getElementById("order-noti-count").innerText = count > 0 ? count : '';
+            })
+            .catch(err => console.error("Lỗi load thông báo:", err));
+    }
+
+    function markNotificationAsRead(id, link) {
+        fetch(`/notifications/read/${id}`, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        })
         .then(res => res.json())
-        .then(data => {
-            let html = "";
-            let count = data.length;
+        .then(() => {
+            // Giảm badge ngay tại frontend
+            let badge = document.getElementById("order-noti-count");
+            let current = parseInt(badge.innerText) || 0;
+            if (current > 0) {
+                badge.innerText = (current - 1) > 0 ? (current - 1) : '';
+            }
 
-            data.forEach(noti => {
-                html += `
-                    <li class="dropdown-item">
-                        <a href="${noti.link}">
-                            <div><strong>${noti.message}</strong></div>
-                            <small>${noti.time ?? ''}</small>
-                        </a>
-                    </li>
-                `;
-            });
+            // Sau đó chuyển hướng
+            window.location.href = link;
+        })
+        .catch(err => console.error("Lỗi đọc thông báo:", err));
+    }
 
-            document.getElementById("order-noti-items").innerHTML = html || '<li class="dropdown-item">Chưa có thông báo</li>';
-            document.getElementById("order-noti-count").innerText = count > 0 ? count : '';
-        });
-}
+    // load ngay khi vào trang
+    loadOrderNotifications();
 
-// load ngay khi vào trang
-loadOrderNotifications();
-// load lại mỗi 10 giây
-setInterval(loadOrderNotifications, 10000);
-
+    // load lại mỗi 10 giây
+    setInterval(loadOrderNotifications, 10000);
 </script>
+
 <!-- Sidebar Chat -->
 
 <div id="chatSidebar" class="chat-sidebar">
