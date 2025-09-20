@@ -22,6 +22,27 @@
                         <div class="col-md-9">
                             <p class="mb-2"><strong>👤 Người dùng:</strong> {{ $comment->user->email ?? 'Ẩn danh' }}</p>
                             <p class="mb-2"><strong>✍ Nội dung:</strong> {{ $comment->content }}</p>
+                            {{-- Hình ảnh và Video cùng 1 hàng, đều nhau --}}
+                            @if ($comment->images->count() || $comment->video)
+                                <div class="d-flex align-items-start gap-2 mb-3 flex-nowrap"
+                                    style="overflow-x:auto; padding-bottom:5px;">
+                                    {{-- Video đầu tiên nếu có --}}
+                                    @if ($comment->video)
+                                        <video controls
+                                            style="width:150px; height:150px; flex-shrink:0; border-radius:8px; object-fit:cover; box-shadow:0 2px 6px rgba(0,0,0,0.2); order:-1;">
+                                            <source src="{{ asset('storage/' . $comment->video) }}" type="video/mp4">
+                                            Trình duyệt không hỗ trợ video.
+                                        </video>
+                                    @endif
+
+                                    {{-- Ảnh --}}
+                                    @foreach ($comment->images->take(5) as $image)
+                                        <img src="{{ asset('storage/' . $image->path) }}" alt="Hình ảnh bình luận"
+                                            class="img-thumbnail"
+                                            style="width:150px; height:150px; flex-shrink:0; border-radius:8px; object-fit:cover; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+                                    @endforeach
+                                </div>
+                            @endif
 
                             {{-- Form trả lời --}}
                             <div class="mt-3">
