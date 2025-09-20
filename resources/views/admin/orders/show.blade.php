@@ -182,32 +182,35 @@
 
                 <div class="row gy-3">
                     @if ($order->cancellation && $order->cancellation->items->count() > 0)
+                        @php
+                            $totalProducts = $order->orderDetails->count();
+                            $cancelledProducts = $order->cancellation->items->count();
+                            $isFullyCancelled = $cancelledProducts === $totalProducts;
+                        @endphp
+
                         <div class="col-12">
-                            <div class="alert alert-warning">
+                            <div class="alert alert-{{ $isFullyCancelled ? 'danger' : 'warning' }}">
                                 <div class="d-flex align-items-center">
-                                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                                    <i
+                                        class="fas fa-{{ $isFullyCancelled ? 'ban' : 'exclamation-triangle' }} fa-2x me-3"></i>
                                     <div>
-                                        <h6 class="alert-heading mb-1">Đơn hàng đã được hủy một phần</h6>
-                                        <p class="mb-0">Một số sản phẩm trong đơn hàng đã được hủy vào
-                                            {{ $order->cancellation->cancelled_at->format('d/m/Y H:i') }}.
-                                            Lý do: {{ $order->cancellation->reason }}</p>
+                                        <h6 class="alert-heading mb-1">
+                                            {{ $isFullyCancelled ? 'Đơn hàng đã hủy toàn bộ' : 'Đơn hàng đã hủy một phần' }}
+                                        </h6>
+                                        <p class="mb-0">
+                                            @if ($isFullyCancelled)
+                                                Toàn bộ đơn hàng đã được hủy vào
+                                                {{ $order->cancellation->cancelled_at->format('d/m/Y H:i') }}.
+                                                Lý do: {{ $order->cancellation->reason }}
+                                            @else
+                                                Một số sản phẩm trong đơn hàng đã được hủy vào
+                                                {{ $order->cancellation->cancelled_at->format('d/m/Y H:i') }}.
+                                                Lý do: {{ $order->cancellation->reason }}
+                                            @endif
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Hiển thị tổng giá trị ban đầu -->
-                        <div class="col-md-6">
-                            <strong>Tổng giá trị ban đầu:</strong>
-                            <span class="text-muted">{{ number_format($totalBeforeCancellation) }}đ</span>
-                        </div>
-
-                        <!-- Hiển thị tiền hoàn lại -->
-                        <div class="col-md-6">
-                            <strong>Tiền hoàn lại:</strong>
-                            <span class="text-danger">-{{ number_format($cancelledAmount) }}đ</span>
-                            <small class="text-muted d-block">({{ $order->cancellation->items->count() }} sản phẩm đã
-                                hủy)</small>
                         </div>
                     @endif
 
@@ -229,23 +232,36 @@
                         <hr>
                     </div>
 
-                    <div class="col-md-6">
-                        <strong>Tổng giá sản phẩm:</strong>
-                        <span class="fw-semibold">{{ number_format($subtotal) }}đ</span>
-                    </div>
+                    @if ($order->status != 6)
+                        <div class="col-md-6">
+                            <strong>Tổng giá sản phẩm:</strong>
+                            <span class="fw-semibold">{{ number_format($subtotal) }}đ</span>
+                        </div>
 
-                    <div class="col-md-6">
-                        <strong>Tổng thanh toán:</strong>
-                        <span class="text-danger fw-bold">{{ number_format($order->total_price) }}đ</span>
-                    </div>
+                        <div class="col-md-6">
+                            <strong>Tổng thanh toán:</strong>
+                            <span class="text-danger fw-bold">{{ number_format($order->total_price) }}đ</span>
+                        </div>
 
-                    @if ($order->cancellation && $cancelledAmount > 0 && $expectedTotal != $order->total_price)
-                        <div class="col-12 mt-2">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Tổng thanh toán đã được điều chỉnh từ {{ number_format($expectedTotal) }}đ
-                                xuống {{ number_format($order->total_price) }}đ do hủy sản phẩm
-                            </small>
+                        @if ($order->cancellation && $cancelledAmount > 0 && $expectedTotal != $order->total_price)
+                            <div class="col-12 mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Tổng thanh toán đã được điều chỉnh từ {{ number_format($expectedTotal) }}đ
+                                    xuống {{ number_format($order->total_price) }}đ do hủy sản phẩm
+                                </small>
+                            </div>
+                        @endif
+                    @else
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-ban fa-2x me-3"></i>
+                                    <div>
+                                        <h6 class="alert-heading mb-1">Đơn hàng đã hủy</h6>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @endif
 
@@ -267,71 +283,50 @@
                             @csrf
                             @method('PATCH')
 
-                            @php
-                                $statusOptions = [
-                                    1 => ['label' => 'Chưa xác nhận', 'class' => 'secondary'],
-                                    10 => ['label' => 'Không xác nhận', 'class' => 'danger'],
-                                    2 => ['label' => 'Đã xác nhận', 'class' => 'info'],
-                                    3 => ['label' => 'Đang giao', 'class' => 'primary'],
-                                    9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
-                                    4 => ['label' => 'Hoàn thành', 'class' => 'success'],
-                                    5 => ['label' => 'Hoàn hàng', 'class' => 'dark'],
-                                    6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
-                                    7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
-                                    8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
-                                    11 => ['label' => 'Giao hàng thất bại', 'class' => 'danger'],
-                                    12 => ['label' => 'Hoàn hàng một phần', 'class' => 'warning'],
-                                ];
-                            @endphp
-
                             <select name="status" id="order-status-select" class="form-select form-select-sm mt-2"
                                 onchange="handleStatusChange(this)">
+                                @php
+                                    $statusOptions = [
+                                        1 => ['label' => 'Chưa xác nhận', 'class' => 'secondary'],
+                                        10 => ['label' => 'Không xác nhận', 'class' => 'danger'],
+                                        2 => ['label' => 'Đã xác nhận', 'class' => 'info'],
+                                        3 => ['label' => 'Đang giao', 'class' => 'primary'],
+                                        9 => ['label' => 'Đã giao hàng', 'class' => 'success'],
+                                        4 => ['label' => 'Hoàn thành', 'class' => 'success'],
+                                        5 => ['label' => 'Hoàn hàng', 'class' => 'dark'],
+                                        6 => ['label' => 'Hủy đơn', 'class' => 'danger'],
+                                        7 => ['label' => 'Chờ xử lý hoàn hàng', 'class' => 'warning'],
+                                        8 => ['label' => 'Hoàn hàng thất bại', 'class' => 'danger'],
+                                        11 => ['label' => 'Giao hàng thất bại', 'class' => 'danger'],
+                                        12 => ['label' => 'Hoàn hàng một phần', 'class' => 'warning'],
+                                    ];
+
+                                    $allowedTransitions = [
+                                        1 => [2], // Chưa xác nhận → Đã xác nhận
+                                        2 => [3], // Đã xác nhận → Đang giao
+                                        3 => [9], // Đang giao → Đã giao
+                                        9 => [4], // Đã giao → Hoàn thành
+                                        4 => [], // Hoàn thành
+                                        5 => [], // Hoàn hàng
+                                        6 => [], // Hủy đơn
+                                        7 => [], // Chờ xử lý hoàn hàng
+                                        8 => [], // Hoàn hàng thất bại
+                                        10 => [], // Không xác nhận
+                                        11 => [], // Giao hàng thất bại
+                                        12 => [], // Hoàn hàng một phần
+                                    ];
+
+                                    $currentStatus = $order->status;
+                                    $allowedStatuses = $allowedTransitions[$currentStatus] ?? [];
+                                    $allowedStatuses[] = $currentStatus;
+                                @endphp
                                 @foreach ($statusOptions as $key => $info)
                                     @php
-                                        $canSelect = false;
-                                        // Cho phép chuyển đến trạng thái kế tiếp
-                                        if ($key == $order->status || $key == $order->status + 1) {
-                                            $canSelect = true;
-                                        }
-
-                                        // Không cho chuyển từ 5 (Hoàn hàng) → 6 (Hủy)
-                                        if ($order->status == 5 && $key == 6) {
-                                            $canSelect = false;
-                                        }
-
-                                        if ($order->status == 3 && $key == 4) {
-                                            $canSelect = false;
-                                        }
-
-                                        if ($order->status == 3 && $key == 10) {
-                                            $canSelect = false;
-                                        }
-
-                                        if ($order->status == 3 && $key == 9) {
-                                            $canSelect = true;
-                                        }
-
-                                        if ($order->status == 9 && $key == 4) {
-                                            $canSelect = true;
-                                        }
-
-                                        if ($order->status == 9 && $key == 10) {
-                                            $canSelect = false;
-                                        }
-
-                                        if ($order->status == 4 && in_array($key, [5, 7, 8, 11])) {
-                                            $canSelect = false;
-                                        }
-
-                                        // Cho phép giao hàng thất bại từ trạng thái đang giao
-                                        if ($order->status == 3 && $key == 11) {
-                                            $canSelect = true;
-                                        }
-
+                                        $isAllowed = in_array($key, $allowedStatuses);
                                     @endphp
 
                                     <option value="{{ $key }}" {{ $order->status == $key ? 'selected' : '' }}
-                                        {{ $canSelect ? '' : 'disabled' }}>
+                                        {{ $isAllowed ? '' : 'disabled' }}>
                                         {{ $info['label'] }}
                                     </option>
                                 @endforeach

@@ -812,8 +812,6 @@
                                         </tr>
                                     @endforeach
                                 @endif
-
-
                             </tbody>
                         </table>
                     </div>
@@ -835,35 +833,37 @@
                                     </div>
                                 @endif
 
-                                <div
-                                    class="d-flex justify-content-between mb-2 @if ($cancelledAmount > 0 && $subtotal > 0) border-top pt-2 @endif">
-                                    <span class="fw-bold">Tổng giá sản phẩm:</span>
-                                    <span class="fw-bold">
+                                @if ($order->status != 6)
+                                    <div
+                                        class="d-flex justify-content-between mb-2 @if ($cancelledAmount > 0 && $subtotal > 0) border-top pt-2 @endif">
+                                        <span class="fw-bold">Tổng giá sản phẩm:</span>
+                                        <span class="fw-bold">
+                                            @if ($cancelledAmount > 0 && $subtotal == 0)
+                                                {{ number_format($cancelledAmount, 0, ',', '.') }}₫
+                                            @else
+                                                {{ number_format($subtotal, 0, ',', '.') }}₫
+                                            @endif
+                                        </span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Phí vận chuyển:</span>
+                                        <span>{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mt-3 pt-2 border-top">
+                                        <span class="fw-bold fs-6">Tổng thanh toán:</span>
                                         @if ($cancelledAmount > 0 && $subtotal == 0)
-                                            {{ number_format($cancelledAmount, 0, ',', '.') }}₫
+                                            <span class="fw-bold fs-5 text-primary">
+                                                {{ number_format($cancelledAmount + $order->shipping_fee, 0, ',', '.') }}₫
+                                            </span>
                                         @else
-                                            {{ number_format($subtotal, 0, ',', '.') }}₫
+                                            <span class="fw-bold fs-5 text-primary">
+                                                {{ number_format($order->total_price, 0, ',', '.') }}₫
+                                            </span>
                                         @endif
-                                    </span>
-                                </div>
-
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Phí vận chuyển:</span>
-                                    <span>{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</span>
-                                </div>
-
-                                <div class="d-flex justify-content-between mt-3 pt-2 border-top">
-                                    <span class="fw-bold fs-6">Tổng thanh toán:</span>
-                                    @if ($cancelledAmount > 0 && $subtotal == 0)
-                                        <span class="fw-bold fs-5 text-primary">
-                                            {{ number_format($cancelledAmount + $order->shipping_fee, 0, ',', '.') }}₫
-                                        </span>
-                                    @else
-                                        <span class="fw-bold fs-5 text-primary">
-                                            {{ number_format($order->total_price, 0, ',', '.') }}₫
-                                        </span>
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
 
                                 <!-- Hiển thị thông báo hủy đơn hàng -->
                                 @if ($order->cancellation)
@@ -894,7 +894,7 @@
                 </div>
 
                 {{-- Modal chỉ render khi chưa đánh giá --}}
-                @if ($order->status == 4 && !$alreadyRated)
+                {{-- @if ($order->status == 4 && !$alreadyRated)
                     @foreach ($order->activeOrderDetails as $item)
                         @php
                             $product = $item->product;
@@ -991,7 +991,7 @@
                             </div>
                         </div>
                     @endforeach
-                @endif
+                @endif --}}
 
                 <!-- Các nút hành động -->
                 <div class="d-flex justify-content-between mt-4">

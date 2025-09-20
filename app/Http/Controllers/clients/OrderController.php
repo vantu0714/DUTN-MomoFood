@@ -530,11 +530,9 @@ class OrderController extends Controller
                 ->count();
 
             if ($remainingItemsCount === 0) {
-                // Hủy toàn bộ đơn hàng
                 $order->status = 6; // Hủy đơn
                 $order->reason = $request->reason;
 
-                // Xử lý hoàn tiền nếu đã thanh toán
                 if ($order->payment_status === 'paid') {
                     $order->payment_status = 'refunded';
                 }
@@ -544,7 +542,6 @@ class OrderController extends Controller
                         '. Số tiền ' . number_format($order->total_price + $totalCancelledAmount, 0, ',', '.') .
                         'đ sẽ được hoàn trả trong vòng 3-5 ngày làm việc.' : '.');
             } else {
-                // Đánh dấu đơn hàng đã hủy một phần - chỉ nếu cột tồn tại
                 if (Schema::hasColumn('orders', 'has_partial_cancellation')) {
                     $order->has_partial_cancellation = true;
                 }
@@ -555,11 +552,8 @@ class OrderController extends Controller
 
             DB::commit();
 
-            if ($remainingItemsCount === 0) {
-                return redirect()->route('clients.orders')->with('success', $message);
-            } else {
-                return redirect()->route('clients.orderdetail', $order->id)->with('success', $message);
-            }
+            return redirect()->route('clients.orderdetail', $order->id)->with('success', $message);
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Lỗi hủy đơn hàng: ' . $e->getMessage());
