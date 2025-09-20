@@ -20,7 +20,15 @@
 
         {{-- Danh sách sản phẩm --}}
         <div class="card mb-4 shadow-sm rounded">
-            <div class="card-header bg-info text-white fw-bold">Danh sách sản phẩm</div>
+            <div class="card-header bg-info text-white fw-bold d-flex justify-content-between align-items-center">
+                <span>Danh sách sản phẩm</span>
+                @if ($order->cancellation && $order->cancellation->items->count() > 0)
+                    <span class="badge bg-warning text-dark">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Đã hủy {{ $order->cancellation->items->count() }} sản phẩm
+                    </span>
+                @endif
+            </div>
             <div class="card-body table-responsive">
                 <table class="table table-striped table-bordered align-middle">
                     <thead class="table-light">
@@ -29,9 +37,16 @@
                             <th>Giá</th>
                             <th>Số lượng</th>
                             <th>Thành tiền</th>
+                            <th>Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            $subtotal = 0;
+                            $cancelledAmount = 0;
+                        @endphp
+
+                        <!-- Hiển thị sản phẩm đang hoạt động -->
                         @foreach ($order->orderDetails as $detail)
                             @php
                                 $variant = $detail->productVariant;
@@ -41,25 +56,40 @@
                                 $price = $detail->price;
                                 $quantity = $detail->quantity;
                                 $lineTotal = $price * $quantity;
+
+                                $isCancelled =
+                                    $order->cancellation &&
+                                    $order->cancellation->items->contains('order_detail_id', $detail->id);
+
+                                if ($isCancelled) {
+                                    $cancelledAmount += $lineTotal;
+                                } else {
+                                    $subtotal += $lineTotal;
+                                }
                             @endphp
-                            <tr>
+                            <tr class="{{ $isCancelled ? 'text-muted' : '' }}">
                                 <td>
                                     <div class="d-flex align-items-start gap-2">
                                         @if ($image)
                                             <img src="{{ asset('storage/' . $image) }}" alt="Ảnh sản phẩm" width="60"
-                                                class="rounded border">
+                                                class="rounded border {{ $isCancelled ? 'opacity-50' : '' }}">
                                         @else
-                                            <div class="text-muted" style="width: 60px;">Không có ảnh</div>
+                                            <div class="text-muted {{ $isCancelled ? 'opacity-50' : '' }}"
+                                                style="width: 60px;">Không có ảnh</div>
                                         @endif
 
                                         <div>
-                                            <div class="fw-semibold">{{ $productName }}</div>
+                                            <div
+                                                class="fw-semibold {{ $isCancelled ? 'text-decoration-line-through' : '' }}">
+                                                {{ $productName }}
+                                            </div>
 
                                             {{-- Hiển thị các thuộc tính của biến thể --}}
                                             @if ($variant && $variant->values->count())
                                                 <div class="mt-1 d-flex flex-wrap gap-1">
                                                     @foreach ($variant->values as $value)
-                                                        <span class="badge bg-info text-white px-2 py-1">
+                                                        <span
+                                                            class="badge bg-info text-white px-2 py-1 {{ $isCancelled ? 'opacity-50' : '' }}">
                                                             {{ $value->attribute->name }}: {{ $value->value }}
                                                         </span>
                                                     @endforeach
@@ -70,7 +100,21 @@
                                 </td>
                                 <td class="text-center">₫{{ number_format($price, 0, ',', '.') }}</td>
                                 <td class="text-center">{{ $quantity }}</td>
-                                <td class="text-end text-danger fw-bold">₫{{ number_format($lineTotal, 0, ',', '.') }}</td>
+                                <td class="text-end {{ $isCancelled ? '' : 'text-danger fw-bold' }}">
+                                    ₫{{ number_format($lineTotal, 0, ',', '.') }}
+                                </td>
+                                <td class="text-center">
+                                    @if ($isCancelled)
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-ban me-1"></i>Đã hủy
+                                        </span>
+                                        <div class="mt-1 small">
+                                            {{ $order->cancellation->cancelled_at->format('d/m/Y') }}
+                                        </div>
+                                    @else
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -109,16 +153,102 @@
                         'label' => 'Không rõ',
                         'class' => 'light',
                     ];
+
+                    $totalBeforeCancellation = $order->orderDetails->sum(fn($item) => $item->price * $item->quantity);
+
+                    $subtotal = 0;
+                    $cancelledAmount = 0;
+
+                    foreach ($order->orderDetails as $detail) {
+                        $lineTotal = $detail->price * $detail->quantity;
+                        $isCancelled =
+                            $order->cancellation &&
+                            $order->cancellation->items->contains('order_detail_id', $detail->id);
+
+                        if ($isCancelled) {
+                            $cancelledAmount += $lineTotal;
+                        } else {
+                            $subtotal += $lineTotal;
+                        }
+                    }
+
+                    $actualDiscount = max(
+                        0,
+                        $totalBeforeCancellation + $order->shipping_fee - $order->total_price - $cancelledAmount,
+                    );
+
+                    $expectedTotal = $totalBeforeCancellation + $order->shipping_fee - $actualDiscount;
                 @endphp
 
                 <div class="row gy-3">
-                    <div class="col-md-6"><strong>Phí vận chuyển:</strong> {{ number_format($order->shipping_fee) }}đ</div>
-                    <div class="col-md-6"><strong>Mã giảm giá:</strong> {{ $order->promotion ?? 'Không có' }}</div>
-                    @if ($discount > 0)
-                        <div class="col-md-6"><strong>Giảm giá:</strong> -{{ number_format($discount) }}đ</div>
+                    @if ($order->cancellation && $order->cancellation->items->count() > 0)
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                                    <div>
+                                        <h6 class="alert-heading mb-1">Đơn hàng đã được hủy một phần</h6>
+                                        <p class="mb-0">Một số sản phẩm trong đơn hàng đã được hủy vào
+                                            {{ $order->cancellation->cancelled_at->format('d/m/Y H:i') }}.
+                                            Lý do: {{ $order->cancellation->reason }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hiển thị tổng giá trị ban đầu -->
+                        <div class="col-md-6">
+                            <strong>Tổng giá trị ban đầu:</strong>
+                            <span class="text-muted">{{ number_format($totalBeforeCancellation) }}đ</span>
+                        </div>
+
+                        <!-- Hiển thị tiền hoàn lại -->
+                        <div class="col-md-6">
+                            <strong>Tiền hoàn lại:</strong>
+                            <span class="text-danger">-{{ number_format($cancelledAmount) }}đ</span>
+                            <small class="text-muted d-block">({{ $order->cancellation->items->count() }} sản phẩm đã
+                                hủy)</small>
+                        </div>
                     @endif
-                    <div class="col-md-6"><strong>Tổng tiền:</strong> <span
-                            class="text-danger fw-bold">{{ number_format($order->total_price) }}đ</span></div>
+
+                    <div class="col-md-6"><strong>Phí vận chuyển:</strong> {{ number_format($order->shipping_fee) }}đ</div>
+
+                    @if ($actualDiscount > 0)
+                        <div class="col-md-6">
+                            <strong>Giảm giá:</strong>
+                            <span class="text-success">-{{ number_format($actualDiscount) }}đ</span>
+                            @if ($order->promotion)
+                                <small class="text-muted d-block">(Mã: {{ $order->promotion }})</small>
+                            @endif
+                        </div>
+                    @else
+                        <div class="col-md-6"><strong>Mã giảm giá:</strong> {{ $order->promotion ?? 'Không có' }}</div>
+                    @endif
+
+                    <div class="col-12">
+                        <hr>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Tổng giá sản phẩm:</strong>
+                        <span class="fw-semibold">{{ number_format($subtotal) }}đ</span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Tổng thanh toán:</strong>
+                        <span class="text-danger fw-bold">{{ number_format($order->total_price) }}đ</span>
+                    </div>
+
+                    @if ($order->cancellation && $cancelledAmount > 0 && $expectedTotal != $order->total_price)
+                        <div class="col-12 mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Tổng thanh toán đã được điều chỉnh từ {{ number_format($expectedTotal) }}đ
+                                xuống {{ number_format($order->total_price) }}đ do hủy sản phẩm
+                            </small>
+                        </div>
+                    @endif
+
                     <div class="col-md-6">
                         <strong>Trạng thái thanh toán:</strong>
                         @if ($order->payment_status === 'paid')
@@ -185,6 +315,10 @@
                                             $canSelect = true;
                                         }
 
+                                        if ($order->status == 9 && $key == 10) {
+                                            $canSelect = false;
+                                        }
+
                                         if ($order->status == 4 && in_array($key, [5, 7, 8, 11])) {
                                             $canSelect = false;
                                         }
@@ -248,7 +382,8 @@
                                 <input type="hidden" name="status" value="11">
                                 <div class="mb-3">
                                     <label for="reason" class="form-label">Lý do giao hàng thất bại</label>
-                                    <textarea name="reason" class="form-control" rows="3" required placeholder="Nhập lý do giao hàng thất bại..."></textarea>
+                                    <textarea name="reason" class="form-control" rows="3" required
+                                        placeholder="Nhập lý do giao hàng thất bại..."></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-warning">Xác nhận giao hàng thất bại</button>
                             </form>
