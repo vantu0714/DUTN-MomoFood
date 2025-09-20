@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('comments', function (Blueprint $table) {
-            $table->unsignedBigInteger('order_detail_id')->nullable()->after('order_id');
+            $table->unsignedBigInteger('order_detail_id')->nullable()->after('id');
 
             $table->foreign('order_detail_id')
                 ->references('id')->on('order_details')

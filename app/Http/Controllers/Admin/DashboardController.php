@@ -189,7 +189,9 @@ class DashboardController extends Controller
                 DB::raw('SUM(od.quantity) as total_quantity'),
                 DB::raw('MAX(od.price) as latest_price')
             )
-            ->groupBy('p.id', 'p.product_name', 'pv.id', 'pv.sku', 'pv.image') // thêm pv.id, pv.image để tránh lỗi SQL
+            // ->groupBy('p.id', 'p.product_name', 'pv.id', 'pv.sku', 'pv.image') // thêm pv.id, pv.image để tránh lỗi SQL
+            ->groupBy('p.id', 'p.product_name', 'pv.id', 'pv.sku', 'pv.image', 'p.image')
+
             ->orderByDesc('total_quantity')
             ->limit(10)
             ->get();
