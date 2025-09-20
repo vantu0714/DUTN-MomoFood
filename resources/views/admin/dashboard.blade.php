@@ -177,7 +177,8 @@
                     <!-- Ảnh sản phẩm -->
                     <div class="col-md-4">
                         <div class="product-image-box">
-                            <img id="productImage" src="" alt="Ảnh sản phẩm" class="product-image" style="width:40%;">
+                            <img id="productImage" src="" alt="Ảnh sản phẩm" class="product-image"
+                                style="width:40%;">
                         </div>
                     </div>
 
@@ -237,11 +238,12 @@
                             <tr>
                                 <td class="text-center fw-bold">{{ $index + 1 }}</td>
                                 <td class="text-center">
-                                    <img src="{{ asset('storage/' . ($product->image ?? 'products/default.jpg')) }}"
-                                        alt="{{ $product->product_name }}"
+                                    <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('clients/img/default.jpg') }}"
+                                        alt="{{ $product->product_name ?? 'Sản phẩm' }}"
                                         onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';"
                                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
                                 </td>
+
                                 <td class="text-center">
                                     {{ $product->product_name }}
                                     @if ($product->variant_attributes)

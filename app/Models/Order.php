@@ -22,6 +22,7 @@ class Order extends Model
         'payment_method',
         'payment_status',
         'status',
+        'has_partial_cancellation',
         'note',
         'reason',
         'recipient_id',
@@ -39,6 +40,7 @@ class Order extends Model
 
     protected $casts = [
         'shipping_started_at' => 'datetime',
+        'has_partial_cancellation' => 'boolean',
     ];
 
     public function user()
@@ -46,10 +48,16 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function cancellation()
+    {
+        return $this->hasOne(OrderCancellation::class);
+    }
+
     public function orderDetails()
     {
-        return $this->hasMany(OrderDetail::class);
+        return $this->hasMany(OrderDetail::class)->withTrashed();
     }
+
     protected static function boot()
     {
         parent::boot();
@@ -80,5 +88,32 @@ class Order extends Model
     public function returnItems()
     {
         return $this->hasMany(OrderReturnItem::class);
+    }
+
+
+    public function getStatusTextAttribute()
+{
+    return match($this->status) {
+        0 => 'chờ xác nhận',
+        1 => 'không được xác nhận',
+        2 => 'đã xác nhận',
+        3 => 'đang được giao',
+        4 => 'đã hoàn thành',
+        5 => 'đã hoàn thành',
+        default => 'không xác định',
+    };
+}
+
+    public function activeOrderDetails()
+    {
+        return $this->hasMany(OrderDetail::class)
+            ->whereNull('deleted_at')
+            ->with(['product', 'productVariant.attributeValues.attribute']);
+    }
+    public function cancelledOrderDetails()
+    {
+        return $this->hasMany(OrderDetail::class)
+            ->onlyTrashed()
+            ->with(['product', 'productVariant.attributeValues.attribute']);
     }
 }

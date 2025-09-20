@@ -33,8 +33,47 @@ class DashboardController extends Controller
 
         // Tổng đơn hàng và doanh thu từ tất cả đơn
         $totalOrders = (clone $baseOrderQuery)->count();
-        $totalRevenue = (clone $baseOrderQuery)->where('status', 4)->sum('total_price');
-        $totalProductsSold = OrderDetail::whereIn('order_id', (clone $baseOrderQuery)->where('status', 4)->pluck('id'))->sum('quantity');
+        $totalRevenue = OrderDetail::join('orders', 'orders.id', '=', 'order_details.order_id')
+            ->leftJoin('products', 'products.id', '=', 'order_details.product_id')
+            ->leftJoin('product_variants', 'product_variants.id', '=', 'order_details.product_variant_id')
+            ->whereIn('order_details.order_id', (clone $baseOrderQuery)->pluck('id'))
+            ->selectRaw("
+        SUM(
+            CASE
+                -- Hoàn hàng (COD & VNPAY đều trừ)
+                WHEN orders.status IN (5,12) 
+                    THEN -order_details.price * order_details.quantity
+
+                -- Hủy VNPAY (6,10) → chỉ trừ
+                WHEN orders.payment_method = 'vnpay' AND orders.status IN (6,10) 
+                    THEN -order_details.price * order_details.quantity
+
+                -- Doanh thu VNPAY (1,2,3,4,7,9) → chỉ cộng
+                WHEN orders.payment_method = 'vnpay' AND orders.status IN (1,2,3,4,7,9) 
+                    THEN order_details.price * order_details.quantity
+
+                -- Doanh thu COD (4,7,9) → chỉ cộng
+                WHEN orders.payment_method = 'cod' AND orders.status IN (4,7,9) 
+                    THEN order_details.price * order_details.quantity
+
+                ELSE 0
+            END
+        ) as total_revenue
+    ")
+            ->first()
+            ->total_revenue;
+
+
+        $totalProductsSold = OrderDetail::whereIn('order_id', (clone $baseOrderQuery)
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('status', 1)->where('payment_method', 'vnpay');
+                })->orWhere(function ($q) {
+                    $q->where('status', 9)->where('payment_method', 'cod');
+                })->orWhere('status', 4);
+            })->pluck('id'))
+            ->sum('quantity');
+
 
         // Đơn hàng hoàn thành
         $completedOrderCount = (clone $baseOrderQuery)->where('status', 4)->count();
@@ -43,7 +82,16 @@ class DashboardController extends Controller
         $cancelledOrderCount = (clone $baseOrderQuery)->where('status', 6)->count();
 
         // Lợi nhuận từ đơn hoàn thành
-        $completedOrderIds = (clone $baseOrderQuery)->where('status', 4)->pluck('id');
+        $completedOrderIds = (clone $baseOrderQuery)
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('status', 1)->where('payment_method', 'vnpay');
+                })->orWhere(function ($q) {
+                    $q->where('status', 9)->where('payment_method', 'cod');
+                })->orWhere('status', 4);
+            })
+            ->pluck('id');
+
 
         $profits = DB::table('order_details as od')
             ->join('orders as o', 'o.id', '=', 'od.order_id')
@@ -91,18 +139,31 @@ class DashboardController extends Controller
         } else {
             // Theo tháng
             $monthlyRevenue = (clone $baseOrderQuery)
-                ->where('status', 4)
+                ->where(function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('status', 1)->where('payment_method', 'vnpay');
+                    })->orWhere(function ($q) {
+                        $q->where('status', 9)->where('payment_method', 'cod');
+                    })->orWhere('status', 4);
+                })
                 ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
                 ->groupBy('month')
                 ->pluck('total', 'month')
                 ->toArray();
 
             $monthlyOrders = (clone $baseOrderQuery)
-                ->where('status', 4)
+                ->where(function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('status', 1)->where('payment_method', 'vnpay');
+                    })->orWhere(function ($q) {
+                        $q->where('status', 9)->where('payment_method', 'cod');
+                    })->orWhere('status', 4);
+                })
                 ->selectRaw('MONTH(created_at) as month, COUNT(*) as total_orders')
                 ->groupBy('month')
                 ->pluck('total_orders', 'month')
                 ->toArray();
+
 
             for ($i = 1; $i <= 12; $i++) {
                 $chartLabels[] = 'Tháng ' . $i;
@@ -111,8 +172,7 @@ class DashboardController extends Controller
             }
         }
 
-
-        // Sản phẩm bán chạy (tính theo biến thể nếu có)
+        // Sản phẩm bán chạy
         $bestSellingProducts = DB::table('order_details as od')
             ->join('products as p', 'p.id', '=', 'od.product_id')
             ->leftJoin('product_variants as pv', 'pv.id', '=', 'od.product_variant_id')
@@ -123,19 +183,20 @@ class DashboardController extends Controller
             ->select(
                 'p.id as product_id',
                 'p.product_name',
-                'p.image',
+                DB::raw("COALESCE(pv.image, p.image) as image"), // ưu tiên ảnh biến thể
                 'pv.sku as variant_name',
                 DB::raw("GROUP_CONCAT(DISTINCT CONCAT(a.name, ': ', av.value) ORDER BY a.name SEPARATOR ', ') as variant_attributes"),
                 DB::raw('SUM(od.quantity) as total_quantity'),
                 DB::raw('MAX(od.price) as latest_price')
             )
-            ->groupBy('p.id', 'p.product_name', 'p.image', 'pv.sku')
+            ->groupBy('p.id', 'p.product_name', 'pv.id', 'pv.sku', 'pv.image') // thêm pv.id, pv.image để tránh lỗi SQL
             ->orderByDesc('total_quantity')
             ->limit(10)
             ->get();
 
         // Tổng tồn kho
         $totalStock = Product::sum('quantity_in_stock');
+
 
 
         // Sản phẩm đã hết hàng
@@ -189,7 +250,7 @@ class DashboardController extends Controller
             ->get();
         // Thống kê đơn hàng theo trạng thái (ví dụ: 1=Chờ xử lý, 2=Đang giao, 4=Hoàn thành, 6=Đã hủy)
         $orderStatusCount = [
-            'Chờ xử lý' => (clone $baseOrderQuery)->where('status', 1)->count(),
+            'chưa xác nhận ' => (clone $baseOrderQuery)->where('status', 1)->count(),
             'Đang giao' => (clone $baseOrderQuery)->where('status', 3)->count(),
             'Hoàn thành' => (clone $baseOrderQuery)->where('status', 4)->count(),
             'Đã hủy' => (clone $baseOrderQuery)->where('status', 6)->count(),
