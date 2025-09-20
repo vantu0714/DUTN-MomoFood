@@ -409,12 +409,12 @@
                                             : [];
 
                                         // ✅ Kiểm tra đã đánh giá chưa (theo product_id + variant_id)
-                                        $alreadyRated = \App\Models\Comment::where('user_id', Auth::id())
-                                            ->where('product_id', $product->id)
-                                            ->when($variant, function ($q) use ($variant) {
-                                                $q->where('product_variant_id', $variant->id);
-                                            })
-                                            ->exists();
+                                            $alreadyRated = \App\Models\Comment::where('user_id', Auth::id())
+                                                ->where('product_id', $product->id)
+                                                ->when($variant, function ($q) use ($variant) {
+                                                    $q->where('product_variant_id', $variant->id);
+                                                })
+                                                ->exists();
                                     @endphp
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
