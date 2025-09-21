@@ -102,7 +102,7 @@
                             </span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="orderNotiDropdown"
-                            style="width: 350px; max-height: 400px; overflow-y: auto;">
+                            style="width: 450px; max-height: 400px; overflow-y: auto;">
                             <li class="dropdown-header fw-bold">Thông báo đơn hàng</li>
                             <ul id="order-noti-items" class="list-unstyled m-0 p-0"></ul>
                             <li>

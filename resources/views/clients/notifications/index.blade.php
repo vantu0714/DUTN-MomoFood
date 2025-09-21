@@ -21,11 +21,9 @@
 
                     <!-- Nội dung -->
                     <div class="flex-grow-1">
-                        <p class="mb-1">
+                        <p class="mb-1 {{ $order->is_read ? 'text-muted' : 'fw-bold' }}">
                             Đơn hàng <strong>#{{ $order->order_code }}</strong> của bạn {{ $order->status_text }}.
                         </p>
-
-
                         <small class="text-muted">
                             {{ $order->updated_at ? \Carbon\Carbon::parse($order->updated_at)->format('H:i d-m-Y') : '' }}
                         </small>
