@@ -74,7 +74,8 @@
                             $total += $subTotal;
                         @endphp
 
-                        <tr class="cart-item" data-id="{{ $item->id }}" data-stock="{{ $stock }}">
+                        <tr class="cart-item" data-id="{{ $item->id }}" data-stock="{{ $stock }}"
+                            data-key="{{ $variant ? 'variant_' . $variant->id : 'product_' . $product->id }}">
                             <td>
                                 <input type="checkbox" class="select-item" value="{{ $item->id }}"
                                     data-subtotal="{{ $subTotal ?? 0 }}" {{ $stock <= 0 ? 'disabled' : '' }}>
@@ -189,10 +190,12 @@
         document.querySelectorAll('.btn-delete').forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log("Clicked button for product:", this.closest('tr').dataset.id);
+
+                let row = this.closest('tr');
+                let productKey = row.dataset.key;
+                // 👆 nhớ trong <tr> bạn cần set data-key="product_123" hoặc "variant_456"
 
                 let form = this.closest('form');
-                console.log("Found form:", form);
 
                 Swal.fire({
                     title: 'Bạn chắc chắn muốn xóa?',
@@ -205,7 +208,17 @@
                     cancelButtonText: 'Hủy'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        form.submit(); // 🔥 gửi form
+                        //  Cập nhật localStorage trước khi submit form
+                        let cartQuantities = JSON.parse(localStorage.getItem(
+                            'cartQuantities')) || {};
+                        if (productKey && cartQuantities[productKey]) {
+                            delete cartQuantities[productKey];
+                            localStorage.setItem('cartQuantities', JSON.stringify(
+                                cartQuantities));
+                            window.cartQuantities = cartQuantities;
+                        }
+
+                        form.submit(); // 🔥 gửi form xóa DB
                     }
                 });
             });
@@ -689,14 +702,28 @@
                 // Lấy tất cả id sản phẩm đã chọn
                 let ids = Array.from(selected).map(cb => cb.value);
 
+                // 🔥 Xóa trong localStorage
+                let cartQuantities = JSON.parse(localStorage.getItem('cartQuantities')) || {};
+                ids.forEach(id => {
+                    // tìm đúng key trùng (trong <tr> bạn cần có data-key)
+                    let row = document.querySelector(`tr.cart-item[data-id="${id}"]`);
+                    let productKey = row ? row.dataset.key : null;
+                    if (productKey && cartQuantities[productKey]) {
+                        delete cartQuantities[productKey];
+                    }
+                });
+                localStorage.setItem('cartQuantities', JSON.stringify(cartQuantities));
+                window.cartQuantities = cartQuantities;
+
                 // Gán vào input hidden trong form
                 document.getElementById('selected-items').value = ids.join(',');
 
-                // Submit form
+                // Submit form để xóa DB
                 document.getElementById('delete-selected-form').submit();
             }
         });
     }
+
 
     // Chọn tất cả
     document.getElementById('select-all')?.addEventListener('change', function() {
