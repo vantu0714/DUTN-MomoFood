@@ -31,23 +31,33 @@ class OrderDetail extends Model
     {
         return $this->belongsTo(Product::class);
     }
+    // public function getProductNameDisplayAttribute()
+    // {
+    //     if ($this->product_variant_id && $this->productVariant) {
+    //         // Có biến thể → lấy tên từ product trong variant
+    //         return $this->productVariant->product->product_name ?? 'Không rõ sản phẩm';
+    //     }
+
+    //     // Không có biến thể → lấy từ product trực tiếp
+    //     return $this->product->product_name ?? 'Không rõ sản phẩm';
+    // }
+
+    // public function getVariantNameDisplayAttribute()
+    // {
+    //     return $this->product_variant_id && $this->productVariant
+    //         ? $this->productVariant->name
+    //         : 'Không có biến thể';
+    // }
+
     public function getProductNameDisplayAttribute()
     {
         if ($this->product_variant_id && $this->productVariant) {
-            // Có biến thể → lấy tên từ product trong variant
-            return $this->productVariant->product->product_name ?? 'Không rõ sản phẩm';
+            return $this->productVariant->full_name;
         }
 
-        // Không có biến thể → lấy từ product trực tiếp
         return $this->product->product_name ?? 'Không rõ sản phẩm';
     }
 
-    public function getVariantNameDisplayAttribute()
-    {
-        return $this->product_variant_id && $this->productVariant
-            ? $this->productVariant->name
-            : 'Không có biến thể';
-    }
 
     public function orderDetails()
     {
