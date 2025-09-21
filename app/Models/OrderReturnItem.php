@@ -50,11 +50,21 @@ class OrderReturnItem extends Model
 
     public function isApproved()
     {
-        return $this->status == 'approved';
+        return $this->status == 'Đồng Ý';
     }
 
     public function isRejected()
     {
-        return $this->status == 'rejected';
+        return $this->status == 'Từ Chối';
+    }
+
+    public function getStatusLabelAttribute()
+    {
+        return match ($this->status) {
+            'approved' => 'Đồng Ý',
+            'rejected' => 'Từ Chối',
+            'pending' => 'Chờ Xử Lý',
+            default => ucfirst($this->status),
+        };
     }
 }

@@ -69,10 +69,23 @@ class OrderNotificationController extends Controller
 
     public function markAsRead($id)
     {
-        $order = Order::where('user_id', auth()->id())->findOrFail($id);
-        $order->is_read = 1;
-        $order->save();
+        $order = Order::where('user_id', auth()->id())
+            ->where('id', $id)
+            ->firstOrFail();
 
-        return response()->json(['success' => true]);
+        if (! $order->is_read) {
+            $order->is_read = 1;
+            $order->save();
+        }
+
+        $remaining = Order::where('user_id', auth()->id())
+            ->whereIn('status', [0, 1, 2, 3, 4])
+            ->where('is_read', 0)
+            ->count();
+
+        return response()->json([
+            'success'   => true,
+            'remaining' => $remaining
+        ]);
     }
 }
