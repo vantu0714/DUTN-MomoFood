@@ -33,7 +33,8 @@ class DashboardController extends Controller
 
         // Tổng đơn hàng và doanh thu từ tất cả đơn
         $totalOrders = (clone $baseOrderQuery)->count();
-        $basicRevenue = OrderDetail::join('orders', 'orders.id', '=', 'order_details.order_id')
+        // Bước 1: Tính tổng doanh thu từ sản phẩm (không bao gồm hoàn hàng)
+        $productRevenue = OrderDetail::join('orders', 'orders.id', '=', 'order_details.order_id')
             ->whereIn('order_details.order_id', (clone $baseOrderQuery)->pluck('id'))
             ->selectRaw("
                 SUM(
@@ -52,12 +53,36 @@ class DashboardController extends Controller
 
                         ELSE 0
                     END
-                ) as basic_revenue
+                ) as product_revenue
             ")
             ->first()
-            ->basic_revenue ?? 0;
+            ->product_revenue ?? 0;
 
-        // Bước 2: Tính tổng số tiền bị trừ do hoàn hàng được chấp nhận
+        // Bước 2: Tính tổng phí vận chuyển
+        $shippingRevenue = Order::whereIn('id', (clone $baseOrderQuery)->pluck('id'))
+            ->selectRaw("
+                SUM(
+                    CASE
+                        -- Đơn hàng hoàn toàn bị hủy (không tính phí vận chuyển)
+                        WHEN status IN (6, 10, 11)
+                            THEN 0
+
+                        -- Doanh thu VNPAY (đã thanh toán hoặc đang xử lý)
+                        WHEN payment_method = 'vnpay' AND status IN (1,2,3,4,5,7,9,12)
+                            THEN shipping_fee
+
+                        -- Doanh thu COD (chỉ khi đã giao hoặc hoàn thành)
+                        WHEN payment_method = 'cod' AND status IN (4,5,7,9,12)
+                            THEN shipping_fee
+
+                        ELSE 0
+                    END
+                ) as shipping_revenue
+            ")
+            ->first()
+            ->shipping_revenue ?? 0;
+
+        // Bước 3: Tính tổng số tiền sản phẩm bị trừ do hoàn hàng được chấp nhận
         $returnedAmount = DB::table('order_return_items as ori')
             ->join('order_details as od', 'ori.order_detail_id', '=', 'od.id')
             ->join('orders as o', 'od.order_id', '=', 'o.id')
@@ -76,8 +101,8 @@ class DashboardController extends Controller
             })
             ->sum(DB::raw('ori.quantity * od.price')) ?? 0;
 
-        // Bước 3: Doanh thu cuối = Doanh thu cơ bản - Số tiền hoàn hàng
-        $totalRevenue = $basicRevenue - $returnedAmount;
+        // Bước 4: Doanh thu cuối = Doanh thu sản phẩm + Phí vận chuyển - Số tiền hoàn hàng
+        $totalRevenue = $productRevenue + $shippingRevenue - $returnedAmount;
 
         $totalProductsSold = OrderDetail::whereIn('order_id', (clone $baseOrderQuery)
             ->where(function ($query) {
