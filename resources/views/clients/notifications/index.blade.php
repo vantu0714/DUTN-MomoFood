@@ -1,7 +1,7 @@
 @extends('clients.layouts.app')
 
 @section('content')
-    <div class="container py-4" style="margin-top: 150px;">
+    <div class="container py-4" style="margin-top: 120px;">
         <h4 class="mb-4">Thông báo đơn hàng</h4>
 
         @forelse($orders as $order)

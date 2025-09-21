@@ -91,27 +91,27 @@
                             {{ $cartCount }}
                         </span>
                     </a>
-<!-- Notifications -->
-<li class="nav-item dropdown me-4 list-unstyled">
-    <a class="nav-link position-relative" href="#" id="orderNotiDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="fa fa-bell fa-2x text-warning"></i>
-        <span id="order-noti-count"
-              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-            0
-        </span>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end shadow"
-        aria-labelledby="orderNotiDropdown"
-        style="width: 350px; max-height: 400px; overflow-y: auto;">
-        <li class="dropdown-header fw-bold">Thông báo đơn hàng</li>
-        <div id="order-noti-items"></div>
-        <li>
-            <a class="dropdown-item text-center" href="{{ route('notifications.orders.index') }}">
-            Xem tất cả
-        </a>
-        </li>
-    </ul>
-</li>
+                    <!-- Notifications -->
+                    <li class="nav-item dropdown me-4 list-unstyled">
+                        <a class="nav-link position-relative" href="#" id="orderNotiDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-bell fa-2x text-warning"></i>
+                            <span id="order-noti-count"
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                0
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="orderNotiDropdown"
+                            style="width: 350px; max-height: 400px; overflow-y: auto;">
+                            <li class="dropdown-header fw-bold">Thông báo đơn hàng</li>
+                            <ul id="order-noti-items" class="list-unstyled m-0 p-0"></ul>
+                            <li>
+                                <a class="dropdown-item text-center" href="{{ route('notifications.orders.index') }}">
+                                    Xem tất cả
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
 
                     <!-- Nút mở chat -->
                     {{-- <li class="nav-item position-relative">
@@ -597,67 +597,43 @@
 
 
 <script>
-    function loadOrderNotifications() {
-        fetch("{{ route('order.notifications.fetch') }}?ts=" + new Date().getTime())
-            .then(res => res.json())
-            .then(data => {
-                let html = "";
-
-                if (data.notifications && data.notifications.length > 0) {
-                    data.notifications.forEach(noti => {
-                        html += `
-                            <li class="dropdown-item">
-                                <a href="javascript:void(0)" onclick="markNotificationAsRead(${noti.id}, '${noti.link}')">
-                                    <div><strong>${noti.message}</strong></div>
-                                    <small>${noti.time ?? ''}</small>
-                                </a>
-                            </li>
-                        `;
-                    });
-                } else {
-                    html = '<li class="dropdown-item">Chưa có thông báo</li>';
-                }
-
-                document.getElementById("order-noti-items").innerHTML = html;
-
-                // cập nhật số badge
-                const count = data.count ?? 0;
-                document.getElementById("order-noti-count").innerText = count > 0 ? count : '';
-            })
-            .catch(err => console.error("Lỗi load thông báo:", err));
-    }
-
-    function markNotificationAsRead(id, link) {
-        fetch(`/notifications/read/${id}`, {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({})
-        })
-        .then(res => res.json())
-        .then(() => {
-            // Giảm badge ngay tại frontend
-            let badge = document.getElementById("order-noti-count");
-            let current = parseInt(badge.innerText) || 0;
-            if (current > 0) {
-                badge.innerText = (current - 1) > 0 ? (current - 1) : '';
+   function markNotificationAsRead(id, link) {
+    fetch(`/notifications/read/${id}`, {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+    })
+    .then(res => res.json())
+    .then(json => {
+        // cập nhật badge
+        const badge = document.getElementById("order-noti-count");
+        if (badge) {
+            if (json.remaining > 0) {
+                badge.innerText = json.remaining;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
             }
+        }
 
-            // Sau đó chuyển hướng
-            window.location.href = link;
-        })
-        .catch(err => console.error("Lỗi đọc thông báo:", err));
-    }
+        // làm mờ item
+        const item = document.querySelector(`#order-noti-items li[data-id="${id}"]`);
+        if (item) item.classList.add("text-muted");
 
-    // load ngay khi vào trang
-    loadOrderNotifications();
+        // chuyển trang
+        window.location.href = link;
+    })
+    .catch(err => console.error("Lỗi đọc thông báo:", err));
+}
 
-    // load lại mỗi 10 giây
-    setInterval(loadOrderNotifications, 10000);
 </script>
+
+
+
 
 <!-- Sidebar Chat -->
 
@@ -740,9 +716,11 @@
         0% {
             box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
         }
+
         70% {
             box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
         }
+
         100% {
             box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
         }
@@ -825,6 +803,7 @@
             opacity: 0;
             transform: translateY(10px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -987,9 +966,13 @@
     }
 
     @keyframes typing {
-        0%, 60%, 100% {
+
+        0%,
+        60%,
+        100% {
             transform: translateY(0);
         }
+
         30% {
             transform: translateY(-10px);
         }
@@ -1007,4 +990,3 @@
         color: rgba(255, 255, 255, 0.7);
     }
 </style>
-
