@@ -10,6 +10,8 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Models\OrderReturnItem;
+
 
 class DashboardController extends Controller
 {
@@ -196,6 +198,13 @@ class DashboardController extends Controller
         ];
 
 
+        // Hàng hoàn (phân trang)
+        $returnedItems = OrderReturnItem::with(['order', 'orderDetail.product'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10); // mỗi trang 10 bản ghi
+
+
+
         return view('admin.dashboard', compact(
             'totalOrders',
             'totalRevenue',
@@ -216,7 +225,8 @@ class DashboardController extends Controller
             'outOfStockProducts',
             'outOfStockVariants',
             'totalOutOfStock',
-            'orderStatusCount'
+            'orderStatusCount',
+            'returnedItems'
         ));
     }
 }

@@ -177,7 +177,8 @@
                     <!-- Ảnh sản phẩm -->
                     <div class="col-md-4">
                         <div class="product-image-box">
-                            <img id="productImage" src="" alt="Ảnh sản phẩm" class="product-image" style="width:40%;">
+                            <img id="productImage" src="" alt="Ảnh sản phẩm" class="product-image"
+                                style="width:40%;">
                         </div>
                     </div>
 
@@ -301,6 +302,57 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+
+        {{-- Danh sách hàng hoàn --}}
+        <div class="card mt-4">
+            <div class="card-header bg-warning fw-bold">
+                Danh sách hàng hoàn
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã sản phẩm</th>
+                            <th>Hình ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Số lượng hoàn</th>
+                            <th>Lý do hoàn trả</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($returnedItems as $item)
+                            <tr>
+                                <td>{{ $loop->iteration + ($returnedItems->currentPage() - 1) * $returnedItems->perPage() }}</td>
+                                <td>{{ $item->orderDetail->product->product_code ?? '-' }}</td>
+                                <td>
+                                    <img src="{{ asset('storage/' . ($item->orderDetail->product->image ?? 'products/default.jpg')) }}"
+                                        alt="Ảnh sản phẩm" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;"
+                                        onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';">
+                                </td>
+                                <td>{{ $item->orderDetail->product_name_display }}</td>
+                                <td>{{ $item->quantity }}</td>
+                                <td>{{ $item->reason }}</td>
+                               <td>
+                                @if($item->isApproved())
+                                    <span class="badge bg-success">{{ $item->status_label }}</span>
+                                @elseif($item->isRejected())
+                                    <span class="badge bg-danger">{{ $item->status_label }}</span>
+                                @else
+                                    <span class="badge bg-warning text-dark">{{ $item->status_label }}</span>
+                                @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                <div class="d-flex justify-content-center">
+                    {{ $returnedItems->links('pagination::bootstrap-5') }}
+                </div>
             </div>
         </div>
 
