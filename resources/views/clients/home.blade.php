@@ -615,7 +615,7 @@
         const quantityInput = document.getElementById('modal-quantity');
         const stockInfoEl = document.getElementById('availableStock');
         const totalStockQuantity = "{{ $totalStock }}";
-
+        window.cartQuantities = JSON.parse(localStorage.getItem('cartQuantities')) || {};
 
         const weightGroup = document.getElementById('modal-weight-group');
         if (weightGroup) weightGroup.style.display = 'none';
@@ -826,12 +826,55 @@
         });
 
         // Validate chọn biến thể trước khi thêm giỏ hàng
+
         document.getElementById('modal-add-to-cart-form').addEventListener('submit', function(e) {
             if (variantOptionsEl.innerHTML.trim() !== '' && !productVariantIdInput.value) {
                 e.preventDefault();
-                alert('⚠️ Vui lòng chọn sản phẩm trước khi thêm vào giỏ hàng.');
+                Toastify({
+                    text: "⚠️ Vui lòng chọn sản phẩm trước khi thêm vào giỏ hàng.",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336",
+                    stopOnFocus: true
+                }).showToast();
+                return false;
             }
+
+            const productId = productIdInput.value;
+            const variantId = productVariantIdInput.value;
+            const key = variantId ? `variant_${variantId}` : `product_${productId}`;
+
+            const alreadyInCart = window.cartQuantities[key] || 0;
+            const addingQty = parseInt(quantityInput.value) || 1;
+            const stock = parseInt(quantityInput.max) || 0; //  fix: fallback = 0
+
+            console.log("CHECK LIMIT", {
+                key,
+                alreadyInCart,
+                addingQty,
+                stock,
+                total: alreadyInCart + addingQty
+            });
+
+            if (stock > 0 && alreadyInCart + addingQty > stock) { //  check thêm điều kiện stock > 0
+                e.preventDefault();
+                Toastify({
+                    text: "⚠️ Sản phẩm này đã đạt số lượng tối đa trong giỏ hàng!",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336",
+                    stopOnFocus: true
+                }).showToast();
+                return false;
+            }
+
+            //  cập nhật giỏ hàng
+            window.cartQuantities[key] = alreadyInCart + addingQty;
+            localStorage.setItem('cartQuantities', JSON.stringify(window.cartQuantities));
         });
+
     });
 </script>
 <!--js đánh giá-->

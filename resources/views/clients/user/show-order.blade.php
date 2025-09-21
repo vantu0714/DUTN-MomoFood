@@ -183,6 +183,17 @@
         usort($statusHistory, function ($a, $b) {
             return strtotime($a['time']) - strtotime($b['time']);
         });
+
+        $refundAmount = 0;
+        $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+
+        if ($isReturnStatus && $order->returnItems->count() > 0) {
+            foreach ($order->returnItems as $returnItem) {
+                if ($returnItem->status == 'approved') {
+                    $refundAmount += $returnItem->orderDetail->price * $returnItem->quantity;
+                }
+            }
+        }
     @endphp
 
     <div class="container mb-5" style="margin-top: 150px">
@@ -244,6 +255,17 @@
                             <div class="col-md-3 mb-2">
                                 <p class="mb-1"><strong>Địa chỉ:</strong></p>
                                 <p>{{ $order->recipient_address ?? Auth::user()->address }}</p>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1"><strong>Giảm giá:</strong></p>
+                                <p>
+                                    @if ($order->discount_amount > 0)
+                                        <span
+                                            class="badge bg-success">-{{ number_format($order->discount_amount, 0, ',', '.') }}₫</span>
+                                    @else
+                                        <span class="text-muted">Không áp dụng</span>
+                                    @endif
+                                </p>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <p class="mb-1"><strong>Thanh toán:</strong></p>
@@ -512,6 +534,11 @@
                                 <i class="fas fa-exclamation-triangle me-1"></i>
                                 Đã hủy {{ $order->cancellation->items->count() }} sản phẩm
                             </span>
+                        @elseif($order->status == 10)
+                            <span class="badge bg-danger text-white">
+                                <i class="fas fa-times-circle me-1"></i>
+                                Đơn hàng không được xác nhận
+                            </span>
                         @endif
                     </div>
                     <div class="table-responsive">
@@ -524,7 +551,7 @@
                                     <th width="8%" class="text-center">SL</th>
                                     <th width="15%" class="text-end">Đơn giá</th>
                                     <th width="15%" class="text-end">Thành tiền</th>
-                                    <th width="17%" class="text-center">Thao tác</th>
+                                    <th width="17%" class="text-center">Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -532,10 +559,34 @@
                                     $index = 0;
                                     $subtotal = 0;
                                     $cancelledAmount = 0;
+
+                                    $cancelledItemIds = [];
+                                    if ($order->cancellation) {
+                                        $cancelledItemIds = $order->cancellation->items
+                                            ->pluck('order_detail_id')
+                                            ->toArray();
+                                    }
+
+                                    $pendingReturnItems = [];
+                                    $completedReturnItems = [];
+                                    $rejectedReturnItems = [];
+
+                                    if ($order->returnItems->count() > 0) {
+                                        foreach ($order->returnItems as $returnItem) {
+                                            if ($returnItem->status == 'pending') {
+                                                $pendingReturnItems[] = $returnItem->order_detail_id;
+                                            } elseif ($returnItem->status == 'approved') {
+                                                $completedReturnItems[] = $returnItem->order_detail_id;
+                                            } elseif ($returnItem->status == 'rejected') {
+                                                $rejectedReturnItems[] = $returnItem->order_detail_id;
+                                            }
+                                        }
+                                    }
+
+                                    $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
                                 @endphp
 
-                                <!-- Hiển thị sản phẩm đang hoạt động -->
-                                @foreach ($order->activeOrderDetails as $item)
+                                @foreach ($order->orderDetails as $item)
                                     @php
                                         $product = $item->product;
                                         $variant = $item->productVariant;
@@ -571,40 +622,61 @@
                                             $displayImage = $product->image;
                                         }
 
-                                        $alreadyRated = \App\Models\Comment::where('user_id', Auth::id())
-                                            ->where('product_id', $product->id)
-                                            ->when($variant, function ($q) use ($variant) {
-                                                $q->where('product_variant_id', $variant->id);
-                                            })
-                                            ->exists();
-
                                         $itemTotal = $item->price * $item->quantity;
-                                        $subtotal += $itemTotal;
+
+                                        $isItemCancelled = in_array($item->id, $cancelledItemIds);
+                                        $isOrderRejected = $order->status == 10; // Không xác nhận
+                                        $isOrderFullyCancelled = $order->status == 6; // Hủy toàn bộ
+
+                                        $showAsRejected = $isOrderRejected && !$isItemCancelled;
+                                        $showAsCancelled = $isItemCancelled || $isOrderFullyCancelled;
+
+                                        if (!$showAsRejected && !$showAsCancelled) {
+                                            $subtotal += $itemTotal;
+                                        } else {
+                                            $cancelledAmount += $itemTotal;
+                                        }
+
                                         $index++;
+
+                                        $alreadyRated = false;
+                                        if (!$showAsCancelled && $order->status == 4) {
+                                            $alreadyRated = \App\Models\Comment::where('user_id', Auth::id())
+                                                ->where('product_id', $product->id)
+                                                ->when($variant, function ($q) use ($variant) {
+                                                    $q->where('product_variant_id', $variant->id);
+                                                })
+                                                ->exists();
+                                        }
                                     @endphp
-                                    <tr>
+
+                                    <tr class="@if ($showAsCancelled) text-muted cancelled-product @endif">
                                         <td>{{ $index }}</td>
                                         <td>
                                             @if ($displayImage)
                                                 <img src="{{ asset('storage/' . $displayImage) }}"
                                                     alt="{{ $product->product_name }}" class="img-thumbnail"
-                                                    style="width: 60px; height: 60px; object-fit: cover;">
+                                                    style="width: 60px; height: 60px; object-fit: cover; @if ($showAsCancelled) opacity: 0.6; @endif">
                                             @else
                                                 <div class="bg-light d-flex align-items-center justify-content-center"
-                                                    style="width: 60px; height: 60px;">
+                                                    style="width: 60px; height: 60px; @if ($showAsCancelled) opacity: 0.6; @endif">
                                                     <i class="fas fa-image text-muted"></i>
                                                 </div>
                                             @endif
                                         </td>
                                         <td>
-                                            <strong class="d-block">{{ $product->product_name ?? '[Đã xoá]' }}</strong>
+                                            <strong
+                                                class="d-block @if ($showAsCancelled) text-decoration-line-through @endif">
+                                                {{ $product->product_name ?? '[Đã xoá]' }}
+                                            </strong>
                                             @if ($variantDisplay)
                                                 <div class="small mt-1">
-                                                    <span class="text-muted">Biến thể:</span>
                                                     <div class="mt-1">
                                                         @foreach (explode(', ', $variantDisplay) as $variantItem)
                                                             <span
-                                                                class="badge bg-info text-white me-1 mb-1">{{ trim($variantItem) }}</span>
+                                                                class="badge @if ($showAsCancelled) bg-secondary @else bg-info text-white @endif me-1 mb-1">
+                                                                {{ trim($variantItem) }}
+                                                            </span>
                                                         @endforeach
                                                     </div>
                                                 </div>
@@ -616,29 +688,106 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-warning text-dark">{{ $item->quantity }}</span>
+                                            <span
+                                                class="badge @if ($showAsCancelled) bg-secondary @else bg-warning text-dark @endif">
+                                                {{ $item->quantity }}
+                                            </span>
                                         </td>
                                         <td class="text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
-                                        <td class="text-end fw-bold text-primary">
+                                        <td
+                                            class="text-end @if (!$showAsCancelled) fw-bold text-primary @endif">
                                             {{ number_format($itemTotal, 0, ',', '.') }}₫
                                         </td>
+                                        {{-- NOTE: sửa sản phẩm đã huỷ thì thành Giao thành công trong các trạng thái hoành hàng --}}
                                         <td class="text-center">
-                                            @if ($order->status == 4 && !$alreadyRated)
-                                                <button type="button" class="btn btn-sm btn-danger btn-danh-gia"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#reviewModal{{ $item->id }}">
-                                                    Đánh giá
-                                                </button>
-                                            @elseif ($order->status == 4 && $alreadyRated)
-                                                <span class="badge bg-success">✅ Đã đánh giá</span>
+                                            @if ($isReturnStatus)
+                                                @if ($showAsCancelled)
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-ban me-1"></i>Đã hủy
+                                                    </span>
+                                                    <div class="mt-1 small">
+                                                        {{ $order->cancellation->cancelled_at->format('d/m/Y') }}
+                                                    </div>
+                                                @elseif (in_array($item->id, $pendingReturnItems))
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
+                                                    </span>
+                                                @elseif (in_array($item->id, $completedReturnItems))
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>Đã hoàn hàng
+                                                    </span>
+                                                @elseif (in_array($item->id, $rejectedReturnItems))
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-times-circle me-1"></i>Không được hoàn hàng
+                                                    </span>
+                                                @else
+                                                    @if ($order->received_at)
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check-circle me-1"></i>Giao thành công
+                                                        </span>
+                                                    @endif
+                                                @endif
                                             @else
-                                                <span class="badge bg-success">Đang hoạt động</span>
+                                                @if ($showAsCancelled)
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-ban me-1"></i>Đã hủy
+                                                    </span>
+                                                    <div class="mt-1 small">
+                                                        {{ $order->cancellation->cancelled_at->format('d/m/Y') }}
+                                                    </div>
+                                                @elseif ($showAsRejected)
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-times-circle me-1"></i>Không xác nhận
+                                                    </span>
+                                                    <div class="mt-1 small">
+                                                        {{ $order->updated_at->format('d/m/Y') }}
+                                                    </div>
+                                                @elseif ($isOrderFullyCancelled)
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-ban me-1"></i>Đã hủy
+                                                    </span>
+                                                    <div class="mt-1 small">
+                                                        {{ $order->updated_at->format('d/m/Y') }}
+                                                    </div>
+                                                @else
+                                                    @if (in_array($item->id, $pendingReturnItems))
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
+                                                        </span>
+                                                    @elseif (in_array($item->id, $completedReturnItems))
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check-circle me-1"></i>Đã hoàn hàng
+                                                        </span>
+                                                    @elseif (in_array($item->id, $rejectedReturnItems))
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-times-circle me-1"></i>Không được hoàn hàng
+                                                        </span>
+                                                    @elseif ($order->status == 4 && !$alreadyRated)
+                                                        <button type="button" class="btn btn-sm btn-danger btn-danh-gia"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#reviewModal{{ $item->id }}">
+                                                            Đánh giá
+                                                        </button>
+                                                    @elseif ($order->status == 4 && $alreadyRated)
+                                                        <span class="badge bg-success">✅ Đã đánh giá</span>
+                                                    @elseif ($order->status == 9 && $order->received_at)
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check-circle me-1"></i>Giao thành công
+                                                        </span>
+                                                    @elseif ($order->status == 11 && $order->delivery_failed_at)
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-times-circle me-1"></i>Giao thất bại
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-success">Đang hoạt động</span>
+                                                    @endif
+                                                @endif
                                             @endif
                                         </td>
                                     </tr>
 
-                                    {{-- Modal chỉ render khi chưa đánh giá --}}
-                                    @if ($order->status == 4 && !$alreadyRated)
+                                    {{-- Modal đánh giá chỉ render cho sản phẩm chưa bị hủy --}}
+                                    @if (!$showAsCancelled && $order->status == 4 && !$alreadyRated)
                                         <div class="modal fade" id="reviewModal{{ $item->id }}" tabindex="-1"
                                             aria-hidden="true">
                                             <div class="modal-dialog modal-lg">
@@ -646,8 +795,6 @@
                                                     <form action="{{ route('clients.comments.store') }}" method="POST"
                                                         enctype="multipart/form-data">
                                                         @csrf
-
-                                                        {{-- hidden inputs --}}
                                                         <input type="hidden" name="product_id"
                                                             value="{{ $product->id }}">
                                                         <input type="hidden" name="product_variant_id"
@@ -657,7 +804,6 @@
                                                         <input type="hidden" name="order_detail_id"
                                                             value="{{ $item->id }}">
 
-                                                        {{-- Header --}}
                                                         <div class="modal-header">
                                                             <h5 class="modal-title">Đánh giá: {{ $product->product_name }}
                                                             </h5>
@@ -665,7 +811,6 @@
                                                                 data-bs-dismiss="modal"></button>
                                                         </div>
 
-                                                        {{-- Body --}}
                                                         <div class="modal-body">
                                                             <!-- Rating -->
                                                             <div class="mb-3">
@@ -715,105 +860,6 @@
                                         </div>
                                     @endif
                                 @endforeach
-
-                                <!-- Hiển thị sản phẩm đã hủy -->
-                                @if ($order->cancellation && $order->cancelledOrderDetails->count() > 0)
-                                    @foreach ($order->cancelledOrderDetails as $item)
-                                        @php
-                                            $product = $item->product;
-                                            $variant = $item->productVariant;
-
-                                            $variantDisplay = '';
-                                            if ($variant) {
-                                                if (
-                                                    $variant->variant_values &&
-                                                    is_array(json_decode($variant->variant_values, true))
-                                                ) {
-                                                    $variantValues = json_decode($variant->variant_values, true);
-                                                    $variantDisplay = implode(', ', $variantValues);
-                                                } elseif ($variant->variant_name) {
-                                                    $variantDisplay = $variant->variant_name;
-                                                }
-
-                                                if (
-                                                    $variant->attributeValues &&
-                                                    $variant->attributeValues->count() > 0
-                                                ) {
-                                                    $attributeDetails = $variant->attributeValues
-                                                        ->map(function ($attrValue) {
-                                                            return $attrValue->attribute->name .
-                                                                ': ' .
-                                                                $attrValue->value;
-                                                        })
-                                                        ->implode(', ');
-                                                    $variantDisplay = $attributeDetails;
-                                                }
-                                            }
-
-                                            $displayImage = null;
-                                            if ($variant && $variant->image) {
-                                                $displayImage = $variant->image;
-                                            } elseif ($product && $product->image) {
-                                                $displayImage = $product->image;
-                                            }
-
-                                            $itemTotal = $item->price * $item->quantity;
-                                            $cancelledAmount += $itemTotal;
-                                            $index++;
-                                        @endphp
-                                        <tr class="text-muted cancelled-product">
-                                            <td>{{ $index }}</td>
-                                            <td>
-                                                @if ($displayImage)
-                                                    <img src="{{ asset('storage/' . $displayImage) }}"
-                                                        alt="{{ $product->product_name }}" class="img-thumbnail"
-                                                        style="width: 60px; height: 60px; object-fit: cover; opacity: 0.6;">
-                                                @else
-                                                    <div class="bg-light d-flex align-items-center justify-content-center"
-                                                        style="width: 60px; height: 60px; opacity: 0.6;">
-                                                        <i class="fas fa-image text-muted"></i>
-                                                    </div>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <div class="text-decoration-line-through">
-                                                    {{ $product->product_name ?? '[Đã xoá]' }}
-                                                </div>
-                                                @if ($variantDisplay)
-                                                    <div class="small mt-1">
-                                                        <span class="text-muted">Biến thể:</span>
-                                                        <div class="mt-1">
-                                                            @foreach (explode(', ', $variantDisplay) as $variantItem)
-                                                                <span
-                                                                    class="badge bg-secondary me-1 mb-1">{{ trim($variantItem) }}</span>
-                                                            @endforeach
-                                                        </div>
-                                                    </div>
-                                                @elseif ($variant && $variant->sku)
-                                                    <div class="small mt-1">
-                                                        <span class="text-muted">SKU:</span>
-                                                        <span class="badge bg-secondary">{{ $variant->sku }}</span>
-                                                    </div>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge bg-secondary">{{ $item->quantity }}</span>
-                                            </td>
-                                            <td class="text-end">{{ number_format($item->price, 0, ',', '.') }}₫</td>
-                                            <td class="text-end">{{ number_format($itemTotal, 0, ',', '.') }}₫</td>
-                                            <td class="text-center">
-                                                <span class="badge bg-danger">
-                                                    <i class="fas fa-ban me-1"></i>Đã hủy
-                                                </span>
-                                                <div class="mt-1 small">
-                                                    {{ $order->cancellation->cancelled_at->format('d/m/Y') }}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @endif
-
-
                             </tbody>
                         </table>
                     </div>
@@ -828,42 +874,62 @@
                                     </div>
 
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span class="fw-bold text-danger">Tiền hoàn lại (đã hủy
-                                            {{ $order->cancellation->items->count() }} sản phẩm):</span>
+                                        <span class="fw-bold text-danger">
+                                            @if ($order->status == 10)
+                                                Tiền hoàn lại (không xác nhận):
+                                            @elseif ($order->status == 6)
+                                                Tiền hoàn lại (đã hủy):
+                                            @else
+                                                Tiền hoàn lại (đã hủy {{ $order->cancellation->items->count() }} sản phẩm):
+                                            @endif
+                                        </span>
                                         <span
                                             class="text-danger">-{{ number_format($cancelledAmount, 0, ',', '.') }}₫</span>
                                     </div>
                                 @endif
 
-                                <div
-                                    class="d-flex justify-content-between mb-2 @if ($cancelledAmount > 0 && $subtotal > 0) border-top pt-2 @endif">
-                                    <span class="fw-bold">Tổng giá sản phẩm:</span>
-                                    <span class="fw-bold">
-                                        @if ($cancelledAmount > 0 && $subtotal == 0)
-                                            {{ number_format($cancelledAmount, 0, ',', '.') }}₫
-                                        @else
-                                            {{ number_format($subtotal, 0, ',', '.') }}₫
-                                        @endif
-                                    </span>
-                                </div>
-
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Phí vận chuyển:</span>
-                                    <span>{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</span>
-                                </div>
-
-                                <div class="d-flex justify-content-between mt-3 pt-2 border-top">
-                                    <span class="fw-bold fs-6">Tổng thanh toán:</span>
-                                    @if ($cancelledAmount > 0 && $subtotal == 0)
-                                        <span class="fw-bold fs-5 text-primary">
-                                            {{ number_format($cancelledAmount + $order->shipping_fee, 0, ',', '.') }}₫
+                                @if ($order->status != 6 && $order->status != 10)
+                                    <div
+                                        class="d-flex justify-content-between mb-2 @if ($cancelledAmount > 0 && $subtotal > 0) border-top pt-2 @endif">
+                                        <span class="fw-bold">Tổng giá sản phẩm:</span>
+                                        <span class="fw-bold">
+                                            @if ($cancelledAmount > 0 && $subtotal == 0)
+                                                0₫
+                                            @else
+                                                {{ number_format($subtotal, 0, ',', '.') }}₫
+                                            @endif
                                         </span>
-                                    @else
-                                        <span class="fw-bold fs-5 text-primary">
-                                            {{ number_format($order->total_price, 0, ',', '.') }}₫
-                                        </span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Phí vận chuyển:</span>
+                                        <span>{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</span>
+                                    </div>
+                                    @if ($order->discount_amount > 0)
+                                        <div class="d-flex justify-content-between mb-2 text-success">
+                                            <span>Giảm giá:</span>
+                                            <span>-{{ number_format($order->discount_amount, 0, ',', '.') }}₫</span>
+                                        </div>
                                     @endif
-                                </div>
+                                    <div class="d-flex justify-content-between mt-3 pt-2 border-top">
+                                        <span class="fw-bold fs-6">Tổng thanh toán:</span>
+                                        <span class="fw-bold fs-5 text-primary">
+                                            {{ number_format(max(0, $order->total_price), 0, ',', '.') }}₫
+                                        </span>
+                                    </div>
+                                    @if ($refundAmount > 0)
+                                        <div class="d-flex justify-content-between mb-2 text-success">
+                                            <span>Tiền đã hoàn trả:</span>
+                                            <span>-{{ number_format($refundAmount, 0, ',', '.') }}₫</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2 border-top pt-2">
+                                            <span class="fw-bold">Tổng thanh toán cuối cùng:</span>
+                                            <span class="fw-bold text-primary">
+                                                {{ number_format(max(0, $order->total_price - $refundAmount), 0, ',', '.') }}₫
+                                            </span>
+                                        </div>
+                                    @endif
+                                @endif
 
                                 <!-- Hiển thị thông báo hủy đơn hàng -->
                                 @if ($order->cancellation)
@@ -875,7 +941,7 @@
                                         <div class="small">
                                             <div class="mb-1">
                                                 <span class="text-muted">Thời gian hủy:</span>
-                                                {{ $order->cancellation->cancelled_at }}
+                                                {{ $order->cancellation->cancelled_at->format('d/m/Y H:i') }}
                                             </div>
                                             <div class="mb-1">
                                                 <span class="text-muted">Lý do:</span>
@@ -887,111 +953,24 @@
                                             </div>
                                         </div>
                                     </div>
+                                @elseif ($order->status == 10 && $order->reason)
+                                    <div class="mt-3 p-3 bg-light rounded">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-times-circle text-danger me-2"></i>
+                                            <strong>Thông tin không xác nhận</strong>
+                                        </div>
+                                        <div class="small">
+                                            <div class="mb-1">
+                                                <span class="text-muted">Lý do không xác nhận:</span>
+                                                <span class="fst-italic">"{{ $order->reason }}"</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {{-- Modal chỉ render khi chưa đánh giá --}}
-                @if ($order->status == 4 && !$alreadyRated)
-                    @foreach ($order->activeOrderDetails as $item)
-                        @php
-                            $product = $item->product;
-                            $variant = $item->productVariant;
-
-                            // Xử lý hiển thị biến thể cho modal
-                            $variantAttributes = [];
-                            if ($variant) {
-                                if ($variant->variant_values && is_array(json_decode($variant->variant_values, true))) {
-                                    $variantValues = json_decode($variant->variant_values, true);
-                                    $variantAttributes = $variantValues;
-                                } elseif ($variant->variant_name) {
-                                    $variantAttributes = [$variant->variant_name];
-                                }
-
-                                // Lấy thông tin chi tiết biến thể từ relationship nếu có
-                                if ($variant->attributeValues && $variant->attributeValues->count() > 0) {
-                                    $variantAttributes = $variant->attributeValues
-                                        ->map(function ($attrValue) {
-                                            return $attrValue->attribute->name . ': ' . $attrValue->value;
-                                        })
-                                        ->toArray();
-                                }
-                            }
-                        @endphp
-
-                        <div class="modal fade" id="reviewModal{{ $item->id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <form action="{{ route('clients.comments.store') }}" method="POST"
-                                        enctype="multipart/form-data">
-                                        @csrf
-                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                        <input type="hidden" name="product_variant_id"
-                                            value="{{ $variant->id ?? '' }}">
-                                        <input type="hidden" name="order_id" value="{{ $order->id }}">
-
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Đánh giá: {{ $product->product_name }}</h5>
-                                            @if (!empty($variantAttributes))
-                                                <div>
-                                                    @foreach ($variantAttributes as $attr)
-                                                        <span class="badge bg-secondary me-1">{{ $attr }}</span>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-
-                                        <div class="modal-body">
-                                            <!-- Rating -->
-                                            <div class="mb-3">
-                                                <label class="form-label">Chấm sao:</label>
-                                                <select name="rating" class="form-select" required>
-                                                    <option value="">-- Chọn sao --</option>
-                                                    @for ($i = 1; $i <= 5; $i++)
-                                                        <option value="{{ $i }}">
-                                                            {{ $i }} ⭐</option>
-                                                    @endfor
-                                                </select>
-                                            </div>
-
-                                            <!-- Nội dung -->
-                                            <div class="mb-3">
-                                                <label class="form-label">Nội dung:</label>
-                                                <textarea name="content" class="form-control" rows="3" required></textarea>
-                                            </div>
-
-                                            <!-- Ảnh -->
-                                            <div class="mb-3">
-                                                <label class="form-label">Ảnh (tối đa 5, ảnh + video ≤
-                                                    5):</label>
-                                                <input type="file" name="images[]" class="form-control media-input"
-                                                    accept="image/*" multiple>
-                                            </div>
-
-                                            <!-- Video -->
-                                            <div class="mb-3">
-                                                <label class="form-label">Video (1 video, tổng ảnh + video
-                                                    ≤ 5):</label>
-                                                <input type="file" name="video" class="form-control media-input"
-                                                    accept="video/*">
-                                            </div>
-                                        </div>
-
-                                        <div class="modal-footer">
-                                            <button type="submit" class="btn btn-primary">Gửi đánh
-                                                giá</button>
-                                            <button type="button" class="btn btn-secondary"
-                                                data-bs-dismiss="modal">Đóng</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
 
                 <!-- Các nút hành động -->
                 <div class="d-flex justify-content-between mt-4">
@@ -1803,55 +1782,19 @@
             const submitButton = document.getElementById('submitCancelRequest');
             const totalRefundElement = document.getElementById('total-refund-amount');
 
-            let totalRefundAmount = 0;
+            function updateTotalRefund() {
+                let total = 0;
 
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
-                    itemCheckboxes.forEach(checkbox => {
-                        checkbox.checked = this.checked;
-                        if (this.checked) {
-                            addToTotal(checkbox);
-                        } else {
-                            removeFromTotal(checkbox);
-                        }
-                    });
-                    validateCancelForm();
-                });
-            }
-
-            itemCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        addToTotal(this);
-                    } else {
-                        removeFromTotal(this);
-                    }
-
-                    validateCancelForm();
-
-                    if (selectAllCheckbox) {
-                        const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
-                        selectAllCheckbox.checked = allChecked;
+                itemCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
+                        total += price;
                     }
                 });
-            });
-
-            function addToTotal(checkbox) {
-                const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
-                totalRefundAmount += price;
-                updateTotalDisplay();
-            }
-
-            function removeFromTotal(checkbox) {
-                const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
-                totalRefundAmount -= price;
-                updateTotalDisplay();
-            }
-
-            function updateTotalDisplay() {
                 if (totalRefundElement) {
-                    totalRefundElement.textContent = formatCurrency(totalRefundAmount);
+                    totalRefundElement.textContent = formatCurrency(total);
                 }
+                return total;
             }
 
             function formatCurrency(amount) {
@@ -1861,6 +1804,7 @@
                 }).format(amount);
             }
 
+            // Hàm validate form
             function validateCancelForm() {
                 const checkedItems = document.querySelectorAll('.cancel-item-checkbox:checked');
                 submitButton.disabled = checkedItems.length === 0;
@@ -1869,10 +1813,40 @@
                     submitButton.innerHTML =
                         `<i class="fas fa-paper-plane me-2"></i>Xác nhận hủy ${checkedItems.length} sản phẩm`;
                 } else {
-                    submitButton.innerHTML = `<i class="fas fa-paper-plane me-2"></i>Xác nhận hủy sản phẩm đã chọn`;
+                    submitButton.innerHTML =
+                        `<i class="fas fa-paper-plane me-2"></i>Xác nhận hủy sản phẩm đã chọn`;
                 }
             }
 
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+
+                    itemCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+
+                    updateTotalRefund();
+                    validateCancelForm();
+                });
+            }
+
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateTotalRefund();
+                    validateCancelForm();
+
+                    if (selectAllCheckbox) {
+                        const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+                        const someChecked = Array.from(itemCheckboxes).some(cb => cb.checked);
+
+                        selectAllCheckbox.checked = allChecked;
+                        selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                    }
+                });
+            });
+
+            // Xử lý sự kiện submit form
             const cancelForm = document.getElementById('cancelOrderForm');
             if (cancelForm) {
                 cancelForm.addEventListener('submit', function(e) {
@@ -1894,10 +1868,37 @@
             }
 
             function showToast(message, type = 'info') {
-                console.log(`${type}: ${message}`);
+                const toastContainer = document.querySelector('.toast-container');
+                if (toastContainer) {
+                    const toastId = 'toast-' + Date.now();
+                    const bgClass = type === 'error' ? 'bg-danger' :
+                        type === 'success' ? 'bg-success' : 'bg-info';
+
+                    const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+                    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+                    const toastElement = document.getElementById(toastId);
+                    const bsToast = new bootstrap.Toast(toastElement, {
+                        delay: 3000
+                    });
+                    bsToast.show();
+
+                    toastElement.addEventListener('hidden.bs.toast', () => {
+                        toastElement.remove();
+                    });
+                }
             }
 
-            updateTotalDisplay();
+            updateTotalRefund();
+            validateCancelForm();
         });
     </script>
 @endsection

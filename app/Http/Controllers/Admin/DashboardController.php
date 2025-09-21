@@ -33,49 +33,78 @@ class DashboardController extends Controller
             $baseOrderQuery->whereYear('created_at', $year);
         }
 
-        // Tổng đơn hàng và doanh thu từ tất cả đơn
+        // Định nghĩa các hằng số status để dễ quản lý
+        $CANCELLED_STATUSES = [6, 10, 11]; // Trạng thái hủy/không xác nhận
+        $VALID_VNPAY_STATUSES = [1, 2, 3, 4, 5, 7, 9, 12]; // VNPAY hợp lệ
+        $VALID_COD_STATUSES = [4, 5, 7, 9, 12]; // COD hợp lệ
+
+
+        // Tổng số đơn hàng (THÊM LẠI DÒNG NÀY)
         $totalOrders = (clone $baseOrderQuery)->count();
-        $totalRevenue = OrderDetail::join('orders', 'orders.id', '=', 'order_details.order_id')
-            ->leftJoin('products', 'products.id', '=', 'order_details.product_id')
-            ->leftJoin('product_variants', 'product_variants.id', '=', 'order_details.product_variant_id')
+        // Định nghĩa các hằng số status
+        $CANCELLED_STATUSES = [6, 10, 11];
+        $VALID_VNPAY_STATUSES = [1, 2, 3, 4, 5, 7, 9, 12];
+        $VALID_COD_STATUSES = [4, 5, 7, 9, 12];
+
+        // Định nghĩa các hằng số status
+        $CANCELLED_STATUSES = [6, 10, 11];
+        $VALID_VNPAY_STATUSES = [1, 2, 3, 4, 5, 7, 9, 12];
+        $VALID_COD_STATUSES = [4, 5, 7, 9, 12];
+
+        // Bước 1: Tính tổng doanh thu từ TẤT CẢ đơn hàng
+        $allOrdersRevenue = DB::table('orders')
+            ->whereIn('id', (clone $baseOrderQuery)->pluck('id'))
+            ->sum('total_price') ?? 0;
+
+        // Bước 2: Tính tổng tiền các đơn VNPay bị hủy/không xác nhận (CHỈ TRỪ 1 LẦN)
+        $cancelledVNPayAmount = DB::table('orders')
+            ->whereIn('id', (clone $baseOrderQuery)->pluck('id'))
+            ->where('payment_method', 'vnpay')
+            ->whereIn('status', [6, 10, 11]) // hủy/không xác nhận
+            ->sum('total_price') ?? 0;
+
+        // Bước 3: Tính tổng tiền các đơn COD bị hủy (KHÔNG TÍNH vì chưa thu tiền)
+        $cancelledCODAmount = DB::table('orders')
+            ->whereIn('id', (clone $baseOrderQuery)->pluck('id'))
+            ->where('payment_method', 'cod')
+            ->whereIn('status', [6, 10, 11])
+            ->sum('total_price') ?? 0;
+
+        // Bước 4: Tính tổng tiền hoàn hàng
+        $returnedAmount = DB::table('order_return_items as ori')
+            ->join('order_details as od', 'ori.order_detail_id', '=', 'od.id')
+            ->join('orders as o', 'od.order_id', '=', 'o.id')
+            ->whereIn('od.order_id', (clone $baseOrderQuery)->pluck('id'))
+            ->where('ori.status', 'approved')
+            ->whereIn('o.status', [4, 5, 7, 9, 12]) // chỉ đơn đã hoàn thành/giao thành công
+            ->sum(DB::raw('ori.quantity * od.price')) ?? 0;
+
+        // Bước 5: Doanh thu cuối = Tổng tất cả - Tiền đơn VNPay hủy - Tiền hoàn hàng
+        $totalRevenue = $allOrdersRevenue - $cancelledVNPayAmount - $returnedAmount;
+        // Tổng số sản phẩm đã bán (THÊM PHẦN NÀY)
+        $totalProductsSold = OrderDetail::join('orders', 'orders.id', '=', 'order_details.order_id')
             ->whereIn('order_details.order_id', (clone $baseOrderQuery)->pluck('id'))
-            ->selectRaw("
-        SUM(
-            CASE
-                -- Hoàn hàng (COD & VNPAY đều trừ)
-                WHEN orders.status IN (5,12) 
-                    THEN -order_details.price * order_details.quantity
-
-                -- Hủy VNPAY (6,10) → chỉ trừ
-                WHEN orders.payment_method = 'vnpay' AND orders.status IN (6,10) 
-                    THEN -order_details.price * order_details.quantity
-
-                -- Doanh thu VNPAY (1,2,3,4,7,9) → chỉ cộng
-                WHEN orders.payment_method = 'vnpay' AND orders.status IN (1,2,3,4,7,9) 
-                    THEN order_details.price * order_details.quantity
-
-                -- Doanh thu COD (4,7,9) → chỉ cộng
-                WHEN orders.payment_method = 'cod' AND orders.status IN (4,7,9) 
-                    THEN order_details.price * order_details.quantity
-
-                ELSE 0
-            END
-        ) as total_revenue
-    ")
-            ->first()
-            ->total_revenue;
-
-
-        $totalProductsSold = OrderDetail::whereIn('order_id', (clone $baseOrderQuery)
+            ->whereNotIn('orders.status', [6, 10, 11]) // không tính đơn hủy
             ->where(function ($query) {
                 $query->where(function ($q) {
-                    $q->where('status', 1)->where('payment_method', 'vnpay');
+                    $q->where('orders.payment_method', 'vnpay')
+                        ->whereIn('orders.status', [1, 2, 3, 4, 5, 7, 9, 12]);
                 })->orWhere(function ($q) {
-                    $q->where('status', 9)->where('payment_method', 'cod');
-                })->orWhere('status', 4);
-            })->pluck('id'))
-            ->sum('quantity');
+                    $q->where('orders.payment_method', 'cod')
+                        ->whereIn('orders.status', [4, 5, 7, 9, 12]);
+                });
+            })
+            ->sum('order_details.quantity');
 
+        // Debug: Hiển thị các giá trị để kiểm tra
+        echo "Tổng tất cả: " . number_format($allOrdersRevenue) . "<br>";
+        echo "Tiền VNPay hủy: " . number_format($cancelledVNPayAmount) . "<br>";
+        echo "Tiền COD hủy: " . number_format($cancelledCODAmount) . "<br>";
+        echo "Tiền hoàn hàng: " . number_format($returnedAmount) . "<br>";
+        echo "Doanh thu cuối: " . number_format($totalRevenue) . "<br>";
+
+        // Tổng số đơn hàng
+        $totalOrders = (clone $baseOrderQuery)->count();
 
         // Đơn hàng hoàn thành
         $completedOrderCount = (clone $baseOrderQuery)->where('status', 4)->count();
@@ -102,15 +131,15 @@ class DashboardController extends Controller
             ->whereIn('od.order_id', $completedOrderIds)
             ->selectRaw("
                 SUM(od.quantity * od.price) as total_revenue,
-                SUM(od.quantity * 
-                    CASE 
+                SUM(od.quantity *
+                    CASE
                         WHEN od.product_variant_id IS NULL THEN p.original_price
                         ELSE pv.price
                     END
                 ) as total_cost,
                 SUM(od.quantity * (
                     od.price -
-                    CASE 
+                    CASE
                         WHEN od.product_variant_id IS NULL THEN p.original_price
                         ELSE pv.price
                     END
@@ -243,12 +272,16 @@ class DashboardController extends Controller
         $topCustomers = User::whereHas('orders', function ($q) use ($completedOrderIds) {
             $q->whereIn('id', $completedOrderIds);
         })
-            ->withCount(['orders' => function ($q) use ($completedOrderIds) {
-                $q->whereIn('id', $completedOrderIds);
-            }])
-            ->withSum(['orders' => function ($q) use ($completedOrderIds) {
-                $q->whereIn('id', $completedOrderIds);
-            }], 'total_price')
+            ->withCount([
+                'orders' => function ($q) use ($completedOrderIds) {
+                    $q->whereIn('id', $completedOrderIds);
+                }
+            ])
+            ->withSum([
+                'orders' => function ($q) use ($completedOrderIds) {
+                    $q->whereIn('id', $completedOrderIds);
+                }
+            ], 'total_price')
             ->orderByDesc('orders_sum_total_price')
             ->limit(5)
             ->get();

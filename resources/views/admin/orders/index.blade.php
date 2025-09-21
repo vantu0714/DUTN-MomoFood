@@ -1,8 +1,6 @@
 @extends('admin.layouts.app')
 
 @section('content')
-   
-
     <div class="container-fluid px-4">
         <!-- Order Stats -->
         <div class="row mb-4">
@@ -119,11 +117,48 @@
                                             {{ $order->recipient_phone }}<br>
                                             {{ $order->recipient_address }}
                                         </td>
-                                        <td>{{ number_format($order->total_price, 0, ',', '.') }}đ</td>
+                                        <td>
+                                            {{-- Ẩn tổng tiền và hiển thị "Đã hủy đơn" nếu đơn hàng bị hủy --}}
+                                            @if ($order->status == 6)
+                                                <span class="badge bg-danger">Đã hủy đơn</span>
+                                            @else
+                                                @php
+                                                    $refundAmount = 0;
+                                                    $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+
+                                                    if ($isReturnStatus && $order->returnItems->count() > 0) {
+                                                        foreach ($order->returnItems as $returnItem) {
+                                                            if ($returnItem->status == 'approved') {
+                                                                $refundAmount +=
+                                                                    $returnItem->orderDetail->price *
+                                                                    $returnItem->quantity;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    $finalAmount = $order->total_price - $refundAmount;
+                                                @endphp
+
+                                                @if ($isReturnStatus && $refundAmount > 0)
+                                                    <div>
+                                                        <span
+                                                            class="fw-bold text-success">{{ number_format($finalAmount, 0, ',', '.') }}₫</span>
+                                                        <div class="small text-muted">
+                                                            <s>{{ number_format($order->total_price, 0, ',', '.') }}₫</s>
+                                                            <span
+                                                                class="text-danger">(-{{ number_format($refundAmount, 0, ',', '.') }}₫)</span>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span
+                                                        class="fw-bold">{{ number_format($order->total_price, 0, ',', '.') }}₫</span>
+                                                @endif
+                                            @endif
+                                        </td>
                                         <td>
                                             <span
                                                 class="badge
-                                                {{ $order->payment_method == 'cod' ? 'bg-primary' : 'bg-success' }}">
+                    {{ $order->payment_method == 'cod' ? 'bg-primary' : 'bg-success' }}">
                                                 {{ $order->payment_method == 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VnPay' }}
                                             </span>
 
@@ -164,8 +199,8 @@
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 {{-- <a href="{{ route('admin.orders.edit', $order->id) }}"
-                                                    class="btn btn-sm btn-outline-warning">
-                                                    <i class="fas fa-edit"></i>
+                                                class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i>
                                                 </a> --}}
                                             </div>
                                         </td>
