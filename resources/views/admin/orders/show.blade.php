@@ -131,8 +131,8 @@
                                 <td class="text-center">
                                     @php
                                         $isItemCancelled = in_array($detail->id, $cancelledItemIds);
-                                        $isOrderRejected = $order->status == 10; // Không xác nhận
-                                        $isOrderFullyCancelled = $order->status == 6; // Hủy toàn bộ
+                                        $isOrderRejected = $order->status == 10;
+                                        $isOrderFullyCancelled = $order->status == 6;
 
                                         $showAsRejected = $isOrderRejected && !$isItemCancelled;
                                         $showAsCancelled = $isItemCancelled || $isOrderFullyCancelled;
@@ -143,7 +143,11 @@
                                     @endphp
 
                                     @if ($isReturnStatus)
-                                        @if ($isItemPendingReturn)
+                                        @if ($showAsCancelled)
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-ban me-1"></i>Đã hủy
+                                            </span>
+                                        @elseif ($isItemPendingReturn)
                                             <span class="badge bg-warning text-dark">
                                                 <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
                                             </span>
@@ -161,7 +165,11 @@
                                             </span>
                                         @endif
                                     @else
-                                        @if ($isItemPendingReturn)
+                                        @if ($showAsCancelled)
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-ban me-1"></i>Đã hủy
+                                            </span>
+                                        @elseif ($isItemPendingReturn)
                                             <span class="badge bg-warning text-dark">
                                                 <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
                                             </span>
@@ -173,17 +181,10 @@
                                             <span class="badge bg-danger">
                                                 <i class="fas fa-times-circle me-1"></i>Không được hoàn hàng
                                             </span>
-                                        @elseif ($showAsCancelled)
-                                            <span class="badge bg-danger">
-                                                <i class="fas fa-ban me-1"></i>Đã hủy
-                                            </span>
                                         @elseif ($showAsRejected)
                                             <span class="badge bg-danger">
                                                 <i class="fas fa-times-circle me-1"></i>Không xác nhận
                                             </span>
-                                            <div class="mt-1 small">
-                                                {{ $order->updated_at->format('d/m/Y') }}
-                                            </div>
                                         @elseif ($isOrderFullyCancelled)
                                             <span class="badge bg-danger">
                                                 <i class="fas fa-ban me-1"></i>Đã hủy
