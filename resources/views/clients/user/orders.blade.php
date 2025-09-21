@@ -24,6 +24,22 @@
         ];
 
         $currentStatus = request()->get('status', 'all');
+
+        // Hàm tính tiền hoàn trả cho một đơn hàng
+        function calculateRefundAmount($order) {
+            $refundAmount = 0;
+            $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+
+            if ($isReturnStatus && $order->returnItems->count() > 0) {
+                foreach ($order->returnItems as $returnItem) {
+                    if ($returnItem->status == 'approved') {
+                        $refundAmount += $returnItem->orderDetail->price * $returnItem->quantity;
+                    }
+                }
+            }
+
+            return $refundAmount;
+        }
     @endphp
 
     <div class="container-xl px-4" style="margin-top: 150px">
@@ -107,6 +123,12 @@
                     </div>
                 @else
                     @foreach ($orders as $order)
+                        @php
+                            $refundAmount = calculateRefundAmount($order);
+                            $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+                            $finalAmount = $order->total_price - $refundAmount;
+                        @endphp
+
                         <div class="card mb-4 shadow-sm border-0">
                             <div class="card-header bg-light border-bottom py-3">
                                 <div class="d-flex justify-content-between align-items-center h-100">
@@ -126,61 +148,90 @@
                                     <div class="ms-4">
                                         <span
                                             class="badge rounded-pill px-3 py-2 fs-6
-                                                @if ($order->status == 1) bg-warning text-dark
-                                                @elseif($order->status == 2) bg-primary text-white
-                                                @elseif($order->status == 3) bg-success text-white
-                                                @elseif($order->status == 4) bg-info text-white
-                                                @elseif($order->status == 5) bg-secondary text-white
-                                                @elseif($order->status == 6) bg-danger text-white
-                                                @elseif($order->status == 7) bg-purple text-white
-                                                @elseif($order->status == 8) bg-danger text-white
-                                                @elseif ($order->status == 9) bg-primary text-white
-                                                @elseif ($order->status == 10) bg-danger text-white
-                                                @elseif ($order->status == 11) bg-danger text-white
-                                                @elseif ($order->status == 12) bg-warning text-white @endif">
+                            @if ($order->status == 1) bg-warning text-dark
+                            @elseif($order->status == 2) bg-primary text-white
+                            @elseif($order->status == 3) bg-success text-white
+                            @elseif($order->status == 4) bg-info text-white
+                            @elseif($order->status == 5) bg-secondary text-white
+                            @elseif($order->status == 6) bg-danger text-white
+                            @elseif($order->status == 7) bg-purple text-white
+                            @elseif($order->status == 8) bg-danger text-white
+                            @elseif ($order->status == 9) bg-primary text-white
+                            @elseif ($order->status == 10) bg-danger text-white
+                            @elseif ($order->status == 11) bg-danger text-white
+                            @elseif ($order->status == 12) bg-warning text-white @endif">
                                             {{ $statusLabels[$order->status] ?? 'Không xác định' }}
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="card-body p-4">
-                                <div class="row g-3 align-items-center">
-                                    <div class="col-md-6 col-lg-3">
-                                        <span class="text-uppercase text-muted small mb-1 d-block">Trạng thái thanh
-                                            toán</span>
-                                        <span
-                                            class="badge rounded-pill px-3 py-2
-                                            {{ $order->payment_status == 'paid'
-                                                ? 'bg-success'
-                                                : ($order->payment_status == 'refunded'
-                                                    ? 'bg-info'
-                                                    : 'bg-warning') }}">
-                                            {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
-                                        </span>
-                                    </div>
+                            {{-- Ẩn toàn bộ card-body cho đơn hàng đã hủy --}}
+                            @if ($order->status != 6)
+                                <div class="card-body p-4">
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-md-6 col-lg-3">
+                                            <span class="text-uppercase text-muted small mb-1 d-block">Trạng thái thanh
+                                                toán</span>
+                                            <span
+                                                class="badge rounded-pill px-3 py-2
+                            {{ $order->payment_status == 'paid'
+                                ? 'bg-success'
+                                : ($order->payment_status == 'refunded'
+                                    ? 'bg-info'
+                                    : 'bg-warning') }}">
+                                                {{ $paymentStatusLabels[$order->payment_status] ?? 'Không xác định' }}
+                                            </span>
+                                        </div>
 
-                                    <div class="col-md-6 col-lg-3">
-                                        <span class="text-uppercase text-muted small mb-1 d-block">Phương thức thanh
-                                            toán</span>
-                                        <span class="fw-semibold text-dark">{{ $order->payment_method }}</span>
-                                    </div>
+                                        <div class="col-md-6 col-lg-3">
+                                            <span class="text-uppercase text-muted small mb-1 d-block">Phương thức thanh
+                                                toán</span>
+                                            <span class="fw-semibold text-dark">{{ $order->payment_method }}</span>
+                                        </div>
 
-                                    <div class="col-md-6 col-lg-3">
-                                        <span class="text-uppercase text-muted small mb-1 d-block">Phí vận chuyển</span>
-                                        <span class="fw-semibold text-dark">
-                                            {{ number_format($order->shipping_fee, 0, ',', '.') }}₫
-                                        </span>
-                                    </div>
+                                        <div class="col-md-6 col-lg-3">
+                                            <span class="text-uppercase text-muted small mb-1 d-block">Phí vận chuyển</span>
+                                            <span class="fw-semibold text-dark">
+                                                {{ number_format($order->shipping_fee, 0, ',', '.') }}₫
+                                            </span>
+                                        </div>
 
-                                    <div class="col-md-6 col-lg-3">
-                                        <span class="text-uppercase text-muted small mb-1 d-block">Tổng tiền</span>
-                                        <span class="fw-bold text-success">
-                                            {{ number_format($order->total_price, 0, ',', '.') }}₫
-                                        </span>
+                                        <div class="col-md-6 col-lg-3">
+                                            <span class="text-uppercase text-muted small mb-1 d-block">
+                                                @if ($isReturnStatus && $refundAmount > 0)
+                                                    Tổng tiền cuối cùng
+                                                @else
+                                                    Tổng tiền
+                                                @endif
+                                            </span>
+                                            <span class="fw-bold text-success">
+                                                {{ number_format($finalAmount, 0, ',', '.') }}₫
+                                            </span>
+                                            @if ($isReturnStatus && $refundAmount > 0)
+                                                <div class="small text-muted mt-1">
+                                                    <s>{{ number_format($order->total_price, 0, ',', '.') }}₫</s>
+                                                    <span class="text-danger ms-1">(-{{ number_format($refundAmount, 0, ',', '.') }}₫)</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @else
+                                <div class="card-body p-4">
+                                    <div class="alert alert-info mb-0">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-info-circle fa-lg me-3"></i>
+                                            <div>
+                                                <h6 class="alert-heading mb-1">Đơn hàng đã hủy theo yêu cầu của bạn</h6>
+                                                @if ($order->reason)
+                                                    <p class="mb-0 mt-2"><strong>Lý do:</strong> {{ $order->reason }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
 
                             <div class="card-footer bg-light border-top text-end p-3">
                                 <a href="{{ route('clients.orderdetail', $order->id) }}" class="btn text-white px-4 py-2"
