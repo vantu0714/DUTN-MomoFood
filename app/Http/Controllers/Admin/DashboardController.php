@@ -33,36 +33,51 @@ class DashboardController extends Controller
 
         // Tổng đơn hàng và doanh thu từ tất cả đơn
         $totalOrders = (clone $baseOrderQuery)->count();
-        $totalRevenue = OrderDetail::join('orders', 'orders.id', '=', 'order_details.order_id')
-            ->leftJoin('products', 'products.id', '=', 'order_details.product_id')
-            ->leftJoin('product_variants', 'product_variants.id', '=', 'order_details.product_variant_id')
+        $basicRevenue = OrderDetail::join('orders', 'orders.id', '=', 'order_details.order_id')
             ->whereIn('order_details.order_id', (clone $baseOrderQuery)->pluck('id'))
             ->selectRaw("
-        SUM(
-            CASE
-                -- Hoàn hàng (COD & VNPAY đều trừ)
-                WHEN orders.status IN (5,12) 
-                    THEN -order_details.price * order_details.quantity
+                SUM(
+                    CASE
+                        -- Đơn hàng hoàn toàn bị hủy
+                        WHEN orders.status IN (6, 10, 11)
+                            THEN -order_details.price * order_details.quantity
 
-                -- Hủy VNPAY (6,10) → chỉ trừ
-                WHEN orders.payment_method = 'vnpay' AND orders.status IN (6,10) 
-                    THEN -order_details.price * order_details.quantity
+                        -- Doanh thu VNPAY (đã thanh toán hoặc đang xử lý)
+                        WHEN orders.payment_method = 'vnpay' AND orders.status IN (1,2,3,4,5,7,9,12)
+                            THEN order_details.price * order_details.quantity
 
-                -- Doanh thu VNPAY (1,2,3,4,7,9) → chỉ cộng
-                WHEN orders.payment_method = 'vnpay' AND orders.status IN (1,2,3,4,7,9) 
-                    THEN order_details.price * order_details.quantity
+                        -- Doanh thu COD (chỉ khi đã giao hoặc hoàn thành)
+                        WHEN orders.payment_method = 'cod' AND orders.status IN (4,5,7,9,12)
+                            THEN order_details.price * order_details.quantity
 
-                -- Doanh thu COD (4,7,9) → chỉ cộng
-                WHEN orders.payment_method = 'cod' AND orders.status IN (4,7,9) 
-                    THEN order_details.price * order_details.quantity
-
-                ELSE 0
-            END
-        ) as total_revenue
-    ")
+                        ELSE 0
+                    END
+                ) as basic_revenue
+            ")
             ->first()
-            ->total_revenue;
+            ->basic_revenue ?? 0;
 
+        // Bước 2: Tính tổng số tiền bị trừ do hoàn hàng được chấp nhận
+        $returnedAmount = DB::table('order_return_items as ori')
+            ->join('order_details as od', 'ori.order_detail_id', '=', 'od.id')
+            ->join('orders as o', 'od.order_id', '=', 'o.id')
+            ->whereIn('od.order_id', (clone $baseOrderQuery)->pluck('id'))
+            ->where('ori.status', 'approved')
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    // VNPAY: tất cả trạng thái có doanh thu
+                    $q->where('o.payment_method', 'vnpay')
+                        ->whereIn('o.status', [1, 2, 3, 4, 5, 7, 9, 12]);
+                })->orWhere(function ($q) {
+                    // COD: chỉ khi đã giao
+                    $q->where('o.payment_method', 'cod')
+                        ->whereIn('o.status', [4, 5, 7, 9, 12]);
+                });
+            })
+            ->sum(DB::raw('ori.quantity * od.price')) ?? 0;
+
+        // Bước 3: Doanh thu cuối = Doanh thu cơ bản - Số tiền hoàn hàng
+        $totalRevenue = $basicRevenue - $returnedAmount;
 
         $totalProductsSold = OrderDetail::whereIn('order_id', (clone $baseOrderQuery)
             ->where(function ($query) {
@@ -100,15 +115,15 @@ class DashboardController extends Controller
             ->whereIn('od.order_id', $completedOrderIds)
             ->selectRaw("
                 SUM(od.quantity * od.price) as total_revenue,
-                SUM(od.quantity * 
-                    CASE 
+                SUM(od.quantity *
+                    CASE
                         WHEN od.product_variant_id IS NULL THEN p.original_price
                         ELSE pv.price
                     END
                 ) as total_cost,
                 SUM(od.quantity * (
                     od.price -
-                    CASE 
+                    CASE
                         WHEN od.product_variant_id IS NULL THEN p.original_price
                         ELSE pv.price
                     END
@@ -241,12 +256,16 @@ class DashboardController extends Controller
         $topCustomers = User::whereHas('orders', function ($q) use ($completedOrderIds) {
             $q->whereIn('id', $completedOrderIds);
         })
-            ->withCount(['orders' => function ($q) use ($completedOrderIds) {
-                $q->whereIn('id', $completedOrderIds);
-            }])
-            ->withSum(['orders' => function ($q) use ($completedOrderIds) {
-                $q->whereIn('id', $completedOrderIds);
-            }], 'total_price')
+            ->withCount([
+                'orders' => function ($q) use ($completedOrderIds) {
+                    $q->whereIn('id', $completedOrderIds);
+                }
+            ])
+            ->withSum([
+                'orders' => function ($q) use ($completedOrderIds) {
+                    $q->whereIn('id', $completedOrderIds);
+                }
+            ], 'total_price')
             ->orderByDesc('orders_sum_total_price')
             ->limit(5)
             ->get();
