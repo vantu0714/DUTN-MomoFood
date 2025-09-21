@@ -24,6 +24,22 @@
         ];
 
         $currentStatus = request()->get('status', 'all');
+
+        // Hàm tính tiền hoàn trả cho một đơn hàng
+        function calculateRefundAmount($order) {
+            $refundAmount = 0;
+            $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+
+            if ($isReturnStatus && $order->returnItems->count() > 0) {
+                foreach ($order->returnItems as $returnItem) {
+                    if ($returnItem->status == 'approved') {
+                        $refundAmount += $returnItem->orderDetail->price * $returnItem->quantity;
+                    }
+                }
+            }
+
+            return $refundAmount;
+        }
     @endphp
 
     <div class="container-xl px-4" style="margin-top: 150px">
@@ -107,6 +123,12 @@
                     </div>
                 @else
                     @foreach ($orders as $order)
+                        @php
+                            $refundAmount = calculateRefundAmount($order);
+                            $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+                            $finalAmount = $order->total_price - $refundAmount;
+                        @endphp
+
                         <div class="card mb-4 shadow-sm border-0">
                             <div class="card-header bg-light border-bottom py-3">
                                 <div class="d-flex justify-content-between align-items-center h-100">
@@ -176,10 +198,22 @@
                                         </div>
 
                                         <div class="col-md-6 col-lg-3">
-                                            <span class="text-uppercase text-muted small mb-1 d-block">Tổng tiền</span>
-                                            <span class="fw-bold text-success">
-                                                {{ number_format($order->total_price, 0, ',', '.') }}₫
+                                            <span class="text-uppercase text-muted small mb-1 d-block">
+                                                @if ($isReturnStatus && $refundAmount > 0)
+                                                    Tổng tiền cuối cùng
+                                                @else
+                                                    Tổng tiền
+                                                @endif
                                             </span>
+                                            <span class="fw-bold text-success">
+                                                {{ number_format($finalAmount, 0, ',', '.') }}₫
+                                            </span>
+                                            @if ($isReturnStatus && $refundAmount > 0)
+                                                <div class="small text-muted mt-1">
+                                                    <s>{{ number_format($order->total_price, 0, ',', '.') }}₫</s>
+                                                    <span class="text-danger ms-1">(-{{ number_format($refundAmount, 0, ',', '.') }}₫)</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
