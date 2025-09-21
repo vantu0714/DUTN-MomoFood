@@ -1,8 +1,6 @@
 @extends('admin.layouts.app')
 
 @section('content')
-   
-
     <div class="container-fluid px-4">
         <!-- Order Stats -->
         <div class="row mb-4">
@@ -119,11 +117,18 @@
                                             {{ $order->recipient_phone }}<br>
                                             {{ $order->recipient_address }}
                                         </td>
-                                        <td>{{ number_format($order->total_price, 0, ',', '.') }}đ</td>
+                                        <td>
+                                            {{-- Ẩn tổng tiền và hiển thị "Đã hủy đơn" nếu đơn hàng bị hủy --}}
+                                            @if ($order->status == 6)
+                                                <span class="badge bg-danger">Đã hủy đơn</span>
+                                            @else
+                                                {{ number_format($order->total_price, 0, ',', '.') }}đ
+                                            @endif
+                                        </td>
                                         <td>
                                             <span
                                                 class="badge
-                                                {{ $order->payment_method == 'cod' ? 'bg-primary' : 'bg-success' }}">
+                    {{ $order->payment_method == 'cod' ? 'bg-primary' : 'bg-success' }}">
                                                 {{ $order->payment_method == 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán qua VnPay' }}
                                             </span>
 
@@ -164,8 +169,8 @@
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 {{-- <a href="{{ route('admin.orders.edit', $order->id) }}"
-                                                    class="btn btn-sm btn-outline-warning">
-                                                    <i class="fas fa-edit"></i>
+                                                class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i>
                                                 </a> --}}
                                             </div>
                                         </td>

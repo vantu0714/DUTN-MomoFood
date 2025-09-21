@@ -78,13 +78,26 @@ class ProductDetailController extends Controller
 
             $hasReviewed = $product->comments->where('user_id', $userId)->isNotEmpty();
         }
+        $orderDetail = null;
+
+        if (Auth::check()) {
+            $userId = Auth::id();
+
+            $orderDetail = OrderDetail::whereHas('order', function ($query) use ($userId) {
+                $query->where('user_id', $userId)->where('status', 4);
+            })
+                ->where('product_id', $product->id)
+                ->latest()
+                ->first();
+        }
 
         return view('clients.product-detail', compact(
             'product',
             'relatedProducts',
             'averageRating',
             'hasPurchased',
-            'hasReviewed'
+            'hasReviewed',
+            'orderDetail'
         ));
     }
 }

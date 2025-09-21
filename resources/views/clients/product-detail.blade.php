@@ -514,8 +514,10 @@
                             <h4 class="mb-4 fw-bold text-uppercase text-primary section-title"
                                 style="color: #1a202c !important;">Để lại đánh giá</h4>
 
-                            <input type="hidden" name="order_id" value="{{ $order->id }}">
-                            <input type="hidden" name="order_detail_id" value="{{ $orderDetail->id }}">
+                            @if ($orderDetail)
+                                <input type="hidden" name="order_id" value="{{ $orderDetail->order_id }}">
+                                <input type="hidden" name="order_detail_id" value="{{ $orderDetail->id }}">
+                            @endif
                             <input type="hidden" name="product_id" value="{{ $orderDetail->product_id }}">
                             <input type="hidden" name="product_variant_id"
                                 value="{{ $orderDetail->product_variant_id }}">
