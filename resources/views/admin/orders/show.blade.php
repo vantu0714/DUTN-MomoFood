@@ -23,7 +23,18 @@
             }
         }
 
+        $refundAmount = 0;
         $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+
+        if ($isReturnStatus && $order->returnItems->count() > 0) {
+            foreach ($order->returnItems as $returnItem) {
+                if ($returnItem->status == 'approved') {
+                    $refundAmount += $returnItem->orderDetail->price * $returnItem->quantity;
+                }
+            }
+        }
+
+        $finalAmount = $order->total_price - $refundAmount;
     @endphp
 
     <div class="container-fluid my-4">
@@ -341,6 +352,18 @@
                                     Tổng thanh toán đã được điều chỉnh từ {{ number_format($expectedTotal) }}đ
                                     xuống {{ number_format($order->total_price) }}đ
                                 </small>
+                            </div>
+                        @endif
+
+                        @if ($isReturnStatus && $refundAmount > 0)
+                            <div class="col-md-6">
+                                <strong>Số tiền đã hoàn trả:</strong>
+                                <span class="text-success">-{{ number_format($refundAmount) }}₫</span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <strong>Tổng thanh toán cuối cùng:</strong>
+                                <span class="text-danger fw-bold">{{ number_format($finalAmount) }}₫</span>
                             </div>
                         @endif
                     @else

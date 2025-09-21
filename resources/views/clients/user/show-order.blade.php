@@ -183,6 +183,17 @@
         usort($statusHistory, function ($a, $b) {
             return strtotime($a['time']) - strtotime($b['time']);
         });
+
+        $refundAmount = 0;
+        $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+
+        if ($isReturnStatus && $order->returnItems->count() > 0) {
+            foreach ($order->returnItems as $returnItem) {
+                if ($returnItem->status == 'approved') {
+                    $refundAmount += $returnItem->orderDetail->price * $returnItem->quantity;
+                }
+            }
+        }
     @endphp
 
     <div class="container mb-5" style="margin-top: 150px">
@@ -244,6 +255,17 @@
                             <div class="col-md-3 mb-2">
                                 <p class="mb-1"><strong>Địa chỉ:</strong></p>
                                 <p>{{ $order->recipient_address ?? Auth::user()->address }}</p>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1"><strong>Giảm giá:</strong></p>
+                                <p>
+                                    @if ($order->discount_amount > 0)
+                                        <span
+                                            class="badge bg-success">-{{ number_format($order->discount_amount, 0, ',', '.') }}₫</span>
+                                    @else
+                                        <span class="text-muted">Không áp dụng</span>
+                                    @endif
+                                </p>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <p class="mb-1"><strong>Thanh toán:</strong></p>
@@ -867,7 +889,6 @@
                                 @endif
 
                                 @if ($order->status != 6 && $order->status != 10)
-                                    {{-- Chỉ hiển thị khi không phải hủy hoặc không xác nhận --}}
                                     <div
                                         class="d-flex justify-content-between mb-2 @if ($cancelledAmount > 0 && $subtotal > 0) border-top pt-2 @endif">
                                         <span class="fw-bold">Tổng giá sản phẩm:</span>
@@ -884,13 +905,30 @@
                                         <span>Phí vận chuyển:</span>
                                         <span>{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</span>
                                     </div>
-
+                                    @if ($order->discount_amount > 0)
+                                        <div class="d-flex justify-content-between mb-2 text-success">
+                                            <span>Giảm giá:</span>
+                                            <span>-{{ number_format($order->discount_amount, 0, ',', '.') }}₫</span>
+                                        </div>
+                                    @endif
                                     <div class="d-flex justify-content-between mt-3 pt-2 border-top">
                                         <span class="fw-bold fs-6">Tổng thanh toán:</span>
                                         <span class="fw-bold fs-5 text-primary">
                                             {{ number_format(max(0, $order->total_price), 0, ',', '.') }}₫
                                         </span>
                                     </div>
+                                    @if ($refundAmount > 0)
+                                        <div class="d-flex justify-content-between mb-2 text-success">
+                                            <span>Tiền đã hoàn trả:</span>
+                                            <span>-{{ number_format($refundAmount, 0, ',', '.') }}₫</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2 border-top pt-2">
+                                            <span class="fw-bold">Tổng thanh toán cuối cùng:</span>
+                                            <span class="fw-bold text-primary">
+                                                {{ number_format(max(0, $order->total_price - $refundAmount), 0, ',', '.') }}₫
+                                            </span>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 <!-- Hiển thị thông báo hủy đơn hàng -->
@@ -1178,7 +1216,6 @@
                 @endif
 
                 <!-- Form hủy đơn hàng -->
-                {{-- NOTE: sửa tính giá số tiền có thể huỷ --}}
                 @if ($order->status == 1 && !$order->cancellation && $order->activeOrderDetails->count() > 0)
                     <div id="cancel-form" class="mt-3" style="display: none;">
                         <div class="card border-danger">
