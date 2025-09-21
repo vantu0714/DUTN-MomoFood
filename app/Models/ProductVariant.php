@@ -67,11 +67,13 @@ class ProductVariant extends Model
     }
     public function getFullNameAttribute()
     {
+        $productName = $this->product->product_name ?? 'Không rõ sản phẩm';
+
         $attrs = $this->attributeValues->map(function ($val) {
             return $val->attribute->name . ': ' . $val->value;
         })->implode(', ');
 
-        return $this->name . ($attrs ? " ($attrs)" : '');
+        return $productName . ($attrs ? " ($attrs)" : '');
     }
 
     public function getImageUrlAttribute()

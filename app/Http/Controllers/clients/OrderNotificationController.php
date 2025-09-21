@@ -62,7 +62,7 @@ class OrderNotificationController extends Controller
             ->where('user_id', auth()->id())
             ->whereIn('status', [0, 1, 2, 3, 4])
             ->latest('created_at')
-            ->paginate(10);
+            ->paginate(5);
 
         return view('clients.notifications.index', compact('orders'));
     }

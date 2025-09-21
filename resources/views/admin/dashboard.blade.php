@@ -328,24 +328,28 @@
                     <tbody>
                         @foreach ($returnedItems as $item)
                             <tr>
-                                <td>{{ $loop->iteration + ($returnedItems->currentPage() - 1) * $returnedItems->perPage() }}</td>
+                                <td>{{ $loop->iteration + ($returnedItems->currentPage() - 1) * $returnedItems->perPage() }}
+                                </td>
                                 <td>{{ $item->orderDetail->product->product_code ?? '-' }}</td>
                                 <td>
                                     <img src="{{ asset('storage/' . ($item->orderDetail->product->image ?? 'products/default.jpg')) }}"
-                                        alt="Ảnh sản phẩm" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;"
+                                        alt="Ảnh sản phẩm"
+                                        style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;"
                                         onerror="this.onerror=null; this.src='{{ asset('clients/img/default.jpg') }}';">
                                 </td>
-                                <td>{{ $item->orderDetail->product_name_display }}</td>
+                                <td class="text-center">
+                                    {{ $item->orderDetail->product_name_display }}
+                                </td>
                                 <td>{{ $item->quantity }}</td>
                                 <td>{{ $item->reason }}</td>
-                               <td>
-                                @if($item->isApproved())
-                                    <span class="badge bg-success">{{ $item->status_label }}</span>
-                                @elseif($item->isRejected())
-                                    <span class="badge bg-danger">{{ $item->status_label }}</span>
-                                @else
-                                    <span class="badge bg-warning text-dark">{{ $item->status_label }}</span>
-                                @endif
+                                <td>
+                                    @if ($item->isApproved())
+                                        <span class="badge bg-success">{{ $item->status_label }}</span>
+                                    @elseif($item->isRejected())
+                                        <span class="badge bg-danger">{{ $item->status_label }}</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark">{{ $item->status_label }}</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
