@@ -198,8 +198,6 @@ class OrderController extends Controller
             'selected_items' => 'nullable',
         ]);
 
-        Log::error('resquét', ['aaa' => $request->all()]);
-
         // Kiểm tra địa chỉ nhận hàng
         if ($request->filled('recipient_id')) {
 
@@ -311,6 +309,7 @@ class OrderController extends Controller
                 }
             }
             // dd($request->all());
+
 
             $grandTotal = $total + $request->shipping_fee - $discount;
 
