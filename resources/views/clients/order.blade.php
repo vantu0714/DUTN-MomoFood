@@ -253,6 +253,7 @@
                                 <input type="hidden" name="shipping_fee" value="{{ $shippingFee }}">
                                 <input type="hidden" name="grand_total" value="{{ $grandTotal }}">
                                 <input type="hidden" name="discount_amount" value="{{ $discount }}">
+                                <input type="hidden" name="promotion" value="{{ session('promotion.code') }}">
 
                                 <input type="hidden" name="recipient_id" id="recipient_id"
                                     value="{{ old('recipient_id', $recipient['id'] ?? '') }}">
