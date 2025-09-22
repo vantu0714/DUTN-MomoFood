@@ -63,23 +63,15 @@ class HomeController extends Controller
             'variants.attributeValues.attribute',
             'variants'
         ])
-            ->where(function ($q) {
-                $q->where(function ($q1) {
-
-                    $q1->where('product_type', 'simple')
-                        ->where('status', 1)
-                        ->where('quantity_in_stock', '>', 0);
-                })->orWhere(function ($q2) {
-
-                    $q2->where('product_type', 'variant')
-                        ->where('status', 1);
-                });
-            })
-            ->withAvg('comments', 'rating')
+            ->withAvg(['comments as comments_avg_rating' => function ($q) {
+                $q->whereNull('parent_id'); 
+            }], 'rating')
+            ->where('status', 1)
             ->having('comments_avg_rating', '>=', 4)
             ->orderByDesc('comments_avg_rating')
             ->take(6)
             ->get();
+
 
         $comments = Comment::with('user')->hasRating()->latest()->take(10)->get();
 
@@ -178,11 +170,11 @@ class HomeController extends Controller
                 })
                     // hoặc sản phẩm có biến thể còn hàng
                     ->orWhere(function ($q2) {
-                    $q2->where('product_type', 'variant')
-                        ->whereHas('variants', function ($q3) {
-                            $q3->where('quantity_in_stock', '>', 0);
-                        });
-                });
+                        $q2->where('product_type', 'variant')
+                            ->whereHas('variants', function ($q3) {
+                                $q3->where('quantity_in_stock', '>', 0);
+                            });
+                    });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->latest()
