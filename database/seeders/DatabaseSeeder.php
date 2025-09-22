@@ -18,7 +18,6 @@ class DatabaseSeeder extends Seeder
 
         // Bước 3: Các seed khác
         $this->call(CategorySeeder::class);    
-        $this->call(ProductSeeder::class);
         $this->call(OrderSeeder::class);
         $this->call([
             AttributeSeeder::class,
