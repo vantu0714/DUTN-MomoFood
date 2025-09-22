@@ -95,11 +95,12 @@ class Order extends Model
 {
     return match($this->status) {
         0 => 'chờ xác nhận',
-        1 => 'không được xác nhận',
-        2 => 'đã xác nhận',
+        10 => 'không được xác nhận',
+        1 => 'đang được xác nhận',
+        2 => 'đã được xác nhận',
         3 => 'đang được giao',
+        9 => 'đã được giao',
         4 => 'đã hoàn thành',
-        5 => 'đã hoàn thành',
         default => 'không xác định',
     };
 }

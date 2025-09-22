@@ -183,6 +183,17 @@
         usort($statusHistory, function ($a, $b) {
             return strtotime($a['time']) - strtotime($b['time']);
         });
+
+        $refundAmount = 0;
+        $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+
+        if ($isReturnStatus && $order->returnItems->count() > 0) {
+            foreach ($order->returnItems as $returnItem) {
+                if ($returnItem->status == 'approved') {
+                    $refundAmount += $returnItem->orderDetail->price * $returnItem->quantity;
+                }
+            }
+        }
     @endphp
 
     <div class="container mb-5" style="margin-top: 150px">
@@ -244,6 +255,17 @@
                             <div class="col-md-3 mb-2">
                                 <p class="mb-1"><strong>Địa chỉ:</strong></p>
                                 <p>{{ $order->recipient_address ?? Auth::user()->address }}</p>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1"><strong>Giảm giá:</strong></p>
+                                <p>
+                                    @if ($order->discount_amount > 0)
+                                        <span
+                                            class="badge bg-success">-{{ number_format($order->discount_amount, 0, ',', '.') }}₫</span>
+                                    @else
+                                        <span class="text-muted">Không áp dụng</span>
+                                    @endif
+                                </p>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <p class="mb-1"><strong>Thanh toán:</strong></p>
@@ -683,9 +705,17 @@
                                             class="text-end @if (!$showAsCancelled) fw-bold text-primary @endif">
                                             {{ number_format($itemTotal, 0, ',', '.') }}₫
                                         </td>
+                                        {{-- NOTE: sửa sản phẩm đã huỷ thì thành Giao thành công trong các trạng thái hoành hàng --}}
                                         <td class="text-center">
                                             @if ($isReturnStatus)
-                                                @if (in_array($item->id, $pendingReturnItems))
+                                                @if ($showAsCancelled)
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-ban me-1"></i>Đã hủy
+                                                    </span>
+                                                    <div class="mt-1 small">
+                                                        {{ $order->cancellation->cancelled_at->format('d/m/Y') }}
+                                                    </div>
+                                                @elseif (in_array($item->id, $pendingReturnItems))
                                                     <span class="badge bg-warning text-dark">
                                                         <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
                                                     </span>
@@ -705,19 +735,7 @@
                                                     @endif
                                                 @endif
                                             @else
-                                                @if (in_array($item->id, $pendingReturnItems))
-                                                    <span class="badge bg-warning text-dark">
-                                                        <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
-                                                    </span>
-                                                @elseif (in_array($item->id, $completedReturnItems))
-                                                    <span class="badge bg-success">
-                                                        <i class="fas fa-check-circle me-1"></i>Đã hoàn hàng
-                                                    </span>
-                                                @elseif (in_array($item->id, $rejectedReturnItems))
-                                                    <span class="badge bg-danger">
-                                                        <i class="fas fa-times-circle me-1"></i>Không được hoàn hàng
-                                                    </span>
-                                                @elseif ($showAsCancelled)
+                                                @if ($showAsCancelled)
                                                     <span class="badge bg-danger">
                                                         <i class="fas fa-ban me-1"></i>Đã hủy
                                                     </span>
@@ -739,7 +757,19 @@
                                                         {{ $order->updated_at->format('d/m/Y') }}
                                                     </div>
                                                 @else
-                                                    @if ($order->status == 4 && !$alreadyRated)
+                                                    @if (in_array($item->id, $pendingReturnItems))
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-clock me-1"></i>Đang chờ hoàn hàng
+                                                        </span>
+                                                    @elseif (in_array($item->id, $completedReturnItems))
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check-circle me-1"></i>Đã hoàn hàng
+                                                        </span>
+                                                    @elseif (in_array($item->id, $rejectedReturnItems))
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-times-circle me-1"></i>Không được hoàn hàng
+                                                        </span>
+                                                    @elseif ($order->status == 4 && !$alreadyRated)
                                                         <button type="button" class="btn btn-sm btn-danger btn-danh-gia"
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#reviewModal{{ $item->id }}">
@@ -866,7 +896,6 @@
                                 @endif
 
                                 @if ($order->status != 6 && $order->status != 10)
-                                    {{-- Chỉ hiển thị khi không phải hủy hoặc không xác nhận --}}
                                     <div
                                         class="d-flex justify-content-between mb-2 @if ($cancelledAmount > 0 && $subtotal > 0) border-top pt-2 @endif">
                                         <span class="fw-bold">Tổng giá sản phẩm:</span>
@@ -883,13 +912,30 @@
                                         <span>Phí vận chuyển:</span>
                                         <span>{{ number_format($order->shipping_fee, 0, ',', '.') }}₫</span>
                                     </div>
-
+                                    @if ($order->discount_amount > 0)
+                                        <div class="d-flex justify-content-between mb-2 text-success">
+                                            <span>Giảm giá:</span>
+                                            <span>-{{ number_format($order->discount_amount, 0, ',', '.') }}₫</span>
+                                        </div>
+                                    @endif
                                     <div class="d-flex justify-content-between mt-3 pt-2 border-top">
                                         <span class="fw-bold fs-6">Tổng thanh toán:</span>
                                         <span class="fw-bold fs-5 text-primary">
                                             {{ number_format(max(0, $order->total_price), 0, ',', '.') }}₫
                                         </span>
                                     </div>
+                                    @if ($refundAmount > 0)
+                                        <div class="d-flex justify-content-between mb-2 text-success">
+                                            <span>Tiền đã hoàn trả:</span>
+                                            <span>-{{ number_format($refundAmount, 0, ',', '.') }}₫</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2 border-top pt-2">
+                                            <span class="fw-bold">Tổng thanh toán cuối cùng:</span>
+                                            <span class="fw-bold text-primary">
+                                                {{ number_format(max(0, $order->total_price - $refundAmount), 0, ',', '.') }}₫
+                                            </span>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 <!-- Hiển thị thông báo hủy đơn hàng -->
@@ -1743,55 +1789,19 @@
             const submitButton = document.getElementById('submitCancelRequest');
             const totalRefundElement = document.getElementById('total-refund-amount');
 
-            let totalRefundAmount = 0;
+            function updateTotalRefund() {
+                let total = 0;
 
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
-                    itemCheckboxes.forEach(checkbox => {
-                        checkbox.checked = this.checked;
-                        if (this.checked) {
-                            addToTotal(checkbox);
-                        } else {
-                            removeFromTotal(checkbox);
-                        }
-                    });
-                    validateCancelForm();
-                });
-            }
-
-            itemCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        addToTotal(this);
-                    } else {
-                        removeFromTotal(this);
-                    }
-
-                    validateCancelForm();
-
-                    if (selectAllCheckbox) {
-                        const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
-                        selectAllCheckbox.checked = allChecked;
+                itemCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
+                        total += price;
                     }
                 });
-            });
-
-            function addToTotal(checkbox) {
-                const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
-                totalRefundAmount += price;
-                updateTotalDisplay();
-            }
-
-            function removeFromTotal(checkbox) {
-                const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
-                totalRefundAmount -= price;
-                updateTotalDisplay();
-            }
-
-            function updateTotalDisplay() {
                 if (totalRefundElement) {
-                    totalRefundElement.textContent = formatCurrency(totalRefundAmount);
+                    totalRefundElement.textContent = formatCurrency(total);
                 }
+                return total;
             }
 
             function formatCurrency(amount) {
@@ -1801,6 +1811,7 @@
                 }).format(amount);
             }
 
+            // Hàm validate form
             function validateCancelForm() {
                 const checkedItems = document.querySelectorAll('.cancel-item-checkbox:checked');
                 submitButton.disabled = checkedItems.length === 0;
@@ -1809,10 +1820,40 @@
                     submitButton.innerHTML =
                         `<i class="fas fa-paper-plane me-2"></i>Xác nhận hủy ${checkedItems.length} sản phẩm`;
                 } else {
-                    submitButton.innerHTML = `<i class="fas fa-paper-plane me-2"></i>Xác nhận hủy sản phẩm đã chọn`;
+                    submitButton.innerHTML =
+                        `<i class="fas fa-paper-plane me-2"></i>Xác nhận hủy sản phẩm đã chọn`;
                 }
             }
 
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+
+                    itemCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+
+                    updateTotalRefund();
+                    validateCancelForm();
+                });
+            }
+
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateTotalRefund();
+                    validateCancelForm();
+
+                    if (selectAllCheckbox) {
+                        const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+                        const someChecked = Array.from(itemCheckboxes).some(cb => cb.checked);
+
+                        selectAllCheckbox.checked = allChecked;
+                        selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                    }
+                });
+            });
+
+            // Xử lý sự kiện submit form
             const cancelForm = document.getElementById('cancelOrderForm');
             if (cancelForm) {
                 cancelForm.addEventListener('submit', function(e) {
@@ -1834,10 +1875,37 @@
             }
 
             function showToast(message, type = 'info') {
-                console.log(`${type}: ${message}`);
+                const toastContainer = document.querySelector('.toast-container');
+                if (toastContainer) {
+                    const toastId = 'toast-' + Date.now();
+                    const bgClass = type === 'error' ? 'bg-danger' :
+                        type === 'success' ? 'bg-success' : 'bg-info';
+
+                    const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+                    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+                    const toastElement = document.getElementById(toastId);
+                    const bsToast = new bootstrap.Toast(toastElement, {
+                        delay: 3000
+                    });
+                    bsToast.show();
+
+                    toastElement.addEventListener('hidden.bs.toast', () => {
+                        toastElement.remove();
+                    });
+                }
             }
 
-            updateTotalDisplay();
+            updateTotalRefund();
+            validateCancelForm();
         });
     </script>
 @endsection

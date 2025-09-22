@@ -122,7 +122,37 @@
                                             @if ($order->status == 6)
                                                 <span class="badge bg-danger">Đã hủy đơn</span>
                                             @else
-                                                {{ number_format($order->total_price, 0, ',', '.') }}đ
+                                                @php
+                                                    $refundAmount = 0;
+                                                    $isReturnStatus = in_array($order->status, [5, 7, 8, 12]);
+
+                                                    if ($isReturnStatus && $order->returnItems->count() > 0) {
+                                                        foreach ($order->returnItems as $returnItem) {
+                                                            if ($returnItem->status == 'approved') {
+                                                                $refundAmount +=
+                                                                    $returnItem->orderDetail->price *
+                                                                    $returnItem->quantity;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    $finalAmount = $order->total_price - $refundAmount;
+                                                @endphp
+
+                                                @if ($isReturnStatus && $refundAmount > 0)
+                                                    <div>
+                                                        <span
+                                                            class="fw-bold text-success">{{ number_format($finalAmount, 0, ',', '.') }}₫</span>
+                                                        <div class="small text-muted">
+                                                            <s>{{ number_format($order->total_price, 0, ',', '.') }}₫</s>
+                                                            <span
+                                                                class="text-danger">(-{{ number_format($refundAmount, 0, ',', '.') }}₫)</span>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span
+                                                        class="fw-bold">{{ number_format($order->total_price, 0, ',', '.') }}₫</span>
+                                                @endif
                                             @endif
                                         </td>
                                         <td>

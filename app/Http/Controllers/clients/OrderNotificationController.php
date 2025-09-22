@@ -13,14 +13,14 @@ class OrderNotificationController extends Controller
     public function fetch(Request $request)
     {
         $totalCount = Order::where('user_id', auth()->id())
-            ->whereIn('status', [0, 1, 2, 3, 4])
-            ->where('is_read', 0)
+            ->whereIn('status', [0, 1, 2, 3, 4, 9])
+            // ->where('is_read', 0)
             ->count();
 
         $orders = Order::with('orderDetails.product')
             ->where('user_id', auth()->id())
-            ->whereIn('status', [0, 1, 2, 3, 4])
-            ->where('is_read', 0)
+            ->whereIn('status', [0, 1, 2, 3, 4, 9])
+            // ->where('is_read', 0)
             ->latest('updated_at')
             ->get();
 
@@ -30,6 +30,7 @@ class OrderNotificationController extends Controller
                 1 => "Đơn hàng {$order->order_code} đang được xác nhận.",
                 2 => "Đơn hàng {$order->order_code} đã được xác nhận.",
                 3 => "Đơn hàng {$order->order_code} đang được giao.",
+                9 => "Đơn hàng {$order->order_code} đã được giao.",
                 4 => "Đơn hàng {$order->order_code} đã hoàn thành.",
                 default => "Đơn hàng {$order->order_code} có cập nhật mới."
             };
@@ -60,9 +61,9 @@ class OrderNotificationController extends Controller
     {
         $orders = Order::with('orderDetails.product')
             ->where('user_id', auth()->id())
-            ->whereIn('status', [0, 1, 2, 3, 4])
+            ->whereIn('status', [0, 1, 2, 3, 4, 9])
             ->latest('created_at')
-            ->paginate(10);
+            ->paginate(5);
 
         return view('clients.notifications.index', compact('orders'));
     }
@@ -82,6 +83,7 @@ class OrderNotificationController extends Controller
             ->whereIn('status', [0, 1, 2, 3, 4])
             ->where('is_read', 0)
             ->count();
+
 
         return response()->json([
             'success'   => true,

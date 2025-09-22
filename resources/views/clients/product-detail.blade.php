@@ -901,6 +901,56 @@
         border-radius: 0 8px 8px 0;
     }
 </style>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const mainImage = document.getElementById("mainProductImage");
+        const mainVideo = document.getElementById("mainProductVideo");
+        const mainVideoSource = document.getElementById("mainVideoSource");
+
+        function updateMainImage(imageUrl) {
+            if (!mainImage) return;
+
+            // Ẩn video nếu đang hiện
+            if (mainVideo && !mainVideo.classList.contains("d-none")) {
+                mainVideo.pause();
+                mainVideo.classList.add("d-none");
+            }
+
+            // Hiện ảnh
+            mainImage.src = imageUrl;
+            mainImage.classList.remove("d-none");
+        }
+
+        function updateMainVideo(videoUrl) {
+            if (!mainVideo || !mainVideoSource) return;
+
+            // Ẩn ảnh nếu đang hiện
+            if (mainImage && !mainImage.classList.contains("d-none")) {
+                mainImage.classList.add("d-none");
+            }
+
+            // Hiện video
+            mainVideo.classList.remove("d-none");
+            mainVideoSource.src = videoUrl;
+            mainVideo.load();
+            mainVideo.play();
+        }
+
+        // Gắn sự kiện click cho tất cả thumbnail
+        document.querySelectorAll(".variant-thumbnail, .video-thumbnail").forEach(item => {
+            item.addEventListener("click", function () {
+                const type = this.dataset.type;
+                const src = this.dataset.src;
+
+                if (type === "image") {
+                    updateMainImage(src);
+                } else if (type === "video") {
+                    updateMainVideo(src);
+                }
+            });
+        });
+    });
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -937,12 +987,12 @@
         const quantityInput = document.getElementById('quantity');
         const cancelButton = document.getElementById('cancelVariantSelection');
         const selectedVariantIdInput = document.getElementById('selectedVariantId');
-        const mainVideo = document.getElementById('mainProductVideo'); // ✅ thêm
+        const mainVideo = document.getElementById('mainProductVideo');
         const mainVideoSource = mainVideo ? mainVideo.querySelector('source') :
             null; // (tuỳ, dùng khi bật video)
-
         var selectedVariant = null;
-        var totalStockQuantity = "{{ $totalStock }}";
+        var totalStockQuantity = parseInt("{{ $totalStock ?? 0 }}") || 0;
+
 
         function formatCurrency(number) {
             return number.toLocaleString('vi-VN');
@@ -968,18 +1018,16 @@
         function updateMainImage(imageUrl) {
             if (!mainImage || !imageUrl) return;
 
-            // ✅ Nếu đang xem video → dừng và ẩn video
+            //  Nếu đang xem video → dừng và ẩn video
             if (mainVideo && !mainVideo.classList.contains('d-none')) {
                 mainVideo.pause();
                 mainVideo.classList.add('d-none');
             }
 
-            // ✅ Hiện ảnh và đổi src
+            // Hiện ảnh và đổi src
             mainImage.classList.remove('d-none');
             mainImage.src = imageUrl;
         }
-
-
         function resetToDefault() {
             selectedVariantIdInput.value = '';
             variantOptions.forEach(opt => opt.classList.remove('selected'));
@@ -1096,12 +1144,55 @@
         const productType = "{{ $product->product_type }}"; // Laravel blade
 
         addToCartBtn?.addEventListener('click', function(e) {
+            let productId = "{{ $product->id }}"; // ID sản phẩm
+            let variantId = selectedVariantIdInput.value; // Nếu có biến thể
+            let key = variantId ? `variant_${variantId}` : `product_${productId}`;
+
+            // === Trường hợp sản phẩm có biến thể ===
             if (productType === 'variant') {
-                if (!selectedVariant || !selectedVariantIdInput.value) {
+                if (!selectedVariant || !variantId) {
                     e.preventDefault();
-                    alert('Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.');
+                    Toastify({
+                        text: "⚠️ Vui lòng chọn biến thể trước khi thêm vào giỏ hàng.",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#f44336",
+                        stopOnFocus: true
+                    }).showToast();
+                    return;
                 }
             }
+
+            // === Lấy số lượng tồn kho ===
+            let stock;
+            if (productType === 'variant') {
+                stock = Number(selectedVariant?.stock || 0);
+            } else {
+                stock = {{ (int) ($product->quantity_in_stock ?? 0) }}; // ép thành số ngay từ Blade
+            }
+            
+            // === Kiểm tra số lượng trong giỏ ===
+            let cartQuantities = JSON.parse(localStorage.getItem('cartQuantities')) || {};
+            let alreadyInCart = cartQuantities[key] || 0;
+            let addingQty = parseInt(quantityInput.value) || 1;
+
+            if (alreadyInCart + addingQty > stock) {
+                e.preventDefault();
+                Toastify({
+                    text: "⚠️ Sản phẩm này đã đạt số lượng tối đa trong giỏ hàng!",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336",
+                    stopOnFocus: true
+                }).showToast();
+                return;
+            }
+
+            // === Nếu hợp lệ thì lưu lại vào localStorage ===
+            cartQuantities[key] = alreadyInCart + addingQty;
+            localStorage.setItem('cartQuantities', JSON.stringify(cartQuantities));
         });
     });
 </script>
