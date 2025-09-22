@@ -288,7 +288,7 @@
                                     <div class="row g-3" id="variantOptions">
                                         @foreach ($product->variants as $variant)
                                             <div class="col-md-6">
-                                                <div class="variant-option {{ $variant->status == 0 || $variant->quantity_in_stock <= 0 ? 'disabled' : '' }}"
+                                                <div class="variant-option {{ $variant->status == 0 || $variant->quantity_in_stock <= 0 ? ' ' : '' }}"
                                                     data-variant-id="{{ $variant->id }}"
                                                     data-variant-name="{{ trim(str_replace(['(', ')'], '', $variant->full_name)) }}"
                                                     data-variant-price="{{ $variant->discounted_price ?? $variant->price }}"
@@ -314,8 +314,9 @@
                                                                 $parts = explode(',', $cleaned);
                                                             @endphp
                                                             <div class="variant-name">
-                                                                @foreach ($parts as $part)
-                                                                    <div>{{ trim($part) }}</div>
+                                                                @foreach ($variant->attributeValues as $value)
+                                                                    <div>{{ $value->attribute->name }}:
+                                                                        {{ $value->value }}</div>
                                                                 @endforeach
                                                             </div>
 
@@ -902,7 +903,7 @@
     }
 </style>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         const mainImage = document.getElementById("mainProductImage");
         const mainVideo = document.getElementById("mainProductVideo");
         const mainVideoSource = document.getElementById("mainVideoSource");
@@ -938,7 +939,7 @@
 
         // Gắn sự kiện click cho tất cả thumbnail
         document.querySelectorAll(".variant-thumbnail, .video-thumbnail").forEach(item => {
-            item.addEventListener("click", function () {
+            item.addEventListener("click", function() {
                 const type = this.dataset.type;
                 const src = this.dataset.src;
 
@@ -1028,6 +1029,7 @@
             mainImage.classList.remove('d-none');
             mainImage.src = imageUrl;
         }
+
         function resetToDefault() {
             selectedVariantIdInput.value = '';
             variantOptions.forEach(opt => opt.classList.remove('selected'));
@@ -1171,7 +1173,7 @@
             } else {
                 stock = {{ (int) ($product->quantity_in_stock ?? 0) }}; // ép thành số ngay từ Blade
             }
-            
+
             // === Kiểm tra số lượng trong giỏ ===
             let cartQuantities = JSON.parse(localStorage.getItem('cartQuantities')) || {};
             let alreadyInCart = cartQuantities[key] || 0;

@@ -140,6 +140,14 @@ class PromotionController extends Controller
     {
         //
         $promotion = Promotion::findOrFail($id);
+
+        $now = now();
+
+        // Nếu đã hết hạn thì tự động cập nhật về 0 trong DB
+        if ($promotion->end_date < $now && $promotion->status == 1) {
+            $promotion->status = 0;
+            $promotion->save();
+        }
         return view('admin.promotions.edit', compact('promotion'));
     }
 

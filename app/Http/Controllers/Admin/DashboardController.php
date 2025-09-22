@@ -79,8 +79,9 @@ class DashboardController extends Controller
             ->whereIn('o.status', [4, 5, 7, 9, 12]) // chỉ đơn đã hoàn thành/giao thành công
             ->sum(DB::raw('ori.quantity * od.price')) ?? 0;
 
-        // Bước 5: Doanh thu cuối = Tổng tất cả - Tiền đơn VNPay hủy - Tiền hoàn hàng
-        $totalRevenue = $allOrdersRevenue - $cancelledVNPayAmount - $returnedAmount;
+        /// Bước 5: Doanh thu cuối = Tổng tất cả - Tiền đơn VNPay hủy - Tiền đơn COD hủy - Tiền hoàn hàng
+        $totalRevenue = $allOrdersRevenue - $cancelledVNPayAmount - $cancelledCODAmount - $returnedAmount;
+
         // Tổng số sản phẩm đã bán (THÊM PHẦN NÀY)
         $totalProductsSold = OrderDetail::join('orders', 'orders.id', '=', 'order_details.order_id')
             ->whereIn('order_details.order_id', (clone $baseOrderQuery)->pluck('id'))

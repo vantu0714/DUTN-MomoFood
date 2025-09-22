@@ -262,53 +262,51 @@ class OrderController extends Controller
             $discount = 0;
             $promotionCode = null;
 
-            if ($request->filled('discount_amount')) {
-                $discount = (float) $request->discount_amount;
-            } else {
-                // Xử lý mã giảm giá từ request hoặc session
-                if ($request->filled('promotion') || session()->has('promotion_code')) {
-                    $promotionCode = $request->filled('promotion')
-                        ? trim($request->promotion)
-                        : session('promotion_code');
+            // Xử lý mã giảm giá từ request hoặc session
+            if ($request->filled('promotion') || session()->has('promotion_code')) {
+                $promotionCode = $request->filled('promotion')
+                    ? trim($request->promotion)
+                    : session('promotion_code');
 
-                    $promotion = Promotion::where('code', $promotionCode)
-                        ->where('status', 1)
-                        ->where('start_date', '<=', now())
-                        ->where('end_date', '>=', now())
-                        ->first();
+                $promotion = Promotion::where('code', $promotionCode)
+                    ->where('status', 1)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now())
+                    ->first();
 
-                    if ($promotion && ($promotion->usage_limit === null || $promotion->used_count < $promotion->usage_limit)) {
-                        if ($promotion->discount_type === 'percent') {
-                            $discount = $total * ($promotion->discount_value / 100);
-                            if ($promotion->max_discount_value !== null) {
-                                $discount = min($discount, $promotion->max_discount_value);
-                            }
-                        } else { // fixed
-                            $discount = (float) $promotion->discount_value;
+                if ($promotion && ($promotion->usage_limit === null || $promotion->used_count < $promotion->usage_limit)) {
+                    if ($promotion->discount_type === 'percent') {
+                        $discount = $total * ($promotion->discount_value / 100);
+                        if ($promotion->max_discount_value !== null) {
+                            $discount = min($discount, $promotion->max_discount_value);
                         }
-
-                        // Không cho giảm vượt quá tổng tiền
-                        $discount = min($discount, $total);
-
-                        // Cập nhật lại session
-                        session()->put('promotion_code', $promotion->code);
-                        session()->put('discount', $discount);
-
-                        // Cập nhật số lần dùng
-                        $promotion->increment('used_count');
-                        PromotionUser::updateOrCreate(
-                            ['promotion_id' => $promotion->id, 'user_id' => $userId],
-                            ['used_count' => DB::raw('used_count + 1')]
-                        );
-                    } else {
-                        // Nếu mã không hợp lệ hoặc bị xóa thì clear session
-                        session()->forget(['promotion', 'promotion_code', 'discount']);
-                        $promotionCode = null;
-                        $discount = 0;
+                    } else { // fixed
+                        $discount = (float) $promotion->discount_value;
                     }
+
+                    // Không cho giảm vượt quá tổng tiền
+                    $discount = min($discount, $total);
+
+                    // Cập nhật lại session
+                    session()->put('promotion_code', $promotion->code);
+                    session()->put('discount', $discount);
+
+                    // Cập nhật số lần dùng
+                    $promotion->increment('used_count');
+                    PromotionUser::updateOrCreate(
+                        ['promotion_id' => $promotion->id, 'user_id' => $userId],
+                        ['used_count' => DB::raw('used_count + 1')]
+                    );
+                } else {
+                    // Nếu mã không hợp lệ hoặc bị xóa thì clear session
+                    session()->forget(['promotion', 'promotion_code', 'discount']);
+                    $promotionCode = null;
+                    $discount = 0;
                 }
             }
+
             // dd($request->all());
+       
 
 
             $grandTotal = $total + $request->shipping_fee - $discount;
@@ -329,6 +327,7 @@ class OrderController extends Controller
                 'payment_status' => 'unpaid',
                 'status' => 1,
             ]);
+
 
             // Thêm chi tiết đơn hàng
             foreach ($cartItems as $item) {
@@ -565,7 +564,6 @@ class OrderController extends Controller
             DB::commit();
 
             return redirect()->route('clients.orderdetail', $order->id)->with('success', $message);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Lỗi hủy đơn hàng: ' . $e->getMessage());

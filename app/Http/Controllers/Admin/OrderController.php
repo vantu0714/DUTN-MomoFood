@@ -317,7 +317,18 @@ class OrderController extends Controller
             $order->status = 4;
             $order->completed_at = now();
             $order->save();
+
+            $productIds = $order->orderDetails->pluck('product_id')->unique();
+
+            foreach ($productIds as $productId) {
+                $product = Product::find($productId);
+                if ($product) {
+                    $product->increment('sold_count', 1);
+                }
+            }
         }
+
+
         // Hoàn hàng (5) → Yêu cầu lý do
         elseif ($newStatus == 5) {
             $request->validate(['reason' => 'required|string|max:1000']);
@@ -437,7 +448,6 @@ class OrderController extends Controller
             }
 
             $order->update($updateData);
-
         } elseif ($approvedCount === $totalCount) {
             // Tất cả sản phẩm được chấp nhận - Hoàn hàng toàn bộ
             $updateData = [
@@ -451,7 +461,6 @@ class OrderController extends Controller
             }
 
             $order->update($updateData);
-
         } elseif ($rejectedCount === $totalCount) {
             // Tất cả sản phẩm bị từ chối - Hoàn hàng thất bại
             $order->update([
