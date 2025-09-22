@@ -80,9 +80,10 @@ class OrderNotificationController extends Controller
         }
 
         $remaining = Order::where('user_id', auth()->id())
-            ->whereIn('status', [0, 1, 2, 3, 4, 9])
+            ->whereIn('status', [0, 1, 2, 3, 4])
             ->where('is_read', 0)
             ->count();
+
 
         return response()->json([
             'success'   => true,

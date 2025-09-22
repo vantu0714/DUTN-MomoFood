@@ -350,6 +350,7 @@
                                     @else
                                         <span class="badge bg-warning text-dark">{{ $item->status_label }}</span>
                                     @endif
+
                                 </td>
                             </tr>
                         @endforeach
