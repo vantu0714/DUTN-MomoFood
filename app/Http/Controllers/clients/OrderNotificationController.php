@@ -13,13 +13,13 @@ class OrderNotificationController extends Controller
     public function fetch(Request $request)
     {
         $totalCount = Order::where('user_id', auth()->id())
-            ->whereIn('status', [0, 1, 2, 3, 4, 9])
+            ->whereIn('status', [0, 1, 2, 3, 4, 9, 5, 6, 7, 8, 10, 11, 12])
             // ->where('is_read', 0)
             ->count();
 
         $orders = Order::with('orderDetails.product')
             ->where('user_id', auth()->id())
-            ->whereIn('status', [0, 1, 2, 3, 4, 9])
+            ->whereIn('status', [0, 1, 2, 3, 4, 9, 5, 6, 7, 8, 10, 11, 12])
             // ->where('is_read', 0)
             ->latest('updated_at')
             ->get();
@@ -32,6 +32,14 @@ class OrderNotificationController extends Controller
                 3 => "Đơn hàng {$order->order_code} đang được giao.",
                 9 => "Đơn hàng {$order->order_code} đã được giao.",
                 4 => "Đơn hàng {$order->order_code} đã hoàn thành.",
+                5 => "Đơn hàng {$order->order_code} đã được hoàn hàng.",
+                6 => "Đơn hàng {$order->order_code} đã được hủy.",
+                7 => "Đơn hàng {$order->order_code} đang xử lí hoàn hàng.",
+                8 => "Đơn hàng {$order->order_code} hoàn hàng thất bại.",
+                10 => "Đơn hàng {$order->order_code} không được xác nhận.",
+                11 => "Đơn hàng {$order->order_code} giao hàng thất bại.",
+                12 => "Đơn hàng {$order->order_code} đã được hoàn hàng mộtphần.",
+                
                 default => "Đơn hàng {$order->order_code} có cập nhật mới."
             };
 
@@ -61,7 +69,7 @@ class OrderNotificationController extends Controller
     {
         $orders = Order::with('orderDetails.product')
             ->where('user_id', auth()->id())
-            ->whereIn('status', [0, 1, 2, 3, 4, 9])
+            ->whereIn('status', [0, 1, 2, 3, 4, 9, 5, 6, 7, 8, 10, 11, 12])
             ->latest('created_at')
             ->paginate(5);
 
@@ -80,7 +88,7 @@ class OrderNotificationController extends Controller
         }
 
         $remaining = Order::where('user_id', auth()->id())
-            ->whereIn('status', [0, 1, 2, 3, 4])
+            ->whereIn('status', [0, 1, 2, 3, 4, 9, 5, 6, 7, 8, 10, 11, 12])
             ->where('is_read', 0)
             ->count();
 

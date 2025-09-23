@@ -385,6 +385,9 @@
                 </div>
             </div>
         </div>
+        <script>
+            localStorage.removeItem('cartQuantities');
+        </script>
     @endif
 @endif
 
@@ -439,6 +442,13 @@
                         if (checkbox) {
                             const cleanValue = data.sub_total.replace(/[^\d]/g, '');
                             checkbox.setAttribute('data-subtotal', parseInt(cleanValue));
+                        }
+                        let cartQuantities = JSON.parse(localStorage.getItem('cartQuantities')) || {};
+                        const productKey = row.dataset.key;
+                        if (productKey) {
+                            cartQuantities[productKey] = quantity;
+                            localStorage.setItem('cartQuantities', JSON.stringify(cartQuantities));
+                            window.cartQuantities = cartQuantities;
                         }
 
                         // 👉 Gọi lại hàm tính tổng theo sản phẩm đã chọn

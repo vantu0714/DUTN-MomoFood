@@ -598,39 +598,38 @@
 
 
 <script>
-   function markNotificationAsRead(id, link) {
-    fetch(`/notifications/read/${id}`, {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({})
-    })
-    .then(res => res.json())
-    .then(json => {
-        // cập nhật badge
-        const badge = document.getElementById("order-noti-count");
-        if (badge) {
-            if (json.remaining > 0) {
-                badge.innerText = json.remaining;
-                badge.style.display = "inline-block";
-            } else {
-                badge.style.display = "none";
-            }
-        }
+    function markNotificationAsRead(id, link) {
+        fetch(`/notifications/read/${id}`, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({})
+            })
+            .then(res => res.json())
+            .then(json => {
+                // cập nhật badge
+                const badge = document.getElementById("order-noti-count");
+                if (badge) {
+                    if (json.remaining > 0) {
+                        badge.innerText = json.remaining;
+                        badge.style.display = "inline-block";
+                    } else {
+                        badge.style.display = "none";
+                    }
+                }
 
-        // làm mờ item
-        const item = document.querySelector(`#order-noti-items li[data-id="${id}"]`);
-        if (item) item.classList.add("text-muted");
+                // làm mờ item
+                const item = document.querySelector(`#order-noti-items li[data-id="${id}"]`);
+                if (item) item.classList.add("text-muted");
 
-        // chuyển trang
-        window.location.href = link;
-    })
-    .catch(err => console.error("Lỗi đọc thông báo:", err));
-}
-
+                // chuyển trang
+                window.location.href = link;
+            })
+            .catch(err => console.error("Lỗi đọc thông báo:", err));
+    }
 </script>
 
 

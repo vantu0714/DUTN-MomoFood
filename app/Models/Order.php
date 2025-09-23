@@ -101,6 +101,12 @@ class Order extends Model
         3 => 'đang được giao',
         9 => 'đã được giao',
         4 => 'đã hoàn thành',
+        5 => 'đã hoàn hàng',
+        6 => 'đã hủy',
+        7 => 'đang xử lí hoàn hàng',
+        8 => 'hoàn hàng thất bại',
+        11 => 'giao hàng thất bại',
+        12 => 'đã được hoàn hàng một phần',
         default => 'không xác định',
     };
 }
