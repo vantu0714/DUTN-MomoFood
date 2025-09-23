@@ -347,14 +347,19 @@
                                 <a href="{{ route('product-detail.show', $product->id) }}" class="h5 d-block mb-2">
                                     {{ $product->product_name }}
                                 </a>
+                                @php
+                                    $firstComment = $product->comments->first();
+                                @endphp
 
-                                <div class="d-flex align-items-center mb-2">
-                                    @for ($i = 1; $i <= 5; $i++)
-                                        <i
-                                            class="fas fa-star{{ $i <= $avgRating ? ' text-warning' : ' text-muted' }}"></i>
-                                    @endfor
-                                    <small class="ms-2 text-muted">({{ number_format($avgRating, 1) }}/5)</small>
-                                </div>
+                                @if ($firstComment)
+                                    <div class="d-flex align-items-center mb-2">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <i
+                                                class="fas fa-star{{ $i <= $firstComment->rating ? ' text-warning' : ' text-muted' }}"></i>
+                                        @endfor
+                                        <small class="ms-2 text-muted">({{ $firstComment->rating }}/5)</small>
+                                    </div>
+                                @endif
 
                                 <h4 class="mb-3 text-danger fw-bold ps-2 product-price">
                                     @if ($isVariant)
