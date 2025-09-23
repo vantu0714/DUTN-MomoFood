@@ -35,7 +35,7 @@ class VNPayController extends Controller
 
         $orderInfo =
             $user->id . '-' . $recipient_name . '-' . $recipient_phone . '-' .
-            $recipient_address . '-' . $note . '-' . $shipping_fee . '-' . $grandTotal . '-' . $promotion;
+            $recipient_address . '-' . $note . '-' . $shipping_fee . '-' . $grandTotal . '-' . $promotion .'-' . ($request->discount_amount ?? 0);
 
 
         // Bắt đầu xử lý redirect qua VNPAY
@@ -149,7 +149,7 @@ class VNPayController extends Controller
 
             $orderParts = explode('-', $inputData['vnp_OrderInfo']);
 
-            if (count($orderParts) <= 7) {
+            if (count($orderParts) <= 8) {
                 return view('clients.vnpay_fail');
             }
 
@@ -170,6 +170,7 @@ class VNPayController extends Controller
             $promotion = $orderParts[7] == 0 ? '' : trim($orderParts[7], '"');
             $cart_user = Cart::with('items.product', 'items.productVariant')->where('user_id', $userId)->first();
             $selectedIds = session()->has('selected_items') ? session('selected_items') : [];
+            $discount_amount = trim($orderParts[8], '"');
 
             $cartItems = !empty($selectedIds)
                 ? $cart_user->items->whereIn('id', $selectedIds)
@@ -188,12 +189,11 @@ class VNPayController extends Controller
                 'note' => $note,
                 'shipping_fee' => $shipping_fee,
                 'promotion' => $promotion,
+                'discount_amount' => $discount_amount,
                 'payment_method' => 'vnpay',
                 'payment_status' => 'paid',
                 'status' => 1
             ]);
-
-            Log::error('errror',$orderParts);
             $dataOrderDetail = [];
 
             foreach ($cartItems as $item) {
