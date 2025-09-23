@@ -296,8 +296,15 @@
 
                     <!-- Danh sách voucher -->
                     @foreach ($vouchers as $voucher)
-                        <div class="border rounded p-3 mb-3 position-relative">
-                            <div class="d-flex justify-content-between">
+                        @php
+                            $isApplied = isset($appliedCode) && $appliedCode === $voucher->code;
+                            $isUsedByUser = in_array((int) $voucher->id, array_map('intval', $usedPromotionIds ?? []));
+                            $isOutOfUsage =
+                                $voucher->usage_limit !== null && $voucher->used_count >= $voucher->usage_limit;
+                            $disabled = $isApplied || $isUsedByUser || $isOutOfUsage;
+                        @endphp
+                        <div class="voucher-card border rounded p-3 {{ $disabled ? 'voucher--disabled' : '' }}">
+                            <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <div class="text-danger fw-bold">Giảm
                                         {{ $voucher->discount_type === 'percent' ? $voucher->discount_value . '%' : number_format($voucher->discount_value) . 'đ' }}
@@ -306,12 +313,27 @@
                                         Đơn tối thiểu: {{ number_format($voucher->min_total_spent ?? 0) }}đ <br>
                                         HSD: {{ \Carbon\Carbon::parse($voucher->end_date)->format('d/m/Y H:i') }}
                                     </small>
+
+                                    @if ($isUsedByUser)
+                                        <div class="text-warning mt-1">Bạn đã sử dụng mã này.</div>
+                                    @elseif($isOutOfUsage)
+                                        <div class="text-danger mt-1">Mã đã hết lượt sử dụng.</div>
+                                    @endif
                                 </div>
-                                <form method="POST" action="{{ route('order.applyCoupon') }}">
-                                    @csrf
-                                    <input type="hidden" name="promotion" value="{{ $voucher->code }}">
-                                    <button class="btn btn-outline-danger">Dùng</button>
-                                </form>
+
+                                <div class="action">
+                                    @if ($isApplied)
+                                        <button class="btn btn-success" disabled>Đang áp dụng</button>
+                                    @elseif ($disabled)
+                                        <button class="btn btn-outline-secondary" disabled>Đã dùng</button>
+                                    @else
+                                        <form method="POST" action="{{ route('order.applyCoupon') }}">
+                                            @csrf
+                                            <input type="hidden" name="promotion" value="{{ $voucher->code }}">
+                                            <button class="btn btn-outline-danger">Dùng</button>
+                                        </form>
+                                    @endif
+                                </div>
                             </div>
 
                             @if ($total < ($voucher->min_total_spent ?? 0))
@@ -505,6 +527,21 @@
     </div>
 
 @endsection
+<style>
+    .voucher-card.voucher--disabled {
+        opacity: 0.5;
+        /* Làm mờ */
+        filter: grayscale(40%);
+        /* Tùy chọn: chuyển xám nhẹ */
+        pointer-events: none;
+        /* Không cho click form/nút bên trong */
+    }
+
+    .voucher-card.voucher--disabled .btn {
+        cursor: not-allowed;
+        /* Hiệu ứng chuột */
+    }
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
