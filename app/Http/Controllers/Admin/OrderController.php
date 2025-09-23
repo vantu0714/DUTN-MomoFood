@@ -233,6 +233,9 @@ class OrderController extends Controller
 
         $newStatus = (int) $request->status;
         $currentStatus = $order->status;
+        if (in_array($currentStatus, [7, 6])) {
+            return back()->with('error', 'Không thể thay đổi trạng thái');
+        }
 
         if ($request->update_source === 'admin_ui') {
             // Danh sách các trạng thái được phép chuyển đổi từ trạng thái hiện tại
