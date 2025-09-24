@@ -93,16 +93,19 @@ class OrderController extends Controller
             $recipient = $savedRecipients->where('is_default', true)->first();
         }
 
-        // Lấy các voucher đang hoạt động
         $vouchers = Promotion::where('status', 1)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
+            ->where(function ($q) {
+                $q->whereNull('usage_limit')
+                    ->orWhereColumn('used_count', '<', 'usage_limit');
+            })
             ->get();
 
-            // Lấy danh sách ID voucher user đã dùng
-    $usedPromotionIds = PromotionUser::where('user_id', $userId)
-    ->pluck('promotion_id')
-    ->toArray();
+        // Lấy danh sách ID voucher user đã dùng
+        $usedPromotionIds = PromotionUser::where('user_id', $userId)
+            ->pluck('promotion_id')
+            ->toArray();
         // Kiểm tra mã giảm giá đang lưu trong session
         $promotionCode = session('promotion_code');
         $discount = session('discount', 0);
@@ -162,7 +165,8 @@ class OrderController extends Controller
             'locations',
             'promotionCode',
             'discount',
-            'usedPromotionIds'
+            'usedPromotionIds',
+
         ));
     }
 
@@ -261,6 +265,7 @@ class OrderController extends Controller
             return $item->discounted_price * $item->quantity;
         });
 
+        $promotion = null;
         $discount = 0;
         $promotionCode = null;
 
@@ -341,12 +346,16 @@ class OrderController extends Controller
                 }
             }
 
-            // Cập nhật số lần dùng
-            $promotion->increment('used_count');
-            PromotionUser::updateOrCreate(
-                ['promotion_id' => $promotion->id, 'user_id' => $userId],
-                ['used_count' => DB::raw('used_count + 1')]
-            );
+            if ($promotion) {
+                $promotion->increment('used_count');
+
+                $promotionUser = PromotionUser::firstOrCreate(
+                    ['promotion_id' => $promotion->id, 'user_id' => $userId],
+                    ['used_count' => 0]
+                );
+
+                $promotionUser->increment('used_count');
+            }
 
             // Cập nhật trạng thái VIP
             $totalSpent = Order::where('user_id', $userId)
